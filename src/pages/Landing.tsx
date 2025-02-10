@@ -26,16 +26,19 @@ const Landing = () => {
 
   const influencers = [
     {
+      id: "1",
       name: "Jane Doe",
       category: "Beauty, Lifestyle",
       image: "https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg"
     },
     {
+      id: "2",
       name: "John Smith",
       category: "Gaming, Tech",
       image: "https://storage.googleapis.com/a1aa/image/R4lTF1BSiN2peiSedQ_j1g5qFHHgy0X5xpVXws3Wo1g.jpg"
     },
     {
+      id: "3",
       name: "Emily Johnson",
       category: "Travel, Photography",
       image: "https://storage.googleapis.com/a1aa/image/e6eeDEu88nkMhxxbqL65Yf_1XJjeRTGffPUCWBak9Vc.jpg"
@@ -151,7 +154,13 @@ const Landing = () => {
                 <div className="mt-2">
                   <h3 className="text-sm font-semibold text-gray-800">{influencer.name}</h3>
                   <p className="text-xs text-gray-600">{influencer.category}</p>
-                  <Button size="sm" className="mt-2 w-full text-xs">View Profile</Button>
+                  <Button 
+                    size="sm" 
+                    className="mt-2 w-full text-xs"
+                    onClick={() => navigate(`/profile/${influencer.id}`)}
+                  >
+                    View Profile
+                  </Button>
                 </div>
               </div>
             ))}

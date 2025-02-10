@@ -9,6 +9,102 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      gifts_to_influencers: {
+        Row: {
+          created_at: string
+          gift_item: string
+          id: string
+          influencer_id: string
+          message: string | null
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          gift_item: string
+          id?: string
+          influencer_id: string
+          message?: string | null
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          gift_item?: string
+          id?: string
+          influencer_id?: string
+          message?: string | null
+          sender_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gifts_to_influencers_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gifts_to_influencers_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      influencer_profiles: {
+        Row: {
+          about: string | null
+          created_at: string
+          facebook_url: string | null
+          followers: number
+          hobbies: string[] | null
+          id: string
+          instagram_url: string | null
+          name: string
+          platform: string
+          profile_image: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
+          updated_at: string
+          youtube_url: string | null
+        }
+        Insert: {
+          about?: string | null
+          created_at?: string
+          facebook_url?: string | null
+          followers?: number
+          hobbies?: string[] | null
+          id?: string
+          instagram_url?: string | null
+          name: string
+          platform: string
+          profile_image?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Update: {
+          about?: string | null
+          created_at?: string
+          facebook_url?: string | null
+          followers?: number
+          hobbies?: string[] | null
+          id?: string
+          instagram_url?: string | null
+          name?: string
+          platform?: string
+          profile_image?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
