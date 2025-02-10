@@ -105,6 +105,36 @@ export type Database = {
         }
         Relationships: []
       }
+      navigation_items: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          order_index: number
+          path: string
+          roles: Database["public"]["Enums"]["nav_role"][] | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          order_index: number
+          path: string
+          roles?: Database["public"]["Enums"]["nav_role"][] | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          order_index?: number
+          path?: string
+          roles?: Database["public"]["Enums"]["nav_role"][] | null
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -137,7 +167,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      nav_role: "admin" | "user" | "influencer"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import CreateInfluencerProfile from "./pages/CreateInfluencerProfile";
 import NotFound from "./pages/NotFound";
+import Navbar from "./components/navigation/Navbar";
 
 const queryClient = new QueryClient();
 
@@ -18,13 +19,18 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <TooltipProvider>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/profile/:id" element={<Profile />} />
-            <Route path="/create-profile" element={<CreateInfluencerProfile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="min-h-screen w-full bg-[var(--background)]">
+            <Navbar />
+            <main className="ml-[calc(var(--navbar-width)+2rem)] pt-4 pr-4">
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/profile/:id" element={<Profile />} />
+                <Route path="/create-profile" element={<CreateInfluencerProfile />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
           <Toaster />
           <Sonner />
         </TooltipProvider>
