@@ -1,14 +1,11 @@
 
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Youtube, Instagram, Twitter, Facebook, Gift } from "lucide-react";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import ProfileBio from "@/components/profile/ProfileBio";
+import SocialLinks from "@/components/profile/SocialLinks";
 
 const isValidUUID = (uuid: string) => {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -19,8 +16,6 @@ const Profile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [giftMessage, setGiftMessage] = useState("");
-  const [giftItem, setGiftItem] = useState("");
 
   const { data: influencer, isLoading, error } = useQuery({
     queryKey: ['influencer', id],
@@ -42,7 +37,7 @@ const Profile = () => {
     retry: false
   });
 
-  const handleSendGift = async () => {
+  const handleSendGift = async (giftItem: string, giftMessage: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -77,8 +72,6 @@ const Profile = () => {
       title: "Success",
       description: "Gift sent successfully!",
     });
-    setGiftMessage("");
-    setGiftItem("");
   };
 
   if (isLoading) {
@@ -109,112 +102,25 @@ const Profile = () => {
     <div className="min-h-screen bg-gray-100">
       <main className="container mx-auto px-4 py-8">
         <section className="bg-white shadow-md rounded-lg p-6">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <img
-              src={influencer.profile_image}
-              alt={`${influencer.name}'s profile picture`}
-              className="w-32 h-32 rounded-full object-cover"
-            />
-            <div className="flex-1">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-800">{influencer.name}</h2>
-                  <p className="text-gray-600">Platform: {influencer.platform}</p>
-                  <p className="text-gray-600">Followers: {influencer.followers.toLocaleString()}</p>
-                </div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="flex items-center gap-2">
-                      <Gift className="h-4 w-4" />
-                      Send Gift
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Send a Gift to {influencer.name}</DialogTitle>
-                      <DialogDescription>
-                        Choose a gift and add a personal message
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <Input
-                        placeholder="Gift item"
-                        value={giftItem}
-                        onChange={(e) => setGiftItem(e.target.value)}
-                      />
-                      <Textarea
-                        placeholder="Add a personal message..."
-                        value={giftMessage}
-                        onChange={(e) => setGiftMessage(e.target.value)}
-                      />
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={handleSendGift}>Send Gift</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-              
-              <p className="text-gray-600 my-4">{influencer.about}</p>
-              
-              <div className="mb-4">
-                <p className="text-gray-600">Hobbies:</p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {influencer.hobbies?.map((hobby, index) => (
-                    <span
-                      key={index}
-                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
-                    >
-                      {hobby}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex gap-4">
-                {influencer.youtube_url && (
-                  <a
-                    href={influencer.youtube_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-red-600 transition-colors"
-                  >
-                    <Youtube size={24} />
-                  </a>
-                )}
-                {influencer.instagram_url && (
-                  <a
-                    href={influencer.instagram_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-pink-600 transition-colors"
-                  >
-                    <Instagram size={24} />
-                  </a>
-                )}
-                {influencer.twitter_url && (
-                  <a
-                    href={influencer.twitter_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-blue-400 transition-colors"
-                  >
-                    <Twitter size={24} />
-                  </a>
-                )}
-                {influencer.facebook_url && (
-                  <a
-                    href={influencer.facebook_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-blue-600 transition-colors"
-                  >
-                    <Facebook size={24} />
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
+          <ProfileHeader
+            name={influencer.name}
+            platform={influencer.platform}
+            followers={influencer.followers}
+            profileImage={influencer.profile_image}
+            onSendGift={handleSendGift}
+          />
+          
+          <ProfileBio
+            about={influencer.about}
+            hobbies={influencer.hobbies}
+          />
+          
+          <SocialLinks
+            youtubeUrl={influencer.youtube_url}
+            instagramUrl={influencer.instagram_url}
+            twitterUrl={influencer.twitter_url}
+            facebookUrl={influencer.facebook_url}
+          />
         </section>
       </main>
     </div>
