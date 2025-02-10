@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,48 +27,65 @@ const CreateInfluencerProfile = () => {
 
   useEffect(() => {
     checkAuth();
-    checkExistingProfile();
   }, []);
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/");
+        return;
+      }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", user.id)
-      .single();
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    if (!profile || profile.user_type !== "influencer") {
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast({
+          title: "Error",
+          description: "Failed to verify user type",
+          variant: "destructive"
+        });
+        navigate("/");
+        return;
+      }
+
+      if (!profile || profile.user_type !== "influencer") {
+        toast({
+          title: "Access Denied",
+          description: "Only influencers can create profiles",
+          variant: "destructive"
+        });
+        navigate("/");
+        return;
+      }
+
+      // Check if profile already exists
+      const { data: existingProfile } = await supabase
+        .from("influencer_profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (existingProfile) {
+        setFormData({
+          ...existingProfile,
+          newHobby: "",
+          hobbies: existingProfile.hobbies || []
+        });
+      }
+    } catch (error) {
+      console.error("Error in checkAuth:", error);
       toast({
-        title: "Access Denied",
-        description: "Only influencers can create profiles",
+        title: "Error",
+        description: "An error occurred while checking authentication",
         variant: "destructive"
       });
       navigate("/");
-    }
-  };
-
-  const checkExistingProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("influencer_profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (profile) {
-      setFormData({
-        ...profile,
-        newHobby: "",
-        hobbies: profile.hobbies || []
-      });
     }
   };
 
@@ -79,7 +95,9 @@ const CreateInfluencerProfile = () => {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
 
       const { error } = await supabase
         .from("influencer_profiles")
@@ -97,7 +115,10 @@ const CreateInfluencerProfile = () => {
           hobbies: formData.hobbies
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating profile:", error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -106,6 +127,7 @@ const CreateInfluencerProfile = () => {
       
       navigate(`/profile/${user.id}`);
     } catch (error: any) {
+      console.error("Error in handleSubmit:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to save profile",
