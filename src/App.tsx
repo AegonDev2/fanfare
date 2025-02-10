@@ -24,7 +24,13 @@ const AppContent = () => {
   return (
     <div className="min-h-screen w-full bg-[var(--background)] relative overflow-x-hidden">
       {!isAuthPage && isNavOpen && (
-        <div className="fixed top-0 left-0 z-40 transition-transform duration-300 ease-in-out">
+        <div 
+          className="fixed top-0 right-0 z-40 transition-all duration-300 ease-in-out origin-top-right"
+          style={{
+            transformOrigin: 'top right',
+            transform: isNavOpen ? 'scale(1)' : 'scale(0)',
+          }}
+        >
           <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
         </div>
       )}
@@ -32,9 +38,7 @@ const AppContent = () => {
       <main 
         className={`transition-all duration-300 ease-in-out min-h-screen ${
           isNavOpen && !isAuthPage
-            ? isMobile 
-              ? 'ml-24 blur-sm' 
-              : 'ml-[calc(var(--navbar-width)+2rem)] blur-sm'
+            ? 'blur-sm' 
             : ''
         }`}
       >
