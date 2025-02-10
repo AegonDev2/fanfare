@@ -21,16 +21,28 @@ const AppContent = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
+
+  // Add overlay click handler
+  const handleOverlayClick = () => {
+    setIsNavOpen(false);
+  };
   
   return (
     <div className="min-h-screen w-full bg-[var(--background)] relative overflow-x-hidden">
+      {/* Overlay */}
       {!isAuthPage && isNavOpen && (
         <div 
-          className="fixed top-0 right-0 z-40 transition-all duration-300 ease-in-out origin-top-right"
-          style={{
-            transformOrigin: 'top right',
-            transform: isNavOpen ? 'scale(1)' : 'scale(0)',
-          }}
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+          onClick={handleOverlayClick}
+        />
+      )}
+
+      {/* Navigation */}
+      {!isAuthPage && (
+        <div 
+          className={`fixed top-0 left-0 z-50 transition-transform duration-300 ${
+            isNavOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
         >
           <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
         </div>
@@ -38,9 +50,7 @@ const AppContent = () => {
 
       <main 
         className={`transition-all duration-300 ease-in-out min-h-screen ${
-          isNavOpen && !isAuthPage
-            ? 'blur-sm' 
-            : ''
+          isNavOpen && !isAuthPage ? 'blur-sm' : ''
         }`}
       >
         <div className="min-h-screen">

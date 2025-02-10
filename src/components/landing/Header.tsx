@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { Menu } from "lucide-react";
 
 interface HeaderProps {
@@ -10,7 +9,6 @@ interface HeaderProps {
 
 const Header = ({ setNavOpen }: HeaderProps) => {
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-md z-30">
