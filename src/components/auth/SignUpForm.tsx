@@ -14,16 +14,28 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
+type UserType = 'fan' | 'influencer';
+
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("");
+  const [userType, setUserType] = useState<UserType | "">("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!userType) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a user type",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -47,7 +59,12 @@ const SignUpForm = () => {
             },
           ]);
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          // If profile creation fails, we should show an error
+          // In a production app, you might want to delete the auth user as well
+          console.error("Profile creation error:", profileError);
+          throw new Error("Failed to create user profile");
+        }
 
         toast({
           title: "Success",
@@ -57,6 +74,8 @@ const SignUpForm = () => {
         // If user type is influencer, redirect to create profile
         if (userType === "influencer") {
           navigate("/create-profile");
+        } else {
+          navigate("/");
         }
       }
     } catch (error: any) {
@@ -65,6 +84,9 @@ const SignUpForm = () => {
         title: "Error",
         description: error.message || "An error occurred during sign up",
       });
+
+      // Log the error for debugging
+      console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +118,10 @@ const SignUpForm = () => {
       </div>
       <div className="space-y-2">
         <Label htmlFor="user-type">I am a...</Label>
-        <Select onValueChange={setUserType} required>
+        <Select 
+          onValueChange={(value) => setUserType(value as UserType)} 
+          required
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select user type" />
           </SelectTrigger>
