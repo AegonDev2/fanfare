@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, User, UserPlus, Settings, Menu, X } from "lucide-react";
+import { Home, User, UserPlus, Settings, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -83,21 +83,21 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         isMobile ? 'z-50' : ''
       }`}
       style={{
-        width: isOpen ? "var(--navbar-width)" : "var(--navbar-width-min)",
+        width: "var(--navbar-width)",
       }}
     >
       <header
         id="nav-header"
         className="relative flex items-center min-h-[80px] pl-4"
       >
-        {isOpen && <h1 id="nav-title" className="text-2xl">Fan Fare</h1>}
+        <h1 id="nav-title" className="text-2xl">Fan Fare</h1>
         <Button
           variant="ghost"
           size="icon"
           className="absolute right-2 text-[var(--navbar-light-primary)]"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => setIsOpen(false)}
         >
-          {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          <X className="h-4 w-4" />
         </Button>
         <hr className="absolute bottom-0 left-4 w-[calc(100%-2rem)] border-t border-[var(--navbar-dark-secondary)]" />
       </header>
@@ -106,7 +106,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         id="nav-content"
         className="relative flex-1 overflow-x-hidden overflow-y-auto"
         style={{
-          width: isOpen ? "var(--navbar-width)" : "var(--navbar-width-min)",
+          width: "var(--navbar-width)",
         }}
       >
         {navItems.map((item) => {
@@ -126,7 +126,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
               onClick={() => navigate(item.path)}
             >
               {Icon && <Icon className="h-5 w-5 min-w-12 text-center" />}
-              {isOpen && <span className="ml-4 truncate">{item.title}</span>}
+              <span className="ml-4 truncate">{item.title}</span>
             </div>
           );
         })}
@@ -139,11 +139,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         <div className="relative w-full h-[54px] flex items-center">
           <div
             id="nav-footer-avatar"
-            className="relative ml-4 w-8 h-8 rounded-full overflow-hidden transition-transform duration-200"
-            style={{
-              left: isOpen ? "0" : "50%",
-              transform: isOpen ? "none" : "translateX(-50%)",
-            }}
+            className="relative ml-4 w-8 h-8 rounded-full overflow-hidden"
           >
             <img
               src="https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg"
@@ -151,14 +147,12 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
               className="h-full w-full object-cover"
             />
           </div>
-          {isOpen && (
-            <div className="ml-4 flex flex-col">
-              <span className="text-sm">User Profile</span>
-              <span className="text-xs text-[var(--navbar-light-secondary)]">
-                {userRole || "Guest"}
-              </span>
-            </div>
-          )}
+          <div className="ml-4 flex flex-col">
+            <span className="text-sm">User Profile</span>
+            <span className="text-xs text-[var(--navbar-light-secondary)]">
+              {userRole || "Guest"}
+            </span>
+          </div>
         </div>
       </footer>
     </nav>

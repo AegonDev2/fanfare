@@ -12,6 +12,8 @@ import CreateInfluencerProfile from "./pages/CreateInfluencerProfile";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/navigation/Navbar";
 import { useIsMobile } from "./hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -21,11 +23,20 @@ const AppContent = () => {
   
   return (
     <div className="min-h-screen w-full bg-[var(--background)] relative overflow-x-hidden">
-      <div className={`fixed top-4 left-4 z-50 transition-transform duration-300 ease-in-out ${
-        isNavOpen ? 'translate-x-0' : '-translate-x-[calc(100%-3rem)]'
-      }`}>
-        <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
-      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 bg-[var(--navbar-dark-primary)] text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
+        onClick={() => setIsNavOpen(!isNavOpen)}
+      >
+        <Menu className="h-4 w-4" />
+      </Button>
+
+      {isNavOpen && (
+        <div className="fixed top-4 left-4 z-40 transition-transform duration-300 ease-in-out">
+          <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
+        </div>
+      )}
 
       <main 
         className={`transition-all duration-300 ease-in-out min-h-screen ${
