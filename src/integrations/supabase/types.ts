@@ -135,6 +135,56 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          created_at: string
+          delivery_estimate: string | null
+          id: string
+          influencer_id: string | null
+          platform_fee: number | null
+          product_price: number | null
+          product_title: string | null
+          product_url: string
+          status: string | null
+          total_amount: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_estimate?: string | null
+          id?: string
+          influencer_id?: string | null
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url: string
+          status?: string | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_estimate?: string | null
+          id?: string
+          influencer_id?: string | null
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url?: string
+          status?: string | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
