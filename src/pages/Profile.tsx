@@ -10,6 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Youtube, Instagram, Twitter, Facebook, Gift } from "lucide-react";
 
+const isValidUUID = (uuid: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
 const Profile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -17,18 +22,24 @@ const Profile = () => {
   const [giftMessage, setGiftMessage] = useState("");
   const [giftItem, setGiftItem] = useState("");
 
-  const { data: influencer, isLoading } = useQuery({
+  const { data: influencer, isLoading, error } = useQuery({
     queryKey: ['influencer', id],
     queryFn: async () => {
+      if (!id || !isValidUUID(id)) {
+        throw new Error("Invalid profile ID");
+      }
+
       const { data, error } = await supabase
         .from('influencer_profiles')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!data) throw new Error("Influencer not found");
       return data;
-    }
+    },
+    retry: false
   });
 
   const handleSendGift = async () => {
@@ -74,8 +85,24 @@ const Profile = () => {
     return <div className="container mx-auto px-4 py-8">Loading...</div>;
   }
 
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error instanceof Error ? error.message : "Failed to load influencer profile"}
+        </div>
+      </div>
+    );
+  }
+
   if (!influencer) {
-    return <div className="container mx-auto px-4 py-8">Influencer not found</div>;
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
+          Influencer not found
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -133,7 +160,7 @@ const Profile = () => {
               <div className="mb-4">
                 <p className="text-gray-600">Hobbies:</p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {influencer.hobbies.map((hobby, index) => (
+                  {influencer.hobbies?.map((hobby, index) => (
                     <span
                       key={index}
                       className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
@@ -167,7 +194,7 @@ const Profile = () => {
                 )}
                 {influencer.twitter_url && (
                   <a
-                    href={influencer.twitter_url}
+                    href={influancer.twitter_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-600 hover:text-blue-400 transition-colors"
