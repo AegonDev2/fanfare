@@ -5,7 +5,11 @@ import InfluencerSection from "@/components/landing/InfluencerSection";
 import GiftSection from "@/components/landing/GiftSection";
 import OrderTrackingSection from "@/components/landing/OrderTrackingSection";
 
-const Landing = () => {
+interface LandingProps {
+  setNavOpen: (isOpen: boolean) => void;
+}
+
+const Landing = ({ setNavOpen }: LandingProps) => {
   const slides = [
     {
       src: "https://storage.googleapis.com/a1aa/image/nEyyMJHY73DoGPRrtOSXC1KvCAwbILiKV78pvYqeexs.jpg",
@@ -94,19 +98,21 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 font-roboto">
-      <Header />
-      <HeroCarousel slides={slides} />
-      <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
-        <InfluencerSection influencers={influencers} />
-        <GiftSection gifts={gifts} />
-        <OrderTrackingSection />
-      </main>
-      <footer className="bg-white shadow-md mt-8">
-        <div className="container mx-auto px-4 py-4 text-center text-gray-600">
-          © 2023 Fan Fare. All rights reserved.
-        </div>
-      </footer>
+    <div className="min-h-screen w-full bg-gray-100 font-roboto">
+      <Header setNavOpen={setNavOpen} />
+      <div className="pt-16"> {/* Add padding to account for fixed header */}
+        <HeroCarousel slides={slides} />
+        <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <InfluencerSection influencers={influencers} />
+          <GiftSection gifts={gifts} />
+          <OrderTrackingSection />
+        </main>
+        <footer className="bg-white shadow-md mt-8">
+          <div className="container mx-auto px-4 py-4 text-center text-gray-600">
+            © 2023 Fan Fare. All rights reserved.
+          </div>
+        </footer>
+      </div>
     </div>
   );
 };
