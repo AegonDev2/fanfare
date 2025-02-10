@@ -2,8 +2,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, User, UserPlus, Settings } from "lucide-react";
+import { Home, User, UserPlus, Settings, Menu, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 
 interface NavItem {
   id: string;
@@ -27,11 +29,15 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
+    if (isMobile) {
+      setIsOpen(false);
+    }
     fetchUserRole();
     fetchNavItems();
-  }, []);
+  }, [isMobile]);
 
   const fetchUserRole = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -66,33 +72,33 @@ const Navbar = () => {
     setNavItems(data);
   };
 
+  const toggleNav = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
     <nav
       id="nav-bar"
-      className="flex flex-col fixed left-4 top-4 h-[calc(100%-2rem)] bg-[var(--navbar-dark-primary)] rounded-2xl text-[var(--navbar-light-primary)] font-sans overflow-hidden select-none"
+      className={`flex flex-col fixed left-4 top-4 h-[calc(100%-2rem)] bg-[var(--navbar-dark-primary)] rounded-2xl text-[var(--navbar-light-primary)] font-sans overflow-hidden select-none transition-all duration-300 ${
+        isMobile ? 'z-50' : ''
+      }`}
       style={{
         width: isOpen ? "var(--navbar-width)" : "var(--navbar-width-min)",
       }}
     >
-      <input
-        type="checkbox"
-        id="nav-toggle"
-        className="hidden"
-        checked={!isOpen}
-        onChange={(e) => setIsOpen(!e.target.checked)}
-      />
-
       <header
         id="nav-header"
         className="relative flex items-center min-h-[80px] pl-4"
       >
         {isOpen && <h1 id="nav-title" className="text-2xl">Fan Fare</h1>}
-        <label
-          htmlFor="nav-toggle"
-          className="absolute right-0 w-12 h-full flex items-center justify-center cursor-pointer"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 text-[var(--navbar-light-primary)]"
+          onClick={toggleNav}
         >
-          <div id="nav-toggle-burger" className="relative w-4 h-0.5 bg-[var(--navbar-dark-primary)]" />
-        </label>
+          {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        </Button>
         <hr className="absolute bottom-0 left-4 w-[calc(100%-2rem)] border-t border-[var(--navbar-dark-secondary)]" />
       </header>
 
@@ -112,21 +118,18 @@ const Navbar = () => {
           return (
             <div
               key={item.id}
-              className={`nav-button ${isActive ? "text-[var(--navbar-dark-primary)]" : "text-[var(--navbar-light-secondary)]"}`}
+              className={`nav-button flex items-center px-4 py-4 cursor-pointer transition-colors duration-200 ${
+                isActive 
+                  ? "text-[var(--navbar-dark-primary)] bg-[var(--background)]" 
+                  : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)]"
+              }`}
               onClick={() => navigate(item.path)}
             >
-              {Icon && <Icon className="min-w-12 text-center" />}
-              {isOpen && <span className="ml-4">{item.title}</span>}
+              {Icon && <Icon className="h-5 w-5 min-w-12 text-center" />}
+              {isOpen && <span className="ml-4 truncate">{item.title}</span>}
             </div>
           );
         })}
-        <div
-          id="nav-content-highlight"
-          className="absolute left-4 w-[calc(100%-1rem)] h-[54px] bg-[var(--background)] rounded-l-2xl transition-all duration-200"
-          style={{
-            top: `${navItems.findIndex(item => item.path === location.pathname) * 54 + 16}px`,
-          }}
-        />
       </div>
 
       <footer
