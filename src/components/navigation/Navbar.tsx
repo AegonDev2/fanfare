@@ -30,6 +30,7 @@ const iconMap: { [key: string]: any } = {
 const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -39,22 +40,35 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     if (isMobile) {
       setIsOpen(false);
     }
-    fetchUserRole();
+    fetchUserInfo();
     fetchNavItems();
   }, [isMobile, setIsOpen]);
 
-  const fetchUserRole = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", user.id)
-        .single();
-      
-      if (profile) {
-        setUserRole(profile.user_type);
+  const fetchUserInfo = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Get user email
+        setUserEmail(user.email);
+
+        // Get user role from user_roles table
+        const { data: roleData, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+
+        if (roleError) {
+          console.error("Error fetching user role:", roleError);
+          return;
+        }
+
+        if (roleData) {
+          setUserRole(roleData.role);
+        }
       }
+    } catch (error) {
+      console.error("Error fetching user info:", error);
     }
   };
 
@@ -134,12 +148,12 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
 
       <footer
         id="nav-footer"
-        className="relative w-full h-[54px] bg-[var(--navbar-dark-secondary)] rounded-2xl z-10"
+        className="relative w-full bg-[var(--navbar-dark-secondary)] rounded-2xl z-10 p-4"
       >
-        <div className="relative w-full h-[54px] flex items-center">
+        <div className="flex items-center">
           <div
             id="nav-footer-avatar"
-            className="relative ml-4 w-8 h-8 rounded-full overflow-hidden"
+            className="relative w-8 h-8 rounded-full overflow-hidden"
           >
             <img
               src="https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg"
@@ -148,9 +162,9 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
             />
           </div>
           <div className="ml-4 flex flex-col">
-            <span className="text-sm">User Profile</span>
-            <span className="text-xs text-[var(--navbar-light-secondary)]">
-              {userRole || "Guest"}
+            <span className="text-sm truncate">{userEmail || "Guest"}</span>
+            <span className="text-xs text-[var(--navbar-light-secondary)] capitalize">
+              {userRole || "Not logged in"}
             </span>
           </div>
         </div>
