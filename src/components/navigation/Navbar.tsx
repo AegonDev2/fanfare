@@ -79,7 +79,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   return (
     <nav
       id="nav-bar"
-      className={`flex flex-col bg-[var(--navbar-dark-primary)] rounded-2xl text-[var(--navbar-light-primary)] font-sans overflow-hidden select-none transition-all duration-300 shadow-xl h-[calc(100vh-2rem)] animate-scale-in ${
+      className={`fixed top-4 left-4 flex flex-col bg-[var(--navbar-dark-primary)] rounded-2xl text-[var(--navbar-light-primary)] font-sans overflow-hidden select-none transition-all duration-300 shadow-xl h-[calc(100vh-2rem)] animate-scale-in ${
         isMobile ? 'z-50' : ''
       }`}
       style={{
