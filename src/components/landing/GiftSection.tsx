@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
 import { memo } from "react";
 
 interface Gift {
@@ -16,7 +15,6 @@ interface GiftSectionProps {
   gifts: Gift[];
 }
 
-// Memoize the individual gift card to prevent unnecessary re-renders
 const GiftCard = memo(({ gift }: { gift: Gift }) => (
   <div className="bg-white p-3 rounded-lg shadow-md h-full">
     <img
@@ -39,7 +37,7 @@ GiftCard.displayName = "GiftCard";
 
 const GiftSection = ({ gifts }: GiftSectionProps) => {
   return (
-    <section className="mb-8">
+    <section className="mb-8 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <h2 className="text-xl font-semibold text-gray-800">Gift Selection</h2>
         <div className="relative w-full md:w-auto">
@@ -51,30 +49,27 @@ const GiftSection = ({ gifts }: GiftSectionProps) => {
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
         </div>
       </div>
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true,
-          skipSnaps: false,
-          dragFree: true
-        }}
-        plugins={[
-          Autoplay({
-            delay: 4000,
-          }),
-        ]}
-        className="w-full"
-      >
-        <CarouselContent className="-ml-2 md:-ml-4">
-          {gifts.map((gift, index) => (
-            <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
-              <GiftCard gift={gift} />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden md:flex" />
-        <CarouselNext className="hidden md:flex" />
-      </Carousel>
+      <div className="relative px-12">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+            skipSnaps: false,
+            dragFree: true
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {gifts.map((gift, index) => (
+              <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
+                <GiftCard gift={gift} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-0 -translate-x-full" />
+          <CarouselNext className="right-0 translate-x-full" />
+        </Carousel>
+      </div>
     </section>
   );
 };
