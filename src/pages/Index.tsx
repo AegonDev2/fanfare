@@ -1,11 +1,44 @@
 
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profile?.user_type === "influencer") {
+        const { data: influencerProfile } = await supabase
+          .from("influencer_profiles")
+          .select("id")
+          .eq("id", session.user.id)
+          .single();
+
+        if (!influencerProfile) {
+          navigate("/create-profile");
+          return;
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 bg-background">
       <div className="max-w-md mx-auto pt-8">

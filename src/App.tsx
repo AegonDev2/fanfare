@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import CreateInfluencerProfile from "./pages/CreateInfluencerProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/create-profile" element={<CreateInfluencerProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
