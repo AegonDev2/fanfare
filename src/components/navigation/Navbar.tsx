@@ -15,6 +15,11 @@ interface NavItem {
   roles: string[];
 }
 
+interface NavbarProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
 const iconMap: { [key: string]: any } = {
   Home,
   User,
@@ -22,8 +27,7 @@ const iconMap: { [key: string]: any } = {
   Settings,
 };
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(true);
+const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -37,7 +41,7 @@ const Navbar = () => {
     }
     fetchUserRole();
     fetchNavItems();
-  }, [isMobile]);
+  }, [isMobile, setIsOpen]);
 
   const fetchUserRole = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -72,14 +76,10 @@ const Navbar = () => {
     setNavItems(data);
   };
 
-  const toggleNav = () => {
-    setIsOpen(!isOpen);
-  };
-
   return (
     <nav
       id="nav-bar"
-      className={`flex flex-col fixed left-4 top-4 h-[calc(100%-2rem)] bg-[var(--navbar-dark-primary)] rounded-2xl text-[var(--navbar-light-primary)] font-sans overflow-hidden select-none transition-all duration-300 ${
+      className={`flex flex-col bg-[var(--navbar-dark-primary)] rounded-2xl text-[var(--navbar-light-primary)] font-sans overflow-hidden select-none transition-all duration-300 shadow-xl h-[calc(100vh-2rem)] ${
         isMobile ? 'z-50' : ''
       }`}
       style={{
@@ -95,7 +95,7 @@ const Navbar = () => {
           variant="ghost"
           size="icon"
           className="absolute right-2 text-[var(--navbar-light-primary)]"
-          onClick={toggleNav}
+          onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>

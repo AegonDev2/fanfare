@@ -1,5 +1,5 @@
 
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,20 +17,34 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const isMobile = useIsMobile();
+  const [isNavOpen, setIsNavOpen] = useState(false);
   
   return (
-    <div className="min-h-screen w-full bg-[var(--background)]">
-      <Navbar />
-      <main className={`transition-all duration-300 ${
-        isMobile ? 'ml-24 pt-4 px-4' : 'ml-[calc(var(--navbar-width)+2rem)] pt-4 pr-4'
+    <div className="min-h-screen w-full bg-[var(--background)] relative overflow-x-hidden">
+      <div className={`fixed top-4 left-4 z-50 transition-transform duration-300 ease-in-out ${
+        isNavOpen ? 'translate-x-0' : '-translate-x-[calc(100%-3rem)]'
       }`}>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/profile/:id" element={<Profile />} />
-          <Route path="/create-profile" element={<CreateInfluencerProfile />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
+      </div>
+
+      <main 
+        className={`transition-all duration-300 ease-in-out min-h-screen ${
+          isNavOpen 
+            ? isMobile 
+              ? 'ml-24 blur-sm' 
+              : 'ml-[calc(var(--navbar-width)+2rem)] blur-sm'
+            : 'ml-16'
+        }`}
+      >
+        <div className="pt-4 px-4">
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/create-profile" element={<CreateInfluencerProfile />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </main>
     </div>
   );
