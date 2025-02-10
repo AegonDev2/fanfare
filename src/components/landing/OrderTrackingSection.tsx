@@ -1,0 +1,23 @@
+
+import { Button } from "@/components/ui/button";
+
+const OrderTrackingSection = () => {
+  return (
+    <section className="mb-8">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Order Tracking</h2>
+      <div className="bg-white p-4 rounded-lg shadow-md">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">Order #12345</h3>
+            <p className="text-gray-600">
+              Status: <span className="text-yellow-500">Pending Approval</span>
+            </p>
+          </div>
+          <Button>View Details</Button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default OrderTrackingSection;
