@@ -18,18 +18,28 @@ const Index = () => {
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", session.user.id)
         .maybeSingle();
 
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        return;
+      }
+
       if (profile?.user_type === "influencer") {
-        const { data: influencerProfile } = await supabase
+        const { data: influencerProfile, error: influencerError } = await supabase
           .from("influencer_profiles")
           .select("id")
           .eq("id", session.user.id)
           .maybeSingle();
+
+        if (influencerError) {
+          console.error("Error fetching influencer profile:", influencerError);
+          return;
+        }
 
         if (!influencerProfile) {
           navigate("/create-profile");
