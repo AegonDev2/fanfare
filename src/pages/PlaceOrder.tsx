@@ -92,7 +92,6 @@ const PlaceOrder = () => {
         </Card>
       </div>
     </div>
-  </div>
   );
 };
 
