@@ -39,6 +39,24 @@ const Landing = () => {
       name: "Emily Johnson",
       category: "Travel, Photography",
       image: "https://storage.googleapis.com/a1aa/image/e6eeDEu88nkMhxxbqL65Yf_1XJjeRTGffPUCWBak9Vc.jpg"
+    },
+    {
+      id: "4",
+      name: "Alex Rivera",
+      category: "Fitness, Health",
+      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901"
+    },
+    {
+      id: "5",
+      name: "Sarah Chen",
+      category: "Fashion, Style",
+      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04"
+    },
+    {
+      id: "6",
+      name: "Mike Wilson",
+      category: "Food, Cooking",
+      image: "https://images.unsplash.com/photo-1498936178812-4b2e558d2937"
     }
   ];
 
@@ -57,6 +75,21 @@ const Landing = () => {
       name: "Travel Backpack",
       price: "$59.99",
       image: "https://storage.googleapis.com/a1aa/image/3w2Nb6lAZ73GNHF_EsRxGE_8ei1THVU1GsAxp-BQ494.jpg"
+    },
+    {
+      name: "Smart Watch",
+      price: "$199.99",
+      image: "https://images.unsplash.com/photo-1501286353178-1ec881214838"
+    },
+    {
+      name: "Wireless Earbuds",
+      price: "$129.99",
+      image: "https://images.unsplash.com/photo-1469041797191-50ace28483c3"
+    },
+    {
+      name: "Digital Camera",
+      price: "$399.99",
+      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901"
     }
   ];
 
