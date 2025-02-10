@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,8 +15,8 @@ interface ProfileHeaderProps {
 }
 
 const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift }: ProfileHeaderProps) => {
-  const [giftMessage, setGiftMessage] = React.useState("");
-  const [giftItem, setGiftItem] = React.useState("");
+  const [giftMessage, setGiftMessage] = useState("");
+  const [giftItem, setGiftItem] = useState("");
 
   const handleSendGift = async () => {
     await onSendGift(giftItem, giftMessage);
