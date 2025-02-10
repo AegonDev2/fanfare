@@ -18,14 +18,14 @@ const Header = ({ setNavOpen }: HeaderProps) => {
           <Button variant="ghost" onClick={() => navigate("/auth")}>
             Sign In
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-[var(--navbar-dark-primary)] text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
+          <button
+            className="relative h-[25px] w-[30px] cursor-pointer transition-all duration-300"
             onClick={() => setNavOpen(true)}
           >
-            <Menu className="h-4 w-4" />
-          </Button>
+            <span className="absolute top-0 left-0 h-0.5 w-full bg-red-500 transition-all duration-300" />
+            <span className="absolute top-[10px] left-0 h-0.5 w-full bg-red-500 transition-all duration-300" />
+            <span className="absolute bottom-0 left-0 h-0.5 w-full bg-red-500 transition-all duration-300" />
+          </button>
         </div>
       </div>
     </header>

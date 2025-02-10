@@ -22,7 +22,6 @@ const AppContent = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
 
-  // Add overlay click handler
   const handleOverlayClick = () => {
     setIsNavOpen(false);
   };
@@ -32,7 +31,7 @@ const AppContent = () => {
       {/* Overlay */}
       {!isAuthPage && isNavOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/50 z-40 transition-all duration-300 ease-in-out"
           onClick={handleOverlayClick}
         />
       )}
@@ -40,18 +39,16 @@ const AppContent = () => {
       {/* Navigation */}
       {!isAuthPage && (
         <div 
-          className={`fixed top-0 left-0 z-50 transition-transform duration-300 ${
-            isNavOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+          className={`fixed top-0 left-0 z-50 transition-all duration-300 ease-in-out transform 
+            ${isNavOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}
         >
           <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
         </div>
       )}
 
       <main 
-        className={`transition-all duration-300 ease-in-out min-h-screen ${
-          isNavOpen && !isAuthPage ? 'blur-sm' : ''
-        }`}
+        className={`transition-all duration-300 ease-in-out min-h-screen transform
+          ${isNavOpen && !isAuthPage ? 'scale-95 blur-sm translate-x-64' : 'scale-100'}`}
       >
         <div className="min-h-screen">
           <Routes>

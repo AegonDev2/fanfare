@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,10 +47,8 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Get user email
         setUserEmail(user.email);
 
-        // Get user role from user_roles table
         const { data: roleData, error: roleError } = await supabase
           .from("user_roles")
           .select("role")
@@ -71,7 +68,6 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         if (roleData) {
           setUserRole(roleData.role);
         } else {
-          // No role found, check profiles table as fallback
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("user_type")
@@ -113,19 +109,12 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
 
   return (
     <nav
-      id="nav-bar"
-      className={`fixed top-4 left-4 flex flex-col bg-[var(--navbar-dark-primary)] rounded-2xl text-[var(--navbar-light-primary)] font-sans overflow-hidden select-none transition-all duration-300 shadow-xl h-[calc(100vh-2rem)] animate-scale-in ${
-        isMobile ? 'z-50' : ''
-      }`}
-      style={{
-        width: "var(--navbar-width)",
-      }}
+      className={`w-64 h-[calc(100vh-2rem)] bg-[var(--navbar-dark-primary)] rounded-2xl text-[var(--navbar-light-primary)] 
+        font-sans overflow-hidden transition-all duration-300 ease-in-out shadow-xl
+        ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}
     >
-      <header
-        id="nav-header"
-        className="relative flex items-center min-h-[80px] pl-4"
-      >
-        <h1 id="nav-title" className="text-2xl">Fan Fare</h1>
+      <header className="relative flex items-center min-h-[80px] px-4">
+        <h1 className="text-2xl">Fan Fare</h1>
         <Button
           variant="ghost"
           size="icon"
@@ -137,13 +126,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         <hr className="absolute bottom-0 left-4 w-[calc(100%-2rem)] border-t border-[var(--navbar-dark-secondary)]" />
       </header>
 
-      <div
-        id="nav-content"
-        className="relative flex-1 overflow-x-hidden overflow-y-auto"
-        style={{
-          width: "var(--navbar-width)",
-        }}
-      >
+      <div className="h-[calc(100%-160px)] overflow-y-auto">
         {navItems.map((item) => {
           if (!userRole || !item.roles.includes(userRole)) return null;
           
@@ -153,11 +136,10 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           return (
             <div
               key={item.id}
-              className={`nav-button flex items-center px-4 py-4 cursor-pointer transition-colors duration-200 ${
-                isActive 
+              className={`flex items-center px-4 py-4 cursor-pointer transition-all duration-300 ease-in-out
+                ${isActive 
                   ? "text-[var(--navbar-dark-primary)] bg-[var(--background)]" 
-                  : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)]"
-              }`}
+                  : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)]"}`}
               onClick={() => navigate(item.path)}
             >
               {Icon && <Icon className="h-5 w-5 min-w-12 text-center" />}
@@ -167,15 +149,9 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         })}
       </div>
 
-      <footer
-        id="nav-footer"
-        className="relative w-full bg-[var(--navbar-dark-secondary)] rounded-2xl z-10 p-4"
-      >
+      <footer className="absolute bottom-0 left-0 w-full bg-[var(--navbar-dark-secondary)] p-4">
         <div className="flex items-center">
-          <div
-            id="nav-footer-avatar"
-            className="relative w-8 h-8 rounded-full overflow-hidden"
-          >
+          <div className="relative w-8 h-8 rounded-full overflow-hidden">
             <img
               src="https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg"
               alt="Avatar"
@@ -195,4 +171,3 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
 };
 
 export default Navbar;
-
