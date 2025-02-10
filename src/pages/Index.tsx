@@ -22,14 +22,14 @@ const Index = () => {
         .from("profiles")
         .select("user_type")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (profile?.user_type === "influencer") {
         const { data: influencerProfile } = await supabase
           .from("influencer_profiles")
           .select("id")
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
 
         if (!influencerProfile) {
           navigate("/create-profile");
