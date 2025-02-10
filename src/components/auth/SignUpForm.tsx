@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -24,16 +25,43 @@ const SignUpForm = () => {
     setIsLoading(true);
 
     try {
-      // Authentication will be implemented here after Supabase integration
-      toast({
-        title: "Coming soon",
-        description: "Authentication will be implemented with Supabase integration",
+      // First create the user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            user_type: userType,
+          },
+        },
       });
-    } catch (error) {
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Create a profile record in the profiles table
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: authData.user.id,
+              email: email,
+              user_type: userType,
+            },
+          ]);
+
+        if (profileError) throw profileError;
+
+        toast({
+          title: "Success",
+          description: "Please check your email to verify your account!",
+        });
+      }
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An error occurred during sign up",
+        description: error.message || "An error occurred during sign up",
       });
     } finally {
       setIsLoading(false);
