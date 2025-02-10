@@ -1,7 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://gptengineerpublic.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdGVuZ2luZWVycHVibGljIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTkyNzk5NDQsImV4cCI6MjAxNDg1NTk0NH0.HfDY4LVK1CN83qvH4oByJJHKKvqFR4YdBbGRJXJEGHo';
+const supabaseUrl = 'https://giftloop-connect.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpZnRsb29wLWNvbm5lY3QiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcwNzU1Mjc4MCwiZXhwIjoyMDIzMTI4NzgwfQ.Wf_GhmGD8lnz_kX6NU_0HRlqJ6Ycg_lNshcqQ3CMdlQ';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
