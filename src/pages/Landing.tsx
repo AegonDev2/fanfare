@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,18 +140,18 @@ const Landing = () => {
               <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {influencers.map((influencer, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg shadow-md">
+              <div key={index} className="bg-white p-3 rounded-lg shadow-md">
                 <img
                   src={influencer.image}
                   alt={`${influencer.name}'s profile`}
-                  className="w-full h-48 object-cover rounded-lg"
+                  className="w-full h-32 object-cover rounded-lg"
                 />
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold text-gray-800">{influencer.name}</h3>
-                  <p className="text-sm text-gray-600">{influencer.category}</p>
-                  <Button className="mt-2 w-full">View Profile</Button>
+                <div className="mt-2">
+                  <h3 className="text-sm font-semibold text-gray-800">{influencer.name}</h3>
+                  <p className="text-xs text-gray-600">{influencer.category}</p>
+                  <Button size="sm" className="mt-2 w-full text-xs">View Profile</Button>
                 </div>
               </div>
             ))}
@@ -171,18 +170,18 @@ const Landing = () => {
               <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {gifts.map((gift, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg shadow-md">
+              <div key={index} className="bg-white p-3 rounded-lg shadow-md">
                 <img
                   src={gift.image}
                   alt={gift.name}
-                  className="w-full h-48 object-cover rounded-lg"
+                  className="w-full h-32 object-cover rounded-lg"
                 />
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold text-gray-800">{gift.name}</h3>
-                  <p className="text-sm text-gray-600">{gift.price}</p>
-                  <Button className="mt-2 w-full" variant="secondary">Gift This</Button>
+                <div className="mt-2">
+                  <h3 className="text-sm font-semibold text-gray-800">{gift.name}</h3>
+                  <p className="text-xs text-gray-600">{gift.price}</p>
+                  <Button size="sm" variant="secondary" className="mt-2 w-full text-xs">Gift This</Button>
                 </div>
               </div>
             ))}
