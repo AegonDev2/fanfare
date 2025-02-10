@@ -34,6 +34,13 @@ const Index = () => {
           return;
         }
 
+        // If no profile exists, don't show the create profile option
+        if (!profile) {
+          console.log("No profile found for user");
+          setIsLoading(false);
+          return;
+        }
+
         const isUserInfluencer = profile?.user_type === "influencer";
         setIsInfluencer(isUserInfluencer);
 
