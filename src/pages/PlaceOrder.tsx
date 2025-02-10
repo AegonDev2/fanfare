@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -82,7 +81,8 @@ const PlaceOrder = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 font-roboto">
-      <div className="container mx-auto px-4 py-8">
+      <Header setNavOpen={() => {}} />
+      <div className="container mx-auto px-4 py-8 pt-20">
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Place Order

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import Header from "@/components/landing/Header";
 
 const CreateInfluencerProfile = () => {
   const navigate = useNavigate();
@@ -156,8 +158,9 @@ const CreateInfluencerProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gray-100">
+      <Header setNavOpen={() => {}} />
+      <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold mb-6">Create Your Influencer Profile</h1>
           
