@@ -56,7 +56,7 @@ const AppContent = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/create-profile" element={<CreateInfluencerProfile />} />
-            <Route path="/place-order" element={<PlaceOrder />} />
+            <Route path="/place-order" element={<PlaceOrder setNavOpen={setIsNavOpen} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
