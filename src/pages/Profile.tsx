@@ -194,7 +194,7 @@ const Profile = () => {
                 )}
                 {influencer.twitter_url && (
                   <a
-                    href={influancer.twitter_url}
+                    href={influencer.twitter_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-600 hover:text-blue-400 transition-colors"
