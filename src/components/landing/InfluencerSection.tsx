@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import { memo } from "react";
 
 interface Influencer {
   id: string;
@@ -16,8 +18,37 @@ interface InfluencerSectionProps {
   influencers: Influencer[];
 }
 
+// Memoize the individual influencer card to prevent unnecessary re-renders
+const InfluencerCard = memo(({ influencer, onProfileClick }: { influencer: Influencer; onProfileClick: (id: string) => void }) => (
+  <div className="bg-white p-3 rounded-lg shadow-md h-full">
+    <img
+      src={influencer.image}
+      alt={`${influencer.name}'s profile`}
+      className="w-full h-32 object-cover rounded-lg"
+      loading="lazy"
+    />
+    <div className="mt-2">
+      <h3 className="text-sm font-semibold text-gray-800">{influencer.name}</h3>
+      <p className="text-xs text-gray-600">{influencer.category}</p>
+      <Button 
+        size="sm" 
+        className="mt-2 w-full text-xs"
+        onClick={() => onProfileClick(influencer.id)}
+      >
+        View Profile
+      </Button>
+    </div>
+  </div>
+));
+
+InfluencerCard.displayName = "InfluencerCard";
+
 const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
   const navigate = useNavigate();
+
+  const handleProfileClick = (id: string) => {
+    navigate(`/profile/${id}`);
+  };
 
   return (
     <section className="mb-8">
@@ -36,30 +67,23 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
         opts={{
           align: "start",
           loop: true,
+          skipSnaps: false,
+          dragFree: true
         }}
+        plugins={[
+          Autoplay({
+            delay: 4000,
+          }),
+        ]}
         className="w-full"
       >
         <CarouselContent className="-ml-2 md:-ml-4">
           {influencers.map((influencer, index) => (
             <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
-              <div className="bg-white p-3 rounded-lg shadow-md h-full">
-                <img
-                  src={influencer.image}
-                  alt={`${influencer.name}'s profile`}
-                  className="w-full h-32 object-cover rounded-lg"
-                />
-                <div className="mt-2">
-                  <h3 className="text-sm font-semibold text-gray-800">{influencer.name}</h3>
-                  <p className="text-xs text-gray-600">{influencer.category}</p>
-                  <Button 
-                    size="sm" 
-                    className="mt-2 w-full text-xs"
-                    onClick={() => navigate(`/profile/${influencer.id}`)}
-                  >
-                    View Profile
-                  </Button>
-                </div>
-              </div>
+              <InfluencerCard 
+                influencer={influencer}
+                onProfileClick={handleProfileClick}
+              />
             </CarouselItem>
           ))}
         </CarouselContent>
@@ -70,4 +94,4 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
   );
 };
 
-export default InfluencerSection;
+export default memo(InfluencerSection);

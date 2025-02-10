@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import { memo } from "react";
 
 interface Gift {
   name: string;
@@ -13,6 +15,27 @@ interface Gift {
 interface GiftSectionProps {
   gifts: Gift[];
 }
+
+// Memoize the individual gift card to prevent unnecessary re-renders
+const GiftCard = memo(({ gift }: { gift: Gift }) => (
+  <div className="bg-white p-3 rounded-lg shadow-md h-full">
+    <img
+      src={gift.image}
+      alt={gift.name}
+      className="w-full h-32 object-cover rounded-lg"
+      loading="lazy"
+    />
+    <div className="mt-2">
+      <h3 className="text-sm font-semibold text-gray-800">{gift.name}</h3>
+      <p className="text-xs text-gray-600">{gift.price}</p>
+      <Button size="sm" variant="secondary" className="mt-2 w-full text-xs">
+        Gift This
+      </Button>
+    </div>
+  </div>
+));
+
+GiftCard.displayName = "GiftCard";
 
 const GiftSection = ({ gifts }: GiftSectionProps) => {
   return (
@@ -32,26 +55,20 @@ const GiftSection = ({ gifts }: GiftSectionProps) => {
         opts={{
           align: "start",
           loop: true,
+          skipSnaps: false,
+          dragFree: true
         }}
+        plugins={[
+          Autoplay({
+            delay: 4000,
+          }),
+        ]}
         className="w-full"
       >
         <CarouselContent className="-ml-2 md:-ml-4">
           {gifts.map((gift, index) => (
             <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
-              <div className="bg-white p-3 rounded-lg shadow-md h-full">
-                <img
-                  src={gift.image}
-                  alt={gift.name}
-                  className="w-full h-32 object-cover rounded-lg"
-                />
-                <div className="mt-2">
-                  <h3 className="text-sm font-semibold text-gray-800">{gift.name}</h3>
-                  <p className="text-xs text-gray-600">{gift.price}</p>
-                  <Button size="sm" variant="secondary" className="mt-2 w-full text-xs">
-                    Gift This
-                  </Button>
-                </div>
-              </div>
+              <GiftCard gift={gift} />
             </CarouselItem>
           ))}
         </CarouselContent>
@@ -62,4 +79,4 @@ const GiftSection = ({ gifts }: GiftSectionProps) => {
   );
 };
 
-export default GiftSection;
+export default memo(GiftSection);
