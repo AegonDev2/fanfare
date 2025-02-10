@@ -56,19 +56,40 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           .from("user_roles")
           .select("role")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (roleError) {
           console.error("Error fetching user role:", roleError);
+          toast({
+            title: "Error",
+            description: "Failed to load user role",
+            variant: "destructive",
+          });
           return;
         }
 
         if (roleData) {
           setUserRole(roleData.role);
+        } else {
+          // No role found, check profiles table as fallback
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("user_type")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (!profileError && profile) {
+            setUserRole(profile.user_type);
+          }
         }
       }
     } catch (error) {
       console.error("Error fetching user info:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load user information",
+        variant: "destructive",
+      });
     }
   };
 
@@ -174,3 +195,4 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
 };
 
 export default Navbar;
+
