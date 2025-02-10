@@ -33,8 +33,7 @@ const LoginForm = () => {
           title: "Success",
           description: "You have successfully logged in!",
         });
-        // We'll implement the dashboard redirect later
-        // navigate("/dashboard");
+        navigate("/");
       }
     } catch (error: any) {
       toast({

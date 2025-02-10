@@ -1,10 +1,10 @@
 
-import { StrictMode, useState } from "react";
+import { StrictMode, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -13,8 +13,39 @@ import CreateInfluencerProfile from "./pages/CreateInfluencerProfile";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/navigation/Navbar";
 import { useIsMobile } from "./hooks/use-mobile";
+import { supabase } from "./integrations/supabase/client";
 
 const queryClient = new QueryClient();
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) return null;
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 const AppContent = () => {
   const isMobile = useIsMobile();
@@ -45,11 +76,27 @@ const AppContent = () => {
       >
         <div className="min-h-screen">
           <Routes>
-            <Route path="/" element={<Landing setNavOpen={setIsNavOpen} />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/profile/:id" element={<Profile />} />
-            <Route path="/create-profile" element={<CreateInfluencerProfile />} />
-            <Route path="/place-order" element={<PlaceOrder />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Landing setNavOpen={setIsNavOpen} />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile/:id" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/create-profile" element={
+              <ProtectedRoute>
+                <CreateInfluencerProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/place-order" element={
+              <ProtectedRoute>
+                <PlaceOrder />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
