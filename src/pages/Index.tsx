@@ -1,21 +1,32 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LoginForm from "@/components/auth/LoginForm";
+import SignUpForm from "@/components/auth/SignUpForm";
 
 const Index = () => {
   return (
     <div className="min-h-screen p-4 bg-background">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-md mx-auto pt-8">
         <Card className="p-6">
-          <h1 className="text-3xl font-bold mb-4">Welcome to GiftLoop Connect</h1>
-          <p className="text-muted-foreground mb-6">
-            Your mobile-ready application powered by Capacitor. Start exploring the features below.
+          <h1 className="text-3xl font-bold mb-4 text-center">GiftLoop Connect</h1>
+          <p className="text-muted-foreground mb-6 text-center">
+            Connect with your favorite influencers and share meaningful gifts.
           </p>
-          <div className="space-y-4">
-            <Button className="w-full" size="lg">
-              Get Started
-            </Button>
-          </div>
+          
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login">
+              <LoginForm />
+            </TabsContent>
+            <TabsContent value="signup">
+              <SignUpForm />
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </div>
