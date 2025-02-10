@@ -39,7 +39,7 @@ const AppContent = () => {
       {/* Navigation */}
       {!isAuthPage && (
         <div 
-          className={`fixed top-0 left-0 z-50 transition-all duration-300 ease-in-out transform 
+          className={`fixed top-8 left-8 z-50 transition-all duration-300 ease-in-out transform 
             ${isNavOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}
         >
           <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
@@ -48,7 +48,7 @@ const AppContent = () => {
 
       <main 
         className={`transition-all duration-300 ease-in-out min-h-screen transform
-          ${isNavOpen && !isAuthPage ? 'scale-95 blur-sm translate-x-64' : 'scale-100'}`}
+          ${isNavOpen && !isAuthPage ? 'scale-95 blur-sm translate-x-72' : 'scale-100'}`}
       >
         <div className="min-h-screen">
           <Routes>

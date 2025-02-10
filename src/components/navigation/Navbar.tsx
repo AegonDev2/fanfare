@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,24 +110,24 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
 
   return (
     <nav
-      className={`w-64 h-[calc(100vh-2rem)] bg-[var(--navbar-dark-primary)] rounded-2xl text-[var(--navbar-light-primary)] 
+      className={`w-64 rounded-2xl text-[var(--navbar-light-primary)] 
         font-sans overflow-hidden transition-all duration-300 ease-in-out shadow-xl
-        ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}
+        bg-[var(--navbar-dark-primary)] h-[calc(100vh-5rem)] my-4`}
     >
-      <header className="relative flex items-center min-h-[80px] px-4">
-        <h1 className="text-2xl">Fan Fare</h1>
+      <header className="relative flex items-center min-h-[80px] px-6">
+        <h1 className="text-2xl font-semibold">Fan Fare</h1>
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-2 text-[var(--navbar-light-primary)]"
+          className="absolute right-4 text-[var(--navbar-light-primary)]"
           onClick={() => setIsOpen(false)}
         >
           <X className="h-4 w-4" />
         </Button>
-        <hr className="absolute bottom-0 left-4 w-[calc(100%-2rem)] border-t border-[var(--navbar-dark-secondary)]" />
+        <hr className="absolute bottom-0 left-6 w-[calc(100%-3rem)] border-t border-[var(--navbar-dark-secondary)]" />
       </header>
 
-      <div className="h-[calc(100%-160px)] overflow-y-auto">
+      <div className="h-[calc(100%-160px)] overflow-y-auto px-2">
         {navItems.map((item) => {
           if (!userRole || !item.roles.includes(userRole)) return null;
           
@@ -136,7 +137,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           return (
             <div
               key={item.id}
-              className={`flex items-center px-4 py-4 cursor-pointer transition-all duration-300 ease-in-out
+              className={`flex items-center px-4 py-4 cursor-pointer rounded-lg transition-all duration-300 ease-in-out my-2
                 ${isActive 
                   ? "text-[var(--navbar-dark-primary)] bg-[var(--background)]" 
                   : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)]"}`}
@@ -149,7 +150,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         })}
       </div>
 
-      <footer className="absolute bottom-0 left-0 w-full bg-[var(--navbar-dark-secondary)] p-4">
+      <footer className="absolute bottom-0 left-0 w-full bg-[var(--navbar-dark-secondary)] p-6">
         <div className="flex items-center">
           <div className="relative w-8 h-8 rounded-full overflow-hidden">
             <img
