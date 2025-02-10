@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { memo } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface Gift {
   name: string;
@@ -15,23 +16,36 @@ interface GiftSectionProps {
   gifts: Gift[];
 }
 
-const GiftCard = memo(({ gift }: { gift: Gift }) => (
-  <div className="bg-white p-3 rounded-lg shadow-md h-full">
-    <img
-      src={gift.image}
-      alt={gift.name}
-      className="w-full h-32 object-cover rounded-lg"
-      loading="lazy"
-    />
-    <div className="mt-2">
-      <h3 className="text-sm font-semibold text-gray-800">{gift.name}</h3>
-      <p className="text-xs text-gray-600">{gift.price}</p>
-      <Button size="sm" variant="secondary" className="mt-2 w-full text-xs">
-        Gift This
-      </Button>
+const GiftCard = memo(({ gift }: { gift: Gift }) => {
+  const navigate = useNavigate();
+
+  const handleGiftClick = () => {
+    navigate(`/place-order?gift=${encodeURIComponent(gift.name)}`);
+  };
+
+  return (
+    <div className="bg-white p-3 rounded-lg shadow-md h-full">
+      <img
+        src={gift.image}
+        alt={gift.name}
+        className="w-full h-32 object-cover rounded-lg"
+        loading="lazy"
+      />
+      <div className="mt-2">
+        <h3 className="text-sm font-semibold text-gray-800">{gift.name}</h3>
+        <p className="text-xs text-gray-600">{gift.price}</p>
+        <Button 
+          size="sm" 
+          variant="secondary" 
+          className="mt-2 w-full text-xs"
+          onClick={handleGiftClick}
+        >
+          Gift This
+        </Button>
+      </div>
     </div>
-  </div>
-));
+  );
+});
 
 GiftCard.displayName = "GiftCard";
 
@@ -49,7 +63,7 @@ const GiftSection = ({ gifts }: GiftSectionProps) => {
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
         </div>
       </div>
-      <div className="relative px-12">
+      <div className="relative px-4 md:px-12">
         <Carousel
           opts={{
             align: "start",
@@ -66,8 +80,8 @@ const GiftSection = ({ gifts }: GiftSectionProps) => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="left-0 -translate-x-full" />
-          <CarouselNext className="right-0 translate-x-full" />
+          <CarouselPrevious className="hidden md:flex -left-8" />
+          <CarouselNext className="hidden md:flex -right-8" />
         </Carousel>
       </div>
     </section>

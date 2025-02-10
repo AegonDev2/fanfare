@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import PlaceOrder from "./pages/PlaceOrder";
 import CreateInfluencerProfile from "./pages/CreateInfluencerProfile";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/navigation/Navbar";
@@ -48,6 +49,7 @@ const AppContent = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/create-profile" element={<CreateInfluencerProfile />} />
+            <Route path="/place-order" element={<PlaceOrder />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
