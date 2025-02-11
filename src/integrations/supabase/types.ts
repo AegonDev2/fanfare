@@ -39,6 +39,53 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          influencer_id: string
+          message: string | null
+          product_price: number | null
+          product_title: string | null
+          product_url: string
+          sender_id: string
+          status: Database["public"]["Enums"]["gift_request_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          influencer_id: string
+          message?: string | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url: string
+          sender_id: string
+          status?: Database["public"]["Enums"]["gift_request_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          influencer_id?: string
+          message?: string | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url?: string
+          sender_id?: string
+          status?: Database["public"]["Enums"]["gift_request_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_requests_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gifts_to_influencers: {
         Row: {
           created_at: string
@@ -373,6 +420,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "fan" | "influencer"
       ecommerce_platform: "amazon" | "flipkart"
+      gift_request_status:
+        | "pending"
+        | "accepted"
+        | "rejected"
+        | "ordered"
+        | "delivered"
       nav_role: "admin" | "user" | "influencer"
     }
     CompositeTypes: {

@@ -27,71 +27,39 @@ export const useOrderSubmission = () => {
       if (!user) {
         toast({
           title: "Authentication required",
-          description: "Please log in to place an order",
+          description: "Please log in to place a gift request",
           variant: "destructive",
         });
         navigate("/auth");
         return;
       }
 
-      // First store product details
-      const { data: productData, error: productError } = await supabase
-        .from('products')
+      // Create a gift request
+      const { error: giftRequestError } = await supabase
+        .from('gift_requests')
         .insert({
-          url: giftItem,
-          name: productPreview.name,
-          description: productPreview.description,
-          price: productPreview.priceInr,
-          image_url: productPreview.image
-        })
-        .select()
-        .single();
+          sender_id: user.id,
+          influencer_id: influencerId,
+          product_url: giftItem,
+          product_title: productPreview.name,
+          product_price: productPreview.priceInr,
+          message: message,
+          status: 'pending'
+        });
 
-      if (productError) throw productError;
-
-      // Place order on ecommerce platform
-      const { data: ecommerceResult, error: ecommerceError } = await supabase.functions.invoke(
-        'place-ecommerce-order',
-        {
-          body: {
-            platform: productPreview.platform || 'amazon',
-            productUrl: giftItem,
-            addressId: influencerAddress.id,
-            quantity: 1
-          }
-        }
-      );
-
-      if (ecommerceError) throw ecommerceError;
-
-      // Store order in our database
-      const { error: orderError } = await supabase.from("orders").insert({
-        user_id: user.id,
-        influencer_id: influencerId,
-        product_id: productData.id,
-        product_url: giftItem,
-        product_title: productPreview.name,
-        product_price: productPreview.priceInr,
-        platform_fee: productPreview.platformFee * 83,
-        total_amount: productPreview.priceInr + (productPreview.platformFee * 83),
-        message: message,
-        status: "pending",
-        shipping_address_id: influencerAddress.id
-      });
-
-      if (orderError) throw orderError;
+      if (giftRequestError) throw giftRequestError;
 
       toast({
-        title: "Order placed successfully",
-        description: "Your order has been submitted",
+        title: "Gift request sent",
+        description: "Your gift request has been sent to the influencer",
       });
       
       navigate("/");
     } catch (error) {
-      console.error("Error placing order:", error);
+      console.error("Error submitting gift request:", error);
       toast({
         title: "Error",
-        description: "Failed to place order. Please try again.",
+        description: "Failed to submit gift request. Please try again.",
         variant: "destructive",
       });
     } finally {
