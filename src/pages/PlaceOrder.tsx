@@ -12,12 +12,21 @@ interface PlaceOrderProps {
   setNavOpen?: (isOpen: boolean) => void;
 }
 
+interface ProductDetails {
+  name: string;
+  description: string;
+  price: number;
+  platformFee: number;
+  image: string;
+}
+
 const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [productPreview, setProductPreview] = useState({
+  const [isFetchingProduct, setIsFetchingProduct] = useState(false);
+  const [productPreview, setProductPreview] = useState<ProductDetails>({
     name: "Stylish Handbag",
     description: "A stylish handbag perfect for any occasion. Made from high-quality materials and designed to be both functional and fashionable.",
     price: 49.99,
@@ -25,7 +34,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
   });
   
-  const giftItem = searchParams.get("gift") || "";
+  const [giftItem, setGiftItem] = useState(searchParams.get("gift") || "");
   const influencerId = searchParams.get("influencer") || "";
   const [message, setMessage] = useState("");
 
@@ -76,11 +85,54 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     }
   };
 
-  const handlePreviewProduct = () => {
-    // In a real application, this would fetch product details
-    toast({
-      title: "Product Preview",
-      description: "Product details would be fetched here",
+  const handlePreviewProduct = async () => {
+    if (!giftItem) {
+      toast({
+        title: "Error",
+        description: "Please enter a product URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFetchingProduct(true);
+    try {
+      // Here we would typically make an API call to fetch product details
+      // For now, we'll simulate a fetch with a timeout
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock product data based on URL
+      const mockProduct = {
+        name: "Product from " + new URL(giftItem).hostname,
+        description: "Product details fetched from the provided URL. This is a placeholder description.",
+        price: Math.floor(Math.random() * 100) + 20,
+        platformFee: 5.00,
+        image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
+      };
+
+      setProductPreview(mockProduct);
+      toast({
+        title: "Product fetched",
+        description: "Product details have been updated",
+      });
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch product details. Please check the URL and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingProduct(false);
+    }
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = e.target.value;
+    setGiftItem(newUrl);
+    setSearchParams(prev => {
+      prev.set("gift", newUrl);
+      return prev;
     });
   };
 
@@ -96,15 +148,17 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
             <div className="mb-4">
               <Input 
                 value={giftItem}
+                onChange={handleUrlChange}
                 className="w-full p-2 border border-gray-300 rounded-lg"
                 placeholder="Paste product link here..."
               />
             </div>
             <Button
               onClick={handlePreviewProduct}
+              disabled={isFetchingProduct}
               className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
             >
-              Preview Product
+              {isFetchingProduct ? "Fetching..." : "Preview Product"}
             </Button>
           </div>
         </section>
