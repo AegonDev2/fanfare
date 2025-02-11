@@ -81,7 +81,14 @@ export type Database = {
             foreignKeyName: "gift_requests_influencer_id_fkey"
             columns: ["influencer_id"]
             isOneToOne: false
-            referencedRelation: "influencer_profiles"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_requests_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

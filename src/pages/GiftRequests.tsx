@@ -60,14 +60,14 @@ const GiftRequests = () => {
         .from("gift_requests")
         .select(`
           *,
-          sender:profiles!gift_requests_sender_id_fkey(email)
+          sender:profiles(email)
         `)
         .eq("influencer_id", user.id)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as unknown as GiftRequest[];
+      return data as GiftRequest[];
     }
   });
 
