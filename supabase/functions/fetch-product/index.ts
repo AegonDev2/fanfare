@@ -32,7 +32,7 @@ async function fetchWithRetry(url: string, maxRetries = 5) {
         'Upgrade-Insecure-Requests': '1'
       };
 
-      // Always add Flipkart-specific headers since we're only handling Flipkart URLs
+      // Always add Flipkart-specific headers
       Object.assign(headers, {
         'Referer': 'https://www.flipkart.com/',
         'Origin': 'https://www.flipkart.com',
@@ -42,13 +42,18 @@ async function fetchWithRetry(url: string, maxRetries = 5) {
       // For Flipkart redirect URLs, first get the final URL
       if (url.includes('dl.flipkart.com')) {
         console.log('Following Flipkart redirect URL...');
-        const redirectResponse = await fetch(url, {
-          headers,
-          redirect: 'follow',
-          method: 'HEAD' // Use HEAD request for redirect following
-        });
-        url = redirectResponse.url;
-        console.log('Resolved to final URL:', url);
+        try {
+          const redirectResponse = await fetch(url, {
+            headers,
+            redirect: 'follow',
+            method: 'HEAD' // Use HEAD request for redirect following
+          });
+          url = redirectResponse.url;
+          console.log('Resolved to final URL:', url);
+        } catch (redirectError) {
+          console.error('Error following redirect:', redirectError);
+          // Continue with the original URL if redirect fails
+        }
       }
 
       // Now fetch the actual product page
@@ -74,10 +79,11 @@ async function fetchWithRetry(url: string, maxRetries = 5) {
 
       return html;
     } catch (error) {
-      console.error(`Attempt ${attempt} error:`, error);
+      console.error(`Attempt ${attempt} failed with error:`, error);
       lastError = error;
 
       if (attempt < maxRetries) {
+        // Exponential backoff with jitter
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000) + Math.random() * 1000;
         console.log(`Waiting ${delay}ms before retry...`);
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -94,8 +100,9 @@ async function extractProductDetails(html: string) {
     throw new Error('Failed to parse HTML document');
   }
 
-  // Extract title
-  const title = doc.querySelector('h1')?.textContent?.trim() 
+  // Improved selectors for Flipkart products
+  const title = doc.querySelector('h1 span')?.textContent?.trim() 
+    || doc.querySelector('h1')?.textContent?.trim()
     || doc.querySelector('._31qSD5')?.textContent?.trim()
     || doc.querySelector('._35KyD6')?.textContent?.trim()
     || doc.querySelector('title')?.textContent?.split('-')[0]?.trim()
@@ -107,7 +114,6 @@ async function extractProductDetails(html: string) {
     throw new Error('Could not extract product title');
   }
 
-  // Extract description
   const description = doc.querySelector('._1mXcCf.RmoJUa')?.textContent?.trim()
     || doc.querySelector('._1mXcCf')?.textContent?.trim()
     || doc.querySelector('meta[name="description"]')?.getAttribute('content')
@@ -115,8 +121,8 @@ async function extractProductDetails(html: string) {
   
   console.log('Extracted description:', description);
 
-  // Extract image
   const imageSelectors = [
+    '._396cs4._2amPTt._3qGmMb',
     '._396cs4 img',
     '._396cs4',
     '._2r_T1I',
@@ -138,11 +144,9 @@ async function extractProductDetails(html: string) {
 
   console.log('Extracted image URL:', image);
 
-  // Extract prices
   let discountedPrice = 0;
   let originalPrice = 0;
 
-  // Try multiple price selectors
   const discountedPriceElement = doc.querySelector('._30jeq3._16Jk6d')
     || doc.querySelector('._30jeq3')
     || doc.querySelector('.CEmiEU');
@@ -180,6 +184,7 @@ async function extractProductDetails(html: string) {
 }
 
 serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -204,10 +209,7 @@ serve(async (req) => {
       );
     }
 
-    // First fetch the HTML content
     const html = await fetchWithRetry(url);
-    
-    // Then extract product details from the HTML
     const productDetails = await extractProductDetails(html);
     
     return new Response(
@@ -225,4 +227,3 @@ serve(async (req) => {
     );
   }
 })
-
