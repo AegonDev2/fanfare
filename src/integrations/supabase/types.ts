@@ -54,6 +54,50 @@ export type Database = {
           },
         ]
       }
+      influencer_addresses: {
+        Row: {
+          city: string
+          country: string
+          created_at: string
+          id: string
+          influencer_id: string
+          is_primary: boolean | null
+          postal_code: string
+          state: string
+          street_address: string
+        }
+        Insert: {
+          city: string
+          country?: string
+          created_at?: string
+          id?: string
+          influencer_id: string
+          is_primary?: boolean | null
+          postal_code: string
+          state: string
+          street_address: string
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          influencer_id?: string
+          is_primary?: boolean | null
+          postal_code?: string
+          state?: string
+          street_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_addresses_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       influencer_profiles: {
         Row: {
           about: string | null
@@ -146,6 +190,7 @@ export type Database = {
           product_price: number | null
           product_title: string | null
           product_url: string
+          shipping_address_id: string | null
           status: string | null
           total_amount: number | null
           user_id: string | null
@@ -160,6 +205,7 @@ export type Database = {
           product_price?: number | null
           product_title?: string | null
           product_url: string
+          shipping_address_id?: string | null
           status?: string | null
           total_amount?: number | null
           user_id?: string | null
@@ -174,6 +220,7 @@ export type Database = {
           product_price?: number | null
           product_title?: string | null
           product_url?: string
+          shipping_address_id?: string | null
           status?: string | null
           total_amount?: number | null
           user_id?: string | null
@@ -191,6 +238,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_shipping_address_id_fkey"
+            columns: ["shipping_address_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_addresses"
             referencedColumns: ["id"]
           },
         ]

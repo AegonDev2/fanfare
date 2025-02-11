@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,15 @@ interface ProductDetails {
   id?: string;
 }
 
+interface InfluencerAddress {
+  id: string;
+  street_address: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+}
+
 const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -32,6 +41,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingProduct, setIsFetchingProduct] = useState(false);
   const [fetchProgress, setFetchProgress] = useState(0);
+  const [influencerAddress, setInfluencerAddress] = useState<InfluencerAddress | null>(null);
   const [productPreview, setProductPreview] = useState<ProductDetails>({
     name: "Enter a product URL to preview",
     description: "Product details will appear here once you enter a valid URL.",
@@ -44,6 +54,46 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
   const [giftItem, setGiftItem] = useState(searchParams.get("gift") || "");
   const influencerId = searchParams.get("influencer") || "";
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (influencerId) {
+      fetchInfluencerAddress();
+    }
+  }, [influencerId]);
+
+  const fetchInfluencerAddress = async () => {
+    try {
+      const { data: addresses, error } = await supabase
+        .from('influencer_addresses')
+        .select('*')
+        .eq('influencer_id', influencerId)
+        .eq('is_primary', true)
+        .single();
+
+      if (error) {
+        console.error('Error fetching address:', error);
+        toast({
+          title: "Warning",
+          description: "Could not verify shipping address. Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!addresses) {
+        toast({
+          title: "Warning",
+          description: "This influencer hasn't set up their shipping address yet.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setInfluencerAddress(addresses);
+    } catch (error) {
+      console.error('Error in fetchInfluencerAddress:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +111,15 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
           variant: "destructive",
         });
         navigate("/auth");
+        return;
+      }
+
+      if (!influencerAddress) {
+        toast({
+          title: "Error",
+          description: "Shipping address not available. Please try again later.",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -90,7 +149,8 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         platform_fee: productPreview.platformFee * 83, // Convert platform fee to INR
         total_amount: productPreview.priceInr + (productPreview.platformFee * 83),
         message: message,
-        status: "pending"
+        status: "pending",
+        shipping_address_id: influencerAddress.id
       });
 
       if (orderError) throw orderError;
@@ -266,6 +326,21 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
                     Total: {formatPrice(productPreview.priceInr + (productPreview.platformFee * 83))}
                   </p>
                 </div>
+
+                {influencerAddress && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <h4 className="font-semibold text-sm text-gray-700">Shipping Address</h4>
+                    <p className="text-sm text-gray-600">Verified ✓</p>
+                  </div>
+                )}
+
+                {!influencerAddress && (
+                  <div className="mt-4 p-3 bg-red-50 rounded-lg">
+                    <p className="text-sm text-red-600">
+                      Shipping address not available. The influencer needs to set up their address.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -286,7 +361,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
               
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !influencerAddress}
                 className="mt-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
               >
                 {isLoading ? "Placing Order..." : "Place Order"}
