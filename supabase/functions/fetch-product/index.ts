@@ -7,137 +7,159 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+async function fetchWithRetry(url: string, maxRetries = 3) {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Attempt ${attempt} to fetch URL: ${url}`);
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Connection': 'keep-alive',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Upgrade-Insecure-Requests': '1'
+        },
+        redirect: 'follow'
+      });
+
+      if (response.ok) {
+        return response;
+      }
+
+      console.error(`Attempt ${attempt} failed with status: ${response.status}`);
+      lastError = new Error(`Failed to fetch URL: ${response.status}`);
+      
+      // Only retry on specific status codes
+      if (response.status !== 429 && response.status !== 503 && response.status !== 529) {
+        throw lastError;
+      }
+    } catch (error) {
+      console.error(`Attempt ${attempt} error:`, error);
+      lastError = error;
+    }
+
+    // Wait before retrying (exponential backoff)
+    if (attempt < maxRetries) {
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+}
+
 async function fetchProductDetails(url: string) {
   try {
-    console.log('Attempting to fetch URL:', url);
+    console.log('Starting to fetch product details for URL:', url);
     
-    // Add custom headers to mimic a browser request
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Cache-Control': 'max-age=0'
-      }
-    });
-
-    if (!response.ok) {
-      console.error('Failed to fetch URL:', url, 'Status:', response.status);
-      throw new Error(`Failed to fetch URL: ${response.status}`);
+    // Handle redirect URLs (like Flipkart's dl.flipkart.com links)
+    if (url.includes('dl.flipkart.com')) {
+      console.log('Detected Flipkart short URL, following redirect...');
     }
 
-    console.log('Successfully fetched URL, getting text content');
+    const response = await fetchWithRetry(url);
     const html = await response.text();
-    console.log('HTML content length:', html.length);
-    console.log('First 500 characters of HTML:', html.substring(0, 500));
+    console.log('Successfully fetched HTML content, length:', html.length);
+    
+    if (html.length < 100) {
+      console.error('Received suspiciously short HTML content:', html);
+      throw new Error('Invalid HTML content received');
+    }
 
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    
     if (!doc) {
-      console.error('Failed to parse HTML document');
-      throw new Error('Failed to parse HTML');
+      throw new Error('Failed to parse HTML document');
     }
 
-    console.log('Successfully parsed HTML document');
-
-    // Enhanced metadata extraction with logging
-    const title = doc.querySelector('title')?.textContent || '';
+    // Extract title with fallbacks
+    const title = doc.querySelector('title')?.textContent 
+      || doc.querySelector('meta[property="og:title"]')?.getAttribute('content')
+      || doc.querySelector('h1')?.textContent
+      || '';
     console.log('Extracted title:', title);
 
-    // Try multiple ways to get description
+    if (!title) {
+      throw new Error('Could not extract product title');
+    }
+
+    // Extract description with multiple fallbacks
     const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') 
       || doc.querySelector('meta[property="og:description"]')?.getAttribute('content')
       || doc.querySelector('.product-description')?.textContent
+      || doc.querySelector('._1mXcCf')?.textContent // Flipkart specific
       || '';
     console.log('Extracted description:', description);
-    
-    // Enhanced image extraction with logging
-    const images = [
-      doc.querySelector('meta[property="og:image"]')?.getAttribute('content'),
-      doc.querySelector('meta[property="product:image"]')?.getAttribute('content'),
-      doc.querySelector('meta[property="twitter:image"]')?.getAttribute('content'),
-      ...Array.from(doc.querySelectorAll('img[src*="product"], img[src*="prod"]')).map(img => img.getAttribute('src')),
-      ...Array.from(doc.querySelectorAll('img.product-image, img._396cs4')).map(img => img.getAttribute('src')), // Added Flipkart-specific class
-    ].filter(Boolean);
-    
-    console.log('Found images:', images);
-    const image = images[0] || '';
 
-    // Enhanced price extraction with logging
+    // Enhanced image extraction
+    const possibleImageSelectors = [
+      'meta[property="og:image"]',
+      'meta[property="product:image"]',
+      'meta[property="twitter:image"]',
+      '._396cs4', // Flipkart specific
+      '.product-image-container img'
+    ];
+
+    let image = '';
+    for (const selector of possibleImageSelectors) {
+      const element = doc.querySelector(selector);
+      if (element) {
+        image = element.getAttribute('content') || element.getAttribute('src') || '';
+        if (image) break;
+      }
+    }
+    console.log('Extracted image URL:', image);
+
+    // Price extraction with specific Flipkart selectors
     let originalPrice = 0;
     let discountedPrice = 0;
 
-    // Try multiple price selectors (including Flipkart-specific ones)
-    const priceSelectors = [
-      '._30jeq3', // Flipkart price class
-      '._3I9_wc', // Flipkart original price class
-      '[class*="price"]',
-      '[class*="cost"]',
-      '[class*="discount"]',
-      '[class*="sale"]'
-    ];
+    // Flipkart specific price selectors
+    const discountedPriceElement = doc.querySelector('._30jeq3');
+    const originalPriceElement = doc.querySelector('._3I9_wc');
 
-    for (const selector of priceSelectors) {
-      const elements = doc.querySelectorAll(selector);
-      console.log(`Found ${elements.length} elements for selector ${selector}`);
-      
-      elements.forEach((element, index) => {
-        const text = element.textContent || '';
-        console.log(`Price element ${selector}[${index}] text:`, text);
-        
-        const priceMatch = text.match(/[₹$]?\s*(\d+(?:,\d+)*(?:\.\d{2})?)/);
-        if (priceMatch) {
-          const price = parseFloat(priceMatch[1].replace(/,/g, ''));
-          console.log(`Matched price value:`, price);
-          
-          if (element.className.includes('3I9_wc')) { // Flipkart original price
-            originalPrice = price;
-          } else if (element.className.includes('30jeq3')) { // Flipkart selling price
-            discountedPrice = price;
-          } else if (!originalPrice && !discountedPrice) {
-            originalPrice = price;
-          }
+    if (discountedPriceElement) {
+      const priceText = discountedPriceElement.textContent.replace(/[^0-9.]/g, '');
+      discountedPrice = parseFloat(priceText);
+      console.log('Extracted discounted price:', discountedPrice);
+    }
+
+    if (originalPriceElement) {
+      const priceText = originalPriceElement.textContent.replace(/[^0-9.]/g, '');
+      originalPrice = parseFloat(priceText);
+      console.log('Extracted original price:', originalPrice);
+    }
+
+    // If no specific price elements found, try generic selectors
+    if (!discountedPrice && !originalPrice) {
+      const priceElements = doc.querySelectorAll('[class*="price"], [class*="cost"]');
+      priceElements.forEach(element => {
+        const priceText = element.textContent.replace(/[^0-9.]/g, '');
+        const price = parseFloat(priceText);
+        if (price > 0) {
+          if (!originalPrice) originalPrice = price;
+          else if (price < originalPrice) discountedPrice = price;
         }
       });
     }
 
-    console.log('Final price values:', { originalPrice, discountedPrice });
-
-    // Use discounted price if available, otherwise use original price
     const finalPrice = discountedPrice || originalPrice;
     if (!finalPrice) {
-      console.error('No valid price found');
       throw new Error('Could not extract price information');
     }
 
-    // Extract specifications
-    const specs: string[] = [];
-    const specElements = doc.querySelectorAll('._3dtsli, ._2cM9lP, [class*="specification"], [class*="specs"], [class*="details"], [class*="features"]');
-    specElements.forEach(element => {
-      const text = element.textContent?.trim();
-      if (text && text.length < 100) {
-        specs.push(text);
-      }
-    });
-    console.log('Extracted specifications:', specs);
-
-    // Create a summarized description
-    const summaryParts = [description];
-    if (specs.length > 0) {
-      summaryParts.push("Specifications: " + specs.slice(0, 3).join(", "));
-    }
-    const summarizedDescription = summaryParts.join("\n").slice(0, 200) + "...";
-
     const productDetails = {
       name: title.split('|')[0].trim(),
-      description: summarizedDescription,
+      description: description.slice(0, 200) + (description.length > 200 ? '...' : ''),
       price: finalPrice,
-      priceInr: finalPrice, // Already in INR for Flipkart
+      priceInr: finalPrice,
       image: image || "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg",
-      originalPrice: originalPrice,
-      hasDiscount: discountedPrice > 0,
+      originalPrice: originalPrice || finalPrice,
+      hasDiscount: discountedPrice > 0
     };
 
     console.log('Successfully extracted product details:', productDetails);
@@ -175,7 +197,6 @@ serve(async (req) => {
     }
 
     const productDetails = await fetchProductDetails(url);
-    console.log('Sending response:', productDetails);
     
     return new Response(
       JSON.stringify(productDetails),
