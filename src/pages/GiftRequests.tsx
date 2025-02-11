@@ -37,11 +37,11 @@ type GiftRequest = {
   product_title: string | null;
   product_price: number | null;
   message: string | null;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered';
   created_at: string | null;
   updated_at: string | null;
   sender: {
-    email: string;
+    email: string | null;
   };
 }
 
@@ -126,7 +126,7 @@ const GiftRequests = () => {
             <TableBody>
               {giftRequests?.map((request) => (
                 <TableRow key={request.id}>
-                  <TableCell>{request.sender.email}</TableCell>
+                  <TableCell>{request.sender?.email}</TableCell>
                   <TableCell>
                     <a 
                       href={request.product_url} 
