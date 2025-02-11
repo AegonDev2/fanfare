@@ -50,8 +50,8 @@ export const useOrderSubmission = () => {
       if (giftRequestError) throw giftRequestError;
 
       toast({
-        title: "Gift request sent",
-        description: "Your gift request has been sent to the influencer",
+        title: "Gift request sent successfully",
+        description: "Your request has been sent to the influencer. The amount will be refunded if the request is rejected.",
       });
       
       navigate("/");
