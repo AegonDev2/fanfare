@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/landing/Header";
+import { Progress } from "@/components/ui/progress";
 
 interface PlaceOrderProps {
   setNavOpen?: (isOpen: boolean) => void;
@@ -18,6 +19,7 @@ interface ProductDetails {
   price: number;
   platformFee: number;
   image: string;
+  id?: string;
 }
 
 const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
@@ -26,10 +28,11 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingProduct, setIsFetchingProduct] = useState(false);
+  const [fetchProgress, setFetchProgress] = useState(0);
   const [productPreview, setProductPreview] = useState<ProductDetails>({
-    name: "Stylish Handbag",
-    description: "A stylish handbag perfect for any occasion. Made from high-quality materials and designed to be both functional and fashionable.",
-    price: 49.99,
+    name: "Enter a product URL to preview",
+    description: "Product details will appear here once you enter a valid URL.",
+    price: 0,
     platformFee: 5.00,
     image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
   });
@@ -57,15 +60,36 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         return;
       }
 
-      const { error } = await supabase.from("orders").insert({
+      // First insert the product details
+      const { data: productData, error: productError } = await supabase
+        .from('products')
+        .insert({
+          url: giftItem,
+          name: productPreview.name,
+          description: productPreview.description,
+          price: productPreview.price,
+          image_url: productPreview.image
+        })
+        .select()
+        .single();
+
+      if (productError) throw productError;
+
+      // Then create the order with the product reference
+      const { error: orderError } = await supabase.from("orders").insert({
         user_id: user.id,
         influencer_id: influencerId,
         product_url: giftItem,
+        product_id: productData.id,
+        product_title: productPreview.name,
+        product_price: productPreview.price,
+        platform_fee: productPreview.platformFee,
+        total_amount: productPreview.price + productPreview.platformFee,
         message: message,
         status: "pending"
       });
 
-      if (error) throw error;
+      if (orderError) throw orderError;
 
       toast({
         title: "Order placed successfully",
@@ -95,21 +119,46 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       return;
     }
 
-    setIsFetchingProduct(true);
+    // Validate URL
     try {
-      // Here we would typically make an API call to fetch product details
-      // For now, we'll simulate a fetch with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      new URL(giftItem);
+    } catch (e) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid product URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFetchingProduct(true);
+    setFetchProgress(0);
+    
+    try {
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setFetchProgress(prev => Math.min(prev + 10, 90));
+      }, 500);
+
+      // Extract product details from URL
+      const url = new URL(giftItem);
+      const domain = url.hostname;
       
-      // Mock product data based on URL
+      // For now using mock data - in production this would call a backend service
       const mockProduct = {
-        name: "Product from " + new URL(giftItem).hostname,
+        name: `Product from ${domain}`,
         description: "Product details fetched from the provided URL. This is a placeholder description.",
         price: Math.floor(Math.random() * 100) + 20,
         platformFee: 5.00,
         image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
       };
 
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      clearInterval(progressInterval);
+      setFetchProgress(100);
+      
       setProductPreview(mockProduct);
       toast({
         title: "Product fetched",
@@ -123,7 +172,10 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         variant: "destructive",
       });
     } finally {
-      setIsFetchingProduct(false);
+      setTimeout(() => {
+        setIsFetchingProduct(false);
+        setFetchProgress(0);
+      }, 500);
     }
   };
 
@@ -160,6 +212,13 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
             >
               {isFetchingProduct ? "Fetching..." : "Preview Product"}
             </Button>
+            
+            {isFetchingProduct && (
+              <div className="mt-4">
+                <Progress value={fetchProgress} className="w-full" />
+                <p className="text-sm text-gray-500 mt-2">Fetching product details...</p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -171,7 +230,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
             <div className="flex flex-col md:flex-row">
               <img
                 src={productPreview.image}
-                alt="Product image"
+                alt="Product"
                 className="w-32 h-32 object-cover rounded-lg"
               />
               <div className="md:ml-4 mt-4 md:mt-0">

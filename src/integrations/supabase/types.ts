@@ -142,6 +142,7 @@ export type Database = {
           id: string
           influencer_id: string | null
           platform_fee: number | null
+          product_id: string | null
           product_price: number | null
           product_title: string | null
           product_url: string
@@ -155,6 +156,7 @@ export type Database = {
           id?: string
           influencer_id?: string | null
           platform_fee?: number | null
+          product_id?: string | null
           product_price?: number | null
           product_title?: string | null
           product_url: string
@@ -168,6 +170,7 @@ export type Database = {
           id?: string
           influencer_id?: string | null
           platform_fee?: number | null
+          product_id?: string | null
           product_price?: number | null
           product_title?: string | null
           product_url?: string
@@ -183,7 +186,47 @@ export type Database = {
             referencedRelation: "influencer_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
