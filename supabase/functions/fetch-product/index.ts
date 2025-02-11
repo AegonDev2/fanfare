@@ -14,14 +14,14 @@ async function fetchWithRetry(url: string, maxRetries = 5) {
     try {
       console.log(`Attempt ${attempt} to fetch URL: ${url}`);
       
-      // More extensive browser-like headers
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
-        'Cache-Control': 'max-age=0',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
         'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120"',
         'Sec-Ch-Ua-Mobile': '?0',
         'Sec-Ch-Ua-Platform': '"Windows"',
@@ -32,179 +32,151 @@ async function fetchWithRetry(url: string, maxRetries = 5) {
         'Upgrade-Insecure-Requests': '1'
       };
 
-      // If it's a Flipkart URL, follow redirects and add referrer
-      if (url.includes('flipkart.com') || url.includes('dl.flipkart.com')) {
-        console.log('Detected Flipkart URL, adding specific headers');
-        Object.assign(headers, {
-          'Referer': 'https://www.flipkart.com/',
-          'Origin': 'https://www.flipkart.com'
+      // Always add Flipkart-specific headers since we're only handling Flipkart URLs
+      Object.assign(headers, {
+        'Referer': 'https://www.flipkart.com/',
+        'Origin': 'https://www.flipkart.com',
+        'Host': 'www.flipkart.com'
+      });
+
+      // For Flipkart redirect URLs, first get the final URL
+      if (url.includes('dl.flipkart.com')) {
+        console.log('Following Flipkart redirect URL...');
+        const redirectResponse = await fetch(url, {
+          headers,
+          redirect: 'follow',
+          method: 'HEAD' // Use HEAD request for redirect following
         });
+        url = redirectResponse.url;
+        console.log('Resolved to final URL:', url);
       }
 
+      // Now fetch the actual product page
       const response = await fetch(url, {
         headers,
         redirect: 'follow'
       });
 
-      // Log response status and headers for debugging
       console.log(`Response status: ${response.status}`);
       console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
-      if (response.ok) {
-        return response;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      console.error(`Attempt ${attempt} failed with status: ${response.status}`);
-      lastError = new Error(`Failed to fetch URL: ${response.status}`);
-      
-      // Handle different error status codes
-      switch (response.status) {
-        case 429: // Too Many Requests
-        case 503: // Service Unavailable
-        case 529: // Site overloaded
-          // These are retryable errors
-          break;
-        default:
-          throw lastError; // Don't retry other errors
+      const html = await response.text();
+      console.log('Successfully fetched HTML content, length:', html.length);
+
+      if (html.length < 100) {
+        console.error('Received suspiciously short HTML:', html);
+        throw new Error('Invalid HTML content received');
       }
+
+      return html;
     } catch (error) {
       console.error(`Attempt ${attempt} error:`, error);
       lastError = error;
-    }
 
-    // Exponential backoff with jitter
-    if (attempt < maxRetries) {
-      const baseDelay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-      const jitter = Math.random() * 1000;
-      const delay = baseDelay + jitter;
-      console.log(`Waiting ${delay}ms before retry...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-
-  throw lastError;
-}
-
-async function fetchProductDetails(url: string) {
-  try {
-    console.log('Starting to fetch product details for URL:', url);
-    
-    // Handle Flipkart redirect URLs
-    if (url.includes('dl.flipkart.com')) {
-      console.log('Detected Flipkart short URL, following redirect...');
-    }
-
-    const response = await fetchWithRetry(url);
-    const html = await response.text();
-    console.log('Successfully fetched HTML content, length:', html.length);
-    
-    if (html.length < 100) {
-      console.error('Received suspiciously short HTML content:', html);
-      throw new Error('Invalid HTML content received');
-    }
-
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    if (!doc) {
-      throw new Error('Failed to parse HTML document');
-    }
-
-    // Extract title with fallbacks
-    const title = doc.querySelector('title')?.textContent 
-      || doc.querySelector('meta[property="og:title"]')?.getAttribute('content')
-      || doc.querySelector('h1')?.textContent
-      || '';
-    console.log('Extracted title:', title);
-
-    if (!title) {
-      throw new Error('Could not extract product title');
-    }
-
-    // Extract description with multiple fallbacks
-    const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') 
-      || doc.querySelector('meta[property="og:description"]')?.getAttribute('content')
-      || doc.querySelector('.product-description')?.textContent
-      || doc.querySelector('._1mXcCf')?.textContent // Flipkart specific
-      || '';
-    console.log('Extracted description:', description);
-
-    // Enhanced image extraction with multiple fallbacks
-    const possibleImageSelectors = [
-      'meta[property="og:image"]',
-      'meta[property="product:image"]',
-      'meta[property="twitter:image"]',
-      '._396cs4', // Flipkart specific
-      '.product-image-container img',
-      '#container img'
-    ];
-
-    let image = '';
-    for (const selector of possibleImageSelectors) {
-      const element = doc.querySelector(selector);
-      if (element) {
-        image = element.getAttribute('content') || element.getAttribute('src') || '';
-        if (image) {
-          console.log(`Found image using selector: ${selector}`);
-          break;
-        }
+      if (attempt < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000) + Math.random() * 1000;
+        console.log(`Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-    console.log('Extracted image URL:', image);
-
-    // Price extraction with specific Flipkart selectors
-    let originalPrice = 0;
-    let discountedPrice = 0;
-
-    // Flipkart specific price selectors
-    const discountedPriceElement = doc.querySelector('._30jeq3');
-    const originalPriceElement = doc.querySelector('._3I9_wc');
-
-    if (discountedPriceElement) {
-      const priceText = discountedPriceElement.textContent.replace(/[^0-9.]/g, '');
-      discountedPrice = parseFloat(priceText);
-      console.log('Extracted discounted price:', discountedPrice);
-    }
-
-    if (originalPriceElement) {
-      const priceText = originalPriceElement.textContent.replace(/[^0-9.]/g, '');
-      originalPrice = parseFloat(priceText);
-      console.log('Extracted original price:', originalPrice);
-    }
-
-    // If no specific price elements found, try generic selectors
-    if (!discountedPrice && !originalPrice) {
-      const priceElements = doc.querySelectorAll('[class*="price"], [class*="cost"]');
-      priceElements.forEach(element => {
-        const priceText = element.textContent.replace(/[^0-9.]/g, '');
-        const price = parseFloat(priceText);
-        if (price > 0) {
-          if (!originalPrice) originalPrice = price;
-          else if (price < originalPrice) discountedPrice = price;
-        }
-      });
-    }
-
-    const finalPrice = discountedPrice || originalPrice;
-    if (!finalPrice) {
-      throw new Error('Could not extract price information');
-    }
-
-    const productDetails = {
-      name: title.split('|')[0].trim(),
-      description: description.slice(0, 200) + (description.length > 200 ? '...' : ''),
-      price: finalPrice,
-      priceInr: finalPrice,
-      image: image || "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg",
-      originalPrice: originalPrice || finalPrice,
-      hasDiscount: discountedPrice > 0
-    };
-
-    console.log('Successfully extracted product details:', productDetails);
-    return productDetails;
-
-  } catch (error) {
-    console.error('Error in fetchProductDetails:', error);
-    throw error;
   }
+
+  throw new Error(`Failed to fetch after ${maxRetries} attempts: ${lastError?.message}`);
+}
+
+async function extractProductDetails(html: string) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  if (!doc) {
+    throw new Error('Failed to parse HTML document');
+  }
+
+  // Extract title
+  const title = doc.querySelector('h1')?.textContent?.trim() 
+    || doc.querySelector('._31qSD5')?.textContent?.trim()
+    || doc.querySelector('._35KyD6')?.textContent?.trim()
+    || doc.querySelector('title')?.textContent?.split('-')[0]?.trim()
+    || '';
+  
+  console.log('Extracted title:', title);
+
+  if (!title) {
+    throw new Error('Could not extract product title');
+  }
+
+  // Extract description
+  const description = doc.querySelector('._1mXcCf.RmoJUa')?.textContent?.trim()
+    || doc.querySelector('._1mXcCf')?.textContent?.trim()
+    || doc.querySelector('meta[name="description"]')?.getAttribute('content')
+    || '';
+  
+  console.log('Extracted description:', description);
+
+  // Extract image
+  const imageSelectors = [
+    '._396cs4 img',
+    '._396cs4',
+    '._2r_T1I',
+    '.CXW8mj img',
+    'meta[property="og:image"]'
+  ];
+
+  let image = '';
+  for (const selector of imageSelectors) {
+    const element = doc.querySelector(selector);
+    if (element) {
+      image = element.getAttribute('src') || element.getAttribute('content') || '';
+      if (image) {
+        console.log(`Found image using selector: ${selector}`);
+        break;
+      }
+    }
+  }
+
+  console.log('Extracted image URL:', image);
+
+  // Extract prices
+  let discountedPrice = 0;
+  let originalPrice = 0;
+
+  // Try multiple price selectors
+  const discountedPriceElement = doc.querySelector('._30jeq3._16Jk6d')
+    || doc.querySelector('._30jeq3')
+    || doc.querySelector('.CEmiEU');
+
+  const originalPriceElement = doc.querySelector('._3I9_wc._2p6lqe')
+    || doc.querySelector('._3I9_wc')
+    || doc.querySelector('._2p6lqe');
+
+  if (discountedPriceElement) {
+    const priceText = discountedPriceElement.textContent.replace(/[^0-9.]/g, '');
+    discountedPrice = parseFloat(priceText);
+    console.log('Extracted discounted price:', discountedPrice);
+  }
+
+  if (originalPriceElement) {
+    const priceText = originalPriceElement.textContent.replace(/[^0-9.]/g, '');
+    originalPrice = parseFloat(priceText);
+    console.log('Extracted original price:', originalPrice);
+  }
+
+  const finalPrice = discountedPrice || originalPrice;
+  if (!finalPrice) {
+    throw new Error('Could not extract price information');
+  }
+
+  return {
+    name: title,
+    description: description.slice(0, 200) + (description.length > 200 ? '...' : ''),
+    price: finalPrice,
+    priceInr: finalPrice,
+    image: image || "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg",
+    originalPrice: originalPrice || finalPrice,
+    hasDiscount: discountedPrice > 0 && originalPrice > discountedPrice
+  };
 }
 
 serve(async (req) => {
@@ -232,7 +204,11 @@ serve(async (req) => {
       );
     }
 
-    const productDetails = await fetchProductDetails(url);
+    // First fetch the HTML content
+    const html = await fetchWithRetry(url);
+    
+    // Then extract product details from the HTML
+    const productDetails = await extractProductDetails(html);
     
     return new Response(
       JSON.stringify(productDetails),
@@ -249,3 +225,4 @@ serve(async (req) => {
     );
   }
 })
+
