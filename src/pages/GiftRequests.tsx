@@ -29,8 +29,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+type GiftRequest = {
+  id: string;
+  sender_id: string;
+  influencer_id: string;
+  product_url: string;
+  product_title: string | null;
+  product_price: number | null;
+  message: string | null;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string | null;
+  profiles: {
+    email: string;
+  };
+}
+
 const GiftRequests = () => {
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<GiftRequest | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
   const { toast } = useToast();
 
@@ -51,7 +66,7 @@ const GiftRequests = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as GiftRequest[];
     }
   });
 
