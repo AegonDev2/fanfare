@@ -60,7 +60,7 @@ const GiftRequests = () => {
         .from("gift_requests")
         .select(`
           *,
-          sender:profiles(email)
+          sender:profiles!gift_requests_sender_id_fkey(email)
         `)
         .eq("influencer_id", user.id)
         .eq("status", "pending")
