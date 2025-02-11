@@ -151,6 +151,10 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       clearInterval(progressInterval);
       setFetchProgress(100);
       
+      if (!data.name || !data.priceInr) {
+        throw new Error('Invalid product data received');
+      }
+
       setProductPreview({
         ...data,
         platformFee: 5.00

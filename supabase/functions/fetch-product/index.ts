@@ -9,6 +9,7 @@ const corsHeaders = {
 
 async function fetchProductDetails(url: string) {
   try {
+    console.log('Fetching URL:', url);
     const response = await fetch(url);
     const html = await response.text();
     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -30,7 +31,7 @@ async function fetchProductDetails(url: string) {
       ...Array.from(doc.querySelectorAll('img.product-image')).map(img => img.getAttribute('src')),
     ].filter(Boolean);
     
-    const image = images[0] || "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg";
+    const image = images[0] || '';
 
     // Enhanced price extraction with discount handling
     const priceElements = doc.querySelectorAll('[class*="price"], [id*="price"], [class*="cost"], .discount, .sale-price');
@@ -39,7 +40,7 @@ async function fetchProductDetails(url: string) {
 
     priceElements.forEach(element => {
       const text = element.textContent || '';
-      const priceMatch = text.match(/₹?\s*(\d+(?:,\d+)*(?:\.\d{2})?)/);
+      const priceMatch = text.match(/[\$₹]?\s*(\d+(?:,\d+)*(?:\.\d{2})?)/);
       if (priceMatch) {
         const price = parseFloat(priceMatch[1].replace(/,/g, ''));
         if (element.className.includes('original') || element.className.includes('mrp')) {
@@ -53,7 +54,7 @@ async function fetchProductDetails(url: string) {
     });
 
     // Use discounted price if available, otherwise use original price
-    const finalPrice = discountedPrice || originalPrice || 29.99;
+    const finalPrice = discountedPrice || originalPrice;
 
     // Extract specifications
     const specs: string[] = [];
@@ -72,12 +73,21 @@ async function fetchProductDetails(url: string) {
     }
     const summarizedDescription = summaryParts.join("\n").slice(0, 200) + "...";
 
+    console.log('Extracted product details:', {
+      name: title,
+      description: summarizedDescription,
+      price: finalPrice,
+      image: image,
+      originalPrice,
+      hasDiscount: discountedPrice > 0
+    });
+
     return {
       name: title.split('|')[0].trim(),
       description: summarizedDescription,
       price: finalPrice,
       priceInr: finalPrice * 83, // Approximate INR conversion
-      image: image,
+      image: image || "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg",
       originalPrice: originalPrice * 83, // Convert to INR
       hasDiscount: discountedPrice > 0,
     };
@@ -94,6 +104,7 @@ serve(async (req) => {
 
   try {
     const { url } = await req.json();
+    console.log('Received request for URL:', url);
     
     if (!url) {
       return new Response(
@@ -112,6 +123,7 @@ serve(async (req) => {
     }
 
     const productDetails = await fetchProductDetails(url);
+    console.log('Sending response:', productDetails);
     
     return new Response(
       JSON.stringify(productDetails),
@@ -125,4 +137,3 @@ serve(async (req) => {
     );
   }
 })
-
