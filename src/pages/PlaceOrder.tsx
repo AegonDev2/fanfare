@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -79,8 +79,8 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       const { error: orderError } = await supabase.from("orders").insert({
         user_id: user.id,
         influencer_id: influencerId,
-        product_url: giftItem,
         product_id: productData.id,
+        product_url: giftItem,
         product_title: productPreview.name,
         product_price: productPreview.price,
         platform_fee: productPreview.platformFee,
@@ -135,31 +135,26 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     setFetchProgress(0);
     
     try {
-      // Simulate progress for better UX
+      // Simulate progress
       const progressInterval = setInterval(() => {
         setFetchProgress(prev => Math.min(prev + 10, 90));
       }, 500);
 
-      // Extract product details from URL
-      const url = new URL(giftItem);
-      const domain = url.hostname;
-      
-      // For now using mock data - in production this would call a backend service
-      const mockProduct = {
-        name: `Product from ${domain}`,
-        description: "Product details fetched from the provided URL. This is a placeholder description.",
-        price: Math.floor(Math.random() * 100) + 20,
-        platformFee: 5.00,
-        image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
-      };
+      // Call the edge function to fetch product details
+      const { data, error } = await supabase.functions.invoke('fetch-product', {
+        body: { url: giftItem }
+      });
 
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      if (error) throw error;
+
       clearInterval(progressInterval);
       setFetchProgress(100);
       
-      setProductPreview(mockProduct);
+      setProductPreview({
+        ...data,
+        platformFee: 5.00
+      });
+
       toast({
         title: "Product fetched",
         description: "Product details have been updated",
