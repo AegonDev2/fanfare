@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ecommerce_credentials: {
+        Row: {
+          created_at: string
+          encrypted_password: string
+          id: string
+          is_active: boolean | null
+          platform: Database["public"]["Enums"]["ecommerce_platform"]
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_password: string
+          id?: string
+          is_active?: boolean | null
+          platform: Database["public"]["Enums"]["ecommerce_platform"]
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_password?: string
+          id?: string
+          is_active?: boolean | null
+          platform?: Database["public"]["Enums"]["ecommerce_platform"]
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
       gifts_to_influencers: {
         Row: {
           created_at: string
@@ -342,6 +372,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "fan" | "influencer"
+      ecommerce_platform: "amazon" | "flipkart"
       nav_role: "admin" | "user" | "influencer"
     }
     CompositeTypes: {

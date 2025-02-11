@@ -9,6 +9,7 @@ export interface ProductDetails {
   originalPrice?: number;
   hasDiscount?: boolean;
   id?: string;
+  platform?: 'amazon' | 'flipkart';
 }
 
 export interface InfluencerAddress {
@@ -18,4 +19,11 @@ export interface InfluencerAddress {
   state: string;
   postal_code: string;
   country: string;
+}
+
+export interface EcommerceOrder {
+  platform: 'amazon' | 'flipkart';
+  productUrl: string;
+  quantity: number;
+  useStoredAddress: boolean;
 }

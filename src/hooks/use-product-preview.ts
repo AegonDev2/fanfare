@@ -19,6 +19,12 @@ export const useProductPreview = () => {
   const [fetchProgress, setFetchProgress] = useState(0);
   const [productPreview, setProductPreview] = useState<ProductDetails>(DEFAULT_PRODUCT);
 
+  const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
+    if (url.includes('amazon')) return 'amazon';
+    if (url.includes('flipkart')) return 'flipkart';
+    return undefined;
+  };
+
   const handlePreviewProduct = async (giftItem: string) => {
     if (!giftItem) {
       toast({
@@ -63,7 +69,8 @@ export const useProductPreview = () => {
 
       setProductPreview({
         ...data,
-        platformFee: 5.00
+        platformFee: 5.00,
+        platform: detectPlatform(giftItem)
       });
 
       toast({

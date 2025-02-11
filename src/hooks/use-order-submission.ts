@@ -34,15 +34,7 @@ export const useOrderSubmission = () => {
         return;
       }
 
-      if (!influencerAddress) {
-        toast({
-          title: "Error",
-          description: "Shipping address not available. Please try again later.",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      // First store product details
       const { data: productData, error: productError } = await supabase
         .from('products')
         .insert({
@@ -57,6 +49,22 @@ export const useOrderSubmission = () => {
 
       if (productError) throw productError;
 
+      // Place order on ecommerce platform
+      const { data: ecommerceResult, error: ecommerceError } = await supabase.functions.invoke(
+        'place-ecommerce-order',
+        {
+          body: {
+            platform: productPreview.platform || 'amazon',
+            productUrl: giftItem,
+            addressId: influencerAddress.id,
+            quantity: 1
+          }
+        }
+      );
+
+      if (ecommerceError) throw ecommerceError;
+
+      // Store order in our database
       const { error: orderError } = await supabase.from("orders").insert({
         user_id: user.id,
         influencer_id: influencerId,
