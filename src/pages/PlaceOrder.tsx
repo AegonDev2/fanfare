@@ -17,8 +17,11 @@ interface ProductDetails {
   name: string;
   description: string;
   price: number;
+  priceInr: number;
   platformFee: number;
   image: string;
+  originalPrice?: number;
+  hasDiscount?: boolean;
   id?: string;
 }
 
@@ -33,6 +36,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     name: "Enter a product URL to preview",
     description: "Product details will appear here once you enter a valid URL.",
     price: 0,
+    priceInr: 0,
     platformFee: 5.00,
     image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
   });
@@ -67,7 +71,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
           url: giftItem,
           name: productPreview.name,
           description: productPreview.description,
-          price: productPreview.price,
+          price: productPreview.priceInr,
           image_url: productPreview.image
         })
         .select()
@@ -82,9 +86,9 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         product_id: productData.id,
         product_url: giftItem,
         product_title: productPreview.name,
-        product_price: productPreview.price,
-        platform_fee: productPreview.platformFee,
-        total_amount: productPreview.price + productPreview.platformFee,
+        product_price: productPreview.priceInr,
+        platform_fee: productPreview.platformFee * 83, // Convert platform fee to INR
+        total_amount: productPreview.priceInr + (productPreview.platformFee * 83),
         message: message,
         status: "pending"
       });
@@ -119,7 +123,6 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       return;
     }
 
-    // Validate URL
     try {
       new URL(giftItem);
     } catch (e) {
@@ -135,12 +138,10 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     setFetchProgress(0);
     
     try {
-      // Simulate progress
       const progressInterval = setInterval(() => {
         setFetchProgress(prev => Math.min(prev + 10, 90));
       }, 500);
 
-      // Call the edge function to fetch product details
       const { data, error } = await supabase.functions.invoke('fetch-product', {
         body: { url: giftItem }
       });
@@ -183,6 +184,14 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     });
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 font-roboto">
       <Header setNavOpen={setNavOpen || (() => {})} />
@@ -223,31 +232,40 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
           </h2>
           <div className="bg-white p-4 rounded-lg shadow-md">
             <div className="flex flex-col md:flex-row">
-              <img
-                src={productPreview.image}
-                alt="Product"
-                className="w-32 h-32 object-cover rounded-lg"
-              />
-              <div className="md:ml-4 mt-4 md:mt-0">
+              <div className="w-full md:w-1/3">
+                <img
+                  src={productPreview.image}
+                  alt={productPreview.name}
+                  className="w-full h-64 object-contain rounded-lg"
+                />
+              </div>
+              <div className="md:ml-6 mt-4 md:mt-0 md:w-2/3">
                 <h3 className="text-lg font-semibold text-gray-800">
                   {productPreview.name}
                 </h3>
-                <p className="text-gray-600">
+                <div className="mt-2 text-gray-600 whitespace-pre-line">
                   {productPreview.description}
-                </p>
-                <p className="text-gray-600 mt-2">
-                  Price: ${productPreview.price.toFixed(2)}
-                </p>
-                <p className="text-gray-600">
-                  Platform Fee: ${productPreview.platformFee.toFixed(2)}
-                </p>
-                <p className="text-gray-800 font-semibold mt-2">
-                  Total: ${(productPreview.price + productPreview.platformFee).toFixed(2)}
-                </p>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {productPreview.hasDiscount && productPreview.originalPrice && (
+                    <p className="text-gray-500 line-through">
+                      Original Price: {formatPrice(productPreview.originalPrice)}
+                    </p>
+                  )}
+                  <p className="text-gray-800 font-semibold">
+                    Price: {formatPrice(productPreview.priceInr)}
+                  </p>
+                  <p className="text-gray-600">
+                    Platform Fee: {formatPrice(productPreview.platformFee * 83)}
+                  </p>
+                  <p className="text-lg text-gray-800 font-bold mt-2">
+                    Total: {formatPrice(productPreview.priceInr + (productPreview.platformFee * 83))}
+                  </p>
+                </div>
               </div>
             </div>
             
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="mt-6">
               <div className="mt-4">
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="message">
                   Custom Message

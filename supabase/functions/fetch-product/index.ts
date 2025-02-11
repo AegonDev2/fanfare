@@ -17,21 +17,69 @@ async function fetchProductDetails(url: string) {
       throw new Error('Failed to parse HTML');
     }
 
-    // Basic metadata extraction - this can be enhanced based on specific sites
+    // Enhanced metadata extraction
     const title = doc.querySelector('title')?.textContent || '';
     const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-    const image = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
     
-    // Try to find price (this is a basic implementation)
-    const priceText = doc.querySelector('[class*="price"], [id*="price"]')?.textContent || '';
-    const priceMatch = priceText.match(/\d+(\.\d{2})?/);
-    const price = priceMatch ? parseFloat(priceMatch[0]) : 0;
+    // Try multiple image sources
+    const images = [
+      doc.querySelector('meta[property="og:image"]')?.getAttribute('content'),
+      doc.querySelector('meta[property="product:image"]')?.getAttribute('content'),
+      doc.querySelector('meta[property="twitter:image"]')?.getAttribute('content'),
+      ...Array.from(doc.querySelectorAll('img[src*="product"]')).map(img => img.getAttribute('src')),
+      ...Array.from(doc.querySelectorAll('img.product-image')).map(img => img.getAttribute('src')),
+    ].filter(Boolean);
+    
+    const image = images[0] || "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg";
+
+    // Enhanced price extraction with discount handling
+    const priceElements = doc.querySelectorAll('[class*="price"], [id*="price"], [class*="cost"], .discount, .sale-price');
+    let originalPrice = 0;
+    let discountedPrice = 0;
+
+    priceElements.forEach(element => {
+      const text = element.textContent || '';
+      const priceMatch = text.match(/₹?\s*(\d+(?:,\d+)*(?:\.\d{2})?)/);
+      if (priceMatch) {
+        const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+        if (element.className.includes('original') || element.className.includes('mrp')) {
+          originalPrice = price;
+        } else if (element.className.includes('discount') || element.className.includes('sale')) {
+          discountedPrice = price;
+        } else if (!originalPrice && !discountedPrice) {
+          originalPrice = price;
+        }
+      }
+    });
+
+    // Use discounted price if available, otherwise use original price
+    const finalPrice = discountedPrice || originalPrice || 29.99;
+
+    // Extract specifications
+    const specs: string[] = [];
+    const specElements = doc.querySelectorAll('[class*="specification"], [class*="specs"], [class*="details"], [class*="features"]');
+    specElements.forEach(element => {
+      const text = element.textContent?.trim();
+      if (text && text.length < 100) { // Avoid large text blocks
+        specs.push(text);
+      }
+    });
+
+    // Create a summarized description
+    const summaryParts = [description];
+    if (specs.length > 0) {
+      summaryParts.push("Specifications: " + specs.slice(0, 3).join(", "));
+    }
+    const summarizedDescription = summaryParts.join("\n").slice(0, 200) + "...";
 
     return {
       name: title.split('|')[0].trim(),
-      description: description,
-      price: price || 29.99, // Fallback price if none found
-      image: image || "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg",
+      description: summarizedDescription,
+      price: finalPrice,
+      priceInr: finalPrice * 83, // Approximate INR conversion
+      image: image,
+      originalPrice: originalPrice * 83, // Convert to INR
+      hasDiscount: discountedPrice > 0,
     };
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -40,7 +88,6 @@ async function fetchProductDetails(url: string) {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -55,7 +102,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate URL
     try {
       new URL(url);
     } catch {
@@ -79,3 +125,4 @@ serve(async (req) => {
     );
   }
 })
+
