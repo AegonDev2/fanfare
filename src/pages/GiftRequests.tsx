@@ -42,7 +42,7 @@ type GiftRequest = {
   updated_at: string | null;
   sender: {
     email: string | null;
-  };
+  } | null;
 }
 
 const GiftRequests = () => {
