@@ -39,7 +39,8 @@ type GiftRequest = {
   message: string | null;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string | null;
-  profiles: {
+  updated_at: string | null;
+  sender: {
     email: string;
   };
 }
@@ -59,14 +60,14 @@ const GiftRequests = () => {
         .from("gift_requests")
         .select(`
           *,
-          profiles:sender_id (email)
+          sender:profiles!gift_requests_sender_id_fkey(email)
         `)
         .eq("influencer_id", user.id)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as GiftRequest[];
+      return data as unknown as GiftRequest[];
     }
   });
 
@@ -125,7 +126,7 @@ const GiftRequests = () => {
             <TableBody>
               {giftRequests?.map((request) => (
                 <TableRow key={request.id}>
-                  <TableCell>{request.profiles.email}</TableCell>
+                  <TableCell>{request.sender.email}</TableCell>
                   <TableCell>
                     <a 
                       href={request.product_url} 
