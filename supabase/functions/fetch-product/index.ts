@@ -11,9 +11,15 @@ async function fetchProductDetails(url: string) {
   try {
     console.log('Attempting to fetch URL:', url);
     
+    // Add custom headers to mimic a browser request
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Cache-Control': 'max-age=0'
       }
     });
 
@@ -25,6 +31,7 @@ async function fetchProductDetails(url: string) {
     console.log('Successfully fetched URL, getting text content');
     const html = await response.text();
     console.log('HTML content length:', html.length);
+    console.log('First 500 characters of HTML:', html.substring(0, 500));
 
     const doc = new DOMParser().parseFromString(html, 'text/html');
     
@@ -35,50 +42,66 @@ async function fetchProductDetails(url: string) {
 
     console.log('Successfully parsed HTML document');
 
-    // Enhanced metadata extraction
+    // Enhanced metadata extraction with logging
     const title = doc.querySelector('title')?.textContent || '';
     console.log('Extracted title:', title);
 
-    const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+    // Try multiple ways to get description
+    const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') 
+      || doc.querySelector('meta[property="og:description"]')?.getAttribute('content')
+      || doc.querySelector('.product-description')?.textContent
+      || '';
     console.log('Extracted description:', description);
     
-    // Try multiple image sources with logging
+    // Enhanced image extraction with logging
     const images = [
       doc.querySelector('meta[property="og:image"]')?.getAttribute('content'),
       doc.querySelector('meta[property="product:image"]')?.getAttribute('content'),
       doc.querySelector('meta[property="twitter:image"]')?.getAttribute('content'),
-      ...Array.from(doc.querySelectorAll('img[src*="product"]')).map(img => img.getAttribute('src')),
-      ...Array.from(doc.querySelectorAll('img.product-image')).map(img => img.getAttribute('src')),
+      ...Array.from(doc.querySelectorAll('img[src*="product"], img[src*="prod"]')).map(img => img.getAttribute('src')),
+      ...Array.from(doc.querySelectorAll('img.product-image, img._396cs4')).map(img => img.getAttribute('src')), // Added Flipkart-specific class
     ].filter(Boolean);
     
     console.log('Found images:', images);
     const image = images[0] || '';
 
-    // Enhanced price extraction with discount handling
-    const priceElements = doc.querySelectorAll('[class*="price"], [id*="price"], [class*="cost"], .discount, .sale-price');
-    console.log('Found price elements:', priceElements.length);
-
+    // Enhanced price extraction with logging
     let originalPrice = 0;
     let discountedPrice = 0;
 
-    priceElements.forEach((element, index) => {
-      const text = element.textContent || '';
-      console.log(`Price element ${index} text:`, text);
+    // Try multiple price selectors (including Flipkart-specific ones)
+    const priceSelectors = [
+      '._30jeq3', // Flipkart price class
+      '._3I9_wc', // Flipkart original price class
+      '[class*="price"]',
+      '[class*="cost"]',
+      '[class*="discount"]',
+      '[class*="sale"]'
+    ];
+
+    for (const selector of priceSelectors) {
+      const elements = doc.querySelectorAll(selector);
+      console.log(`Found ${elements.length} elements for selector ${selector}`);
       
-      const priceMatch = text.match(/[\$₹]?\s*(\d+(?:,\d+)*(?:\.\d{2})?)/);
-      if (priceMatch) {
-        const price = parseFloat(priceMatch[1].replace(/,/g, ''));
-        console.log(`Matched price value:`, price);
+      elements.forEach((element, index) => {
+        const text = element.textContent || '';
+        console.log(`Price element ${selector}[${index}] text:`, text);
         
-        if (element.className.includes('original') || element.className.includes('mrp')) {
-          originalPrice = price;
-        } else if (element.className.includes('discount') || element.className.includes('sale')) {
-          discountedPrice = price;
-        } else if (!originalPrice && !discountedPrice) {
-          originalPrice = price;
+        const priceMatch = text.match(/[₹$]?\s*(\d+(?:,\d+)*(?:\.\d{2})?)/);
+        if (priceMatch) {
+          const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+          console.log(`Matched price value:`, price);
+          
+          if (element.className.includes('3I9_wc')) { // Flipkart original price
+            originalPrice = price;
+          } else if (element.className.includes('30jeq3')) { // Flipkart selling price
+            discountedPrice = price;
+          } else if (!originalPrice && !discountedPrice) {
+            originalPrice = price;
+          }
         }
-      }
-    });
+      });
+    }
 
     console.log('Final price values:', { originalPrice, discountedPrice });
 
@@ -91,7 +114,7 @@ async function fetchProductDetails(url: string) {
 
     // Extract specifications
     const specs: string[] = [];
-    const specElements = doc.querySelectorAll('[class*="specification"], [class*="specs"], [class*="details"], [class*="features"]');
+    const specElements = doc.querySelectorAll('._3dtsli, ._2cM9lP, [class*="specification"], [class*="specs"], [class*="details"], [class*="features"]');
     specElements.forEach(element => {
       const text = element.textContent?.trim();
       if (text && text.length < 100) {
@@ -111,9 +134,9 @@ async function fetchProductDetails(url: string) {
       name: title.split('|')[0].trim(),
       description: summarizedDescription,
       price: finalPrice,
-      priceInr: finalPrice * 83, // Approximate INR conversion
+      priceInr: finalPrice, // Already in INR for Flipkart
       image: image || "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg",
-      originalPrice: originalPrice * 83, // Convert to INR
+      originalPrice: originalPrice,
       hasDiscount: discountedPrice > 0,
     };
 
