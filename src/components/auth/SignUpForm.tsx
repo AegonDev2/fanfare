@@ -39,7 +39,7 @@ const SignUpForm = () => {
     setIsLoading(true);
 
     try {
-      // Create the user in Supabase Auth with metadata
+      // First, sign up the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -56,37 +56,24 @@ const SignUpForm = () => {
         throw new Error("No user data returned");
       }
 
-      // Insert the profile data
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email: email,
-          user_type: userType
-        });
-
-      if (profileError) {
-        console.error("Profile creation error:", profileError);
-        throw new Error("Failed to create user profile");
-      }
-
       toast({
         title: "Success",
         description: "Please check your email to verify your account!",
       });
       
+      // Navigate based on user type
       if (userType === "influencer") {
         navigate("/create-profile");
       } else {
         navigate("/");
       }
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: error.message || "An error occurred during sign up",
       });
-      console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
     }
