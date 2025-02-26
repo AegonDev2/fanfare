@@ -116,15 +116,26 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       .eq("id", currentUserId)
       .maybeSingle();
 
-    const processedItems = navData.map(item => {
-      // If this is the profile item and user has a profile, update the path
-      if (item.title === "Profile" && existingProfile) {
-        return {
-          ...item,
-          path: `/profile/${currentUserId}` // Update path to user's profile
-        };
+    const processedItems = navData.filter(item => {
+      // If user has a profile, show Profile but hide Create Profile
+      if (existingProfile) {
+        if (item.title === "Create Profile") {
+          return false;
+        }
+        if (item.title === "Profile") {
+          item.path = `/profile/${currentUserId}`;
+          return true;
+        }
+      } else {
+        // If user doesn't have a profile, show Create Profile but hide Profile
+        if (item.title === "Profile") {
+          return false;
+        }
+        if (item.title === "Create Profile") {
+          return true;
+        }
       }
-      return item;
+      return true;
     });
 
     setNavItems(processedItems);
