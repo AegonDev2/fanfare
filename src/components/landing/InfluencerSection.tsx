@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Gift } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { memo, useState, useMemo } from "react";
 
@@ -18,27 +18,50 @@ interface InfluencerSectionProps {
   influencers: Influencer[];
 }
 
-const InfluencerCard = memo(({ influencer, onProfileClick }: { influencer: Influencer; onProfileClick: (id: string) => void }) => (
-  <div className="bg-white p-3 rounded-lg shadow-md h-full">
-    <img
-      src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'}
-      alt={`${influencer.name}'s profile`}
-      className="w-full h-32 object-cover rounded-lg"
-      loading="lazy"
-    />
-    <div className="mt-2">
-      <h3 className="text-sm font-semibold text-gray-800">{influencer.name}</h3>
-      <p className="text-xs text-gray-600">{influencer.platform} • {influencer.followers.toLocaleString()} followers</p>
-      <Button 
-        size="sm" 
-        className="mt-2 w-full text-xs"
-        onClick={() => onProfileClick(influencer.id)}
+const InfluencerCard = memo(({ influencer, onProfileClick }: { 
+  influencer: Influencer; 
+  onProfileClick: (id: string) => void;
+}) => {
+  const navigate = useNavigate();
+
+  const handleGiftClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/place-order?influencer=${influencer.id}`);
+  };
+
+  return (
+    <div className="bg-white p-3 rounded-lg shadow-md h-full relative group">
+      <div 
+        className="absolute right-5 top-5 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={handleGiftClick}
       >
-        View Profile
-      </Button>
+        <Button 
+          size="icon" 
+          className="rounded-full h-8 w-8 bg-white/90 hover:bg-white shadow-md"
+        >
+          <Gift className="h-4 w-4 text-primary" />
+        </Button>
+      </div>
+      <img
+        src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'}
+        alt={`${influencer.name}'s profile`}
+        className="w-full h-32 object-cover rounded-lg"
+        loading="lazy"
+      />
+      <div className="mt-2">
+        <h3 className="text-sm font-semibold text-gray-800">{influencer.name}</h3>
+        <p className="text-xs text-gray-600">{influencer.platform} • {influencer.followers.toLocaleString()} followers</p>
+        <Button 
+          size="sm" 
+          className="mt-2 w-full text-xs"
+          onClick={() => onProfileClick(influencer.id)}
+        >
+          View Profile
+        </Button>
+      </div>
     </div>
-  </div>
-));
+  );
+});
 
 InfluencerCard.displayName = "InfluencerCard";
 
