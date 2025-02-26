@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Bell, User, Lock, Trash2 } from "lucide-react";
+import { Settings as SettingsIcon, Bell, User, Lock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
@@ -14,14 +14,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
 const Settings = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -41,33 +33,6 @@ const Settings = () => {
       toast({
         title: "Error",
         description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-
-      const { error } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", user.id);
-
-      if (error) throw error;
-
-      await supabase.auth.signOut();
-      navigate("/auth");
-      toast({
-        title: "Account deleted",
-        description: "Your account has been successfully deleted.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete account. Please try again.",
         variant: "destructive",
       });
     }
@@ -140,47 +105,6 @@ const Settings = () => {
               <Lock className="mr-2 h-4 w-4" />
               Sign Out
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Danger Zone */}
-        <Card className="border-red-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
-              <Trash2 className="h-5 w-5" />
-              Danger Zone
-            </CardTitle>
-            <CardDescription>
-              Irreversible account actions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="destructive" className="w-full justify-start">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Account
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Are you absolutely sure?</DialogTitle>
-                  <DialogDescription>
-                    This action cannot be undone. This will permanently delete your
-                    account and remove your data from our servers.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="ghost">Cancel</Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleDeleteAccount}
-                  >
-                    Delete Account
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </CardContent>
         </Card>
       </div>
