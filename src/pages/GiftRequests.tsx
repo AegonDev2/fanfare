@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import Header from "@/components/landing/Header";
 import {
   Card,
   CardContent,
@@ -20,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Gift, ThumbsUp, ThumbsDown, ArrowLeft, Info } from "lucide-react";
+import { Gift, ThumbsUp, ThumbsDown } from "lucide-react";
 
 type GiftRequest = {
   id: string;
@@ -40,6 +41,7 @@ type GiftRequest = {
 
 const GiftRequests = () => {
   const isMobile = useIsMobile();
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<GiftRequest | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
   const { toast } = useToast();
@@ -99,12 +101,9 @@ const GiftRequests = () => {
 
   return (
     <div className="min-h-screen bg-[#9b87f5]">
-      <div className="sticky top-0 z-10 bg-[#9b87f5] shadow-md px-4 py-3 flex items-center gap-3">
-        <ArrowLeft className="w-6 h-6 text-white" />
-        <h1 className="text-lg font-medium text-white">Gift Requests</h1>
-      </div>
-
-      <div className="bg-[#F1F1F1] min-h-screen rounded-t-3xl pt-6">
+      <Header setNavOpen={setIsNavOpen} />
+      
+      <div className="bg-[#F1F1F1] min-h-screen rounded-t-3xl pt-6 mt-16">
         <Card className="mx-4 mb-4 border-none shadow-lg bg-white rounded-2xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
