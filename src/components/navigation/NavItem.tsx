@@ -1,0 +1,37 @@
+
+import { Home, User, UserPlus, Settings } from "lucide-react";
+
+interface NavItemProps {
+  id: string;
+  title: string;
+  path: string;
+  icon: string;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const iconMap: { [key: string]: any } = {
+  Home,
+  User,
+  UserPlus,
+  Settings,
+};
+
+const NavItem = ({ title, icon, isActive, onClick }: NavItemProps) => {
+  const Icon = iconMap[icon];
+
+  return (
+    <div
+      className={`flex items-center px-4 py-4 cursor-pointer rounded-lg transition-all duration-300 ease-in-out my-2
+        ${isActive 
+          ? "text-[var(--navbar-dark-primary)] bg-[var(--background)]" 
+          : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)]"}`}
+      onClick={onClick}
+    >
+      {Icon && <Icon className="h-5 w-5 min-w-12 text-center" />}
+      <span className="ml-4 truncate">{title}</span>
+    </div>
+  );
+};
+
+export default NavItem;
