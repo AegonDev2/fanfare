@@ -31,6 +31,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -49,6 +50,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserEmail(user.email);
+        setUserId(user.id);
 
         const { data: roleData, error: roleError } = await supabase
           .from("user_roles")
@@ -105,7 +107,25 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       return;
     }
 
-    setNavItems(data);
+    // Filter out create-profile if user already has a profile
+    if (userId) {
+      const { data: existingProfile } = await supabase
+        .from("influencer_profiles")
+        .select("id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      const filteredItems = data.filter(item => {
+        if (item.path === "/create-profile") {
+          return !existingProfile;
+        }
+        return true;
+      });
+
+      setNavItems(filteredItems);
+    } else {
+      setNavItems(data);
+    }
   };
 
   return (
