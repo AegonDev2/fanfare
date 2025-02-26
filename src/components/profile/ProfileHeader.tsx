@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Gift, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -38,9 +37,9 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
   };
 
   // Call checkEditPermission when component mounts
-  useState(() => {
+  useEffect(() => {
     checkEditPermission();
-  }, []);
+  }, [profileId]);
 
   return (
     <div className="flex flex-col md:flex-row items-center md:items-start gap-6">

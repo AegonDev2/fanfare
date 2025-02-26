@@ -9,8 +9,9 @@ import { memo, useState, useMemo } from "react";
 interface Influencer {
   id: string;
   name: string;
-  category: string;
-  image: string;
+  platform: string;
+  profile_image: string;
+  followers: number;
 }
 
 interface InfluencerSectionProps {
@@ -20,14 +21,14 @@ interface InfluencerSectionProps {
 const InfluencerCard = memo(({ influencer, onProfileClick }: { influencer: Influencer; onProfileClick: (id: string) => void }) => (
   <div className="bg-white p-3 rounded-lg shadow-md h-full">
     <img
-      src={influencer.image}
+      src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'}
       alt={`${influencer.name}'s profile`}
       className="w-full h-32 object-cover rounded-lg"
       loading="lazy"
     />
     <div className="mt-2">
       <h3 className="text-sm font-semibold text-gray-800">{influencer.name}</h3>
-      <p className="text-xs text-gray-600">{influencer.category}</p>
+      <p className="text-xs text-gray-600">{influencer.platform} • {influencer.followers.toLocaleString()} followers</p>
       <Button 
         size="sm" 
         className="mt-2 w-full text-xs"
@@ -49,14 +50,13 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
     navigate(`/profile/${id}`);
   };
 
-  // Filter influencers based on search query
   const filteredInfluencers = useMemo(() => {
     if (!searchQuery.trim()) return influencers;
     
     const query = searchQuery.toLowerCase().trim();
     return influencers.filter(influencer => 
       influencer.name.toLowerCase().includes(query) ||
-      influencer.category.toLowerCase().includes(query)
+      influencer.platform.toLowerCase().includes(query)
     );
   }, [influencers, searchQuery]);
 

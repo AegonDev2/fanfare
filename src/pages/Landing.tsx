@@ -1,15 +1,49 @@
 
+import { useEffect, useState } from "react";
 import Header from "@/components/landing/Header";
 import HeroCarousel from "@/components/landing/HeroCarousel";
 import InfluencerSection from "@/components/landing/InfluencerSection";
 import GiftSection from "@/components/landing/GiftSection";
 import OrderTrackingSection from "@/components/landing/OrderTrackingSection";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface LandingProps {
   setNavOpen: (isOpen: boolean) => void;
 }
 
 const Landing = ({ setNavOpen }: LandingProps) => {
+  const { toast } = useToast();
+  const [influencers, setInfluencers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchInfluencers();
+  }, []);
+
+  const fetchInfluencers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('influencer_profiles')
+        .select('*');
+
+      if (error) {
+        throw error;
+      }
+
+      setInfluencers(data);
+    } catch (error: any) {
+      console.error('Error fetching influencers:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load influencers",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const slides = [
     {
       src: "https://storage.googleapis.com/a1aa/image/nEyyMJHY73DoGPRrtOSXC1KvCAwbILiKV78pvYqeexs.jpg",
@@ -22,45 +56,6 @@ const Landing = ({ setNavOpen }: LandingProps) => {
     {
       src: "https://storage.googleapis.com/a1aa/image/Z2Kqw4XzbQzPaXB2LzQB4Rce-FMmCB0pAxCN5JOjxo0.jpg",
       alt: "Advertisement banner for Sponsor 3 featuring a special event"
-    }
-  ];
-
-  const influencers = [
-    {
-      id: "1",
-      name: "Jane Doe",
-      category: "Beauty, Lifestyle",
-      image: "https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg"
-    },
-    {
-      id: "2",
-      name: "John Smith",
-      category: "Gaming, Tech",
-      image: "https://storage.googleapis.com/a1aa/image/R4lTF1BSiN2peiSedQ_j1g5qFHHgy0X5xpVXws3Wo1g.jpg"
-    },
-    {
-      id: "3",
-      name: "Emily Johnson",
-      category: "Travel, Photography",
-      image: "https://storage.googleapis.com/a1aa/image/e6eeDEu88nkMhxxbqL65Yf_1XJjeRTGffPUCWBak9Vc.jpg"
-    },
-    {
-      id: "4",
-      name: "Alex Rivera",
-      category: "Fitness, Health",
-      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901"
-    },
-    {
-      id: "5",
-      name: "Sarah Chen",
-      category: "Fashion, Style",
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04"
-    },
-    {
-      id: "6",
-      name: "Mike Wilson",
-      category: "Food, Cooking",
-      image: "https://images.unsplash.com/photo-1498936178812-4b2e558d2937"
     }
   ];
 
@@ -100,10 +95,14 @@ const Landing = ({ setNavOpen }: LandingProps) => {
   return (
     <div className="min-h-screen w-full bg-gray-100 font-roboto">
       <Header setNavOpen={setNavOpen} />
-      <div className="pt-16"> {/* Add padding to account for fixed header */}
+      <div className="pt-16">
         <HeroCarousel slides={slides} />
         <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <InfluencerSection influencers={influencers} />
+          {loading ? (
+            <div className="text-center py-8">Loading influencers...</div>
+          ) : (
+            <InfluencerSection influencers={influencers} />
+          )}
           <GiftSection gifts={gifts} />
           <OrderTrackingSection />
         </main>
