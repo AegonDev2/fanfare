@@ -13,6 +13,7 @@ const CreateInfluencerProfile = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     platform: "",
@@ -30,6 +31,68 @@ const CreateInfluencerProfile = () => {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Image size should be less than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setUploadingImage(true);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('profile_images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile_images')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({
+        ...prev,
+        profile_image: publicUrl
+      }));
+
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully"
+      });
+    } catch (error: any) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload image",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const checkAuth = async () => {
     try {
@@ -118,7 +181,6 @@ const CreateInfluencerProfile = () => {
         });
 
       if (error) {
-        console.error("Error creating profile:", error);
         throw error;
       }
 
@@ -217,13 +279,27 @@ const CreateInfluencerProfile = () => {
             </div>
 
             <div>
-              <Label htmlFor="profile_image">Profile Image URL</Label>
-              <Input
-                id="profile_image"
-                value={formData.profile_image || ""}
-                onChange={e => setFormData(prev => ({ ...prev, profile_image: e.target.value }))}
-                placeholder="https://..."
-              />
+              <Label htmlFor="profile_image">Profile Image</Label>
+              <div className="space-y-2">
+                <Input
+                  id="profile_image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={uploadingImage}
+                  className="cursor-pointer"
+                />
+                {uploadingImage && <p className="text-sm text-gray-500">Uploading image...</p>}
+                {formData.profile_image && (
+                  <div className="mt-2">
+                    <img 
+                      src={formData.profile_image} 
+                      alt="Profile preview" 
+                      className="w-32 h-32 object-cover rounded-full"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>
@@ -281,7 +357,7 @@ const CreateInfluencerProfile = () => {
               </div>
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full">
+            <Button type="submit" disabled={isLoading || uploadingImage} className="w-full">
               {isLoading ? "Saving..." : "Save Profile"}
             </Button>
           </form>
