@@ -109,11 +109,21 @@ const GiftRequests = () => {
       <div className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4 animate-fade-in">
             <Gift className="w-8 h-8 text-purple-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gift Requests</h1>
-          <p className="text-lg text-gray-600">Manage your pending gift requests from fans</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight lg:text-4xl">
+            Your Gift Requests
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Review and manage gift requests from your fans. Accept or reject requests and provide personalized responses.
+          </p>
+          <div className="mt-6 flex justify-center gap-4">
+            <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-lg">
+              <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+              <span className="text-sm text-purple-700">Pending Requests</span>
+            </div>
+          </div>
         </div>
 
         {/* Requests Table Card */}
@@ -155,7 +165,7 @@ const GiftRequests = () => {
                       <TableCell>
                         <Button 
                           size="sm" 
-                          className="bg-purple-600 hover:bg-purple-700 text-white"
+                          className="bg-purple-600 hover:bg-purple-700 text-white shadow-sm"
                           onClick={() => setSelectedRequest(request)}
                         >
                           Respond
@@ -165,8 +175,11 @@ const GiftRequests = () => {
                   ))}
                   {(!giftRequests || giftRequests.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-12 text-gray-500">
-                        No pending gift requests
+                      <TableCell colSpan={5} className="text-center py-12">
+                        <div className="flex flex-col items-center gap-2 text-gray-500">
+                          <Gift className="w-8 h-8 text-gray-400" />
+                          <p>No pending gift requests</p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )}
