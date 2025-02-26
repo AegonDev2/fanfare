@@ -36,29 +36,70 @@ const SignUpForm = () => {
       return;
     }
 
+    if (password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Password must be at least 6 characters long",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // First, sign up the user
+      console.log("Starting signup process for:", email, "as", userType);
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             user_type: userType
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
-      if (authError) throw authError;
+      console.log("Signup response:", { authData, authError });
+
+      if (authError) {
+        throw authError;
+      }
 
       if (!authData.user) {
         throw new Error("No user data returned");
       }
 
+      // Check if the profile was created by querying it
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      console.log("Profile check:", { profileData, profileError });
+
+      if (profileError) {
+        console.error("Error checking profile:", profileError);
+      }
+
+      // Check if the role was created
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', authData.user.id)
+        .single();
+
+      console.log("Role check:", { roleData, roleError });
+
+      if (roleError) {
+        console.error("Error checking role:", roleError);
+      }
+
       toast({
         title: "Success",
-        description: "Please check your email to verify your account!",
+        description: "Account created successfully! Please check your email to verify your account.",
       });
       
       // Navigate based on user type
@@ -69,11 +110,21 @@ const SignUpForm = () => {
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "An error occurred during sign up",
-      });
+      
+      // Handle specific error cases
+      if (error.message?.toLowerCase().includes('already registered')) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "This email is already registered. Please try logging in instead.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "An error occurred during sign up",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -97,10 +148,11 @@ const SignUpForm = () => {
         <Input
           id="signup-password"
           type="password"
-          placeholder="Create a password"
+          placeholder="Create a password (min. 6 characters)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          minLength={6}
         />
       </div>
       <div className="space-y-2">
