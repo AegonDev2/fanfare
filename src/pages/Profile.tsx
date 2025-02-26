@@ -109,6 +109,7 @@ const Profile = () => {
             followers={influencer.followers}
             profileImage={influencer.profile_image}
             onSendGift={handleSendGift}
+            profileId={influencer.id}
           />
           
           <ProfileBio
