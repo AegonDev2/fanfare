@@ -41,7 +41,6 @@ type GiftRequest = {
 
 const GiftRequests = () => {
   const isMobile = useIsMobile();
-  const [isNavOpen, setIsNavOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<GiftRequest | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
   const { toast } = useToast();
@@ -101,7 +100,7 @@ const GiftRequests = () => {
 
   return (
     <div className="min-h-screen bg-[#F1F1F1]">
-      <Header setNavOpen={setIsNavOpen} />
+      <Header setNavOpen={(isOpen) => isOpen} />
       
       <div className="container mx-auto px-4 pb-6 pt-20">
         <Card className="mb-4 border-none shadow-lg bg-white rounded-2xl">
