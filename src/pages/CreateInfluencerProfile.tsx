@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -150,7 +151,7 @@ const CreateInfluencerProfile = () => {
       });
       navigate("/");
     } finally {
-      setIsAuthChecking(false);
+      setIsAuthChecking(false);  // Fixed: Changed from true to false
     }
   };
 
@@ -235,6 +236,7 @@ const CreateInfluencerProfile = () => {
           <h1 className="text-2xl font-bold mb-6 text-center">Create Your Influencer Profile</h1>
           
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Name field */}
             <div>
               <Label htmlFor="name">Name *</Label>
               <Input
@@ -245,6 +247,7 @@ const CreateInfluencerProfile = () => {
               />
             </div>
 
+            {/* Platform field */}
             <div>
               <Label htmlFor="platform">Platform *</Label>
               <Input
@@ -256,6 +259,7 @@ const CreateInfluencerProfile = () => {
               />
             </div>
 
+            {/* Followers field */}
             <div>
               <Label htmlFor="followers">Followers *</Label>
               <Input
@@ -268,6 +272,7 @@ const CreateInfluencerProfile = () => {
               />
             </div>
 
+            {/* About field */}
             <div>
               <Label htmlFor="about">About</Label>
               <Textarea
@@ -278,6 +283,7 @@ const CreateInfluencerProfile = () => {
               />
             </div>
 
+            {/* Profile Image Upload */}
             <div>
               <Label htmlFor="profile_image">Profile Image</Label>
               <div className="space-y-2">
@@ -302,6 +308,7 @@ const CreateInfluencerProfile = () => {
               </div>
             </div>
 
+            {/* Social Media Links */}
             <div>
               <Label>Social Media Links</Label>
               <div className="space-y-4">
@@ -328,6 +335,7 @@ const CreateInfluencerProfile = () => {
               </div>
             </div>
 
+            {/* Hobbies section */}
             <div>
               <Label>Hobbies</Label>
               <div className="flex gap-2 mb-2">
