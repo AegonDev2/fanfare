@@ -7,6 +7,7 @@ import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileBio from "@/components/profile/ProfileBio";
 import SocialLinks from "@/components/profile/SocialLinks";
 import Header from "@/components/landing/Header";
+import { useState } from "react";
 
 const isValidUUID = (uuid: string) => {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -17,6 +18,7 @@ const Profile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
   const { data: influencer, isLoading, error } = useQuery({
     queryKey: ['influencer', id],
@@ -76,14 +78,22 @@ const Profile = () => {
   };
 
   if (isLoading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Header setNavOpen={setIsNavOpen} />
+        <div className="container mx-auto px-4 py-8 pt-20">Loading...</div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error instanceof Error ? error.message : "Failed to load influencer profile"}
+      <div className="min-h-screen bg-gray-100">
+        <Header setNavOpen={setIsNavOpen} />
+        <div className="container mx-auto px-4 py-8 pt-20">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error instanceof Error ? error.message : "Failed to load influencer profile"}
+          </div>
         </div>
       </div>
     );
@@ -91,9 +101,12 @@ const Profile = () => {
 
   if (!influencer) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
-          Influencer not found
+      <div className="min-h-screen bg-gray-100">
+        <Header setNavOpen={setIsNavOpen} />
+        <div className="container mx-auto px-4 py-8 pt-20">
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
+            Influencer not found
+          </div>
         </div>
       </div>
     );
@@ -101,7 +114,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Header setNavOpen={() => {}} />
+      <Header setNavOpen={setIsNavOpen} />
       <main className="container mx-auto px-4 py-8 pt-20">
         <section className="bg-white shadow-md rounded-lg p-6">
           <ProfileHeader
