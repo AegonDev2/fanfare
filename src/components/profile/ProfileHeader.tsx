@@ -61,7 +61,7 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
               <Button 
                 variant="outline"
                 className="flex items-center gap-2"
-                onClick={() => navigate('/create-profile')}
+                onClick={() => navigate('/edit-profile')}
               >
                 <Edit className="h-4 w-4" />
                 Edit Profile

@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import PlaceOrder from "./pages/PlaceOrder";
 import CreateInfluencerProfile from "./pages/CreateInfluencerProfile";
+import EditProfile from "./pages/EditProfile";
 import NotFound from "./pages/NotFound";
 import GiftRequests from "./pages/GiftRequests";
 import Navbar from "./components/navigation/Navbar";
@@ -57,6 +58,7 @@ const AppContent = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/create-profile" element={<CreateInfluencerProfile />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/place-order" element={<PlaceOrder setNavOpen={setIsNavOpen} />} />
             <Route path="/gift-requests" element={<GiftRequests />} />
             <Route path="*" element={<NotFound />} />
