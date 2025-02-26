@@ -19,6 +19,7 @@ export interface InfluencerAddress {
   state: string;
   postal_code: string;
   country: string;
+  is_primary?: boolean;
 }
 
 export interface EcommerceOrder {
