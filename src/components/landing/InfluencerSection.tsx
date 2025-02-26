@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { memo } from "react";
+import { memo, useState, useMemo } from "react";
 
 interface Influencer {
   id: string;
@@ -43,10 +43,22 @@ InfluencerCard.displayName = "InfluencerCard";
 
 const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleProfileClick = (id: string) => {
     navigate(`/profile/${id}`);
   };
+
+  // Filter influencers based on search query
+  const filteredInfluencers = useMemo(() => {
+    if (!searchQuery.trim()) return influencers;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return influencers.filter(influencer => 
+      influencer.name.toLowerCase().includes(query) ||
+      influencer.category.toLowerCase().includes(query)
+    );
+  }, [influencers, searchQuery]);
 
   return (
     <section className="mb-8 relative">
@@ -57,6 +69,8 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
             className="w-full md:w-64"
             placeholder="Search Influencers"
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
         </div>
@@ -72,14 +86,22 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
           className="w-full"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
-            {influencers.map((influencer, index) => (
-              <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
-                <InfluencerCard 
-                  influencer={influencer}
-                  onProfileClick={handleProfileClick}
-                />
+            {filteredInfluencers.length > 0 ? (
+              filteredInfluencers.map((influencer, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
+                  <InfluencerCard 
+                    influencer={influencer}
+                    onProfileClick={handleProfileClick}
+                  />
+                </CarouselItem>
+              ))
+            ) : (
+              <CarouselItem className="pl-2 md:pl-4 w-full">
+                <div className="bg-white p-6 rounded-lg shadow-md text-center">
+                  <p className="text-gray-600">No influencers found matching your search.</p>
+                </div>
               </CarouselItem>
-            ))}
+            )}
           </CarouselContent>
           <CarouselPrevious className="left-0 -translate-x-full" />
           <CarouselNext className="right-0 translate-x-full" />
