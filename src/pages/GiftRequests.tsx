@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Card,
   CardContent,
@@ -47,6 +47,7 @@ type GiftRequest = {
 }
 
 const GiftRequests = () => {
+  const isMobile = useIsMobile();
   const [selectedRequest, setSelectedRequest] = useState<GiftRequest | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
   const { toast } = useToast();
@@ -105,67 +106,85 @@ const GiftRequests = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
-      <div className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4 animate-fade-in">
-            <Gift className="w-8 h-8 text-purple-600" />
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white pb-20 md:pb-0">
+      <div className="container mx-auto py-8 md:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8 md:mb-12">
+          <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-purple-100 mb-3 md:mb-4 animate-fade-in">
+            <Gift className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight lg:text-4xl">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight lg:text-4xl">
             Your Gift Requests
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             Review and manage gift requests from your fans. Accept or reject requests and provide personalized responses.
           </p>
-          <div className="mt-6 flex justify-center gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-lg">
+          <div className="mt-4 md:mt-6 flex justify-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-purple-50 rounded-lg">
               <div className="w-2 h-2 rounded-full bg-purple-400"></div>
-              <span className="text-sm text-purple-700">Pending Requests</span>
+              <span className="text-xs md:text-sm text-purple-700">Pending Requests</span>
             </div>
           </div>
         </div>
 
-        {/* Requests Table Card */}
         <Card className="rounded-xl shadow-lg bg-white/80 backdrop-blur-sm border-purple-100">
-          <CardHeader className="border-b border-purple-100/20 bg-gradient-to-r from-purple-50/50 to-transparent">
-            <CardTitle className="text-xl text-gray-800">Pending Requests</CardTitle>
-            <CardDescription>
+          <CardHeader className="border-b border-purple-100/20 bg-gradient-to-r from-purple-50/50 to-transparent p-4 md:p-6">
+            <CardTitle className="text-lg md:text-xl text-gray-800">Pending Requests</CardTitle>
+            <CardDescription className="text-sm md:text-base">
               Review and respond to gift requests from your fans
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="rounded-lg overflow-hidden border border-purple-100/20">
+          <CardContent className="p-3 md:p-6">
+            <div className="rounded-lg overflow-x-auto border border-purple-100/20">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-purple-50/50">
-                    <TableHead className="font-semibold text-purple-900">From</TableHead>
-                    <TableHead className="font-semibold text-purple-900">Product</TableHead>
-                    <TableHead className="font-semibold text-purple-900">Price</TableHead>
-                    <TableHead className="font-semibold text-purple-900">Message</TableHead>
-                    <TableHead className="font-semibold text-purple-900">Actions</TableHead>
+                    <TableHead className="font-semibold text-purple-900 text-xs md:text-sm">From</TableHead>
+                    {!isMobile && (
+                      <>
+                        <TableHead className="font-semibold text-purple-900 text-xs md:text-sm">Product</TableHead>
+                        <TableHead className="font-semibold text-purple-900 text-xs md:text-sm">Price</TableHead>
+                      </>
+                    )}
+                    <TableHead className="font-semibold text-purple-900 text-xs md:text-sm">Message</TableHead>
+                    <TableHead className="font-semibold text-purple-900 text-xs md:text-sm">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {giftRequests?.map((request) => (
                     <TableRow key={request.id} className="hover:bg-purple-50/30 transition-colors">
-                      <TableCell className="text-gray-700">{request.sender?.email}</TableCell>
-                      <TableCell>
-                        <a 
-                          href={request.product_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-purple-600 hover:text-purple-800 hover:underline font-medium"
-                        >
-                          {request.product_title}
-                        </a>
+                      <TableCell className="text-gray-700 text-xs md:text-sm py-3 md:py-4">
+                        {request.sender?.email}
                       </TableCell>
-                      <TableCell className="text-gray-700">₹{request.product_price}</TableCell>
-                      <TableCell className="text-gray-700">{request.message}</TableCell>
+                      {!isMobile && (
+                        <>
+                          <TableCell className="text-xs md:text-sm">
+                            <a 
+                              href={request.product_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-purple-600 hover:text-purple-800 hover:underline font-medium"
+                            >
+                              {request.product_title}
+                            </a>
+                          </TableCell>
+                          <TableCell className="text-gray-700 text-xs md:text-sm">₹{request.product_price}</TableCell>
+                        </>
+                      )}
+                      <TableCell className="text-gray-700 text-xs md:text-sm">
+                        {isMobile ? (
+                          <div>
+                            <p className="font-medium text-purple-600 mb-1">{request.product_title}</p>
+                            <p className="text-sm text-gray-600 mb-1">₹{request.product_price}</p>
+                            <p className="text-xs">{request.message}</p>
+                          </div>
+                        ) : (
+                          request.message
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Button 
-                          size="sm" 
-                          className="bg-purple-600 hover:bg-purple-700 text-white shadow-sm"
+                          size={isMobile ? "sm" : "default"}
+                          className="bg-purple-600 hover:bg-purple-700 text-white shadow-sm w-full md:w-auto text-xs md:text-sm py-1.5 h-auto"
                           onClick={() => setSelectedRequest(request)}
                         >
                           Respond
@@ -175,10 +194,10 @@ const GiftRequests = () => {
                   ))}
                   {(!giftRequests || giftRequests.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-12">
+                      <TableCell colSpan={isMobile ? 3 : 5} className="text-center py-8 md:py-12">
                         <div className="flex flex-col items-center gap-2 text-gray-500">
-                          <Gift className="w-8 h-8 text-gray-400" />
-                          <p>No pending gift requests</p>
+                          <Gift className="w-6 h-6 md:w-8 md:h-8 text-gray-400" />
+                          <p className="text-sm md:text-base">No pending gift requests</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -191,12 +210,12 @@ const GiftRequests = () => {
       </div>
 
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[95%] max-w-md mx-auto rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-gray-900">
+            <DialogTitle className="text-lg md:text-xl font-semibold text-gray-900">
               Respond to Gift Request
             </DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-sm md:text-base text-gray-600">
               Choose whether to accept or reject this gift request
             </DialogDescription>
           </DialogHeader>
@@ -213,24 +232,24 @@ const GiftRequests = () => {
             />
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
             <Button
               variant="outline"
               onClick={() => setSelectedRequest(null)}
-              className="border-purple-200 hover:bg-purple-50"
+              className="w-full sm:w-auto border-purple-200 hover:bg-purple-50"
             >
               Cancel
             </Button>
             <Button 
               variant="destructive"
               onClick={() => handleResponse("rejected")}
-              className="bg-red-500 hover:bg-red-600"
+              className="w-full sm:w-auto bg-red-500 hover:bg-red-600"
             >
               Reject
             </Button>
             <Button
               onClick={() => handleResponse("accepted")}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700"
             >
               Accept
             </Button>
