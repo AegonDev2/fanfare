@@ -43,6 +43,11 @@ const SignUpForm = () => {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            user_type: userType
+          }
+        }
       });
 
       if (authError) throw authError;
@@ -56,12 +61,10 @@ const SignUpForm = () => {
               id: authData.user.id,
               email: email,
               user_type: userType,
-            },
+            }
           ]);
 
         if (profileError) {
-          // If profile creation fails, we should show an error
-          // In a production app, you might want to delete the auth user as well
           console.error("Profile creation error:", profileError);
           throw new Error("Failed to create user profile");
         }
@@ -71,7 +74,6 @@ const SignUpForm = () => {
           description: "Please check your email to verify your account!",
         });
         
-        // If user type is influencer, redirect to create profile
         if (userType === "influencer") {
           navigate("/create-profile");
         } else {
@@ -85,7 +87,6 @@ const SignUpForm = () => {
         description: error.message || "An error occurred during sign up",
       });
 
-      // Log the error for debugging
       console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
