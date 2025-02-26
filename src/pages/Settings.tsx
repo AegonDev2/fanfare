@@ -41,79 +41,102 @@ const Settings = () => {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <Header setNavOpen={setIsNavOpen} />
-      <div className="container mx-auto px-4 py-8 max-w-4xl mt-20">
-        <div className="flex items-center gap-3 mb-8">
-          <SettingsIcon className="h-8 w-8" />
-          <h1 className="text-3xl font-bold">Settings</h1>
-        </div>
-
-        <div className="space-y-6">
-          {/* Notification Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Notification Settings
-              </CardTitle>
-              <CardDescription>
-                Manage how you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="email-notifications">Email Notifications</Label>
-                <Switch
-                  id="email-notifications"
-                  checked={emailNotifications}
-                  onCheckedChange={setEmailNotifications}
-                />
+      
+      <main className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Page Header */}
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <SettingsIcon className="h-6 w-6 text-purple-600" />
               </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="push-notifications">Push Notifications</Label>
-                <Switch
-                  id="push-notifications"
-                  checked={pushNotifications}
-                  onCheckedChange={setPushNotifications}
-                />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+                <p className="text-gray-500 mt-1">Manage your account and preferences</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Account Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Account Settings
-              </CardTitle>
-              <CardDescription>
-                Manage your account preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => navigate("/edit-profile")}
-              >
-                <User className="mr-2 h-4 w-4" />
-                Edit Profile
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={handleSignOut}
-              >
-                <Lock className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* Notification Settings Card */}
+            <Card className="shadow-sm">
+              <CardHeader className="space-y-1">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Bell className="h-5 w-5 text-purple-600" />
+                  Notification Settings
+                </CardTitle>
+                <CardDescription>
+                  Choose how you want to receive updates
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between space-x-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="email-notifications" className="text-base">Email Notifications</Label>
+                    <p className="text-sm text-gray-500">Receive updates via email</p>
+                  </div>
+                  <Switch
+                    id="email-notifications"
+                    checked={emailNotifications}
+                    onCheckedChange={setEmailNotifications}
+                  />
+                </div>
+                <div className="flex items-center justify-between space-x-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="push-notifications" className="text-base">Push Notifications</Label>
+                    <p className="text-sm text-gray-500">Get notified on your device</p>
+                  </div>
+                  <Switch
+                    id="push-notifications"
+                    checked={pushNotifications}
+                    onCheckedChange={setPushNotifications}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Account Settings Card */}
+            <Card className="shadow-sm">
+              <CardHeader className="space-y-1">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <User className="h-5 w-5 text-purple-600" />
+                  Account Settings
+                </CardTitle>
+                <CardDescription>
+                  Manage your account details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-14 text-base hover:bg-purple-50"
+                  onClick={() => navigate("/edit-profile")}
+                >
+                  <User className="mr-3 h-5 w-5 text-purple-600" />
+                  <div className="text-left">
+                    <div className="font-medium">Edit Profile</div>
+                    <div className="text-sm text-gray-500">Update your personal information</div>
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-14 text-base hover:bg-purple-50"
+                  onClick={handleSignOut}
+                >
+                  <Lock className="mr-3 h-5 w-5 text-purple-600" />
+                  <div className="text-left">
+                    <div className="font-medium">Sign Out</div>
+                    <div className="text-sm text-gray-500">Securely log out of your account</div>
+                  </div>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 };
 
