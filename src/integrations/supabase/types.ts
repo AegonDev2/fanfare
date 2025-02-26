@@ -425,7 +425,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "fan" | "influencer"
+      app_role: "fan" | "influencer" | "admin"
       ecommerce_platform: "amazon" | "flipkart"
       gift_request_status:
         | "pending"

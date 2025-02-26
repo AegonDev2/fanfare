@@ -13,6 +13,7 @@ const CreateInfluencerProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     platform: "",
@@ -35,7 +36,12 @@ const CreateInfluencerProfile = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/");
+        toast({
+          title: "Not authenticated",
+          description: "Please sign in first",
+          variant: "destructive"
+        });
+        navigate("/auth");
         return;
       }
 
@@ -47,13 +53,7 @@ const CreateInfluencerProfile = () => {
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        toast({
-          title: "Error",
-          description: "Failed to verify user type",
-          variant: "destructive"
-        });
-        navigate("/");
-        return;
+        throw new Error("Failed to verify user type");
       }
 
       if (!profile || profile.user_type !== "influencer") {
@@ -80,14 +80,16 @@ const CreateInfluencerProfile = () => {
           hobbies: existingProfile.hobbies || []
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in checkAuth:", error);
       toast({
         title: "Error",
-        description: "An error occurred while checking authentication",
+        description: error.message || "An error occurred while checking authentication",
         variant: "destructive"
       });
       navigate("/");
+    } finally {
+      setIsAuthChecking(true);
     }
   };
 
@@ -157,12 +159,20 @@ const CreateInfluencerProfile = () => {
     }));
   };
 
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Header setNavOpen={() => {}} />
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold mb-6">Create Your Influencer Profile</h1>
+          <h1 className="text-2xl font-bold mb-6 text-center">Create Your Influencer Profile</h1>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
