@@ -42,7 +42,6 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       setIsOpen(false);
     }
     fetchUserInfo();
-    fetchNavItems();
   }, [isMobile, setIsOpen]);
 
   const fetchUserInfo = async () => {
@@ -81,6 +80,9 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
             setUserRole(profile.user_type);
           }
         }
+
+        // After getting user info, fetch nav items
+        fetchNavItems(user.id);
       }
     } catch (error) {
       console.error("Error fetching user info:", error);
@@ -92,8 +94,8 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     }
   };
 
-  const fetchNavItems = async () => {
-    const { data, error } = await supabase
+  const fetchNavItems = async (currentUserId: string) => {
+    const { data: navData, error } = await supabase
       .from("navigation_items")
       .select("*")
       .order("order_index");
@@ -107,25 +109,25 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       return;
     }
 
-    // Filter out create-profile if user already has a profile
-    if (userId) {
-      const { data: existingProfile } = await supabase
-        .from("influencer_profiles")
-        .select("id")
-        .eq("id", userId)
-        .maybeSingle();
+    // Check if user has a profile
+    const { data: existingProfile } = await supabase
+      .from("influencer_profiles")
+      .select("id")
+      .eq("id", currentUserId)
+      .maybeSingle();
 
-      const filteredItems = data.filter(item => {
-        if (item.path === "/create-profile") {
-          return !existingProfile;
-        }
-        return true;
-      });
+    const processedItems = navData.map(item => {
+      // If this is the profile item and user has a profile, update the path
+      if (item.title === "Profile" && existingProfile) {
+        return {
+          ...item,
+          path: `/profile/${currentUserId}` // Update path to user's profile
+        };
+      }
+      return item;
+    });
 
-      setNavItems(filteredItems);
-    } else {
-      setNavItems(data);
-    }
+    setNavItems(processedItems);
   };
 
   return (
@@ -161,7 +163,10 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
                 ${isActive 
                   ? "text-[var(--navbar-dark-primary)] bg-[var(--background)]" 
                   : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)]"}`}
-              onClick={() => navigate(item.path)}
+              onClick={() => {
+                navigate(item.path);
+                setIsOpen(false);
+              }}
             >
               {Icon && <Icon className="h-5 w-5 min-w-12 text-center" />}
               <span className="ml-4 truncate">{item.title}</span>
