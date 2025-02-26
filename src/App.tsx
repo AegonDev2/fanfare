@@ -13,6 +13,7 @@ import CreateInfluencerProfile from "./pages/CreateInfluencerProfile";
 import EditProfile from "./pages/EditProfile";
 import NotFound from "./pages/NotFound";
 import GiftRequests from "./pages/GiftRequests";
+import Settings from "./pages/Settings";
 import Navbar from "./components/navigation/Navbar";
 import { useIsMobile } from "./hooks/use-mobile";
 
@@ -61,6 +62,7 @@ const AppContent = () => {
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/place-order" element={<PlaceOrder setNavOpen={setIsNavOpen} />} />
             <Route path="/gift-requests" element={<GiftRequests />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
