@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,7 +65,6 @@ const CreateInfluencerProfile = () => {
         return;
       }
 
-      // Check if profile already exists
       const { data: existingProfile } = await supabase
         .from("influencer_profiles")
         .select("*")
@@ -89,7 +87,7 @@ const CreateInfluencerProfile = () => {
       });
       navigate("/");
     } finally {
-      setIsAuthChecking(true);
+      setIsAuthChecking(false);
     }
   };
 
