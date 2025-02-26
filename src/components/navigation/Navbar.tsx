@@ -141,6 +141,17 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     setNavItems(processedItems);
   };
 
+  const isActiveRoute = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    // Handle profile path specially
+    if (path.startsWith('/profile/')) {
+      return location.pathname.startsWith('/profile/');
+    }
+    return location.pathname === path;
+  };
+
   return (
     <nav
       className={`w-64 rounded-2xl text-[var(--navbar-light-primary)] 
@@ -165,7 +176,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           if (!userRole || !item.roles.includes(userRole)) return null;
           
           const Icon = iconMap[item.icon];
-          const isActive = location.pathname === item.path;
+          const isActive = isActiveRoute(item.path);
           
           return (
             <div
