@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,7 +101,13 @@ const GiftRequests = () => {
 
   return (
     <div className="min-h-screen bg-[#F1F1F1]">
-      <Header setNavOpen={(isOpen) => isOpen} />
+      <Header setNavOpen={(isOpen: boolean) => {
+        // This function is called from the Header component when the menu button is clicked
+        // The isOpen parameter contains the new desired state of the navigation menu
+        if (window.parent) {
+          window.parent.postMessage({ type: 'SET_NAV_OPEN', isOpen }, '*');
+        }
+      }} />
       
       <div className="container mx-auto px-4 pb-6 pt-20">
         <Card className="mb-4 border-none shadow-lg bg-white rounded-2xl">
