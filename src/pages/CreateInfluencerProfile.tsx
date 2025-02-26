@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -129,11 +128,20 @@ const CreateInfluencerProfile = () => {
         return;
       }
 
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: existingProfileError } = await supabase
         .from("influencer_profiles")
         .select("*")
         .eq("id", user.id)
         .maybeSingle();
+
+      if (existingProfileError) {
+        throw existingProfileError;
+      }
+
+      if (existingProfile) {
+        navigate(`/profile/${user.id}`);
+        return;
+      }
 
       if (existingProfile) {
         setFormData({
@@ -151,7 +159,7 @@ const CreateInfluencerProfile = () => {
       });
       navigate("/");
     } finally {
-      setIsAuthChecking(false);  // Fixed: Changed from true to false
+      setIsAuthChecking(false);
     }
   };
 
