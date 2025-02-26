@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,12 +7,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import Header from "@/components/landing/Header";
+import type { InfluencerAddress } from "@/types/order";
 
 const EditProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [addresses, setAddresses] = useState<InfluencerAddress[]>([]);
+  const [newAddress, setNewAddress] = useState({
+    street_address: "",
+    city: "",
+    state: "",
+    postal_code: "",
+    country: "India",
+  });
   const [formData, setFormData] = useState({
     name: "",
     platform: "",
@@ -30,7 +38,30 @@ const EditProfile = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchAddresses();
   }, []);
+
+  const fetchAddresses = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("influencer_addresses")
+        .select("*")
+        .eq("influencer_id", user.id);
+
+      if (error) throw error;
+      setAddresses(data);
+    } catch (error: any) {
+      console.error("Error fetching addresses:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load addresses",
+        variant: "destructive"
+      });
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -198,6 +229,107 @@ const EditProfile = () => {
     }));
   };
 
+  const handleAddAddress = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      if (!newAddress.street_address || !newAddress.city || !newAddress.state || !newAddress.postal_code) {
+        toast({
+          title: "Error",
+          description: "Please fill in all address fields",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("influencer_addresses")
+        .insert({
+          ...newAddress,
+          influencer_id: user.id,
+          is_primary: addresses.length === 0
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setAddresses(prev => [...prev, data]);
+      setNewAddress({
+        street_address: "",
+        city: "",
+        state: "",
+        postal_code: "",
+        country: "India"
+      });
+
+      toast({
+        title: "Success",
+        description: "Address added successfully"
+      });
+    } catch (error: any) {
+      console.error("Error adding address:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add address",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemoveAddress = async (addressId: string) => {
+    try {
+      const { error } = await supabase
+        .from("influencer_addresses")
+        .delete()
+        .eq("id", addressId);
+
+      if (error) throw error;
+
+      setAddresses(prev => prev.filter(addr => addr.id !== addressId));
+      toast({
+        title: "Success",
+        description: "Address removed successfully"
+      });
+    } catch (error: any) {
+      console.error("Error removing address:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove address",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSetPrimaryAddress = async (addressId: string) => {
+    try {
+      const { error } = await supabase
+        .from("influencer_addresses")
+        .update({ is_primary: true })
+        .eq("id", addressId);
+
+      if (error) throw error;
+
+      setAddresses(prev => prev.map(addr => ({
+        ...addr,
+        is_primary: addr.id === addressId
+      })));
+
+      toast({
+        title: "Success",
+        description: "Primary address updated"
+      });
+    } catch (error: any) {
+      console.error("Error updating primary address:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update primary address",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Header setNavOpen={() => {}} />
@@ -206,7 +338,6 @@ const EditProfile = () => {
           <h1 className="text-2xl font-bold mb-6 text-center">Edit Your Profile</h1>
           
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name field */}
             <div>
               <Label htmlFor="name">Name *</Label>
               <Input
@@ -217,7 +348,6 @@ const EditProfile = () => {
               />
             </div>
 
-            {/* Platform field */}
             <div>
               <Label htmlFor="platform">Platform *</Label>
               <Input
@@ -229,7 +359,6 @@ const EditProfile = () => {
               />
             </div>
 
-            {/* Followers field */}
             <div>
               <Label htmlFor="followers">Followers *</Label>
               <Input
@@ -242,7 +371,6 @@ const EditProfile = () => {
               />
             </div>
 
-            {/* About field */}
             <div>
               <Label htmlFor="about">About</Label>
               <Textarea
@@ -253,7 +381,6 @@ const EditProfile = () => {
               />
             </div>
 
-            {/* Profile Image Upload */}
             <div>
               <Label htmlFor="profile_image">Profile Image</Label>
               <div className="space-y-2">
@@ -278,7 +405,6 @@ const EditProfile = () => {
               </div>
             </div>
 
-            {/* Social Media Links */}
             <div>
               <Label>Social Media Links</Label>
               <div className="space-y-4">
@@ -305,7 +431,6 @@ const EditProfile = () => {
               </div>
             </div>
 
-            {/* Hobbies section */}
             <div>
               <Label>Hobbies</Label>
               <div className="flex gap-2 mb-2">
@@ -332,6 +457,111 @@ const EditProfile = () => {
                     </button>
                   </span>
                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold">Delivery Addresses</h2>
+              
+              <div className="space-y-4">
+                {addresses.map((address) => (
+                  <div key={address.id} className="p-4 border rounded-lg relative">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p>{address.street_address}</p>
+                        <p>{address.city}, {address.state} {address.postal_code}</p>
+                        <p>{address.country}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        {!address.is_primary && (
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleSetPrimaryAddress(address.id)}
+                          >
+                            Set as Primary
+                          </Button>
+                        )}
+                        <Button 
+                          type="button" 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => handleRemoveAddress(address.id)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                    {address.is_primary && (
+                      <span className="absolute top-2 right-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="border rounded-lg p-4 space-y-4">
+                <h3 className="font-medium">Add New Address</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="street_address">Street Address *</Label>
+                    <Input
+                      id="street_address"
+                      value={newAddress.street_address}
+                      onChange={e => setNewAddress(prev => ({ ...prev, street_address: e.target.value }))}
+                      placeholder="Enter your street address"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="city">City *</Label>
+                      <Input
+                        id="city"
+                        value={newAddress.city}
+                        onChange={e => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
+                        placeholder="Enter city"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="state">State *</Label>
+                      <Input
+                        id="state"
+                        value={newAddress.state}
+                        onChange={e => setNewAddress(prev => ({ ...prev, state: e.target.value }))}
+                        placeholder="Enter state"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="postal_code">Postal Code *</Label>
+                      <Input
+                        id="postal_code"
+                        value={newAddress.postal_code}
+                        onChange={e => setNewAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                        placeholder="Enter postal code"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="country">Country</Label>
+                      <Input
+                        id="country"
+                        value={newAddress.country}
+                        onChange={e => setNewAddress(prev => ({ ...prev, country: e.target.value }))}
+                        disabled
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleAddAddress}
+                    className="w-full"
+                  >
+                    Add Address
+                  </Button>
+                </div>
               </div>
             </div>
 
