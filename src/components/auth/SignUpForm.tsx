@@ -82,19 +82,7 @@ const SignUpForm = () => {
 
       if (profileError) {
         console.error("Error checking profile:", profileError);
-      }
-
-      // Check if the role was created
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', authData.user.id)
-        .single();
-
-      console.log("Role check:", { roleData, roleError });
-
-      if (roleError) {
-        console.error("Error checking role:", roleError);
+        throw new Error("Failed to create user profile");
       }
 
       toast({
