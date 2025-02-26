@@ -39,7 +39,7 @@ const SignUpForm = () => {
     setIsLoading(true);
 
     try {
-      // First create the user in Supabase Auth
+      // Create the user in Supabase Auth with metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -52,33 +52,33 @@ const SignUpForm = () => {
 
       if (authError) throw authError;
 
-      if (authData.user) {
-        // Create a profile record in the profiles table
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: authData.user.id,
-              email: email,
-              user_type: userType,
-            }
-          ]);
+      if (!authData.user) {
+        throw new Error("No user data returned");
+      }
 
-        if (profileError) {
-          console.error("Profile creation error:", profileError);
-          throw new Error("Failed to create user profile");
-        }
-
-        toast({
-          title: "Success",
-          description: "Please check your email to verify your account!",
+      // Insert the profile data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: email,
+          user_type: userType
         });
-        
-        if (userType === "influencer") {
-          navigate("/create-profile");
-        } else {
-          navigate("/");
-        }
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+        throw new Error("Failed to create user profile");
+      }
+
+      toast({
+        title: "Success",
+        description: "Please check your email to verify your account!",
+      });
+      
+      if (userType === "influencer") {
+        navigate("/create-profile");
+      } else {
+        navigate("/");
       }
     } catch (error: any) {
       toast({
@@ -86,7 +86,6 @@ const SignUpForm = () => {
         title: "Error",
         description: error.message || "An error occurred during sign up",
       });
-
       console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
