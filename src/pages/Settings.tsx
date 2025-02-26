@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Bell, User, Lock } from "lucide-react";
+import { Settings as SettingsIcon, Bell, User, Lock, Image } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
@@ -60,8 +60,69 @@ const Settings = () => {
           </div>
 
           <div className="grid gap-8 md:grid-cols-2">
+            {/* Account Settings Card */}
+            <Card className="shadow-sm md:col-span-2">
+              <CardHeader className="space-y-1">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <User className="h-5 w-5 text-purple-600" />
+                  Account Settings
+                </CardTitle>
+                <CardDescription>
+                  Manage your account details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Profile Photo Section */}
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <img 
+                      src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d"
+                      alt="Profile" 
+                      className="h-24 w-24 rounded-full object-cover border-2 border-purple-100"
+                    />
+                    <Button 
+                      size="icon"
+                      variant="outline"
+                      className="absolute bottom-0 right-0 rounded-full w-8 h-8 bg-white hover:bg-purple-50"
+                    >
+                      <Image className="h-4 w-4 text-purple-600" />
+                    </Button>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-base">Profile Photo</h3>
+                    <p className="text-sm text-gray-500">Update your profile picture</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-14 text-base hover:bg-purple-50"
+                    onClick={() => navigate("/edit-profile")}
+                  >
+                    <User className="mr-3 h-5 w-5 text-purple-600" />
+                    <div className="text-left">
+                      <div className="font-medium">Edit Profile</div>
+                      <div className="text-sm text-gray-500">Update your personal information</div>
+                    </div>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-14 text-base hover:bg-purple-50"
+                    onClick={handleSignOut}
+                  >
+                    <Lock className="mr-3 h-5 w-5 text-purple-600" />
+                    <div className="text-left">
+                      <div className="font-medium">Sign Out</div>
+                      <div className="text-sm text-gray-500">Securely log out of your account</div>
+                    </div>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Notification Settings Card */}
-            <Card className="shadow-sm">
+            <Card className="shadow-sm md:col-span-2">
               <CardHeader className="space-y-1">
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <Bell className="h-5 w-5 text-purple-600" />
@@ -94,43 +155,6 @@ const Settings = () => {
                     onCheckedChange={setPushNotifications}
                   />
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Account Settings Card */}
-            <Card className="shadow-sm">
-              <CardHeader className="space-y-1">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <User className="h-5 w-5 text-purple-600" />
-                  Account Settings
-                </CardTitle>
-                <CardDescription>
-                  Manage your account details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start h-14 text-base hover:bg-purple-50"
-                  onClick={() => navigate("/edit-profile")}
-                >
-                  <User className="mr-3 h-5 w-5 text-purple-600" />
-                  <div className="text-left">
-                    <div className="font-medium">Edit Profile</div>
-                    <div className="text-sm text-gray-500">Update your personal information</div>
-                  </div>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start h-14 text-base hover:bg-purple-50"
-                  onClick={handleSignOut}
-                >
-                  <Lock className="mr-3 h-5 w-5 text-purple-600" />
-                  <div className="text-left">
-                    <div className="font-medium">Sign Out</div>
-                    <div className="text-sm text-gray-500">Securely log out of your account</div>
-                  </div>
-                </Button>
               </CardContent>
             </Card>
           </div>
