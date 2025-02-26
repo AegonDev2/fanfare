@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,68 +101,70 @@ const GiftRequests = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#9b87f5]">
+    <div className="min-h-screen bg-[#9b87f5] relative">
       <Header setNavOpen={setIsNavOpen} />
       
-      <div className="bg-[#F1F1F1] min-h-screen rounded-t-3xl pt-6 mt-16">
-        <Card className="mx-4 mb-4 border-none shadow-lg bg-white rounded-2xl">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#E5DEFF] p-2 rounded-xl">
-                <Gift className="w-5 h-5 text-[#9b87f5]" />
-              </div>
-              <div>
-                <h2 className="text-[#333333] font-medium">Pending Requests</h2>
-                <p className="text-sm text-[#555555]">
-                  {giftRequests?.length || 0} requests waiting
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="px-4 space-y-3">
-          {giftRequests?.map((request) => (
-            <Card 
-              key={request.id} 
-              className="border-none shadow-md rounded-xl bg-white"
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#333333] truncate mb-1">
-                      {request.sender?.email}
-                    </p>
-                    <h3 className="text-base font-semibold text-[#9b87f5] mb-1 truncate">
-                      {request.product_title}
-                    </h3>
-                    <p className="text-sm text-[#555555] mb-2">
-                      ₹{request.product_price}
-                    </p>
-                    <p className="text-sm text-[#555555] line-clamp-2">
-                      {request.message}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="bg-[#9b87f5] hover:bg-[#7E69AB] text-white shadow-sm rounded-xl px-4"
-                    onClick={() => setSelectedRequest(request)}
-                  >
-                    Review
-                  </Button>
+      <div className="bg-[#F1F1F1] min-h-[calc(100vh-64px)] rounded-t-3xl pt-6 mt-16 relative z-10">
+        <div className="container mx-auto px-4 pb-6">
+          <Card className="mb-4 border-none shadow-lg bg-white rounded-2xl">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-[#E5DEFF] p-2 rounded-xl">
+                  <Gift className="w-5 h-5 text-[#9b87f5]" />
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {(!giftRequests || giftRequests.length === 0) && (
-            <div className="text-center py-12">
-              <div className="bg-[#E5DEFF] w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Gift className="w-6 h-6 text-[#9b87f5]" />
+                <div>
+                  <h2 className="text-[#333333] font-medium">Pending Requests</h2>
+                  <p className="text-sm text-[#555555]">
+                    {giftRequests?.length || 0} requests waiting
+                  </p>
+                </div>
               </div>
-              <p className="text-[#555555] text-sm">No pending gift requests</p>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+
+          <div className="space-y-3">
+            {giftRequests?.map((request) => (
+              <Card 
+                key={request.id} 
+                className="border-none shadow-md rounded-xl bg-white"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#333333] truncate mb-1">
+                        {request.sender?.email}
+                      </p>
+                      <h3 className="text-base font-semibold text-[#9b87f5] mb-1 truncate">
+                        {request.product_title}
+                      </h3>
+                      <p className="text-sm text-[#555555] mb-2">
+                        ₹{request.product_price}
+                      </p>
+                      <p className="text-sm text-[#555555] line-clamp-2">
+                        {request.message}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="bg-[#9b87f5] hover:bg-[#7E69AB] text-white shadow-sm rounded-xl px-4 whitespace-nowrap"
+                      onClick={() => setSelectedRequest(request)}
+                    >
+                      Review
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {(!giftRequests || giftRequests.length === 0) && (
+              <div className="text-center py-12 bg-white rounded-xl shadow-md">
+                <div className="bg-[#E5DEFF] w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Gift className="w-6 h-6 text-[#9b87f5]" />
+                </div>
+                <p className="text-[#555555] text-sm">No pending gift requests</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
