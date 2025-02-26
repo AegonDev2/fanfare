@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Home } from "lucide-react";
 
 interface HeaderProps {
   setNavOpen: (isOpen: boolean) => void;
@@ -41,10 +40,9 @@ const Header = ({ setNavOpen }: HeaderProps) => {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Button 
           variant="ghost" 
-          className="flex items-center gap-2 text-2xl font-bold text-gray-800"
+          className="text-2xl font-bold text-gray-800"
           onClick={() => navigate("/")}
         >
-          <Home className="h-5 w-5" />
           Fan Fare
         </Button>
         <div className="flex items-center gap-4">
