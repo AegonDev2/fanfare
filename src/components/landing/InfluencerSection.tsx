@@ -2,8 +2,8 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Gift, ChevronLeft, ChevronRight } from "lucide-react";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Search, Gift } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { memo, useState, useMemo, useRef, useEffect } from "react";
 
 interface Influencer {
@@ -171,12 +171,6 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
               </CarouselItem>
             )}
           </CarouselContent>
-          <CarouselPrevious className="absolute left-2 md:-left-12 bg-white/80 border border-gray-200 hover:bg-white/90 rounded-full flex items-center justify-center">
-            <ChevronLeft className="h-5 w-5" />
-          </CarouselPrevious>
-          <CarouselNext className="absolute right-2 md:-right-12 bg-white/80 border border-gray-200 hover:bg-white/90 rounded-full flex items-center justify-center">
-            <ChevronRight className="h-5 w-5" />
-          </CarouselNext>
         </Carousel>
         
         {/* Pagination dots */}
