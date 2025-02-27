@@ -27,7 +27,7 @@ const HeroCarousel = ({ slides }: HeroCarouselProps) => {
   }, [slides.length, isPaused]);
 
   return (
-    <div className="relative pb-10 pt-8 bg-gray-50">
+    <div className="relative pb-4 pt-8 bg-gray-50">
       <Carousel
         opts={{
           loop: true,
@@ -55,7 +55,7 @@ const HeroCarousel = ({ slides }: HeroCarouselProps) => {
         <CarouselPrevious className="left-4" />
         <CarouselNext className="right-4" />
       </Carousel>
-      <div className="flex justify-center space-x-2 mt-4">
+      <div className="flex justify-center space-x-2 mt-2">
         {slides.map((_, index) => (
           <button
             key={index}
