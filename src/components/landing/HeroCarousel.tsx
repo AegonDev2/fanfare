@@ -1,7 +1,5 @@
-
 import { useEffect, useState } from "react";
 import { CarouselNext, CarouselPrevious, Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { cn } from "@/lib/utils";
 
 interface Slide {
   src: string;
@@ -13,18 +11,17 @@ interface HeroCarouselProps {
 }
 
 const HeroCarousel = ({ slides }: HeroCarouselProps) => {
-  const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (!isPaused) {
       const interval = setInterval(() => {
-        setActiveIndex((current) => (current + 1) % slides.length);
+        // Auto-advance handled by carousel component
       }, 5000);
       
       return () => clearInterval(interval);
     }
-  }, [slides.length, isPaused]);
+  }, [isPaused]);
 
   return (
     <div className="relative pb-4 pt-8 bg-gray-50">
@@ -55,19 +52,6 @@ const HeroCarousel = ({ slides }: HeroCarouselProps) => {
         <CarouselPrevious className="left-4" />
         <CarouselNext className="right-4" />
       </Carousel>
-      <div className="flex justify-center space-x-2 mt-2">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveIndex(index)}
-            className={cn(
-              "w-2.5 h-2.5 rounded-full transition-colors",
-              index === activeIndex ? "bg-primary" : "bg-gray-300"
-            )}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
     </div>
   );
 };

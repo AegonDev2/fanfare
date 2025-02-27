@@ -155,57 +155,6 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
   const handleCarouselHover = (isHovering: boolean) => {
     setAutoplayEnabled(!isHovering);
   };
-  
-  // Handle dot click - optimized to prevent layout thrashing
-  const handleDotClick = useCallback((index: number) => {
-    setActiveSlide(index);
-  }, []);
-
-  // Simplified pagination dots - limited to visible ones to reduce lag
-  const renderPaginationDots = useMemo(() => {
-    // Only render dots if we have more slides than visible cards
-    if (filteredInfluencers.length <= visibleCards) return null;
-
-    // Limit the maximum number of dots to display
-    const maxDots = 5;
-    let dotsToRender = [];
-    
-    if (maxSlideIndex + 1 <= maxDots) {
-      // If total dots are less than max, show them all
-      dotsToRender = Array.from({ length: maxSlideIndex + 1 }, (_, i) => i);
-    } else {
-      // Show a subset centered around the active slide
-      const leftPad = Math.floor(maxDots / 2);
-      const rightPad = maxDots - leftPad - 1;
-      
-      let startDot = Math.max(0, activeSlide - leftPad);
-      let endDot = Math.min(maxSlideIndex, activeSlide + rightPad);
-      
-      // Adjust if we're near the edges
-      if (startDot === 0) {
-        endDot = Math.min(maxDots - 1, maxSlideIndex);
-      } else if (endDot === maxSlideIndex) {
-        startDot = Math.max(0, maxSlideIndex - maxDots + 1);
-      }
-      
-      dotsToRender = Array.from({ length: endDot - startDot + 1 }, (_, i) => startDot + i);
-    }
-    
-    return (
-      <div className="flex justify-center mt-4 gap-1.5">
-        {dotsToRender.map(index => (
-          <button
-            key={index}
-            className={`h-2 rounded-full transition-colors ${
-              index === activeSlide ? "w-4 bg-primary" : "w-2 bg-gray-300"
-            }`}
-            onClick={() => handleDotClick(index)}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
-    );
-  }, [activeSlide, maxSlideIndex, visibleCards, filteredInfluencers.length, handleDotClick]);
 
   return (
     <section className="mb-8 relative">
@@ -260,8 +209,7 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
           </CarouselContent>
         </Carousel>
         
-        {/* Memoized pagination dots */}
-        {renderPaginationDots}
+        {/* Pagination dots removed */}
       </div>
     </section>
   );

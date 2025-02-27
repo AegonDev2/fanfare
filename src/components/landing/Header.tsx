@@ -10,7 +10,7 @@ interface HeaderProps {
 const Header = ({ setNavOpen }: HeaderProps) => {
   const toggleNav = () => {
     if (setNavOpen) {
-      setNavOpen(prev => !prev);
+      setNavOpen(true); // Use boolean value directly instead of callback
     }
   };
 
