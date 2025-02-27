@@ -1,5 +1,5 @@
 
-import { Home, User, UserPlus, Settings, Gift } from "lucide-react";
+import { Home, User, UserPlus, Settings, Gift, Info, Book, Users } from "lucide-react";
 
 interface NavItemProps {
   id: string;
@@ -16,6 +16,9 @@ const iconMap: { [key: string]: any } = {
   UserPlus,
   Settings,
   Gift,
+  Info,
+  Book,
+  Users
 };
 
 const NavItem = ({ title, icon, isActive, onClick }: NavItemProps) => {
