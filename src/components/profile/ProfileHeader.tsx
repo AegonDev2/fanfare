@@ -50,17 +50,17 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
         className="w-32 h-32 rounded-full object-cover"
       />
       <div className="flex-1">
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-4">
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">{name}</h2>
             <p className="text-gray-600">Platform: {platform}</p>
             <p className="text-gray-600">Followers: {followers.toLocaleString()}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             {canEdit && (
               <Button 
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 w-full sm:w-auto"
                 onClick={() => navigate('/edit-profile')}
               >
                 <Edit className="h-4 w-4" />
@@ -69,7 +69,7 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
             )}
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
+                <Button className="flex items-center gap-2 w-full sm:w-auto">
                   <Gift className="h-4 w-4" />
                   Send Gift
                 </Button>
