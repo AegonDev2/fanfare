@@ -90,20 +90,41 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
     );
   }, [influencers, searchQuery]);
 
-  // Autoplay functionality
+  // Calculate visible card counts based on screen size
+  const getVisibleCardCount = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 1024) return 4; // lg
+      if (window.innerWidth >= 640) return 2; // sm
+      return 1; // mobile
+    }
+    return 4; // Default for SSR
+  };
+  
+  const [visibleCards, setVisibleCards] = useState(getVisibleCardCount());
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setVisibleCards(getVisibleCardCount());
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Maximum number of slides (non-looping)
+  const maxSlideIndex = Math.max(0, filteredInfluencers.length - visibleCards);
+
+  // Autoplay functionality (non-looping)
   useEffect(() => {
     if (autoplayEnabled && filteredInfluencers.length > 0) {
       autoplayTimerRef.current = setInterval(() => {
-        const nextSlide = (activeSlide + 1) % filteredInfluencers.length;
-        setActiveSlide(nextSlide);
-        
-        // Scroll to the next slide
-        const container = carouselRef.current?.querySelector('.embla__container');
-        const items = container?.querySelectorAll('.embla__slide');
-        if (items && items[nextSlide]) {
-          const scrollPosition = (items[nextSlide] as HTMLElement).offsetLeft;
-          container?.scrollTo({ left: scrollPosition, behavior: 'smooth' });
-        }
+        setActiveSlide(current => {
+          // Stop at the last slide instead of looping
+          if (current >= maxSlideIndex) return maxSlideIndex;
+          return current + 1;
+        });
       }, 5000); // Change slide every 5 seconds
     }
 
@@ -112,12 +133,31 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
         clearInterval(autoplayTimerRef.current);
       }
     };
-  }, [activeSlide, autoplayEnabled, filteredInfluencers.length]);
+  }, [activeSlide, autoplayEnabled, filteredInfluencers.length, maxSlideIndex]);
+
+  // Scroll to the active slide
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const container = carouselRef.current?.querySelector('.embla__container');
+      const items = container?.querySelectorAll('.embla__slide');
+      if (items && items[activeSlide]) {
+        const scrollPosition = (items[activeSlide] as HTMLElement).offsetLeft;
+        container?.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+      }
+    });
+  }, [activeSlide]);
 
   // Pause autoplay on hover
   const handleCarouselHover = (isHovering: boolean) => {
     setAutoplayEnabled(!isHovering);
   };
+  
+  // Optimize indicator rendering - only show a limited number
+  const maxIndicators = Math.min(5, maxSlideIndex + 1);
+  const activeIndicatorWindow = Math.min(
+    Math.max(0, activeSlide - Math.floor(maxIndicators / 2)),
+    Math.max(0, maxSlideIndex + 1 - maxIndicators)
+  );
 
   return (
     <section className="mb-8 relative">
@@ -143,9 +183,9 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
         <Carousel
           opts={{
             align: "start",
-            loop: true,
+            loop: false, // Changed to false to prevent looping
             skipSnaps: false,
-            dragFree: true
+            dragFree: false // Set to false to reduce lag
           }}
           className="w-full"
         >
@@ -173,28 +213,40 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
           </CarouselContent>
         </Carousel>
         
-        {/* Pagination dots */}
-        <div className="flex justify-center mt-4 gap-1.5">
-          {filteredInfluencers.length > 0 && filteredInfluencers.slice(0, Math.min(6, filteredInfluencers.length)).map((_, index) => (
-            <button
-              key={index}
-              className={`h-2 rounded-full transition-all ${
-                index === activeSlide ? "w-4 bg-primary" : "w-2 bg-gray-300"
-              }`}
-              onClick={() => {
-                setActiveSlide(index);
-                // Scroll to the slide
-                const container = carouselRef.current?.querySelector('.embla__container');
-                const items = container?.querySelectorAll('.embla__slide');
-                if (items && items[index]) {
-                  const scrollPosition = (items[index] as HTMLElement).offsetLeft;
-                  container?.scrollTo({ left: scrollPosition, behavior: 'smooth' });
-                }
-              }}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
+        {/* Pagination dots - optimized */}
+        {filteredInfluencers.length > visibleCards && (
+          <div className="flex justify-center mt-4 gap-1.5">
+            {activeIndicatorWindow > 0 && (
+              <button
+                className="h-2 w-2 rounded-full bg-gray-300"
+                onClick={() => setActiveSlide(Math.max(0, activeSlide - maxIndicators))}
+                aria-label="Previous set of slides"
+              />
+            )}
+            
+            {Array.from({ length: Math.min(maxIndicators, maxSlideIndex + 1) }).map((_, i) => {
+              const slideIndex = i + activeIndicatorWindow;
+              return (
+                <button
+                  key={slideIndex}
+                  className={`h-2 rounded-full transition-all ${
+                    slideIndex === activeSlide ? "w-4 bg-primary" : "w-2 bg-gray-300"
+                  }`}
+                  onClick={() => setActiveSlide(slideIndex)}
+                  aria-label={`Go to slide ${slideIndex + 1}`}
+                />
+              );
+            })}
+            
+            {activeIndicatorWindow + maxIndicators < maxSlideIndex + 1 && (
+              <button
+                className="h-2 w-2 rounded-full bg-gray-300"
+                onClick={() => setActiveSlide(Math.min(maxSlideIndex, activeSlide + maxIndicators))}
+                aria-label="Next set of slides"
+              />
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

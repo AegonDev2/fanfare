@@ -36,8 +36,6 @@ const HeroCarousel = ({ slides }: HeroCarouselProps) => {
         className="w-full"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        setActiveIndex={setActiveIndex}
-        index={activeIndex}
       >
         <CarouselContent>
           {slides.map((slide, index) => (
