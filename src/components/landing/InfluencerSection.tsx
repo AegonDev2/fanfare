@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Gift } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { memo, useState, useMemo, useRef, useEffect } from "react";
+import { memo, useState, useMemo, useRef, useEffect, useCallback } from "react";
 
 interface Influencer {
   id: string;
@@ -133,31 +133,79 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
         clearInterval(autoplayTimerRef.current);
       }
     };
-  }, [activeSlide, autoplayEnabled, filteredInfluencers.length, maxSlideIndex]);
+  }, [autoplayEnabled, filteredInfluencers.length, maxSlideIndex]);
 
-  // Scroll to the active slide
+  // Memoized function to scroll to a slide
+  const scrollToSlide = useCallback((index: number) => {
+    const container = carouselRef.current?.querySelector('.embla__container');
+    const items = container?.querySelectorAll('.embla__slide');
+    
+    if (items && items[index]) {
+      const scrollPosition = (items[index] as HTMLElement).offsetLeft;
+      container?.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+    }
+  }, []);
+
+  // Scroll to the active slide when it changes
   useEffect(() => {
-    requestAnimationFrame(() => {
-      const container = carouselRef.current?.querySelector('.embla__container');
-      const items = container?.querySelectorAll('.embla__slide');
-      if (items && items[activeSlide]) {
-        const scrollPosition = (items[activeSlide] as HTMLElement).offsetLeft;
-        container?.scrollTo({ left: scrollPosition, behavior: 'smooth' });
-      }
-    });
-  }, [activeSlide]);
+    scrollToSlide(activeSlide);
+  }, [activeSlide, scrollToSlide]);
 
   // Pause autoplay on hover
   const handleCarouselHover = (isHovering: boolean) => {
     setAutoplayEnabled(!isHovering);
   };
   
-  // Optimize indicator rendering - only show a limited number
-  const maxIndicators = Math.min(5, maxSlideIndex + 1);
-  const activeIndicatorWindow = Math.min(
-    Math.max(0, activeSlide - Math.floor(maxIndicators / 2)),
-    Math.max(0, maxSlideIndex + 1 - maxIndicators)
-  );
+  // Handle dot click - optimized to prevent layout thrashing
+  const handleDotClick = useCallback((index: number) => {
+    setActiveSlide(index);
+  }, []);
+
+  // Simplified pagination dots - limited to visible ones to reduce lag
+  const renderPaginationDots = useMemo(() => {
+    // Only render dots if we have more slides than visible cards
+    if (filteredInfluencers.length <= visibleCards) return null;
+
+    // Limit the maximum number of dots to display
+    const maxDots = 5;
+    let dotsToRender = [];
+    
+    if (maxSlideIndex + 1 <= maxDots) {
+      // If total dots are less than max, show them all
+      dotsToRender = Array.from({ length: maxSlideIndex + 1 }, (_, i) => i);
+    } else {
+      // Show a subset centered around the active slide
+      const leftPad = Math.floor(maxDots / 2);
+      const rightPad = maxDots - leftPad - 1;
+      
+      let startDot = Math.max(0, activeSlide - leftPad);
+      let endDot = Math.min(maxSlideIndex, activeSlide + rightPad);
+      
+      // Adjust if we're near the edges
+      if (startDot === 0) {
+        endDot = Math.min(maxDots - 1, maxSlideIndex);
+      } else if (endDot === maxSlideIndex) {
+        startDot = Math.max(0, maxSlideIndex - maxDots + 1);
+      }
+      
+      dotsToRender = Array.from({ length: endDot - startDot + 1 }, (_, i) => startDot + i);
+    }
+    
+    return (
+      <div className="flex justify-center mt-4 gap-1.5">
+        {dotsToRender.map(index => (
+          <button
+            key={index}
+            className={`h-2 rounded-full transition-colors ${
+              index === activeSlide ? "w-4 bg-primary" : "w-2 bg-gray-300"
+            }`}
+            onClick={() => handleDotClick(index)}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+    );
+  }, [activeSlide, maxSlideIndex, visibleCards, filteredInfluencers.length, handleDotClick]);
 
   return (
     <section className="mb-8 relative">
@@ -183,9 +231,9 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
         <Carousel
           opts={{
             align: "start",
-            loop: false, // Changed to false to prevent looping
+            loop: false,
             skipSnaps: false,
-            dragFree: false // Set to false to reduce lag
+            dragFree: false
           }}
           className="w-full"
         >
@@ -195,7 +243,6 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
                 <CarouselItem 
                   key={index} 
                   className="pl-4 basis-full sm:basis-1/2 lg:basis-1/4"
-                  data-active={index === activeSlide ? "true" : "false"}
                 >
                   <InfluencerCard 
                     influencer={influencer}
@@ -213,40 +260,8 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
           </CarouselContent>
         </Carousel>
         
-        {/* Pagination dots - optimized */}
-        {filteredInfluencers.length > visibleCards && (
-          <div className="flex justify-center mt-4 gap-1.5">
-            {activeIndicatorWindow > 0 && (
-              <button
-                className="h-2 w-2 rounded-full bg-gray-300"
-                onClick={() => setActiveSlide(Math.max(0, activeSlide - maxIndicators))}
-                aria-label="Previous set of slides"
-              />
-            )}
-            
-            {Array.from({ length: Math.min(maxIndicators, maxSlideIndex + 1) }).map((_, i) => {
-              const slideIndex = i + activeIndicatorWindow;
-              return (
-                <button
-                  key={slideIndex}
-                  className={`h-2 rounded-full transition-all ${
-                    slideIndex === activeSlide ? "w-4 bg-primary" : "w-2 bg-gray-300"
-                  }`}
-                  onClick={() => setActiveSlide(slideIndex)}
-                  aria-label={`Go to slide ${slideIndex + 1}`}
-                />
-              );
-            })}
-            
-            {activeIndicatorWindow + maxIndicators < maxSlideIndex + 1 && (
-              <button
-                className="h-2 w-2 rounded-full bg-gray-300"
-                onClick={() => setActiveSlide(Math.min(maxSlideIndex, activeSlide + maxIndicators))}
-                aria-label="Next set of slides"
-              />
-            )}
-          </div>
-        )}
+        {/* Memoized pagination dots */}
+        {renderPaginationDots}
       </div>
     </section>
   );

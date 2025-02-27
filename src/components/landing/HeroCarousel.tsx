@@ -27,7 +27,7 @@ const HeroCarousel = ({ slides }: HeroCarouselProps) => {
   }, [slides.length, isPaused]);
 
   return (
-    <div className="relative pb-10 bg-gray-50">
+    <div className="relative pb-10 pt-8 bg-gray-50">
       <Carousel
         opts={{
           loop: true,
