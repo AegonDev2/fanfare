@@ -21,22 +21,40 @@ export const useNavigation = () => {
         const { data } = await supabase.auth.getUser();
         
         if (data.user) {
-          // Get user profile to determine role
+          // Get user profile to get email
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .select('role, email')
+            .select('email, user_type')
             .eq('id', data.user.id)
-            .single();
+            .maybeSingle();
             
-          if (profileError && profileError.code !== 'PGRST116') {
+          if (profileError) {
             throw profileError;
           }
           
-          setUser(data.user);
-          setUserEmail(data.user.email);
+          // Get user role from user_roles table
+          const { data: roleData, error: roleError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+            
+          if (roleError && roleError.code !== 'PGRST116') {
+            throw roleError;
+          }
           
-          if (profileData?.role) {
-            setUserRole(profileData.role as NavRole);
+          setUser(data.user);
+          setUserEmail(profileData?.email || data.user.email);
+          
+          // Set the role based on the user_roles table, or fall back to user_type from profiles
+          if (roleData?.role) {
+            setUserRole(roleData.role as NavRole);
+          } else if (profileData?.user_type) {
+            // Convert user_type to a NavRole if possible
+            const userType = profileData.user_type.toLowerCase();
+            if (userType === 'fan' || userType === 'influencer' || userType === 'admin') {
+              setUserRole(userType as NavRole);
+            }
           }
         }
       } catch (err) {
