@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Gift } from "lucide-react";
+import { Search, Gift, User } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { memo, useState, useMemo, useRef, useEffect, useCallback } from "react";
 
@@ -75,9 +75,12 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [autoplayEnabled, setAutoplayEnabled] = useState(true);
   const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchInputRef = useRef<HTMLDivElement>(null);
 
   const handleProfileClick = (id: string) => {
     navigate(`/profile/${id}`);
+    setShowSuggestions(false);
   };
 
   const filteredInfluencers = useMemo(() => {
@@ -89,6 +92,13 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
       influencer.platform.toLowerCase().includes(query)
     );
   }, [influencers, searchQuery]);
+
+  // Suggestions for dropdown - limit to 5
+  const searchSuggestions = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    
+    return filteredInfluencers.slice(0, 5);
+  }, [filteredInfluencers, searchQuery]);
 
   // Calculate visible card counts based on screen size
   const getVisibleCardCount = () => {
@@ -110,6 +120,20 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Handle clicks outside of the search suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -156,19 +180,76 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
     setAutoplayEnabled(!isHovering);
   };
 
+  // Handle search input focus
+  const handleSearchFocus = () => {
+    if (searchQuery.trim().length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    setShowSuggestions(value.trim().length > 0);
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (id: string) => {
+    const influencer = influencers.find(inf => inf.id === id);
+    if (influencer) {
+      setSearchQuery(influencer.name);
+      handleProfileClick(id);
+    }
+  };
+
   return (
     <section className="mb-8 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <h2 className="text-xl font-semibold text-gray-800">Discover Influencers</h2>
-        <div className="relative w-full md:w-auto">
+        <div className="relative w-full md:w-auto" ref={searchInputRef}>
           <Input
             className="w-full md:w-64"
             placeholder="Search Influencers"
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
+            onFocus={handleSearchFocus}
           />
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
+          
+          {/* Search Suggestions Dropdown */}
+          {showSuggestions && searchSuggestions.length > 0 && (
+            <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200">
+              <ul className="max-h-60 overflow-auto py-1">
+                {searchSuggestions.map((influencer) => (
+                  <li 
+                    key={influencer.id}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+                    onClick={() => handleSuggestionClick(influencer.id)}
+                  >
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                      {influencer.profile_image ? (
+                        <img 
+                          src={influencer.profile_image} 
+                          alt={influencer.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          <User className="h-4 w-4 text-gray-500" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{influencer.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{influencer.platform} • {influencer.followers.toLocaleString()} followers</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
       <div 
