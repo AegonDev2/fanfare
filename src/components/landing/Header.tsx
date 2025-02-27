@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface HeaderProps {
-  setNavOpen: (isOpen: boolean) => void;
+  setNavOpen?: (isOpen: boolean) => void;
 }
 
 const Header = ({ setNavOpen }: HeaderProps) => {
@@ -19,20 +19,22 @@ const Header = ({ setNavOpen }: HeaderProps) => {
   const [user, setUser] = useState<any>(null);
 
   // Check if user is logged in
-  useState(() => {
+  useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
       setUser(data?.user || null);
     };
     checkUser();
-  });
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const handleNavToggle = () => {
-    setNavOpen(true);
+    if (setNavOpen) {
+      setNavOpen(true);
+    }
   };
 
   const handleSignOut = async () => {
@@ -65,14 +67,16 @@ const Header = ({ setNavOpen }: HeaderProps) => {
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden mr-2"
-              onClick={handleNavToggle}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+            {setNavOpen && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden mr-2"
+                onClick={handleNavToggle}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
             <a href="/" className="flex items-center">
               <span className="text-xl font-bold text-gray-900">FanFare</span>
             </a>

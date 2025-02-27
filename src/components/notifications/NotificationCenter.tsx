@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,13 +52,14 @@ const NotificationCenter = () => {
         (payload) => {
           const newNotification = payload.new as Notification;
           
+          // Check if this notification is for the current user
           supabase.auth.getUser().then(({ data }) => {
             if (data.user && newNotification.recipient_id === data.user.id) {
               setNotifications((prev) => [newNotification, ...prev]);
               setUnreadCount((prev) => prev + 1);
               
               toast({
-                title: `${getNotificationIcon(newNotification.type)} New Notification`,
+                title: "New Notification",
                 description: newNotification.message,
               });
             }
@@ -91,11 +93,6 @@ const NotificationCenter = () => {
       setUnreadCount(data?.filter(n => !n.is_read).length || 0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load notifications",
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }
@@ -120,11 +117,6 @@ const NotificationCenter = () => {
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
-        variant: "destructive",
-      });
     }
   };
 
@@ -146,41 +138,13 @@ const NotificationCenter = () => {
         prev.map(notification => ({ ...notification, is_read: true }))
       );
       setUnreadCount(0);
-      
-      toast({
-        title: "Success",
-        description: "All notifications marked as read",
-      });
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark all notifications as read",
-        variant: "destructive",
-      });
     }
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    
-    if (diff < 24 * 60 * 60 * 1000) {
-      const hours = Math.floor(diff / (60 * 60 * 1000));
-      if (hours < 1) {
-        const minutes = Math.floor(diff / (60 * 1000));
-        return minutes < 1 ? 'Just now' : `${minutes}m ago`;
-      }
-      return `${hours}h ago`;
-    }
-    
-    if (diff < 7 * 24 * 60 * 60 * 1000) {
-      return date.toLocaleDateString(undefined, { weekday: 'short' }) + 
-             ' at ' + 
-             date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-    
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
@@ -201,102 +165,68 @@ const NotificationCenter = () => {
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    if (!notification.is_read) {
-      markAsRead(notification.id);
-    }
-    
-    if (notification.type === 'new_gift_request' && notification.reference_id) {
-      window.location.href = `/gift-requests?id=${notification.reference_id}`;
-      setIsOpen(false);
-    }
-  };
-
-  const getEmptyStateMessage = () => {
-    return (
-      <div className="py-8 flex flex-col items-center justify-center text-gray-500">
-        <Bell className="h-12 w-12 text-gray-300 mb-3" />
-        <p className="text-sm font-medium">No notifications yet</p>
-        <p className="text-xs mt-1">We'll notify you when something happens</p>
-      </div>
-    );
-  };
-
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)] transition-colors duration-200"
+          className="relative text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 animate-pulse"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0"
             >
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {unreadCount}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 shadow-xl border-gray-200" align="end">
+      <PopoverContent className="w-80 p-0" align="end">
         <Card className="border-0">
-          <CardHeader className="py-3 px-4 flex flex-row justify-between items-center border-b border-gray-100">
+          <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
             <div>
               <CardTitle className="text-lg">Notifications</CardTitle>
-              <CardDescription>Your recent updates</CardDescription>
+              <CardDescription>Your recent notifications</CardDescription>
             </div>
             {unreadCount > 0 && (
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm" 
                 onClick={markAllAsRead}
                 className="text-xs"
               >
-                Mark all read
+                Mark all as read
               </Button>
             )}
           </CardHeader>
           <CardContent className="p-0 max-h-[400px] overflow-y-auto">
             {isLoading ? (
-              <div className="py-8 text-center text-gray-500">
-                <div className="flex justify-center mb-2">
-                  <div className="animate-spin h-6 w-6 border-2 border-gray-300 rounded-full border-t-gray-600"></div>
-                </div>
-                <p>Loading notifications...</p>
-              </div>
+              <div className="py-8 text-center text-gray-500">Loading notifications...</div>
             ) : notifications.length === 0 ? (
-              getEmptyStateMessage()
+              <div className="py-8 text-center text-gray-500">No notifications yet</div>
             ) : (
               <div className="divide-y divide-gray-100">
                 {notifications.map((notification) => (
                   <div 
                     key={notification.id} 
-                    className={`p-4 flex items-start hover:bg-gray-50 cursor-pointer transition-colors duration-150 ${!notification.is_read ? 'bg-blue-50' : ''}`}
-                    onClick={() => handleNotificationClick(notification)}
+                    className={`p-4 flex items-start hover:bg-gray-50 cursor-pointer ${!notification.is_read ? 'bg-blue-50' : ''}`}
+                    onClick={() => markAsRead(notification.id)}
                   >
                     <div className="mr-3 text-xl">{getNotificationIcon(notification.type)}</div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm mb-1 ${!notification.is_read ? 'font-medium text-gray-900' : 'text-gray-700'}`}>
-                        {notification.message}
-                      </p>
+                      <p className="text-sm font-medium text-gray-900 mb-1">{notification.message}</p>
                       <p className="text-xs text-gray-500">{formatDate(notification.created_at)}</p>
                     </div>
-                    {!notification.is_read && (
-                      <div className="ml-2 h-2 w-2 bg-blue-500 rounded-full"></div>
-                    )}
                   </div>
                 ))}
               </div>
             )}
           </CardContent>
-          <CardFooter className="py-2 px-4 bg-gray-50 border-t border-gray-100">
-            <Button variant="link" size="sm" className="mx-auto text-xs" onClick={() => {
-              window.location.href = '/notifications';
-              setIsOpen(false);
-            }}>
+          <CardFooter className="py-2 px-4 bg-gray-50">
+            <Button variant="link" size="sm" className="mx-auto text-xs">
               View all notifications
             </Button>
           </CardFooter>
