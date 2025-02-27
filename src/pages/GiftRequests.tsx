@@ -59,7 +59,16 @@ const GiftRequests = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+      
+      // Make sure we're only setting data that matches our GiftRequest type
+      if (data) {
+        const typedRequests: GiftRequest[] = data.map(item => ({
+          ...item,
+          // Ensure status is one of the allowed values
+          status: (item.status as 'pending' | 'approved' | 'rejected') || 'pending'
+        }));
+        setRequests(typedRequests);
+      }
     } catch (error) {
       console.error('Error fetching gift requests:', error);
       toast({
