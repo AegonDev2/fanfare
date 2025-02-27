@@ -88,7 +88,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
 
   return (
     <div className="min-h-screen bg-gray-100 font-roboto">
-      <Header setNavOpen={setNavOpen || (() => {})} />
+      <Header setNavOpen={setNavOpen} />
       <div className="container mx-auto px-4 py-8 pt-20">
         <ProductUrlInput
           giftItem={giftItem}
