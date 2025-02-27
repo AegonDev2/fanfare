@@ -23,6 +23,7 @@ const Landing = ({ setNavOpen }: LandingProps) => {
 
   const fetchInfluencers = async () => {
     try {
+      // Remove any auth check and just fetch the data directly
       const { data, error } = await supabase
         .from('influencer_profiles')
         .select('*');
