@@ -15,12 +15,11 @@ import NotFound from "./pages/NotFound";
 import GiftRequests from "./pages/GiftRequests";
 import Settings from "./pages/Settings";
 import Navbar from "./components/navigation/Navbar";
-import { useIsMobile } from "./hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const isMobile = useIsMobile();
   const [isNavOpen, setIsNavOpen] = useState(false);
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
@@ -33,16 +32,21 @@ const AppContent = () => {
       )}
 
       {/* Overlay for navigation */}
-      {!isAuthPage && isNavOpen && (
+      {!isAuthPage && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 transition-all duration-300 ease-in-out"
+          className={cn(
+            "fixed inset-0 bg-black/50 z-40 transition-all duration-300 ease-in-out",
+            isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}
           onClick={() => setIsNavOpen(false)}
         />
       )}
 
       <main 
-        className={`transition-all duration-300 ease-in-out min-h-screen transform
-          ${isNavOpen && !isAuthPage ? 'scale-95 blur-sm' : 'scale-100'}`}
+        className={cn(
+          "transition-all duration-300 ease-in-out min-h-screen",
+          isNavOpen && !isAuthPage ? "scale-95 blur-sm" : "scale-100"
+        )}
       >
         <div className="min-h-screen">
           <Routes>

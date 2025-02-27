@@ -8,6 +8,7 @@ import OrderTrackingSection from "@/components/landing/OrderTrackingSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import Navbar from "@/components/navigation/Navbar";
+import { cn } from "@/lib/utils";
 
 interface LandingProps {
   setNavOpen: (isOpen: boolean) => void;
@@ -101,12 +102,13 @@ const Landing = ({ setNavOpen }: LandingProps) => {
       <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
       
       {/* Overlay */}
-      {isNavOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 transition-all duration-300 ease-in-out"
-          onClick={() => setIsNavOpen(false)}
-        />
-      )}
+      <div 
+        className={cn(
+          "fixed inset-0 bg-black/50 z-40 transition-all duration-300 ease-in-out",
+          isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setIsNavOpen(false)}
+      />
       
       <div className="pt-16">
         <HeroCarousel slides={slides} />

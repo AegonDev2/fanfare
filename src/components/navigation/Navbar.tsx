@@ -62,7 +62,9 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       <nav
         className={cn(
           "fixed top-8 bottom-8 left-8 z-50 flex h-[calc(100%-4rem)] w-64 flex-col rounded-xl bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          isOpen 
+            ? "opacity-100 transform translate-x-0" 
+            : "opacity-0 pointer-events-none transform -translate-x-16"
         )}
       >
         <div className="flex justify-center items-center h-full">
@@ -78,7 +80,9 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       <nav
         className={cn(
           "fixed top-8 bottom-8 left-8 z-50 flex h-[calc(100%-4rem)] w-64 flex-col rounded-xl bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          isOpen 
+            ? "opacity-100 transform translate-x-0" 
+            : "opacity-0 pointer-events-none transform -translate-x-16"
         )}
       >
         <div className="flex justify-center items-center h-full">
@@ -93,27 +97,47 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   return (
     <nav
       className={cn(
-        "fixed top-8 bottom-8 left-8 z-50 flex h-[calc(100%-4rem)] w-64 flex-col rounded-xl bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        "fixed top-8 bottom-8 left-8 z-50 flex h-[calc(100%-4rem)] w-64 flex-col rounded-xl bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-500 ease-in-out",
+        isOpen 
+          ? "opacity-100 transform translate-x-0 animate-fade-in" 
+          : "opacity-0 pointer-events-none transform -translate-x-16"
       )}
     >
       <NavHeader setIsOpen={setIsOpen} />
 
       <div className="mt-6 flex-1 flex flex-col space-y-1 px-3 overflow-y-auto">
-        {navItems && navItems.map((item) => (
-          <NavItem
+        {navItems && navItems.map((item, index) => (
+          <div 
             key={item.id}
-            id={item.id}
-            icon={item.icon}
-            title={item.title}
-            path={item.path}
-            isActive={activeUrl === item.path}
-            onClick={() => handleNavigation(item.path)}
-          />
+            className={cn(
+              "transition-all duration-300 transform",
+              isOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+            )}
+            style={{ 
+              transitionDelay: `${isOpen ? index * 50 : 0}ms` 
+            }}
+          >
+            <NavItem
+              id={item.id}
+              icon={item.icon}
+              title={item.title}
+              path={item.path}
+              isActive={activeUrl === item.path}
+              onClick={() => handleNavigation(item.path)}
+            />
+          </div>
         ))}
 
         {!user ? (
-          <div className="mt-4 px-4 space-y-2">
+          <div 
+            className={cn(
+              "mt-4 px-4 space-y-2 transition-all duration-300 transform",
+              isOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+            )}
+            style={{ 
+              transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms` 
+            }}
+          >
             <Button
               variant="outline"
               className="w-full bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)] hover:text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
@@ -129,23 +153,51 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
             </Button>
           </div>
         ) : (
-          <Button
-            variant="outline"
-            className="mt-4 mx-4 bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)] hover:text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
-            onClick={handleSignOut}
-            disabled={isSigningOut}
+          <div
+            className={cn(
+              "transition-all duration-300 transform",
+              isOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+            )}
+            style={{ 
+              transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms` 
+            }}
           >
-            {isSigningOut ? "Signing out..." : "Sign Out"}
-          </Button>
+            <Button
+              variant="outline"
+              className="mt-4 mx-4 w-[calc(100%-2rem)] bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)] hover:text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+            >
+              {isSigningOut ? "Signing out..." : "Sign Out"}
+            </Button>
+          </div>
         )}
       </div>
 
-      <div className="mt-auto px-3 py-4 flex items-center justify-between text-[var(--navbar-light-secondary)]">
+      <div 
+        className={cn(
+          "mt-auto px-3 py-4 flex items-center justify-between text-[var(--navbar-light-secondary)] transition-all duration-300 transform",
+          isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+        )}
+        style={{ 
+          transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 100 : 0}ms` 
+        }}
+      >
         <div className="text-xs">FanFare v1.0.0</div>
         {user && <NotificationCenter />}
       </div>
 
-      <NavUser user={user} />
+      <div 
+        className={cn(
+          "transition-all duration-300 transform",
+          isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+        )}
+        style={{ 
+          transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 150 : 0}ms` 
+        }}
+      >
+        <NavUser user={user} />
+      </div>
     </nav>
   );
 };
