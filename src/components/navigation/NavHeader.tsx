@@ -1,12 +1,15 @@
 
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { useMobile } from "@/hooks/use-mobile";
 
 interface NavHeaderProps {
   setIsOpen?: (isOpen: boolean) => void;
 }
 
 const NavHeader = ({ setIsOpen }: NavHeaderProps) => {
+  const { isMobile } = useMobile();
+  
   return (
     <header className="relative flex items-center justify-between min-h-[80px] px-6 text-[var(--navbar-light-primary)]">
       <h1 className="text-2xl font-semibold">Fan Fare</h1>
@@ -17,10 +20,10 @@ const NavHeader = ({ setIsOpen }: NavHeaderProps) => {
           className="text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
           onClick={() => setIsOpen(false)}
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </Button>
       )}
-      <hr className="absolute bottom-0 left-6 w-[calc(100%-3rem)] border-t border-[var(--navbar-dark-secondary)]" />
+      <hr className={`absolute bottom-0 left-6 ${isMobile ? 'w-[calc(100%-3rem)]' : 'w-[calc(100%-3rem)]'} border-t border-[var(--navbar-dark-secondary)]`} />
     </header>
   );
 };

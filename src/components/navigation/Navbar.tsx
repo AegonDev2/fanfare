@@ -11,6 +11,7 @@ import NavUser from "./NavUser";
 import { useNavigation } from "./useNavigation";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
+import { useMobile } from "@/hooks/use-mobile";
 
 interface NavbarProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const { navItems, activeUrl, isLoading, error, user } = useNavigation();
   const { toast } = useToast();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const { isMobile } = useMobile();
 
   const handleCloseNav = () => {
     setIsOpen(false);
@@ -57,14 +59,22 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     }
   };
 
+  // Calculate nav dimensions based on screen size
+  const navPosition = isMobile 
+    ? "top-0 left-0 right-0 bottom-auto h-[85vh] w-full rounded-b-xl" 
+    : "top-8 bottom-8 left-8 h-[calc(100%-4rem)] w-[280px] rounded-xl";
+
   if (isLoading) {
     return (
       <nav
         className={cn(
-          "fixed top-8 bottom-8 left-8 z-50 flex h-[calc(100%-4rem)] w-64 flex-col rounded-xl bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
+          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
+          navPosition,
           isOpen 
-            ? "opacity-100 transform translate-x-0" 
-            : "opacity-0 pointer-events-none transform -translate-x-16"
+            ? "opacity-100 transform translate-y-0 translate-x-0" 
+            : isMobile 
+              ? "opacity-0 pointer-events-none transform -translate-y-16" 
+              : "opacity-0 pointer-events-none transform -translate-x-16"
         )}
       >
         <div className="flex justify-center items-center h-full">
@@ -79,10 +89,13 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     return (
       <nav
         className={cn(
-          "fixed top-8 bottom-8 left-8 z-50 flex h-[calc(100%-4rem)] w-64 flex-col rounded-xl bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
+          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
+          navPosition,
           isOpen 
-            ? "opacity-100 transform translate-x-0" 
-            : "opacity-0 pointer-events-none transform -translate-x-16"
+            ? "opacity-100 transform translate-y-0 translate-x-0" 
+            : isMobile 
+              ? "opacity-0 pointer-events-none transform -translate-y-16" 
+              : "opacity-0 pointer-events-none transform -translate-x-16"
         )}
       >
         <div className="flex justify-center items-center h-full">
@@ -97,21 +110,28 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   return (
     <nav
       className={cn(
-        "fixed top-8 bottom-8 left-8 z-50 flex h-[calc(100%-4rem)] w-64 flex-col rounded-xl bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-500 ease-in-out",
+        "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-500 ease-in-out",
+        navPosition,
         isOpen 
-          ? "opacity-100 transform translate-x-0 animate-fade-in" 
-          : "opacity-0 pointer-events-none transform -translate-x-16"
+          ? "opacity-100 transform translate-y-0 translate-x-0 animate-fade-in" 
+          : isMobile 
+            ? "opacity-0 pointer-events-none transform -translate-y-16" 
+            : "opacity-0 pointer-events-none transform -translate-x-16"
       )}
     >
       <NavHeader setIsOpen={setIsOpen} />
 
-      <div className="mt-6 flex-1 flex flex-col space-y-1 px-3 overflow-y-auto">
+      <div className="mt-4 flex-1 flex flex-col space-y-1 px-3 overflow-y-auto">
         {navItems && navItems.map((item, index) => (
           <div 
             key={item.id}
             className={cn(
               "transition-all duration-300 transform",
-              isOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+              isOpen 
+                ? "translate-x-0 opacity-100" 
+                : isMobile 
+                  ? "translate-y-8 opacity-0" 
+                  : "translate-x-8 opacity-0"
             )}
             style={{ 
               transitionDelay: `${isOpen ? index * 50 : 0}ms` 
@@ -132,7 +152,11 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           <div 
             className={cn(
               "mt-4 px-4 space-y-2 transition-all duration-300 transform",
-              isOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+              isOpen 
+                ? "translate-x-0 opacity-100" 
+                : isMobile 
+                  ? "translate-y-8 opacity-0" 
+                  : "translate-x-8 opacity-0"
             )}
             style={{ 
               transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms` 
@@ -156,7 +180,11 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           <div
             className={cn(
               "transition-all duration-300 transform",
-              isOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+              isOpen 
+                ? "translate-x-0 opacity-100" 
+                : isMobile 
+                  ? "translate-y-8 opacity-0" 
+                  : "translate-x-8 opacity-0"
             )}
             style={{ 
               transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms` 
@@ -177,7 +205,9 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       <div 
         className={cn(
           "mt-auto px-3 py-4 flex items-center justify-between text-[var(--navbar-light-secondary)] transition-all duration-300 transform",
-          isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+          isOpen 
+            ? "translate-y-0 opacity-100" 
+            : "translate-y-4 opacity-0"
         )}
         style={{ 
           transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 100 : 0}ms` 
@@ -190,7 +220,9 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       <div 
         className={cn(
           "transition-all duration-300 transform",
-          isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+          isOpen 
+            ? "translate-y-0 opacity-100" 
+            : "translate-y-4 opacity-0"
         )}
         style={{ 
           transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 150 : 0}ms` 

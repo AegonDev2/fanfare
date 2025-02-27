@@ -16,6 +16,7 @@ import GiftRequests from "./pages/GiftRequests";
 import Settings from "./pages/Settings";
 import Navbar from "./components/navigation/Navbar";
 import { cn } from "@/lib/utils";
+import { useMobile } from "@/hooks/use-mobile";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const AppContent = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
+  const { isMobile } = useMobile();
   
   return (
     <div className="min-h-screen w-full bg-[var(--background)] relative overflow-x-hidden">
@@ -45,7 +47,9 @@ const AppContent = () => {
       <main 
         className={cn(
           "transition-all duration-300 ease-in-out min-h-screen",
-          isNavOpen && !isAuthPage ? "scale-95 blur-sm" : "scale-100"
+          isNavOpen && !isAuthPage ? 
+            isMobile ? "opacity-50" : "scale-95 blur-sm" 
+            : "scale-100"
         )}
       >
         <div className="min-h-screen">
