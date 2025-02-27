@@ -73,21 +73,39 @@ export const useOrderSubmission = () => {
           message: message,
           status: 'pending'
         })
-        .select()
-        .single();
+        .select();
 
-      if (giftRequestError) throw giftRequestError;
+      if (giftRequestError) {
+        console.error("Error creating gift request:", giftRequestError);
+        throw giftRequestError;
+      }
 
-      // Send notification to the influencer (in real app, this would trigger a notification)
-      await supabase.functions.invoke('send-notification', {
-        body: { 
-          type: 'new_gift_request',
-          recipientId: influencerId,
-          senderId: user.id,
-          giftRequestId: giftRequest.id,
-          message: `You have a new gift request for ${productPreview.name}`
+      if (!giftRequest || giftRequest.length === 0) {
+        throw new Error("Failed to create gift request");
+      }
+
+      console.log("Gift request created:", giftRequest[0]);
+
+      // Send notification to the influencer
+      try {
+        const { error: notificationError } = await supabase.functions.invoke('send-notification', {
+          body: { 
+            type: 'new_gift_request',
+            recipientId: influencerId,
+            senderId: user.id,
+            giftRequestId: giftRequest[0].id,
+            message: `You have a new gift request for ${productPreview.name}`
+          }
+        });
+
+        if (notificationError) {
+          console.error("Error sending notification:", notificationError);
+          // Don't throw here - we still want to complete the flow even if notification fails
         }
-      });
+      } catch (notificationError) {
+        console.error("Exception sending notification:", notificationError);
+        // Don't throw here - we still want to complete the flow even if notification fails
+      }
 
       toast({
         title: "Gift request sent successfully",

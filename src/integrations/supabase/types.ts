@@ -263,6 +263,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          recipient_id: string
+          reference_id: string | null
+          sender_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          recipient_id: string
+          reference_id?: string | null
+          sender_id?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          recipient_id?: string
+          reference_id?: string | null
+          sender_id?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string

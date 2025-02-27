@@ -16,7 +16,7 @@ interface NavbarProps {
 }
 
 const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
-  const { navigationItems, activeUrl, isLoading, error } = useNavigation();
+  const { navItems, activeUrl, isLoading, error } = useNavigation();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       <NavUser user={user} />
 
       <div className="mt-2 flex flex-col space-y-1 px-3">
-        {navigationItems && navigationItems.map((item) => (
+        {navItems && navItems.map((item) => (
           <NavItem
             key={item.id}
             icon={item.icon}

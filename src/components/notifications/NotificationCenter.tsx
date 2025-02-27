@@ -25,6 +25,7 @@ interface Notification {
   message: string;
   created_at: string;
   is_read: boolean;
+  recipient_id: string;
   sender_id?: string;
   reference_id?: string;
 }
@@ -38,11 +39,15 @@ const NotificationCenter = () => {
 
   useEffect(() => {
     fetchNotifications();
-    setupRealtimeSubscription();
+    const channel = setupRealtimeSubscription();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const setupRealtimeSubscription = () => {
-    const channel = supabase
+    return supabase
       .channel('public:notifications')
       .on(
         'postgres_changes',
@@ -53,20 +58,22 @@ const NotificationCenter = () => {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          setNotifications((prev) => [newNotification, ...prev]);
-          setUnreadCount((prev) => prev + 1);
           
-          toast({
-            title: "New Notification",
-            description: newNotification.message,
+          // Check if this notification is for the current user
+          supabase.auth.getUser().then(({ data }) => {
+            if (data.user && newNotification.recipient_id === data.user.id) {
+              setNotifications((prev) => [newNotification, ...prev]);
+              setUnreadCount((prev) => prev + 1);
+              
+              toast({
+                title: "New Notification",
+                description: newNotification.message,
+              });
+            }
           });
         }
       )
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   };
 
   const fetchNotifications = async () => {

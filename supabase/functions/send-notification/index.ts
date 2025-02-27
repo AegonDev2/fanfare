@@ -28,6 +28,8 @@ serve(async (req) => {
       )
     }
 
+    console.log(`Creating notification for user ${recipientId}: ${message}`)
+
     // Store notification in database
     const { data, error } = await supabase
       .from('notifications')
@@ -40,10 +42,12 @@ serve(async (req) => {
         is_read: false
       })
 
-    if (error) throw error
+    if (error) {
+      console.error('Database error when inserting notification:', error)
+      throw error
+    }
 
-    // In a real implementation, you might send a push notification here
-    console.log(`Notification sent to user ${recipientId}: ${message}`)
+    console.log(`Notification created successfully: ${JSON.stringify(data)}`)
 
     return new Response(
       JSON.stringify({ success: true, data }),
