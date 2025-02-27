@@ -29,7 +29,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     handlePreviewProduct 
   } = useProductPreview();
 
-  const { isLoading, submitOrder } = useOrderSubmission();
+  const { isLoading, paymentStep, submitOrder } = useOrderSubmission();
 
   useEffect(() => {
     if (influencerId) {
@@ -105,6 +105,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
           onMessageChange={(newMessage) => setMessage(newMessage)}
           onSubmit={handleSubmit}
           isLoading={isLoading}
+          paymentStep={paymentStep}
         />
       </div>
     </div>

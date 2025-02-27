@@ -1,7 +1,12 @@
 
-import { ProductDetails, InfluencerAddress } from "@/types/order";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { ProductDetails, InfluencerAddress } from "@/types/order";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { MapPin, ShoppingCart, Gift } from "lucide-react";
+import PaymentForm from "@/components/payment/PaymentForm";
 
 interface ProductPreviewProps {
   productPreview: ProductDetails;
@@ -10,6 +15,7 @@ interface ProductPreviewProps {
   onMessageChange: (message: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
+  paymentStep?: 'initial' | 'processing' | 'complete';
 }
 
 const ProductPreview = ({
@@ -18,99 +24,130 @@ const ProductPreview = ({
   message,
   onMessageChange,
   onSubmit,
-  isLoading
+  isLoading,
+  paymentStep = 'initial',
 }: ProductPreviewProps) => {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(price);
+  const [activeTab, setActiveTab] = useState<string>("product");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activeTab === "payment") {
+      onSubmit(e);
+    } else {
+      setActiveTab("payment");
+    }
   };
 
   return (
-    <section className="mb-8">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">
-        Order Summary
-      </h2>
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-1/3">
-            <img
-              src={productPreview.image}
-              alt={productPreview.name}
-              className="w-full h-64 object-contain rounded-lg"
-            />
-          </div>
-          <div className="md:ml-6 mt-4 md:mt-0 md:w-2/3">
-            <h3 className="text-lg font-semibold text-gray-800">
-              {productPreview.name}
-            </h3>
-            <div className="mt-2 text-gray-600 whitespace-pre-line">
-              {productPreview.description}
+    <div className="mt-8">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="product" disabled={isLoading}>
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Product Details
+          </TabsTrigger>
+          <TabsTrigger value="payment" disabled={isLoading}>
+            <Gift className="h-4 w-4 mr-2" />
+            Payment & Message
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="product" className="mt-4">
+          <div className="bg-white p-6 shadow-md rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <img
+                  src={productPreview.image}
+                  alt={productPreview.name}
+                  className="w-full h-auto rounded-md object-contain"
+                  style={{ maxHeight: "300px" }}
+                />
+              </div>
+              <div className="flex flex-col justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold mb-2">{productPreview.name}</h2>
+                  <p className="text-gray-700 mb-4 text-sm">
+                    {productPreview.description}
+                  </p>
+                  <div className="bg-gray-50 p-4 rounded-md mb-4">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-600">Price:</span>
+                      <span className="font-semibold">₹{productPreview.priceInr.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-gray-600">Platform Fee:</span>
+                      <span>₹{productPreview.platformFee.toFixed(2)}</span>
+                    </div>
+                    <Separator className="my-2" />
+                    <div className="flex justify-between">
+                      <span className="text-gray-800 font-semibold">Total:</span>
+                      <span className="text-primary font-semibold">
+                        ₹{(productPreview.priceInr + productPreview.platformFee).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {influencerAddress && (
+                  <div className="bg-gray-50 p-4 rounded-md mb-4">
+                    <div className="flex items-start">
+                      <MapPin className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
+                      <div>
+                        <h3 className="text-sm font-medium mb-1">Shipping Address:</h3>
+                        <p className="text-gray-600 text-sm">
+                          {influencerAddress.street_address}, {influencerAddress.city}, {influencerAddress.state}, {influencerAddress.postal_code}, {influencerAddress.country}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={() => setActiveTab("payment")}
+                  className="w-full mt-4"
+                  disabled={isLoading}
+                >
+                  Proceed to Payment
+                </Button>
+              </div>
             </div>
-            <div className="mt-4 space-y-2">
-              {productPreview.hasDiscount && productPreview.originalPrice && (
-                <p className="text-gray-500 line-through">
-                  Original Price: {formatPrice(productPreview.originalPrice)}
-                </p>
-              )}
-              <p className="text-gray-800 font-semibold">
-                Price: {formatPrice(productPreview.priceInr)}
-              </p>
-              <p className="text-gray-600">
-                Platform Fee: {formatPrice(productPreview.platformFee * 83)}
-              </p>
-              <p className="text-lg text-gray-800 font-bold mt-2">
-                Total: {formatPrice(productPreview.priceInr + (productPreview.platformFee * 83))}
-              </p>
-              <p className="text-sm text-gray-600 mt-2">
-                * Amount will be deducted immediately and refunded if the request is rejected
-              </p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="payment" className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white p-6 shadow-md rounded-lg">
+              <h3 className="text-lg font-medium mb-4">Add a Personal Message</h3>
+              <Textarea
+                placeholder="Write a personal message to the influencer..."
+                value={message}
+                onChange={(e) => onMessageChange(e.target.value)}
+                rows={6}
+                className="mb-4"
+                disabled={isLoading}
+              />
+              <Button
+                onClick={() => setActiveTab("product")}
+                variant="outline"
+                className="w-full"
+                disabled={isLoading}
+              >
+                Back to Product Details
+              </Button>
             </div>
 
-            {influencerAddress && (
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-sm text-gray-700">Shipping Address</h4>
-                <p className="text-sm text-gray-600">Verified ✓</p>
-              </div>
-            )}
-
-            {!influencerAddress && (
-              <div className="mt-4 p-3 bg-red-50 rounded-lg">
-                <p className="text-sm text-red-600">
-                  Shipping address not available. The influencer needs to set up their address.
-                </p>
-              </div>
-            )}
+            <div>
+              <PaymentForm
+                productPreview={productPreview}
+                isProcessing={isLoading}
+                paymentStep={paymentStep}
+                onSubmit={handleSubmit}
+              />
+            </div>
           </div>
-        </div>
-        
-        <form onSubmit={onSubmit} className="mt-6">
-          <div className="mt-4">
-            <label className="block text-gray-700 font-semibold mb-2" htmlFor="message">
-              Custom Message
-            </label>
-            <Textarea
-              id="message"
-              value={message}
-              onChange={(e) => onMessageChange(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-              placeholder="Write a custom message for the influencer..."
-              rows={4}
-            />
-          </div>
-          
-          <Button
-            type="submit"
-            disabled={isLoading || !influencerAddress}
-            className="mt-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-          >
-            {isLoading ? "Sending Request..." : "Send Gift Request"}
-          </Button>
-        </form>
-      </div>
-    </section>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
