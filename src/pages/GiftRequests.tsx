@@ -1,226 +1,260 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useState, useEffect } from "react";
 import Header from "@/components/landing/Header";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Gift, ThumbsUp, ThumbsDown } from "lucide-react";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { CheckIcon, XIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-type GiftRequest = {
+interface GiftRequest {
   id: string;
-  sender_id: string;
-  influencer_id: string;
-  product_url: string;
-  product_title: string | null;
-  product_price: number | null;
-  message: string | null;
-  status: 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered';
-  created_at: string | null;
-  updated_at: string | null;
+  gift_item: string;
+  message: string;
+  created_at: string;
+  status: 'pending' | 'approved' | 'rejected';
   sender: {
-    email: string | null;
-  } | null;
+    id: string;
+    email: string;
+  };
 }
 
 const GiftRequests = () => {
-  const isMobile = useIsMobile();
-  const [selectedRequest, setSelectedRequest] = useState<GiftRequest | null>(null);
-  const [responseMessage, setResponseMessage] = useState("");
+  const [requests, setRequests] = useState<GiftRequest[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const { data: giftRequests, refetch } = useQuery({
-    queryKey: ["gift-requests"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+  useEffect(() => {
+    fetchGiftRequests();
+  }, []);
 
-      const { data, error } = await supabase
-        .from("gift_requests")
-        .select(`
-          *,
-          sender:profiles!gift_requests_sender_id_fkey(email)
-        `)
-        .eq("influencer_id", user.id)
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data as GiftRequest[];
-    }
-  });
-
-  const handleResponse = async (status: "accepted" | "rejected") => {
-    if (!selectedRequest) return;
-
+  const fetchGiftRequests = async () => {
     try {
-      const { error } = await supabase
-        .from("gift_requests")
-        .update({
+      setLoading(true);
+      // In a real app, this would filter by the current influencer's ID
+      const { data, error } = await supabase
+        .from('gifts_to_influencers')
+        .select(`
+          id,
+          gift_item,
+          message,
+          created_at,
           status,
-          response_message: responseMessage
-        })
-        .eq("id", selectedRequest.id);
+          sender:sender_id (id, email)
+        `)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      toast({
-        title: `Request ${status}`,
-        description: `Gift request has been ${status} successfully.`,
-      });
-
-      setSelectedRequest(null);
-      setResponseMessage("");
-      refetch();
+      setRequests(data || []);
     } catch (error) {
-      console.error("Error updating gift request:", error);
+      console.error('Error fetching gift requests:', error);
       toast({
         title: "Error",
-        description: "Failed to update gift request status.",
+        description: "Failed to load gift requests",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateRequestStatus = async (id: string, status: 'approved' | 'rejected') => {
+    try {
+      const { error } = await supabase
+        .from('gifts_to_influencers')
+        .update({ status })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Update local state
+      setRequests(prev => 
+        prev.map(request => 
+          request.id === id ? { ...request, status } : request
+        )
+      );
+
+      toast({
+        title: "Success",
+        description: `Gift request ${status === 'approved' ? 'approved' : 'rejected'} successfully!`,
+      });
+    } catch (error) {
+      console.error(`Error ${status === 'approved' ? 'approving' : 'rejecting'} gift request:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to ${status === 'approved' ? 'approve' : 'reject'} gift request`,
         variant: "destructive",
       });
     }
   };
 
+  const getPendingRequests = () => requests.filter(r => r.status === 'pending');
+  const getApprovedRequests = () => requests.filter(r => r.status === 'approved');
+  const getRejectedRequests = () => requests.filter(r => r.status === 'rejected');
+
   return (
-    <div className="min-h-screen bg-[#F1F1F1]">
-      <Header setNavOpen={(isOpen: boolean) => {
-        // This function is called from the Header component when the menu button is clicked
-        // The isOpen parameter contains the new desired state of the navigation menu
-        if (window.parent) {
-          window.parent.postMessage({ type: 'SET_NAV_OPEN', isOpen }, '*');
-        }
-      }} />
-      
-      <div className="container mx-auto px-4 pb-6 pt-20">
-        <Card className="mb-4 border-none shadow-lg bg-white rounded-2xl">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#E5DEFF] p-2 rounded-xl">
-                <Gift className="w-5 h-5 text-[#9b87f5]" />
-              </div>
-              <div>
-                <h2 className="text-[#333333] font-medium">Pending Requests</h2>
-                <p className="text-sm text-[#555555]">
-                  {giftRequests?.length || 0} requests waiting
-                </p>
-              </div>
-            </div>
-          </CardContent>
+    <div className="min-h-screen bg-gray-100">
+      <Header />
+      <main className="container mx-auto p-4 pt-20">
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-2xl">Gift Requests</CardTitle>
+            <CardDescription>
+              Manage gifts that fans want to send you
+            </CardDescription>
+          </CardHeader>
         </Card>
 
-        <div className="space-y-3">
-          {giftRequests?.map((request) => (
-            <Card 
-              key={request.id} 
-              className="border-none shadow-md rounded-xl bg-white"
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#333333] truncate mb-1">
-                      {request.sender?.email}
-                    </p>
-                    <h3 className="text-base font-semibold text-[#9b87f5] mb-1 truncate">
-                      {request.product_title}
-                    </h3>
-                    <p className="text-sm text-[#555555] mb-2">
-                      ₹{request.product_price}
-                    </p>
-                    <p className="text-sm text-[#555555] line-clamp-2">
-                      {request.message}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="bg-[#9b87f5] hover:bg-[#7E69AB] text-white shadow-sm rounded-xl px-4 whitespace-nowrap"
-                    onClick={() => setSelectedRequest(request)}
-                  >
-                    Review
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <Tabs defaultValue="pending" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="pending" className="relative">
+              Pending
+              {getPendingRequests().length > 0 && (
+                <Badge variant="destructive" className="ml-2 absolute -top-2 -right-2">
+                  {getPendingRequests().length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="approved">Approved</TabsTrigger>
+            <TabsTrigger value="rejected">Rejected</TabsTrigger>
+          </TabsList>
 
-          {(!giftRequests || giftRequests.length === 0) && (
-            <div className="text-center py-12 bg-white rounded-xl shadow-md">
-              <div className="bg-[#E5DEFF] w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Gift className="w-6 h-6 text-[#9b87f5]" />
+          <TabsContent value="pending">
+            {loading ? (
+              <div className="text-center py-8">Loading pending requests...</div>
+            ) : getPendingRequests().length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center text-muted-foreground">
+                  No pending gift requests.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {getPendingRequests().map((request) => (
+                  <RequestCard 
+                    key={request.id}
+                    request={request}
+                    onApprove={() => updateRequestStatus(request.id, 'approved')}
+                    onReject={() => updateRequestStatus(request.id, 'rejected')}
+                  />
+                ))}
               </div>
-              <p className="text-[#555555] text-sm">No pending gift requests</p>
-            </div>
-          )}
-        </div>
-      </div>
+            )}
+          </TabsContent>
 
-      <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="w-[90%] max-w-md mx-auto rounded-2xl bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-[#333333]">
-              Review Request
-            </DialogTitle>
-            <DialogDescription className="text-sm text-[#555555]">
-              {selectedRequest?.product_title}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <label className="text-sm font-medium text-[#555555]">
-              Response Message
-            </label>
-            <Input
-              value={responseMessage}
-              onChange={(e) => setResponseMessage(e.target.value)}
-              placeholder="Add a personal message..."
-              className="mt-2 border-[#D6BCFA] focus:border-[#9b87f5] rounded-xl"
-            />
-          </div>
+          <TabsContent value="approved">
+            {loading ? (
+              <div className="text-center py-8">Loading approved requests...</div>
+            ) : getApprovedRequests().length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center text-muted-foreground">
+                  No approved gift requests.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {getApprovedRequests().map((request) => (
+                  <RequestCard 
+                    key={request.id}
+                    request={request}
+                    showActions={false}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
-          <DialogFooter className="flex-col gap-2">
-            <Button
-              onClick={() => handleResponse("accepted")}
-              className="w-full bg-[#9b87f5] hover:bg-[#7E69AB] text-white rounded-xl h-11 flex items-center justify-center gap-2"
-            >
-              <ThumbsUp className="w-4 h-4" />
-              Accept Request
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={() => handleResponse("rejected")}
-              className="w-full bg-[#ea384c] hover:bg-red-600 text-white rounded-xl h-11 flex items-center justify-center gap-2"
-            >
-              <ThumbsDown className="w-4 h-4" />
-              Reject Request
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setSelectedRequest(null)}
-              className="w-full border-[#D6BCFA] text-[#555555] hover:bg-[#E5DEFF] rounded-xl h-11"
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <TabsContent value="rejected">
+            {loading ? (
+              <div className="text-center py-8">Loading rejected requests...</div>
+            ) : getRejectedRequests().length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center text-muted-foreground">
+                  No rejected gift requests.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {getRejectedRequests().map((request) => (
+                  <RequestCard 
+                    key={request.id}
+                    request={request}
+                    showActions={false}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
+  );
+};
+
+interface RequestCardProps {
+  request: GiftRequest;
+  onApprove?: () => void;
+  onReject?: () => void;
+  showActions?: boolean;
+}
+
+const RequestCard = ({ request, onApprove, onReject, showActions = true }: RequestCardProps) => {
+  const formattedDate = new Date(request.created_at).toLocaleDateString();
+  
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg">{request.gift_item}</CardTitle>
+          <Badge variant={
+            request.status === 'pending' ? 'outline' : 
+            request.status === 'approved' ? 'default' : 'destructive'
+          }>
+            {request.status}
+          </Badge>
+        </div>
+        <CardDescription>From: {request.sender.email}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-700 mb-2">
+          {request.message || <span className="text-gray-400 italic">No message</span>}
+        </p>
+        <p className="text-xs text-gray-500">Requested on {formattedDate}</p>
+      </CardContent>
+      {showActions && request.status === 'pending' && (
+        <CardFooter className="flex justify-between pt-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-red-600 hover:text-red-800 hover:bg-red-100"
+            onClick={onReject}
+          >
+            <XIcon className="mr-1 h-4 w-4" /> Reject
+          </Button>
+          <Button 
+            variant="default" 
+            size="sm"
+            onClick={onApprove}
+          >
+            <CheckIcon className="mr-1 h-4 w-4" /> Approve
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
   );
 };
 

@@ -16,6 +16,8 @@ import GiftRequests from "./pages/GiftRequests";
 import Settings from "./pages/Settings";
 import Navbar from "./components/navigation/Navbar";
 import { useIsMobile } from "./hooks/use-mobile";
+import { Menu } from "lucide-react";
+import { Button } from "./components/ui/button";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,10 @@ const AppContent = () => {
 
   const handleOverlayClick = () => {
     setIsNavOpen(false);
+  };
+
+  const toggleNav = () => {
+    setIsNavOpen(!isNavOpen);
   };
   
   return (
@@ -47,6 +53,18 @@ const AppContent = () => {
         >
           <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
         </div>
+      )}
+
+      {/* Navigation Toggle Button - visible on all pages except auth */}
+      {!isAuthPage && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed top-8 left-8 z-30 rounded-full h-10 w-10 bg-white shadow-md hover:bg-gray-100"
+          onClick={toggleNav}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
       )}
 
       <main 
