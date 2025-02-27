@@ -30,9 +30,9 @@ const InfluencerCard = memo(({ influencer, onProfileClick }: {
   };
 
   return (
-    <div className="bg-white p-3 rounded-lg shadow-md h-[calc(100%-1rem)] relative group">
+    <div className="bg-white p-3 rounded-lg shadow-md h-full relative group">
       <div 
-        className="absolute right-5 top-5 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute right-3 top-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={handleGiftClick}
       >
         <Button 
@@ -42,7 +42,7 @@ const InfluencerCard = memo(({ influencer, onProfileClick }: {
           <Gift className="h-4 w-4 text-primary" />
         </Button>
       </div>
-      <div className="aspect-[1/1] mb-2 overflow-hidden rounded-lg">
+      <div className="w-full aspect-square mb-2 overflow-hidden rounded-lg">
         <img
           src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'}
           alt={`${influencer.name}'s profile`}
@@ -55,6 +55,7 @@ const InfluencerCard = memo(({ influencer, onProfileClick }: {
         <p className="text-xs text-gray-600 truncate">{influencer.platform} • {influencer.followers.toLocaleString()} followers</p>
         <Button 
           size="sm" 
+          variant="secondary" 
           className="mt-2 w-full text-xs"
           onClick={() => onProfileClick(influencer.id)}
         >
@@ -100,7 +101,7 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
         </div>
       </div>
-      <div className="relative px-4 md:px-12">
+      <div className="relative">
         <Carousel
           opts={{
             align: "start",
@@ -110,28 +111,26 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
           }}
           className="w-full"
         >
-          <CarouselContent className="-ml-2 md:-ml-4">
+          <CarouselContent className="-ml-4">
             {filteredInfluencers.length > 0 ? (
               filteredInfluencers.map((influencer, index) => (
-                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
-                  <div className="h-full pb-4">
-                    <InfluencerCard 
-                      influencer={influencer}
-                      onProfileClick={handleProfileClick}
-                    />
-                  </div>
+                <CarouselItem key={index} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/4">
+                  <InfluencerCard 
+                    influencer={influencer}
+                    onProfileClick={handleProfileClick}
+                  />
                 </CarouselItem>
               ))
             ) : (
-              <CarouselItem className="pl-2 md:pl-4 w-full">
+              <CarouselItem className="pl-4 w-full">
                 <div className="bg-white p-6 rounded-lg shadow-md text-center">
                   <p className="text-gray-600">No influencers found matching your search.</p>
                 </div>
               </CarouselItem>
             )}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex -left-8" />
-          <CarouselNext className="hidden md:flex -right-8" />
+          <CarouselPrevious className="hidden md:flex -left-12" />
+          <CarouselNext className="hidden md:flex -right-12" />
         </Carousel>
       </div>
     </section>

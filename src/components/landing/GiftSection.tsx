@@ -25,14 +25,16 @@ const GiftCard = memo(({ gift }: { gift: Gift }) => {
 
   return (
     <div className="bg-white p-3 rounded-lg shadow-md h-full">
-      <img
-        src={gift.image}
-        alt={gift.name}
-        className="w-full h-32 object-cover rounded-lg"
-        loading="lazy"
-      />
+      <div className="w-full aspect-square mb-2 overflow-hidden rounded-lg">
+        <img
+          src={gift.image}
+          alt={gift.name}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
       <div className="mt-2">
-        <h3 className="text-sm font-semibold text-gray-800">{gift.name}</h3>
+        <h3 className="text-sm font-semibold text-gray-800 truncate">{gift.name}</h3>
         <p className="text-xs text-gray-600">{gift.price}</p>
         <Button 
           size="sm" 
@@ -63,7 +65,7 @@ const GiftSection = ({ gifts }: GiftSectionProps) => {
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
         </div>
       </div>
-      <div className="relative px-4 md:px-12">
+      <div className="relative">
         <Carousel
           opts={{
             align: "start",
@@ -73,15 +75,15 @@ const GiftSection = ({ gifts }: GiftSectionProps) => {
           }}
           className="w-full"
         >
-          <CarouselContent className="-ml-2 md:-ml-4">
+          <CarouselContent className="-ml-4">
             {gifts.map((gift, index) => (
-              <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
+              <CarouselItem key={index} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/4">
                 <GiftCard gift={gift} />
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex -left-8" />
-          <CarouselNext className="hidden md:flex -right-8" />
+          <CarouselPrevious className="hidden md:flex -left-12" />
+          <CarouselNext className="hidden md:flex -right-12" />
         </Carousel>
       </div>
     </section>
