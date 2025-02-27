@@ -11,9 +11,9 @@ const NavUser = ({ user, userEmail, userRole }: NavUserProps) => {
   const role = userRole || (user ? "User" : "Not logged in");
 
   return (
-    <footer className="absolute bottom-0 left-0 w-full bg-[var(--navbar-dark-secondary)] p-6">
+    <div className="p-6 bg-[var(--navbar-dark-secondary)] text-[var(--navbar-light-primary)]">
       <div className="flex items-center">
-        <div className="relative w-8 h-8 rounded-full overflow-hidden">
+        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[var(--navbar-dark-primary)]">
           <img
             src="https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg"
             alt="Avatar"
@@ -27,7 +27,7 @@ const NavUser = ({ user, userEmail, userRole }: NavUserProps) => {
           </span>
         </div>
       </div>
-    </footer>
+    </div>
   );
 };
 

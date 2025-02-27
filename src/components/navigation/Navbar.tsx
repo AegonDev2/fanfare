@@ -58,25 +58,13 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   return (
     <nav
       className={cn(
-        "fixed top-8 bottom-8 left-8 z-50 flex h-[calc(100%-4rem)] w-64 flex-col rounded-xl bg-white shadow-xl transition-all duration-300 ease-in-out",
+        "fixed top-8 bottom-8 left-8 z-50 flex h-[calc(100%-4rem)] w-64 flex-col rounded-xl bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
     >
-      <div className="flex justify-between items-center p-4">
-        <NavHeader setIsOpen={setIsOpen} />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleCloseNav}
-          className="h-8 w-8"
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+      <NavHeader setIsOpen={setIsOpen} />
 
-      <NavUser user={user} />
-
-      <div className="mt-2 flex flex-col space-y-1 px-3">
+      <div className="mt-6 flex-1 flex flex-col space-y-1 px-3 overflow-y-auto">
         {navItems && navItems.map((item) => (
           <NavItem
             key={item.id}
@@ -90,10 +78,12 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         ))}
       </div>
 
-      <div className="mt-auto px-3 py-4 flex items-center justify-between">
-        <div className="text-xs text-gray-500">FanFare v1.0.0</div>
+      <div className="mt-auto px-3 py-4 flex items-center justify-between text-[var(--navbar-light-secondary)]">
+        <div className="text-xs">FanFare v1.0.0</div>
         {user && <NotificationCenter />}
       </div>
+
+      <NavUser user={user} />
     </nav>
   );
 };

@@ -25,11 +25,11 @@ const NavItem = ({ title, icon, isActive, onClick }: NavItemProps) => {
     <div
       className={`flex items-center px-4 py-4 cursor-pointer rounded-lg transition-all duration-300 ease-in-out my-2
         ${isActive 
-          ? "text-[var(--navbar-dark-primary)] bg-[var(--background)]" 
-          : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)]"}`}
+          ? "text-[var(--navbar-dark-primary)] bg-[var(--navbar-light-primary)]" 
+          : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)] hover:text-[var(--navbar-light-primary)]"}`}
       onClick={onClick}
     >
-      {Icon && <Icon className="h-5 w-5 min-w-12 text-center" />}
+      {Icon && <Icon className="h-5 w-5 min-w-5" />}
       <span className="ml-4 truncate">{title}</span>
     </div>
   );

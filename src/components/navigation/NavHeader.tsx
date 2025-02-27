@@ -8,13 +8,13 @@ interface NavHeaderProps {
 
 const NavHeader = ({ setIsOpen }: NavHeaderProps) => {
   return (
-    <header className="relative flex items-center min-h-[80px] px-6">
+    <header className="relative flex items-center justify-between min-h-[80px] px-6 text-[var(--navbar-light-primary)]">
       <h1 className="text-2xl font-semibold">Fan Fare</h1>
       {setIsOpen && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-4 text-[var(--navbar-light-primary)]"
+          className="text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
           onClick={() => setIsOpen(false)}
         >
           <X className="h-4 w-4" />

@@ -39,15 +39,8 @@ const NotificationCenter = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const channel = setupRealtimeSubscription();
     
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const setupRealtimeSubscription = () => {
-    return supabase
+    const channel = supabase
       .channel('public:notifications')
       .on(
         'postgres_changes',
@@ -74,7 +67,11 @@ const NotificationCenter = () => {
         }
       )
       .subscribe();
-  };
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -171,7 +168,11 @@ const NotificationCenter = () => {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge 
