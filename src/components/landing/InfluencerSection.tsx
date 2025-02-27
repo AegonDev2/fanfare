@@ -30,7 +30,7 @@ const InfluencerCard = memo(({ influencer, onProfileClick }: {
   };
 
   return (
-    <div className="bg-white p-3 rounded-lg shadow-md h-full relative group">
+    <div className="bg-white p-3 rounded-lg shadow-md h-[calc(100%-1rem)] relative group">
       <div 
         className="absolute right-5 top-5 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={handleGiftClick}
@@ -42,15 +42,17 @@ const InfluencerCard = memo(({ influencer, onProfileClick }: {
           <Gift className="h-4 w-4 text-primary" />
         </Button>
       </div>
-      <img
-        src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'}
-        alt={`${influencer.name}'s profile`}
-        className="w-full h-32 object-cover rounded-lg"
-        loading="lazy"
-      />
+      <div className="aspect-[1/1] mb-2 overflow-hidden rounded-lg">
+        <img
+          src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'}
+          alt={`${influencer.name}'s profile`}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
       <div className="mt-2">
-        <h3 className="text-sm font-semibold text-gray-800">{influencer.name}</h3>
-        <p className="text-xs text-gray-600">{influencer.platform} • {influencer.followers.toLocaleString()} followers</p>
+        <h3 className="text-sm font-semibold text-gray-800 truncate">{influencer.name}</h3>
+        <p className="text-xs text-gray-600 truncate">{influencer.platform} • {influencer.followers.toLocaleString()} followers</p>
         <Button 
           size="sm" 
           className="mt-2 w-full text-xs"
@@ -98,7 +100,7 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
         </div>
       </div>
-      <div className="relative px-12">
+      <div className="relative px-4 md:px-12">
         <Carousel
           opts={{
             align: "start",
@@ -112,10 +114,12 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
             {filteredInfluencers.length > 0 ? (
               filteredInfluencers.map((influencer, index) => (
                 <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/4">
-                  <InfluencerCard 
-                    influencer={influencer}
-                    onProfileClick={handleProfileClick}
-                  />
+                  <div className="h-full pb-4">
+                    <InfluencerCard 
+                      influencer={influencer}
+                      onProfileClick={handleProfileClick}
+                    />
+                  </div>
                 </CarouselItem>
               ))
             ) : (
@@ -126,8 +130,8 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
               </CarouselItem>
             )}
           </CarouselContent>
-          <CarouselPrevious className="left-0 -translate-x-full" />
-          <CarouselNext className="right-0 translate-x-full" />
+          <CarouselPrevious className="hidden md:flex -left-8" />
+          <CarouselNext className="hidden md:flex -right-8" />
         </Carousel>
       </div>
     </section>
