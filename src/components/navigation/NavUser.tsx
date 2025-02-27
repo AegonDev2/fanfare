@@ -1,10 +1,15 @@
 
 interface NavUserProps {
-  userEmail: string | null;
-  userRole: string | null;
+  user?: any;
+  userEmail?: string | null;
+  userRole?: string | null;
 }
 
-const NavUser = ({ userEmail, userRole }: NavUserProps) => {
+const NavUser = ({ user, userEmail, userRole }: NavUserProps) => {
+  // Use user object if provided, otherwise fall back to userEmail and userRole
+  const email = user?.email || userEmail || "Guest";
+  const role = userRole || (user ? "User" : "Not logged in");
+
   return (
     <footer className="absolute bottom-0 left-0 w-full bg-[var(--navbar-dark-secondary)] p-6">
       <div className="flex items-center">
@@ -16,9 +21,9 @@ const NavUser = ({ userEmail, userRole }: NavUserProps) => {
           />
         </div>
         <div className="ml-4 flex flex-col">
-          <span className="text-sm truncate">{userEmail || "Guest"}</span>
+          <span className="text-sm truncate">{email}</span>
           <span className="text-xs text-[var(--navbar-light-secondary)] capitalize">
-            {userRole || "Not logged in"}
+            {role}
           </span>
         </div>
       </div>

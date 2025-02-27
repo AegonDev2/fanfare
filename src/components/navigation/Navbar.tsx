@@ -63,7 +63,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       )}
     >
       <div className="flex justify-between items-center p-4">
-        <NavHeader />
+        <NavHeader setIsOpen={setIsOpen} />
         <Button
           variant="ghost"
           size="icon"
@@ -80,6 +80,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         {navItems && navItems.map((item) => (
           <NavItem
             key={item.id}
+            id={item.id}
             icon={item.icon}
             title={item.title}
             path={item.path}

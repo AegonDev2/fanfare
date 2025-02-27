@@ -20,7 +20,7 @@ interface PaymentFormProps {
   productPreview: ProductDetails;
   isProcessing: boolean;
   paymentStep: 'initial' | 'processing' | 'complete';
-  onSubmit: () => void;
+  onSubmit: (e: React.FormEvent) => void;
 }
 
 const PaymentForm = ({
@@ -92,7 +92,7 @@ const PaymentForm = ({
       return;
     }
 
-    onSubmit();
+    onSubmit(e);
   };
 
   if (paymentStep === 'complete') {

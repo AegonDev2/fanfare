@@ -1,11 +1,13 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 export type NavRole = 'fan' | 'influencer' | 'admin';
 
 export const useNavigation = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const userRole = 'influencer'; // This should be fetched from your auth context
   const userEmail = 'user@example.com'; // This should be fetched from your auth context
 
@@ -33,14 +35,15 @@ export const useNavigation = () => {
     },
   ];
 
-  const isActiveRoute = (path: string) => {
-    return location.pathname === path;
-  };
+  const activeUrl = location.pathname;
 
   return {
     navItems,
     userRole,
     userEmail,
-    isActiveRoute,
+    isActiveRoute: (path: string) => location.pathname === path,
+    activeUrl,
+    isLoading,
+    error
   };
 };
