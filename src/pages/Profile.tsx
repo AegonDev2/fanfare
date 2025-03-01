@@ -38,6 +38,7 @@ const Profile = () => {
     retry: false
   });
 
+  // This function is no longer used directly, but kept for backward compatibility
   const handleSendGift = async (giftItem: string, giftMessage: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     
