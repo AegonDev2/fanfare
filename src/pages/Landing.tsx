@@ -7,8 +7,6 @@ import GiftSection from "@/components/landing/GiftSection";
 import OrderTrackingSection from "@/components/landing/OrderTrackingSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import Navbar from "@/components/navigation/Navbar";
-import { cn } from "@/lib/utils";
 
 interface LandingProps {
   setNavOpen: (isOpen: boolean) => void;
@@ -18,7 +16,6 @@ const Landing = ({ setNavOpen }: LandingProps) => {
   const { toast } = useToast();
   const [influencers, setInfluencers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isNavOpen, setIsNavOpen] = useState(false);
 
   useEffect(() => {
     fetchInfluencers();
@@ -98,17 +95,7 @@ const Landing = ({ setNavOpen }: LandingProps) => {
 
   return (
     <div className="min-h-screen w-full bg-gray-100 font-roboto">
-      <Header setNavOpen={setIsNavOpen} />
-      <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
-      
-      {/* Overlay */}
-      <div 
-        className={cn(
-          "fixed inset-0 bg-black/50 z-40 transition-all duration-300 ease-in-out",
-          isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        )}
-        onClick={() => setIsNavOpen(false)}
-      />
+      <Header setNavOpen={setNavOpen} />
       
       <div className="pt-16">
         <HeroCarousel slides={slides} />
