@@ -41,6 +41,7 @@ const AppContent = () => {
             isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
           onClick={() => setIsNavOpen(false)}
+          style={{ transition: "all 0.3s ease-in" }}
         />
       )}
 
@@ -48,9 +49,12 @@ const AppContent = () => {
         className={cn(
           "transition-all duration-300 ease-in-out min-h-screen",
           isNavOpen && !isAuthPage ? 
-            isMobile ? "opacity-50" : "scale-95 blur-sm" 
-            : "scale-100"
+            isMobile ? 
+              "opacity-50 transform scale-[0.85] origin-center" : 
+              "transform translate-x-[260px] opacity-[0.6] origin-center" 
+            : "scale-100 transform-none"
         )}
+        style={{ transition: "all 0.3s ease-in" }}
       >
         <div className="min-h-screen">
           <Routes>

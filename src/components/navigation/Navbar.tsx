@@ -59,23 +59,37 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     }
   };
 
-  // Update the navigation styles based on the provided designs
+  // Update the navigation styles based on the provided designs with new animations
   const navPosition = isMobile 
     ? "top-0 left-0 right-0 h-screen max-h-screen w-full overflow-hidden" 
     : "top-0 left-0 h-screen w-[280px] overflow-hidden";
+
+  // Implement animation style based on the SCSS code provided
+  const navOpenStyle = isOpen ? `
+    transform-none opacity-100 visible
+  ` : isMobile ? `
+    opacity-0 invisible transform -translate-y-full
+  ` : `
+    opacity-0 invisible transform -translate-x-full
+  `;
+
+  const contentStyle = isOpen ? `
+    transform-origin-center scale-100 opacity-100
+  ` : `
+    transform-origin-center scale-[0.85] opacity-0
+  `;
 
   if (isLoading) {
     return (
       <nav
         className={cn(
-          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-500 ease-in-out",
+          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
           navPosition,
-          isOpen 
-            ? "opacity-100 transform translate-y-0 translate-x-0" 
-            : isMobile 
-              ? "opacity-0 pointer-events-none transform -translate-y-16" 
-              : "opacity-0 pointer-events-none transform -translate-x-16"
+          navOpenStyle
         )}
+        style={{ 
+          transition: "all 0.3s ease-in",
+        }}
       >
         <div className="flex justify-center items-center h-full">
           <div className="text-[var(--navbar-light-primary)]">Loading navigation...</div>
@@ -89,14 +103,13 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     return (
       <nav
         className={cn(
-          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-500 ease-in-out",
+          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
           navPosition,
-          isOpen 
-            ? "opacity-100 transform translate-y-0 translate-x-0" 
-            : isMobile 
-              ? "opacity-0 pointer-events-none transform -translate-y-16" 
-              : "opacity-0 pointer-events-none transform -translate-x-16"
+          navOpenStyle
         )}
+        style={{ 
+          transition: "all 0.3s ease-in",
+        }}
       >
         <div className="flex justify-center items-center h-full">
           <div className="text-red-500">
@@ -110,31 +123,40 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   return (
     <nav
       className={cn(
-        "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-500 ease-in-out",
+        "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl",
         navPosition,
-        isOpen 
-          ? "opacity-100 transform translate-y-0 translate-x-0" 
-          : isMobile 
-            ? "opacity-0 pointer-events-none transform -translate-y-full" 
-            : "opacity-0 pointer-events-none transform -translate-x-full"
+        navOpenStyle
       )}
+      style={{ 
+        transition: "all 0.3s ease-in",
+      }}
     >
       <NavHeader setIsOpen={setIsOpen} />
 
-      <div className="mt-4 flex-1 flex flex-col space-y-1 px-3 overflow-y-auto">
+      <div 
+        className={cn(
+          "mt-4 flex-1 flex flex-col space-y-1 px-3 overflow-y-auto transition-all duration-300",
+          contentStyle
+        )}
+        style={{ 
+          transition: "all 0.3s ease-in",
+        }}
+      >
         {navItems && navItems.map((item, index) => (
           <div 
             key={item.id}
             className={cn(
-              "transition-all duration-300 transform",
+              "transition-all duration-300",
               isOpen 
-                ? "translate-x-0 opacity-100" 
+                ? `opacity-100 translate-x-0 translate-y-0` 
                 : isMobile 
-                  ? "translate-y-4 opacity-0" 
-                  : "translate-x-8 opacity-0"
+                  ? `opacity-0 translate-y-8` 
+                  : `opacity-0 translate-x-8`
             )}
             style={{ 
-              transitionDelay: `${isOpen ? index * 50 : 0}ms` 
+              transitionDelay: `${isOpen ? index * 50 : 0}ms`,
+              width: isOpen ? "100%" : "0",
+              marginLeft: isOpen ? "0" : (index * -40) + "px"
             }}
           >
             <NavItem
@@ -151,15 +173,16 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         {!user ? (
           <div 
             className={cn(
-              "mt-4 px-4 space-y-2 transition-all duration-300 transform",
+              "mt-4 px-4 space-y-2 transition-all duration-300",
               isOpen 
-                ? "translate-x-0 opacity-100" 
+                ? `opacity-100 translate-x-0 translate-y-0`  
                 : isMobile 
-                  ? "translate-y-8 opacity-0" 
-                  : "translate-x-8 opacity-0"
+                  ? `opacity-0 translate-y-8` 
+                  : `opacity-0 translate-x-8`
             )}
             style={{ 
-              transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms` 
+              transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms`,
+              width: isOpen ? "100%" : "0"
             }}
           >
             <Button
@@ -179,15 +202,16 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         ) : (
           <div
             className={cn(
-              "transition-all duration-300 transform",
+              "transition-all duration-300",
               isOpen 
-                ? "translate-x-0 opacity-100" 
+                ? `opacity-100 translate-x-0 translate-y-0` 
                 : isMobile 
-                  ? "translate-y-8 opacity-0" 
-                  : "translate-x-8 opacity-0"
+                  ? `opacity-0 translate-y-8` 
+                  : `opacity-0 translate-x-8`
             )}
             style={{ 
-              transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms` 
+              transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms`,
+              width: isOpen ? "100%" : "0"
             }}
           >
             <Button
@@ -204,10 +228,10 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
 
       <div 
         className={cn(
-          "mt-auto px-3 py-4 flex items-center justify-between text-[var(--navbar-light-secondary)] transition-all duration-300 transform",
+          "mt-auto px-3 py-4 flex items-center justify-between text-[var(--navbar-light-secondary)] transition-all duration-300",
           isOpen 
-            ? "translate-y-0 opacity-100" 
-            : "translate-y-4 opacity-0"
+            ? `opacity-100 translate-y-0` 
+            : `opacity-0 translate-y-4`
         )}
         style={{ 
           transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 100 : 0}ms` 
@@ -219,10 +243,10 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
 
       <div 
         className={cn(
-          "transition-all duration-300 transform",
+          "transition-all duration-300",
           isOpen 
-            ? "translate-y-0 opacity-100" 
-            : "translate-y-4 opacity-0"
+            ? `opacity-100 translate-y-0` 
+            : `opacity-0 translate-y-4`
         )}
         style={{ 
           transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 150 : 0}ms` 
