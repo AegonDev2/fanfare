@@ -1,14 +1,14 @@
 
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavHeaderProps {
   setIsOpen?: (isOpen: boolean) => void;
 }
 
 const NavHeader = ({ setIsOpen }: NavHeaderProps) => {
-  const { isMobile } = useMobile();
+  const isMobile = useIsMobile();
   
   return (
     <header className="relative flex items-center justify-between min-h-[80px] px-6 text-[var(--navbar-light-primary)]">

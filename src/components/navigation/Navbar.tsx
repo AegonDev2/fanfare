@@ -11,7 +11,7 @@ import NavUser from "./NavUser";
 import { useNavigation } from "./useNavigation";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavbarProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const { navItems, activeUrl, isLoading, error, user } = useNavigation();
   const { toast } = useToast();
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const { isMobile } = useMobile();
+  const isMobile = useIsMobile();
 
   const handleCloseNav = () => {
     setIsOpen(false);
@@ -59,16 +59,16 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     }
   };
 
-  // Calculate nav dimensions based on screen size
+  // Update the navigation styles based on the provided designs
   const navPosition = isMobile 
-    ? "top-0 left-0 right-0 bottom-auto h-[85vh] w-full rounded-b-xl" 
-    : "top-8 bottom-8 left-8 h-[calc(100%-4rem)] w-[280px] rounded-xl";
+    ? "top-0 left-0 right-0 h-screen max-h-screen w-full overflow-hidden" 
+    : "top-0 left-0 h-screen w-[280px] overflow-hidden";
 
   if (isLoading) {
     return (
       <nav
         className={cn(
-          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
+          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-500 ease-in-out",
           navPosition,
           isOpen 
             ? "opacity-100 transform translate-y-0 translate-x-0" 
@@ -89,7 +89,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     return (
       <nav
         className={cn(
-          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
+          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-500 ease-in-out",
           navPosition,
           isOpen 
             ? "opacity-100 transform translate-y-0 translate-x-0" 
@@ -113,10 +113,10 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-500 ease-in-out",
         navPosition,
         isOpen 
-          ? "opacity-100 transform translate-y-0 translate-x-0 animate-fade-in" 
+          ? "opacity-100 transform translate-y-0 translate-x-0" 
           : isMobile 
-            ? "opacity-0 pointer-events-none transform -translate-y-16" 
-            : "opacity-0 pointer-events-none transform -translate-x-16"
+            ? "opacity-0 pointer-events-none transform -translate-y-full" 
+            : "opacity-0 pointer-events-none transform -translate-x-full"
       )}
     >
       <NavHeader setIsOpen={setIsOpen} />
@@ -130,7 +130,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
               isOpen 
                 ? "translate-x-0 opacity-100" 
                 : isMobile 
-                  ? "translate-y-8 opacity-0" 
+                  ? "translate-y-4 opacity-0" 
                   : "translate-x-8 opacity-0"
             )}
             style={{ 

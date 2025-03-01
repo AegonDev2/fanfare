@@ -16,7 +16,7 @@ import GiftRequests from "./pages/GiftRequests";
 import Settings from "./pages/Settings";
 import Navbar from "./components/navigation/Navbar";
 import { cn } from "@/lib/utils";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +24,7 @@ const AppContent = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
-  const { isMobile } = useMobile();
+  const isMobile = useIsMobile();
   
   return (
     <div className="min-h-screen w-full bg-[var(--background)] relative overflow-x-hidden">
