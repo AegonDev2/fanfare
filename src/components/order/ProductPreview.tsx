@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ProductDetails, InfluencerAddress } from "@/types/order";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, ShoppingCart, Gift } from "lucide-react";
+import { ShoppingCart, Gift } from "lucide-react";
 import PaymentForm from "@/components/payment/PaymentForm";
 
 interface ProductPreviewProps {
@@ -88,19 +88,14 @@ const ProductPreview = ({
                   </div>
                 </div>
 
-                {influencerAddress && (
-                  <div className="bg-gray-50 p-4 rounded-md mb-4">
-                    <div className="flex items-start">
-                      <MapPin className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
-                      <div>
-                        <h3 className="text-sm font-medium mb-1">Shipping Address:</h3>
-                        <p className="text-gray-600 text-sm">
-                          {influencerAddress.street_address}, {influencerAddress.city}, {influencerAddress.state}, {influencerAddress.postal_code}, {influencerAddress.country}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Shipping address section removed to maintain privacy */}
+                
+                <div className="bg-gray-50 p-4 rounded-md mb-4">
+                  <p className="text-gray-600 text-sm">
+                    Your gift will be sent directly to the influencer's verified shipping address.
+                    The shipping address is kept private for security reasons.
+                  </p>
+                </div>
 
                 <Button
                   onClick={() => setActiveTab("payment")}

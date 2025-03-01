@@ -37,6 +37,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     }
   }, [influencerId]);
 
+  // Still fetch the address for order processing, but we won't display it to the user
   const fetchInfluencerAddress = async () => {
     try {
       const { data: addresses, error } = await supabase
@@ -65,6 +66,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         return;
       }
 
+      // Store address but don't display it to user
       setInfluencerAddress(addresses);
     } catch (error) {
       console.error('Error in fetchInfluencerAddress:', error);
