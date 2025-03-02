@@ -10,6 +10,7 @@ export const useOrderSubmission = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>('initial');
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const submitOrder = async (
     giftItem: string,
@@ -24,13 +25,28 @@ export const useOrderSubmission = () => {
         description: "Missing required information",
         variant: "destructive",
       });
+      setOrderError("Missing gift item URL or influencer ID");
+      return;
+    }
+
+    // Validate product details
+    if (!productDetails || !productDetails.name || productDetails.priceInr <= 0) {
+      toast({
+        title: "Error",
+        description: "Invalid product details. Please try again with a different product URL.",
+        variant: "destructive",
+      });
+      setOrderError("Invalid product details");
       return;
     }
 
     setIsLoading(true);
     setPaymentStep('pending');
+    setOrderError(null);
 
     try {
+      console.log("Submitting order with product details:", productDetails);
+      
       // Create order in database
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -59,8 +75,11 @@ export const useOrderSubmission = () => {
         .single();
 
       if (orderError) {
+        console.error("Database order creation error:", orderError);
         throw new Error(orderError.message);
       }
+
+      console.log("Order created successfully:", order);
 
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -72,6 +91,7 @@ export const useOrderSubmission = () => {
         .eq('id', order.id);
 
       if (updateError) {
+        console.error("Order status update error:", updateError);
         throw new Error(updateError.message);
       }
 
@@ -90,6 +110,8 @@ export const useOrderSubmission = () => {
     } catch (error) {
       console.error("Order submission error:", error);
       setPaymentStep('initial');
+      setOrderError(error instanceof Error ? error.message : "An unknown error occurred");
+      
       toast({
         title: "Order Failed",
         description: error instanceof Error ? error.message : "An unknown error occurred",
@@ -103,6 +125,7 @@ export const useOrderSubmission = () => {
   return {
     isLoading,
     paymentStep,
+    orderError,
     submitOrder
   };
 };

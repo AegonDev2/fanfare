@@ -10,13 +10,13 @@ import { useProductPreview } from "@/hooks/use-product-preview";
 import { useOrderSubmission } from "@/hooks/use-order-submission";
 import { InfluencerAddress } from "@/types/order";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingBag, Sparkles } from "lucide-react";
+import { ShoppingBag, Sparkles, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PlaceOrderProps {
   setNavOpen?: (isOpen: boolean) => void;
 }
 
-// Define an interface that matches what's coming from the database
 interface SupabaseAddress {
   id: string;
   influencer_id: string;
@@ -47,10 +47,11 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     setProductPreview,
     isFetchingProduct, 
     fetchProgress, 
-    handlePreviewProduct 
+    handlePreviewProduct,
+    error: productPreviewError
   } = useProductPreview();
 
-  const { isLoading, paymentStep, submitOrder } = useOrderSubmission();
+  const { isLoading, paymentStep, orderError, submitOrder } = useOrderSubmission();
 
   useEffect(() => {
     if (influencerId) {
@@ -86,7 +87,6 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         return;
       }
 
-      // Cast the address to the correct type and transform it
       const supabaseAddress = addresses as SupabaseAddress;
       
       const transformedAddress: InfluencerAddress = {
@@ -113,15 +113,25 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (influencerAddress) {
-      await submitOrder(giftItem, message, influencerId, productPreview, influencerAddress);
-    } else {
+    if (!influencerAddress) {
       toast({
         title: "Error",
         description: "Could not verify shipping address. Please try again later.",
         variant: "destructive",
       });
+      return;
     }
+    
+    if (!productPreview || productPreview.name === DEFAULT_PRODUCT.name) {
+      toast({
+        title: "Error",
+        description: "Please select a valid product before proceeding.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    await submitOrder(giftItem, message, influencerId, productPreview, influencerAddress);
   };
 
   const handleUrlChange = (newUrl: string) => {
@@ -141,10 +151,26 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
   };
 
+  const renderErrorMessage = () => {
+    const error = productPreviewError || orderError;
+    if (!error) return null;
+    
+    return (
+      <Alert className="mb-6 border-red-200 bg-red-50">
+        <AlertCircle className="h-4 w-4 text-red-500" />
+        <AlertDescription className="text-red-600">
+          {error}
+        </AlertDescription>
+      </Alert>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 font-roboto">
       <Header setNavOpen={setNavOpen} />
       <div className="container mx-auto px-4 py-8 pt-20">
+        {renderErrorMessage()}
+        
         <Tabs value={extractionMethod} onValueChange={(value) => setExtractionMethod(value as "standard" | "automation")}>
           <TabsList className="mb-6 w-full max-w-md mx-auto">
             <TabsTrigger value="standard" className="flex-1">
@@ -189,7 +215,6 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
             </div>
             <WebAutomation />
             
-            {/* Show product preview if product is selected through automation */}
             {productPreview && productPreview.name !== DEFAULT_PRODUCT.name && (
               <div className="mt-8">
                 <ProductPreview
