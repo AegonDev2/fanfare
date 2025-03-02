@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 // Use a newer version of deno_dom that exists
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts"; // Add XHR support
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,15 +26,16 @@ serve(async (req) => {
       throw new Error("URL is required");
     }
 
-    console.log(`Starting web automation for URL: ${url}`);
-    
-    // Basic fetch implementation (no actual browser automation)
+    console.log("Processing URL:", url);
+
+    // Attempt to fetch the webpage
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
       },
+    }).catch(error => {
+      console.error("Fetch error:", error);
+      throw new Error(`Failed to fetch URL: ${error.message || error}`);
     });
 
     if (!response.ok) {
@@ -41,146 +43,80 @@ serve(async (req) => {
     }
 
     const html = await response.text();
-    console.log(`Successfully fetched HTML content (${html.length} bytes)`);
+    const doc = new DOMParser().parseFromString(html, "text/html");
     
-    // Use Deno DOM to parse the HTML
-    const parser = new DOMParser();
-    const document = parser.parseFromString(html, "text/html");
+    if (!doc) {
+      throw new Error("Failed to parse HTML");
+    }
+
+    console.log("Successfully parsed HTML");
+
+    // Extract product information
+    let productName = null;
+    let productPrice = null;
+    let productImage = null;
+    let productDescription = null;
+
+    // Check if it's Amazon
+    if (url.includes('amazon')) {
+      productName = doc.querySelector('#productTitle')?.textContent?.trim();
+      productPrice = doc.querySelector('.a-price .a-offscreen')?.textContent?.trim();
+      productImage = doc.querySelector('#landingImage')?.getAttribute('src');
+      productDescription = doc.querySelector('#productDescription')?.textContent?.trim();
+
+      // Alternative selectors
+      if (!productName) productName = doc.querySelector('h1.a-size-large')?.textContent?.trim();
+      if (!productPrice) productPrice = doc.querySelector('span.a-price span.a-offscreen')?.textContent?.trim();
+      if (!productImage) productImage = doc.querySelector('img#landingImage, img#imgBlkFront')?.getAttribute('src');
+      if (!productDescription) productDescription = doc.querySelector('div#feature-bullets')?.textContent?.trim();
+    } 
+    // Check if it's Flipkart
+    else if (url.includes('flipkart')) {
+      productName = doc.querySelector('.B_NuCI')?.textContent?.trim();
+      productPrice = doc.querySelector('._30jeq3._16Jk6d')?.textContent?.trim();
+      productImage = doc.querySelector('._396cs4')?.getAttribute('src');
+      productDescription = doc.querySelector('._1mXcCf')?.textContent?.trim();
+
+      // Alternative selectors
+      if (!productName) productName = doc.querySelector('h1 span')?.textContent?.trim();
+      if (!productPrice) productPrice = doc.querySelector('div._30jeq3')?.textContent?.trim();
+      if (!productImage) {
+        const imgElement = doc.querySelector('img._396cs4._2amPTt._3qGmMb');
+        if (imgElement) {
+          productImage = imgElement.getAttribute('src');
+        }
+      }
+      if (!productDescription) productDescription = doc.querySelector('div._1mXcCf.RmoJUa')?.textContent?.trim();
+    }
     
-    if (!document) {
-      throw new Error("Failed to parse HTML document");
-    }
+    console.log("Extracted data:", { productName, productPrice, productImage, productDescription });
 
-    // Extract product data
-    const productData = {
-      name: null,
-      price: null,
-      image: null,
-      description: null,
-    };
-
-    // Try to extract product name
-    try {
-      // Common selectors for product names
-      const nameSelectors = [
-        'h1', // Generic
-        '#productTitle', // Amazon
-        '.B_NuCI', // Flipkart
-        '.product-title', // Generic
-        '[data-testid="product-name"]', // Generic
-      ];
-
-      for (const selector of nameSelectors) {
-        const element = document.querySelector(selector);
-        if (element && element.textContent.trim()) {
-          productData.name = element.textContent.trim();
-          console.log(`Found product name: ${productData.name}`);
-          break;
-        }
-      }
-    } catch (error) {
-      console.error("Error extracting product name:", error);
-    }
-
-    // Try to extract product price
-    try {
-      // Common selectors for prices
-      const priceSelectors = [
-        '.a-price .a-offscreen', // Amazon
-        '._30jeq3', // Flipkart
-        '.product-price', // Generic
-        '[data-testid="product-price"]', // Generic
-        '.price', // Generic
-        '.offer-price', // Generic
-      ];
-
-      for (const selector of priceSelectors) {
-        const element = document.querySelector(selector);
-        if (element && element.textContent.trim()) {
-          productData.price = element.textContent.trim();
-          console.log(`Found product price: ${productData.price}`);
-          break;
-        }
-      }
-    } catch (error) {
-      console.error("Error extracting product price:", error);
-    }
-
-    // Try to extract product image
-    try {
-      // Common selectors for main product images
-      const imageSelectors = [
-        '#landingImage', // Amazon
-        '#imgTagWrapperId img', // Amazon
-        '._396QI4 img', // Flipkart
-        '.product-image img', // Generic
-        '.main-image img', // Generic
-      ];
-
-      for (const selector of imageSelectors) {
-        const element = document.querySelector(selector);
-        if (element) {
-          productData.image = element.getAttribute('src');
-          console.log(`Found product image: ${productData.image}`);
-          break;
-        }
-      }
-    } catch (error) {
-      console.error("Error extracting product image:", error);
-    }
-
-    // Try to extract product description
-    try {
-      // Common selectors for product descriptions
-      const descSelectors = [
-        '#productDescription', // Amazon
-        '#feature-bullets', // Amazon bullet points
-        '._1mXcCf', // Flipkart
-        '.product-description', // Generic
-        '.description', // Generic
-      ];
-
-      for (const selector of descSelectors) {
-        const element = document.querySelector(selector);
-        if (element && element.textContent.trim()) {
-          productData.description = element.textContent.trim().substring(0, 500);
-          console.log(`Found product description (truncated): ${productData.description}`);
-          break;
-        }
-      }
-    } catch (error) {
-      console.error("Error extracting product description:", error);
-    }
-
+    // Return extracted data
     return new Response(
       JSON.stringify({
         success: true,
-        url,
-        timestamp: new Date().toISOString(),
-        productData,
-        message: "Web content extraction completed",
+        productData: {
+          name: productName,
+          price: productPrice,
+          image: productImage,
+          description: productDescription
+        }
       }),
       {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
-    console.error("Error in web automation:", error);
-    
+    console.error("Error in axiom-ai function:", error);
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error.message || "An unknown error occurred"
       }),
       {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-        status: 400,
+        status: 200, // Return 200 even for errors to avoid CORS issues
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }

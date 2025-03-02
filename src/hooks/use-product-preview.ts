@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -212,6 +213,7 @@ export const useProductPreview = () => {
 
   return {
     productPreview,
+    setProductPreview, // Expose the setter for the WebAutomation component
     isFetchingProduct,
     fetchProgress,
     handlePreviewProduct

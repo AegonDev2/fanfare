@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -45,6 +44,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
 
   const { 
     productPreview, 
+    setProductPreview,
     isFetchingProduct, 
     fetchProgress, 
     handlePreviewProduct 
@@ -132,6 +132,15 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     });
   };
 
+  const DEFAULT_PRODUCT = {
+    name: "Enter a product URL to preview",
+    description: "Product details will appear here once you enter a valid URL.",
+    price: 0,
+    priceInr: 0,
+    platformFee: 5.00,
+    image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 font-roboto">
       <Header setNavOpen={setNavOpen} />
@@ -175,10 +184,25 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
               </h2>
               <p className="text-gray-600 mb-4">
                 Use our web automation technology to extract product details directly from any ecommerce site.
-                This method doesn't require an API key and works with most popular shopping websites.
+                This method works with most popular shopping websites.
               </p>
             </div>
             <WebAutomation />
+            
+            {/* Show product preview if product is selected through automation */}
+            {productPreview && productPreview.name !== DEFAULT_PRODUCT.name && (
+              <div className="mt-8">
+                <ProductPreview
+                  productPreview={productPreview}
+                  influencerAddress={influencerAddress}
+                  message={message}
+                  onMessageChange={(newMessage) => setMessage(newMessage)}
+                  onSubmit={handleSubmit}
+                  isLoading={isLoading}
+                  paymentStep={paymentStep === 'pending' ? 'processing' : paymentStep}
+                />
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

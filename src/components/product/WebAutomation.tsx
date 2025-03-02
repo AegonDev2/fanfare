@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ExternalLink } from "lucide-react";
+import { ProductDetails } from "@/types/order";
+import { useProductPreview } from "@/hooks/use-product-preview";
 
 interface ExtractedProduct {
   name: string | null;
@@ -21,6 +23,7 @@ export const WebAutomation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [productData, setProductData] = useState<ExtractedProduct | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { productPreview, setProductPreview } = useProductPreview();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +56,28 @@ export const WebAutomation = () => {
 
       if (data && data.success && data.productData) {
         setProductData(data.productData);
+        
+        // Convert extracted data to ProductDetails format for the product preview
+        if (data.productData.name) {
+          const platform = url.includes('amazon') ? 'amazon' : 'flipkart';
+          const priceString = data.productData.price || "0";
+          const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, "")) || 0;
+          
+          const newProductDetails: ProductDetails = {
+            name: data.productData.name,
+            description: data.productData.description || "No description available",
+            price: priceNumber,
+            priceInr: priceNumber,
+            platformFee: 5.00,
+            image: data.productData.image || "https://placehold.co/600x400?text=No+Image",
+            platform: platform,
+            id: url,
+          };
+          
+          // Update the global product preview state
+          setProductPreview(newProductDetails);
+        }
+        
         toast({
           title: "Data Extracted",
           description: "Successfully extracted product information",
@@ -73,6 +98,22 @@ export const WebAutomation = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleUseProduct = () => {
+    if (!productData?.name) {
+      toast({
+        title: "No Product Selected",
+        description: "Please extract a product first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    toast({
+      title: "Product Selected",
+      description: "The product has been added to your order",
+    });
   };
 
   return (
@@ -173,8 +214,26 @@ export const WebAutomation = () => {
                     </ul>
                   </div>
                 )}
+                
+                <div className="pt-4">
+                  <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline inline-flex items-center text-sm">
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    View original product page
+                  </a>
+                </div>
               </div>
             </div>
+            
+            {productData.name && (
+              <div className="mt-6">
+                <Button 
+                  onClick={handleUseProduct} 
+                  className="w-full"
+                >
+                  Use This Product
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
