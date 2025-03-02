@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,23 @@ import { ShoppingBag, Sparkles } from "lucide-react";
 
 interface PlaceOrderProps {
   setNavOpen?: (isOpen: boolean) => void;
+}
+
+// Define an interface that matches what's coming from the database
+interface SupabaseAddress {
+  id: string;
+  influencer_id: string;
+  street_address: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  created_at: string;
+  is_primary: boolean;
+  name?: string;
+  address_line1?: string;
+  address_line2?: string;
+  phone?: string;
 }
 
 const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
@@ -68,20 +86,23 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         return;
       }
 
+      // Cast the address to the correct type and transform it
+      const supabaseAddress = addresses as SupabaseAddress;
+      
       const transformedAddress: InfluencerAddress = {
-        id: addresses.id,
-        name: addresses.name || "Recipient", 
-        street_address: addresses.street_address || "",
-        address_line1: addresses.address_line1 || addresses.street_address || "",
-        address_line2: addresses.address_line2 || "",
-        city: addresses.city,
-        state: addresses.state,
-        postal_code: addresses.postal_code,
-        country: addresses.country || "India",
-        phone: addresses.phone || "Not provided",
-        is_primary: addresses.is_primary,
-        influencer_id: addresses.influencer_id,
-        created_at: addresses.created_at
+        id: supabaseAddress.id,
+        name: supabaseAddress.name || "Recipient", 
+        street_address: supabaseAddress.street_address || "",
+        address_line1: supabaseAddress.address_line1 || supabaseAddress.street_address || "",
+        address_line2: supabaseAddress.address_line2 || "",
+        city: supabaseAddress.city,
+        state: supabaseAddress.state,
+        postal_code: supabaseAddress.postal_code,
+        country: supabaseAddress.country || "India",
+        phone: supabaseAddress.phone || "Not provided",
+        is_primary: supabaseAddress.is_primary,
+        influencer_id: supabaseAddress.influencer_id,
+        created_at: supabaseAddress.created_at
       };
 
       setInfluencerAddress(transformedAddress);

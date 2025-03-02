@@ -15,15 +15,15 @@ export interface ProductDetails {
 export interface InfluencerAddress {
   id: string;
   influencer_id?: string;
-  name?: string; // Made optional
+  name?: string; 
   street_address: string;
-  address_line1?: string; // Optional for backward compatibility
+  address_line1?: string;
   address_line2?: string;
   city: string;
   state: string;
   postal_code: string;
   country: string;
-  phone?: string; // Made optional
+  phone?: string;
   is_primary?: boolean;
   created_at?: string;
 }
