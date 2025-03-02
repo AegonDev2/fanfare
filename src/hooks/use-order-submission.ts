@@ -47,19 +47,18 @@ export const useOrderSubmission = () => {
     try {
       console.log("Submitting order with product details:", productDetails);
       
-      // Create order in database
+      // Create order in database with shipping address information directly in the orders table
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           influencer_id: influencerId,
           product_url: giftItem,
-          product_name: productDetails.name,
+          product_title: productDetails.name,
           product_price: productDetails.priceInr,
           platform_fee: productDetails.platformFee,
           total_amount: productDetails.priceInr + productDetails.platformFee,
           message: message,
           status: "pending",
-          product_image: productDetails.image,
           shipping_address: {
             name: influencerAddress.name, 
             address_line1: influencerAddress.address_line1,
@@ -81,13 +80,15 @@ export const useOrderSubmission = () => {
 
       console.log("Order created successfully:", order);
 
-      // If using Axiom AI for automated ordering, call that service here
+      // Call Axiom AI service for order automation via Supabase Edge Function
       try {
         const { data: automationData, error: automationError } = await supabase.functions.invoke("axiom-order-automation", {
           body: { 
             orderId: order.id,
             productUrl: giftItem,
-            shippingAddress: order.shipping_address,
+            // Fix: Access shipping address from the correct location
+            // Since shipping_address isn't a field in the orders table, we pass the address directly
+            shippingAddress: influencerAddress,
             platform: productDetails.platform || detectPlatform(giftItem)
           },
         });
