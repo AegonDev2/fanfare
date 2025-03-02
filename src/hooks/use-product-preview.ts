@@ -13,6 +13,45 @@ const DEFAULT_PRODUCT: ProductDetails = {
   image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
 };
 
+// Helper to fetch with retries and timeout
+const fetchWithRetries = async (url: string, options: RequestInit = {}, maxRetries = 3, timeout = 30000) => {
+  let attempt = 0;
+  
+  // Create an AbortController for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  const finalOptions = {
+    ...options,
+    signal: controller.signal,
+    headers: {
+      ...options.headers,
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+  };
+
+  while (attempt < maxRetries) {
+    try {
+      const response = await fetch(url, finalOptions);
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      attempt++;
+      console.log(`Attempt ${attempt} failed:`, error);
+      if (attempt >= maxRetries) {
+        throw error;
+      }
+      // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+    }
+  }
+};
+
 export const useProductPreview = () => {
   const { toast } = useToast();
   const [isFetchingProduct, setIsFetchingProduct] = useState(false);
@@ -23,6 +62,12 @@ export const useProductPreview = () => {
     if (url.includes('amazon')) return 'amazon';
     if (url.includes('flipkart')) return 'flipkart';
     return undefined;
+  };
+
+  const extractFlipkartProductId = (url: string): string | null => {
+    // Extract pid from URL
+    const pidMatch = url.match(/pid=([^&]+)/);
+    return pidMatch ? pidMatch[1] : null;
   };
 
   const handlePreviewProduct = async (giftItem: string) => {
@@ -47,20 +92,29 @@ export const useProductPreview = () => {
     }
 
     setIsFetchingProduct(true);
-    setFetchProgress(0);
+    setFetchProgress(10);
     
     try {
-      const progressInterval = setInterval(() => {
-        setFetchProgress(prev => Math.min(prev + 10, 90));
-      }, 500);
+      const platform = detectPlatform(giftItem);
+      setFetchProgress(20);
+      
+      if (!platform) {
+        throw new Error("Unsupported platform. Currently only Amazon and Flipkart are supported.");
+      }
 
-      // Use direct fetch-product function for reliable product extraction
+      // For debugging - Log detected platform
+      console.log(`Detected platform: ${platform}, URL: ${giftItem}`);
+      
+      // Use direct backend function for reliable product extraction
       const { data, error } = await supabase.functions.invoke('fetch-product', {
-        body: { url: giftItem }
+        body: { 
+          url: giftItem,
+          platform: platform,
+          productId: platform === 'flipkart' ? extractFlipkartProductId(giftItem) : null
+        }
       });
 
-      clearInterval(progressInterval);
-      setFetchProgress(100);
+      setFetchProgress(90);
       
       if (error) {
         console.error("Supabase function error:", error);
@@ -68,13 +122,13 @@ export const useProductPreview = () => {
       }
       
       if (!data || !data.name) {
+        console.error("Invalid product data received:", data);
         throw new Error('Invalid product data received');
       }
 
       console.log("Product data received:", data);
       
-      // Ensure we have the necessary fields
-      const platform = detectPlatform(giftItem);
+      // Ensure we have the necessary fields with proper defaults if missing
       const productData: ProductDetails = {
         name: data.name || "Unknown Product",
         description: data.description || "No description available",
@@ -86,6 +140,7 @@ export const useProductPreview = () => {
       };
       
       setProductPreview(productData);
+      setFetchProgress(100);
 
       toast({
         title: "Product fetched",
