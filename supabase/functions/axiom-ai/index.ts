@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.36/deno-dom-wasm.ts";
+// Use a newer version of deno_dom that exists
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,7 +15,11 @@ serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const requestData = await req.json().catch(() => {
+      throw new Error("Invalid JSON in request body");
+    });
+    
+    const { url } = requestData;
     
     if (!url) {
       throw new Error("URL is required");
