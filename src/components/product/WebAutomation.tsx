@@ -102,16 +102,16 @@ export const WebAutomation = ({ onProductExtracted }: WebAutomationProps) => {
     setProductData(null);
     
     try {
-      console.log("Calling edge function with URL:", url);
+      console.log("Calling Axiom AI extraction service with URL:", url);
       
       // Notify user about extraction process
       toast({
         title: "Starting Extraction",
-        description: "Using headless browser technology to extract product details. This may take up to 20 seconds...",
+        description: "Using Axiom AI to extract product details. This may take up to 20 seconds...",
       });
       
       // Call the Supabase edge function with improved error handling
-      const { data, error } = await supabase.functions.invoke("axiom-ai", {
+      const { data, error } = await supabase.functions.invoke("axiom-product-extraction", {
         body: { 
           url, 
           retryCount,
@@ -120,11 +120,11 @@ export const WebAutomation = ({ onProductExtracted }: WebAutomationProps) => {
       });
 
       if (error) {
-        console.error("Edge function error:", error);
-        throw new Error(error.message || "Failed to call automation service");
+        console.error("Extraction service error:", error);
+        throw new Error(error.message || "Failed to call extraction service");
       }
 
-      console.log("Automation result:", data);
+      console.log("Extraction result:", data);
 
       if (data && data.success && data.productData) {
         setExtractionProgress(100);
@@ -153,23 +153,31 @@ export const WebAutomation = ({ onProductExtracted }: WebAutomationProps) => {
           if (onProductExtracted) {
             onProductExtracted(newProductDetails);
           }
+          
+          toast({
+            title: "Data Extracted",
+            description: "Successfully extracted product information",
+          });
+        } else {
+          throw new Error("Product data incomplete");
         }
-        
-        toast({
-          title: "Data Extracted",
-          description: "Successfully extracted product information",
-        });
       } else if (data && !data.success) {
         throw new Error(data.error || "Failed to extract product data");
       } else {
-        throw new Error("Invalid response format from automation service");
+        throw new Error("Invalid response format from extraction service");
       }
     } catch (error) {
-      console.error("Error in automation:", error);
+      console.error("Error in product extraction:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       
       // Show different toast based on error type
-      if (errorMessage.includes("529")) {
+      if (errorMessage.includes("429") || errorMessage.includes("rate limit")) {
+        toast({
+          title: "Service Limit Reached",
+          description: "The extraction service is temporarily unavailable due to rate limiting. Please try again later.",
+          variant: "destructive",
+        });
+      } else if (errorMessage.includes("blocked") || errorMessage.includes("403")) {
         toast({
           title: "Service Blocked",
           description: "The extraction service is being blocked by the website. Please try a different product URL.",
@@ -199,12 +207,12 @@ export const WebAutomation = ({ onProductExtracted }: WebAutomationProps) => {
   const renderExtractionStatus = () => {
     if (!isLoading) return null;
     
-    let statusMessage = "Initializing browser...";
+    let statusMessage = "Connecting to Axiom AI...";
     
-    if (extractionProgress > 10) statusMessage = "Navigating to website...";
-    if (extractionProgress > 30) statusMessage = "Waiting for page to load...";
-    if (extractionProgress > 50) statusMessage = "Extracting product details...";
-    if (extractionProgress > 70) statusMessage = "Processing data...";
+    if (extractionProgress > 10) statusMessage = "Analyzing product URL...";
+    if (extractionProgress > 30) statusMessage = "Extracting product details...";
+    if (extractionProgress > 50) statusMessage = "Processing data...";
+    if (extractionProgress > 70) statusMessage = "Validating information...";
     if (extractionProgress > 90) statusMessage = "Finalizing...";
     
     return (
@@ -217,9 +225,9 @@ export const WebAutomation = ({ onProductExtracted }: WebAutomationProps) => {
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>Web Automation</CardTitle>
+        <CardTitle>Product Extraction with Axiom AI</CardTitle>
         <CardDescription>
-          Extract product details using Puppeteer headless browser
+          Extract product details using our advanced AI service
         </CardDescription>
       </CardHeader>
       <CardContent>

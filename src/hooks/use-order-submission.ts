@@ -81,8 +81,31 @@ export const useOrderSubmission = () => {
 
       console.log("Order created successfully:", order);
 
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // If using Axiom AI for automated ordering, call that service here
+      try {
+        const { data: automationData, error: automationError } = await supabase.functions.invoke("axiom-order-automation", {
+          body: { 
+            orderId: order.id,
+            productUrl: giftItem,
+            shippingAddress: order.shipping_address,
+            platform: productDetails.platform || detectPlatform(giftItem)
+          },
+        });
+        
+        if (automationError) {
+          console.error("Order automation error:", automationError);
+          // Continue with the process even if automation fails
+          toast({
+            title: "Automation Notice",
+            description: "Order created, but automated processing encountered an issue. Our team will handle it manually.",
+          });
+        } else {
+          console.log("Order automation successful:", automationData);
+        }
+      } catch (automationError) {
+        console.error("Order automation exception:", automationError);
+        // Continue with the process even if automation fails
+      }
 
       // Update order status after payment
       const { error: updateError } = await supabase
@@ -120,6 +143,13 @@ export const useOrderSubmission = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to detect platform from URL
+  const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
+    if (url.includes('amazon')) return 'amazon';
+    if (url.includes('flipkart')) return 'flipkart';
+    return undefined;
   };
 
   return {
