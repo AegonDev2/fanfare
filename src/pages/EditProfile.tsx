@@ -52,7 +52,23 @@ const EditProfile = () => {
         .eq("influencer_id", user.id);
 
       if (error) throw error;
-      setAddresses(data);
+      
+      const transformedAddresses: InfluencerAddress[] = data.map(addr => ({
+        id: addr.id,
+        influencer_id: addr.influencer_id,
+        street_address: addr.street_address,
+        address_line1: addr.street_address, // For backward compatibility
+        city: addr.city,
+        state: addr.state,
+        postal_code: addr.postal_code,
+        country: addr.country,
+        phone: "Not provided", // Default value
+        name: "Address", // Default value
+        is_primary: addr.is_primary,
+        created_at: addr.created_at
+      }));
+      
+      setAddresses(transformedAddresses);
     } catch (error: any) {
       console.error("Error fetching addresses:", error);
       toast({
@@ -255,7 +271,22 @@ const EditProfile = () => {
 
       if (error) throw error;
 
-      setAddresses(prev => [...prev, data]);
+      const transformedAddress: InfluencerAddress = {
+        id: data.id,
+        influencer_id: data.influencer_id,
+        street_address: data.street_address,
+        address_line1: data.street_address, // For backward compatibility
+        city: data.city,
+        state: data.state,
+        postal_code: data.postal_code,
+        country: data.country,
+        phone: "Not provided", // Default value
+        name: "Address", // Default value
+        is_primary: data.is_primary,
+        created_at: data.created_at
+      };
+
+      setAddresses(prev => [...prev, transformedAddress]);
       setNewAddress({
         street_address: "",
         city: "",

@@ -263,13 +263,28 @@ const CreateInfluencerProfile = () => {
 
       if (error) throw error;
 
-      setAddresses(prev => [...prev, data]);
+      const transformedAddress: InfluencerAddress = {
+        id: data.id,
+        influencer_id: data.influencer_id,
+        street_address: data.street_address,
+        address_line1: data.street_address,
+        city: data.city,
+        state: data.state,
+        postal_code: data.postal_code,
+        country: data.country,
+        phone: "Not provided",
+        name: "Address",
+        is_primary: data.is_primary,
+        created_at: data.created_at
+      };
+
+      setAddresses(prev => [...prev, transformedAddress]);
       setNewAddress({
         street_address: "",
         city: "",
         state: "",
         postal_code: "",
-        country: "India"
+        country: "India",
       });
 
       toast({

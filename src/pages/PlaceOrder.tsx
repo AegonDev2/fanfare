@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -69,7 +68,8 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       // Transform to expected format with all required fields
       const transformedAddress: InfluencerAddress = {
         id: addresses.id,
-        name: addresses.name || "Recipient", // Ensure name has a fallback
+        name: addresses.name || "Recipient", 
+        street_address: addresses.street_address || "",
         address_line1: addresses.address_line1 || addresses.street_address || "",
         address_line2: addresses.address_line2 || "",
         city: addresses.city,
@@ -79,8 +79,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         phone: addresses.phone || "Not provided",
         is_primary: addresses.is_primary,
         influencer_id: addresses.influencer_id,
-        created_at: addresses.created_at,
-        street_address: addresses.street_address
+        created_at: addresses.created_at
       };
 
       // Store address but don't display it to user

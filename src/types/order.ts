@@ -14,17 +14,17 @@ export interface ProductDetails {
 
 export interface InfluencerAddress {
   id: string;
-  name: string;
-  address_line1: string;
+  influencer_id?: string;
+  name?: string; // Made optional
+  street_address: string;
+  address_line1?: string; // Optional for backward compatibility
   address_line2?: string;
   city: string;
   state: string;
   postal_code: string;
   country: string;
-  phone: string;
+  phone?: string; // Made optional
   is_primary?: boolean;
-  street_address?: string; // For backward compatibility
-  influencer_id?: string;
   created_at?: string;
 }
 
