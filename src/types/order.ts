@@ -24,6 +24,8 @@ export interface InfluencerAddress {
   phone: string;
   is_primary?: boolean;
   street_address?: string; // Keep for backward compatibility
+  influencer_id?: string;
+  created_at?: string;
 }
 
 export interface EcommerceOrder {

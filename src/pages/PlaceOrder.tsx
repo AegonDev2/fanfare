@@ -66,10 +66,10 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         return;
       }
 
-      // Transform to expected format if needed
+      // Transform to expected format
       const transformedAddress: InfluencerAddress = {
         id: addresses.id,
-        name: addresses.name || "Unknown",
+        name: addresses.name || addresses.street_address?.split(',')[0] || "Unknown",
         address_line1: addresses.address_line1 || addresses.street_address || "",
         address_line2: addresses.address_line2 || "",
         city: addresses.city,
@@ -77,7 +77,9 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         postal_code: addresses.postal_code,
         country: addresses.country || "India",
         phone: addresses.phone || "",
-        is_primary: addresses.is_primary
+        is_primary: addresses.is_primary,
+        influencer_id: addresses.influencer_id,
+        created_at: addresses.created_at
       };
 
       // Store address but don't display it to user
