@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +42,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
   const influencerId = searchParams.get("influencer") || "";
   const [message, setMessage] = useState("");
   const [extractionMethod, setExtractionMethod] = useState<"standard" | "automation">("standard");
+  const [isLoadingAddress, setIsLoadingAddress] = useState(false); // New state for loading address
 
   const { 
     productPreview, 
@@ -48,7 +50,8 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     isFetchingProduct, 
     fetchProgress, 
     handlePreviewProduct,
-    error: productPreviewError
+    error: productPreviewError,
+    resetExtractionState
   } = useProductPreview();
 
   const { isLoading, paymentStep, orderError, submitOrder } = useOrderSubmission();
@@ -61,6 +64,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
 
   const fetchInfluencerAddress = async () => {
     try {
+      setIsLoadingAddress(true);
       const { data: addresses, error } = await supabase
         .from('influencer_addresses')
         .select('*')
@@ -108,6 +112,8 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       setInfluencerAddress(transformedAddress);
     } catch (error) {
       console.error('Error in fetchInfluencerAddress:', error);
+    } finally {
+      setIsLoadingAddress(false);
     }
   };
 
@@ -213,7 +219,11 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
                 This method works with most popular shopping websites.
               </p>
             </div>
-            <WebAutomation />
+            <WebAutomation 
+              onProductExtracted={(productData) => {
+                setProductPreview(productData);
+              }}
+            />
             
             {productPreview && productPreview.name !== DEFAULT_PRODUCT.name && (
               <div className="mt-8">

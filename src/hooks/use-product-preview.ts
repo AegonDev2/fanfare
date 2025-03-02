@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
 
@@ -48,14 +48,14 @@ export const useProductPreview = () => {
   const [retryCount, setRetryCount] = useState(0);
 
   // Helper: Determine platform from URL
-  const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
+  const detectPlatform = useCallback((url: string): 'amazon' | 'flipkart' | undefined => {
     if (url.includes('amazon')) return 'amazon';
     if (url.includes('flipkart')) return 'flipkart';
     return undefined;
-  };
+  }, []);
 
   // Helper: Extract product ID from Flipkart URL
-  const extractFlipkartProductId = (url: string): string | null => {
+  const extractFlipkartProductId = useCallback((url: string): string | null => {
     // Pattern for pid in URL
     const pidMatch = url.match(/pid=([^&]+)/);
     if (pidMatch) return pidMatch[1];
@@ -65,16 +65,16 @@ export const useProductPreview = () => {
     if (pMatch) return pMatch[1];
     
     return null;
-  };
+  }, []);
 
   // Reset extraction state to try again
-  const resetExtractionState = () => {
+  const resetExtractionState = useCallback(() => {
     setError(null);
     setRetryCount(prev => prev + 1);
-  };
+  }, []);
 
   // Main function to handle product preview
-  const handlePreviewProduct = async (giftItem: string) => {
+  const handlePreviewProduct = useCallback(async (giftItem: string) => {
     if (!giftItem) {
       toast({
         title: "Error",
@@ -142,76 +142,88 @@ export const useProductPreview = () => {
       // Step 3: Try to fetch actual product data from the Edge Function
       console.log("Fetching product data via Edge Function for:", giftItem);
       
-      const { data, error } = await fetch('/api/fetch-product', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          url: giftItem,
-          retryCount: retryCount,
-          // Pass necessary context for extraction
-          platform: platform
-        }),
-      }).then(res => res.json());
-      
-      if (error) {
-        console.error("Edge function error:", error);
-        throw new Error(error.message || "Failed to fetch product details");
+      try {
+        const response = await fetch('/api/fetch-product', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            url: giftItem,
+            retryCount: retryCount,
+            // Pass necessary context for extraction
+            platform: platform
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API responded with status: ${response.status}`);
+        }
+        
+        const { data, error } = await response.json();
+        
+        if (error) {
+          console.error("Edge function error:", error);
+          throw new Error(error.message || "Failed to fetch product details");
+        }
+        
+        setFetchProgress(80);
+        
+        if (!data || !data.productData || !data.productData.name) {
+          throw new Error("Could not extract product details. Please try a different product or URL.");
+        }
+        
+        console.log("Extracted product data:", data.productData);
+        
+        // Process the extracted data
+        const extractedData = data.productData;
+        const priceString = extractedData.price?.toString() || "0";
+        const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, "")) || 0;
+        
+        const productDetails: ProductDetails = {
+          name: extractedData.name,
+          description: extractedData.description || "No description available",
+          price: priceNumber,
+          priceInr: priceNumber,
+          platformFee: 5.00,
+          image: extractedData.image || "https://placehold.co/600x400?text=No+Image",
+          platform: platform,
+        };
+        
+        setProductPreview(productDetails);
+        setFetchProgress(100);
+        
+        toast({
+          title: "Product extracted",
+          description: "Successfully extracted product details",
+        });
+      } catch (fetchError) {
+        console.error("Fetch error:", fetchError);
+        throw new Error(fetchError instanceof Error ? fetchError.message : 'Error connecting to extraction service');
       }
-      
-      setFetchProgress(80);
-      
-      if (!data || !data.productData || !data.productData.name) {
-        throw new Error("Could not extract product details. Please try a different product or URL.");
-      }
-      
-      console.log("Extracted product data:", data.productData);
-      
-      // Process the extracted data
-      const extractedData = data.productData;
-      const priceString = extractedData.price?.toString() || "0";
-      const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, "")) || 0;
-      
-      const productDetails: ProductDetails = {
-        name: extractedData.name,
-        description: extractedData.description || "No description available",
-        price: priceNumber,
-        priceInr: priceNumber,
-        platformFee: 5.00,
-        image: extractedData.image || "https://placehold.co/600x400?text=No+Image",
-        platform: platform,
-      };
-      
-      setProductPreview(productDetails);
-      setFetchProgress(100);
-      
-      toast({
-        title: "Product extracted",
-        description: "Successfully extracted product details",
-      });
       
     } catch (error) {
       console.error("Error fetching product:", error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setError(errorMessage);
       
-      // Don't provide fake data
       toast({
         title: "Extraction failed",
         description: `${errorMessage}. Please try another product URL.`,
         variant: "destructive",
       });
       
-      // Reset the product preview to default
-      setProductPreview(DEFAULT_PRODUCT);
+      // Reset the product preview to default if extraction failed
+      if (productPreview.name !== DEFAULT_PRODUCT.name) {
+        setProductPreview(DEFAULT_PRODUCT);
+      }
     } finally {
       setTimeout(() => {
         setIsFetchingProduct(false);
         setFetchProgress(0);
       }, 500);
     }
-  };
+  }, [toast, retryCount, detectPlatform, extractFlipkartProductId, productPreview.name]);
 
   return {
     productPreview,
