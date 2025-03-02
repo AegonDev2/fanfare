@@ -19,7 +19,11 @@ interface ExtractedProduct {
   description: string | null;
 }
 
-export const WebAutomation = () => {
+interface WebAutomationProps {
+  onProductExtracted?: (productData: ProductDetails) => void;
+}
+
+export const WebAutomation = ({ onProductExtracted }: WebAutomationProps) => {
   const { toast } = useToast();
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -144,6 +148,11 @@ export const WebAutomation = () => {
           
           // Update the global product preview state
           setProductPreview(newProductDetails);
+          
+          // Call the onProductExtracted callback if provided
+          if (onProductExtracted) {
+            onProductExtracted(newProductDetails);
+          }
         }
         
         toast({
@@ -333,6 +342,9 @@ export const WebAutomation = () => {
               <div className="mt-6">
                 <Button 
                   onClick={() => {
+                    if (onProductExtracted && productPreview) {
+                      onProductExtracted(productPreview);
+                    }
                     toast({
                       title: "Product Selected",
                       description: "The product has been added to your order",
