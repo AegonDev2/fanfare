@@ -20,6 +20,7 @@ export const WebAutomation = () => {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [productData, setProductData] = useState<ExtractedProduct | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,35 +35,36 @@ export const WebAutomation = () => {
 
     setIsLoading(true);
     setProductData(null);
+    setError(null);
 
     try {
+      console.log("Calling edge function with URL:", url);
+      
       const { data, error } = await supabase.functions.invoke("axiom-ai", {
-        body: { 
-          url, 
-          extractors: {
-            title: "title",
-            metaDescription: "meta[name='description']",
-          }
-        },
+        body: { url },
       });
 
       if (error) {
-        throw new Error(error.message);
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Failed to call automation service");
       }
 
       console.log("Automation result:", data);
 
-      if (data.success && data.productData) {
+      if (data && data.success && data.productData) {
         setProductData(data.productData);
         toast({
           title: "Data Extracted",
           description: "Successfully extracted product information",
         });
+      } else if (data && !data.success) {
+        throw new Error(data.error || "Failed to extract product data");
       } else {
-        throw new Error("Failed to extract product data");
+        throw new Error("Invalid response format from automation service");
       }
     } catch (error) {
       console.error("Error in automation:", error);
+      setError(error instanceof Error ? error.message : "An unknown error occurred");
       toast({
         title: "Extraction Failed",
         description: error instanceof Error ? error.message : "An unknown error occurred",
@@ -78,7 +80,7 @@ export const WebAutomation = () => {
       <CardHeader>
         <CardTitle>Web Automation</CardTitle>
         <CardDescription>
-          Extract product details from ecommerce websites without an API key
+          Extract product details from ecommerce websites
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -107,6 +109,9 @@ export const WebAutomation = () => {
                 )}
               </Button>
             </div>
+            {error && (
+              <p className="text-sm text-red-500 mt-1">{error}</p>
+            )}
           </div>
         </form>
 
@@ -155,6 +160,17 @@ export const WebAutomation = () => {
                   <div>
                     <h4 className="text-sm font-medium text-gray-500">Description</h4>
                     <p className="text-sm text-gray-700">{productData.description}</p>
+                  </div>
+                )}
+
+                {!productData.name && !productData.price && !productData.description && (
+                  <div className="text-amber-600">
+                    <p>Limited product information extracted. This may be due to:</p>
+                    <ul className="list-disc pl-5 mt-2 text-sm">
+                      <li>Website using advanced anti-scraping techniques</li>
+                      <li>Non-standard page structure</li>
+                      <li>Dynamic content loaded via JavaScript</li>
+                    </ul>
                   </div>
                 )}
               </div>
