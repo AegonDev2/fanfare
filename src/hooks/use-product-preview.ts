@@ -45,6 +45,7 @@ export const useProductPreview = () => {
   const [fetchProgress, setFetchProgress] = useState(0);
   const [productPreview, setProductPreview] = useState<ProductDetails>(DEFAULT_PRODUCT);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Helper: Determine platform from URL
   const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
@@ -66,35 +67,10 @@ export const useProductPreview = () => {
     return null;
   };
 
-  // Helper: Extract basic product info from URL
-  const extractBasicProductInfo = (url: string, platform: 'amazon' | 'flipkart'): ProductDetails => {
-    // Extract product name from URL path
-    const urlParts = url.split('/');
-    let productName = "Unknown Product";
-    
-    for (const part of urlParts) {
-      if (part && !part.includes('http') && !part.includes('www') && part.length > 5) {
-        productName = part
-          .replace(/-/g, ' ')
-          .replace(/_/g, ' ')
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-          .join(' ');
-        break;
-      }
-    }
-    
-    return {
-      name: productName || `Product from ${platform}`,
-      description: `This is a product from ${platform.charAt(0).toUpperCase() + platform.slice(1)}. We've extracted basic details from the URL.`,
-      price: 1999, // Default price
-      priceInr: 1999,
-      platformFee: 5.00,
-      image: platform === 'flipkart' 
-        ? "https://rukminim1.flixcart.com/flap/128/128/image/f15c02bfeb02d15d.png?q=100" 
-        : "https://m.media-amazon.com/images/G/01/error/logo._TTD_.png",
-      platform: platform
-    };
+  // Reset extraction state to try again
+  const resetExtractionState = () => {
+    setError(null);
+    setRetryCount(prev => prev + 1);
   };
 
   // Main function to handle product preview
@@ -135,9 +111,9 @@ export const useProductPreview = () => {
         throw new Error("Unsupported platform. Currently only Amazon and Flipkart are supported.");
       }
       
-      setFetchProgress(40);
+      setFetchProgress(30);
       
-      // Step 2: For Flipkart, try to use hardcoded data
+      // Step 2: For Flipkart, try to use hardcoded data first
       if (platform === 'flipkart') {
         const productId = extractFlipkartProductId(giftItem);
         console.log("Extracted Flipkart product ID:", productId);
@@ -161,39 +137,58 @@ export const useProductPreview = () => {
         }
       }
       
-      setFetchProgress(60);
+      setFetchProgress(40);
       
-      // Step 3: Check for specific Timex watch URL - redundant but keeping as fallback
-      if (giftItem.includes('timex-automatic-black-dial-analog-watch-men') && 
-          (giftItem.includes('WATGPGR7QCYTFHRG') || giftItem.includes('itm5d039dcaeb0c8'))) {
-        console.log("Using hardcoded Timex product data");
-        setProductPreview(HARDCODED_PRODUCTS["WATGPGR7QCYTFHRG"]);
-        setFetchProgress(100);
-        
-        toast({
-          title: "Product fetched",
-          description: "Product details have been loaded successfully",
-        });
-        
-        setTimeout(() => {
-          setIsFetchingProduct(false);
-          setFetchProgress(0);
-        }, 500);
-        
-        return;
+      // Step 3: Try to fetch actual product data from the Edge Function
+      console.log("Fetching product data via Edge Function for:", giftItem);
+      
+      const { data, error } = await fetch('/api/fetch-product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          url: giftItem,
+          retryCount: retryCount,
+          // Pass necessary context for extraction
+          platform: platform
+        }),
+      }).then(res => res.json());
+      
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Failed to fetch product details");
       }
       
       setFetchProgress(80);
       
-      // Step 4: Fallback to basic extraction
-      const basicProduct = extractBasicProductInfo(giftItem, platform);
-      setProductPreview(basicProduct);
+      if (!data || !data.productData || !data.productData.name) {
+        throw new Error("Could not extract product details. Please try a different product or URL.");
+      }
+      
+      console.log("Extracted product data:", data.productData);
+      
+      // Process the extracted data
+      const extractedData = data.productData;
+      const priceString = extractedData.price?.toString() || "0";
+      const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, "")) || 0;
+      
+      const productDetails: ProductDetails = {
+        name: extractedData.name,
+        description: extractedData.description || "No description available",
+        price: priceNumber,
+        priceInr: priceNumber,
+        platformFee: 5.00,
+        image: extractedData.image || "https://placehold.co/600x400?text=No+Image",
+        platform: platform,
+      };
+      
+      setProductPreview(productDetails);
       setFetchProgress(100);
       
       toast({
-        title: "Basic product details",
-        description: "Only basic details could be extracted from the URL",
-        variant: "default",
+        title: "Product extracted",
+        description: "Successfully extracted product details",
       });
       
     } catch (error) {
@@ -201,13 +196,14 @@ export const useProductPreview = () => {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setError(errorMessage);
       
+      // Don't provide fake data
       toast({
-        title: "Error",
-        description: `Failed to fetch product details: ${errorMessage}`,
+        title: "Extraction failed",
+        description: `${errorMessage}. Please try another product URL.`,
         variant: "destructive",
       });
       
-      // Reset to default state
+      // Reset the product preview to default
       setProductPreview(DEFAULT_PRODUCT);
     } finally {
       setTimeout(() => {
@@ -223,6 +219,8 @@ export const useProductPreview = () => {
     isFetchingProduct,
     fetchProgress,
     handlePreviewProduct,
-    error
+    error,
+    resetExtractionState,
+    retryCount
   };
 };
