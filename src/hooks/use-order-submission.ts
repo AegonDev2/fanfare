@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,10 +42,10 @@ export const useOrderSubmission = () => {
           platform_fee: productDetails.platformFee,
           total_amount: productDetails.priceInr + productDetails.platformFee,
           message: message,
-          status: "pending", // Use "pending" instead of "processing"
+          status: "pending",
           product_image: productDetails.image,
           shipping_address: {
-            name: influencerAddress.name,
+            name: influencerAddress.name, 
             address_line1: influencerAddress.address_line1,
             address_line2: influencerAddress.address_line2 || "",
             city: influencerAddress.city,

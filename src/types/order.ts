@@ -14,12 +14,16 @@ export interface ProductDetails {
 
 export interface InfluencerAddress {
   id: string;
-  street_address: string;
+  name: string;
+  address_line1: string;
+  address_line2?: string;
   city: string;
   state: string;
   postal_code: string;
   country: string;
+  phone: string;
   is_primary?: boolean;
+  street_address?: string; // Keep for backward compatibility
 }
 
 export interface EcommerceOrder {

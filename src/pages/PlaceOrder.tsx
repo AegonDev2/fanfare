@@ -66,8 +66,22 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         return;
       }
 
+      // Transform to expected format if needed
+      const transformedAddress: InfluencerAddress = {
+        id: addresses.id,
+        name: addresses.name || "Unknown",
+        address_line1: addresses.address_line1 || addresses.street_address || "",
+        address_line2: addresses.address_line2 || "",
+        city: addresses.city,
+        state: addresses.state,
+        postal_code: addresses.postal_code,
+        country: addresses.country || "India",
+        phone: addresses.phone || "",
+        is_primary: addresses.is_primary
+      };
+
       // Store address but don't display it to user
-      setInfluencerAddress(addresses);
+      setInfluencerAddress(transformedAddress);
     } catch (error) {
       console.error('Error in fetchInfluencerAddress:', error);
     }
