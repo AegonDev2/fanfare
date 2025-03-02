@@ -54,24 +54,44 @@ export const useProductPreview = () => {
         setFetchProgress(prev => Math.min(prev + 10, 90));
       }, 500);
 
-      const { data, error } = await supabase.functions.invoke('fetch-product', {
-        body: { url: giftItem }
+      // Try using Axiom AI first for better product extraction
+      const { data: axiomData, error: axiomError } = await supabase.functions.invoke('axiom-ai', {
+        body: { 
+          action: 'extractProductDetails', 
+          url: giftItem 
+        }
       });
 
-      if (error) throw error;
+      // If Axiom AI fails, fall back to the original fetch-product function
+      if (axiomError || !axiomData.success) {
+        console.log("Falling back to original product fetcher due to error:", axiomError || axiomData?.error);
+        
+        const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('fetch-product', {
+          body: { url: giftItem }
+        });
 
-      clearInterval(progressInterval);
-      setFetchProgress(100);
-      
-      if (!data.name || !data.priceInr) {
-        throw new Error('Invalid product data received');
+        if (fallbackError) throw fallbackError;
+        
+        clearInterval(progressInterval);
+        setFetchProgress(100);
+        
+        if (!fallbackData.name || !fallbackData.priceInr) {
+          throw new Error('Invalid product data received');
+        }
+
+        setProductPreview({
+          ...fallbackData,
+          platformFee: 5.00,
+          platform: detectPlatform(giftItem)
+        });
+      } else {
+        // Use Axiom AI data if successful
+        clearInterval(progressInterval);
+        setFetchProgress(100);
+        
+        setProductPreview(axiomData.data);
+        console.log("Successfully extracted product details using Axiom AI");
       }
-
-      setProductPreview({
-        ...data,
-        platformFee: 5.00,
-        platform: detectPlatform(giftItem)
-      });
 
       toast({
         title: "Product fetched",

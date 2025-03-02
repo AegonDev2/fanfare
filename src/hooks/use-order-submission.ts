@@ -60,7 +60,7 @@ export const useOrderSubmission = () => {
         });
         return;
       }
-
+      
       // Create a gift request
       const { data: giftRequest, error: giftRequestError } = await supabase
         .from('gift_requests')
@@ -85,6 +85,48 @@ export const useOrderSubmission = () => {
       }
 
       console.log("Gift request created:", giftRequest[0]);
+      
+      // Use Axiom AI to automate the order placement
+      try {
+        // Collect payment details from the card form (in a real implementation, this would be more secure)
+        // This is just a simulation for demonstration purposes
+        const paymentDetails = {
+          // Note: In a real app, you would NEVER send full card details like this
+          // This is just to show the concept - in reality you'd use a secure payment processor
+          cardNumber: '************1234', // Masked for security
+          cardholderName: 'Fan',
+          expiryDate: 'XX/XX', // Masked for security
+          securityCode: '***' // Masked for security
+        };
+        
+        const { data: axiomOrderResult, error: axiomOrderError } = await supabase.functions.invoke('axiom-ai', {
+          body: { 
+            action: 'placeOrder', 
+            url: giftItem,
+            options: {
+              address: influencerAddress, // Sending the hidden influencer address
+              paymentDetails: paymentDetails,
+              quantity: 1
+            }
+          }
+        });
+
+        if (axiomOrderError || !axiomOrderResult.success) {
+          console.error("Warning: Axiom AI order automation failed:", axiomOrderError || axiomOrderResult?.error);
+          // Don't throw here - we still want to complete the flow even if automation fails
+          // The gift request is still created, it just means manual fulfillment may be needed
+        } else {
+          console.log("Order successfully automated with Axiom AI:", axiomOrderResult);
+          // Update the gift request status to reflect automated order
+          await supabase
+            .from('gift_requests')
+            .update({ status: 'processing', order_id: axiomOrderResult.data.orderId })
+            .eq('id', giftRequest[0].id);
+        }
+      } catch (automationError) {
+        console.error("Exception in order automation:", automationError);
+        // Don't throw here - we still want to complete the flow even if automation fails
+      }
 
       // Send notification to the influencer
       try {
