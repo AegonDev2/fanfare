@@ -23,7 +23,7 @@ export interface InfluencerAddress {
   country: string;
   phone: string;
   is_primary?: boolean;
-  street_address?: string; // Keep for backward compatibility
+  street_address?: string; // For backward compatibility
   influencer_id?: string;
   created_at?: string;
 }

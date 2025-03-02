@@ -37,7 +37,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     }
   }, [influencerId]);
 
-  // Still fetch the address for order processing, but we won't display it to the user
+  // Fetch the address for order processing, but won't display it to the user
   const fetchInfluencerAddress = async () => {
     try {
       const { data: addresses, error } = await supabase
@@ -66,20 +66,21 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         return;
       }
 
-      // Transform to expected format
+      // Transform to expected format with all required fields
       const transformedAddress: InfluencerAddress = {
         id: addresses.id,
-        name: addresses.name || addresses.street_address?.split(',')[0] || "Unknown",
+        name: addresses.name || "Recipient", // Ensure name has a fallback
         address_line1: addresses.address_line1 || addresses.street_address || "",
         address_line2: addresses.address_line2 || "",
         city: addresses.city,
         state: addresses.state,
         postal_code: addresses.postal_code,
         country: addresses.country || "India",
-        phone: addresses.phone || "",
+        phone: addresses.phone || "Not provided",
         is_primary: addresses.is_primary,
         influencer_id: addresses.influencer_id,
-        created_at: addresses.created_at
+        created_at: addresses.created_at,
+        street_address: addresses.street_address
       };
 
       // Store address but don't display it to user
@@ -93,6 +94,12 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     e.preventDefault();
     if (influencerAddress) {
       await submitOrder(giftItem, message, influencerId, productPreview, influencerAddress);
+    } else {
+      toast({
+        title: "Error",
+        description: "Could not verify shipping address. Please try again later.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -123,7 +130,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
           onMessageChange={(newMessage) => setMessage(newMessage)}
           onSubmit={handleSubmit}
           isLoading={isLoading}
-          paymentStep={paymentStep}
+          paymentStep={paymentStep === 'pending' ? 'processing' : paymentStep}
         />
       </div>
     </div>
