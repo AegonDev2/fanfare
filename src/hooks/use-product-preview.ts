@@ -54,44 +54,38 @@ export const useProductPreview = () => {
         setFetchProgress(prev => Math.min(prev + 10, 90));
       }, 500);
 
-      // Try using Axiom AI first for better product extraction
-      const { data: axiomData, error: axiomError } = await supabase.functions.invoke('axiom-ai', {
-        body: { 
-          action: 'extractProductDetails', 
-          url: giftItem 
-        }
+      // Use direct fetch-product function for reliable product extraction
+      const { data, error } = await supabase.functions.invoke('fetch-product', {
+        body: { url: giftItem }
       });
 
-      // If Axiom AI fails, fall back to the original fetch-product function
-      if (axiomError || !axiomData.success) {
-        console.log("Falling back to original product fetcher due to error:", axiomError || axiomData?.error);
-        
-        const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('fetch-product', {
-          body: { url: giftItem }
-        });
-
-        if (fallbackError) throw fallbackError;
-        
-        clearInterval(progressInterval);
-        setFetchProgress(100);
-        
-        if (!fallbackData.name || !fallbackData.priceInr) {
-          throw new Error('Invalid product data received');
-        }
-
-        setProductPreview({
-          ...fallbackData,
-          platformFee: 5.00,
-          platform: detectPlatform(giftItem)
-        });
-      } else {
-        // Use Axiom AI data if successful
-        clearInterval(progressInterval);
-        setFetchProgress(100);
-        
-        setProductPreview(axiomData.data);
-        console.log("Successfully extracted product details using Axiom AI");
+      clearInterval(progressInterval);
+      setFetchProgress(100);
+      
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(`Failed to fetch product: ${error.message}`);
       }
+      
+      if (!data || !data.name) {
+        throw new Error('Invalid product data received');
+      }
+
+      console.log("Product data received:", data);
+      
+      // Ensure we have the necessary fields
+      const platform = detectPlatform(giftItem);
+      const productData: ProductDetails = {
+        name: data.name || "Unknown Product",
+        description: data.description || "No description available",
+        price: parseFloat(data.price) || 0,
+        priceInr: parseFloat(data.priceInr || data.price) || 0,
+        platformFee: 5.00,
+        image: data.image || DEFAULT_PRODUCT.image,
+        platform
+      };
+      
+      setProductPreview(productData);
 
       toast({
         title: "Product fetched",
@@ -101,7 +95,7 @@ export const useProductPreview = () => {
       console.error("Error fetching product:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch product details. Please check the URL and try again.",
+        description: `Failed to fetch product details: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
