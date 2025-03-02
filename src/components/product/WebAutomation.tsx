@@ -25,7 +25,7 @@ export const WebAutomation = () => {
   const [productData, setProductData] = useState<ExtractedProduct | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const { productPreview, setProductPreview } = useProductPreview();
+  const { productPreview, setProductPreview, error: productPreviewError } = useProductPreview();
 
   const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
     if (url.includes('amazon')) return 'amazon';
@@ -93,6 +93,12 @@ export const WebAutomation = () => {
         setIsLoading(false);
         return;
       }
+
+      // Inform user we're using Puppeteer for extraction
+      toast({
+        title: "Extracting Data",
+        description: "Using advanced browser automation to extract product details. This may take a moment...",
+      });
       
       const { data, error } = await supabase.functions.invoke("axiom-ai", {
         body: { url, retryCount },
@@ -255,7 +261,7 @@ export const WebAutomation = () => {
       <CardHeader>
         <CardTitle>Web Automation</CardTitle>
         <CardDescription>
-          Extract product details from ecommerce websites
+          Extract product details using Puppeteer headless browser
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -310,13 +316,20 @@ export const WebAutomation = () => {
               </span>
             </AlertDescription>
           </Alert>
+
+          {productPreviewError && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              <AlertDescription>{productPreviewError}</AlertDescription>
+            </Alert>
+          )}
         </form>
 
         {isLoading && (
           <div className="mt-6 text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto" />
             <p className="mt-2 text-sm text-gray-500">
-              Extracting product data... This may take a few moments.
+              Extracting product data using headless browser... This may take up to 15 seconds.
             </p>
           </div>
         )}

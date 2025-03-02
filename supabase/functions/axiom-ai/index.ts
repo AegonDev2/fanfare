@@ -1,227 +1,247 @@
 
+// @ts-ignore
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.6";
+import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 
-// CORS headers for browser requests
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-// Main serve function
-serve(async (req) => {
+interface RequestPayload {
+  url: string;
+  retryCount?: number;
+}
+
+interface ExtractedProduct {
+  name: string | null;
+  price: string | null;
+  image: string | null;
+  description: string | null;
+}
+
+const extractAmazonProduct = async (page: any): Promise<ExtractedProduct> => {
+  try {
+    await page.waitForSelector('#productTitle, #title', { timeout: 5000 }).catch(() => null);
+    
+    const name = await page.evaluate(() => {
+      const title = document.querySelector('#productTitle, #title');
+      return title ? title.textContent?.trim() : null;
+    }).catch(() => null);
+
+    const price = await page.evaluate(() => {
+      const selectors = [
+        '.a-price .a-offscreen', 
+        '#priceblock_ourprice', 
+        '#priceblock_dealprice',
+        '.apexPriceToPay .a-offscreen'
+      ];
+      
+      for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (element && element.textContent) {
+          return element.textContent.trim();
+        }
+      }
+      
+      return null;
+    }).catch(() => null);
+
+    const image = await page.evaluate(() => {
+      const img = document.querySelector('#landingImage, #imgBlkFront, .image-stretch-vertical img');
+      return img ? img.getAttribute('src') : null;
+    }).catch(() => null);
+
+    const description = await page.evaluate(() => {
+      const descElement = document.querySelector('#feature-bullets, #productDescription');
+      return descElement ? descElement.textContent?.trim().substring(0, 500) : null;
+    }).catch(() => null);
+
+    return { name, price, image, description };
+  } catch (error) {
+    console.error('Error extracting Amazon product:', error);
+    return { name: null, price: null, image: null, description: null };
+  }
+};
+
+const extractFlipkartProduct = async (page: any): Promise<ExtractedProduct> => {
+  try {
+    await page.waitForSelector('.B_NuCI, ._30jeq3, .CXW8mj img', { timeout: 5000 }).catch(() => null);
+
+    const name = await page.evaluate(() => {
+      const title = document.querySelector('.B_NuCI, ._35KyD6');
+      return title ? title.textContent?.trim() : null;
+    }).catch(() => null);
+
+    const price = await page.evaluate(() => {
+      const priceEl = document.querySelector('._30jeq3, ._1vC4OE');
+      return priceEl ? priceEl.textContent?.trim() : null;
+    }).catch(() => null);
+
+    const image = await page.evaluate(() => {
+      const img = document.querySelector('.CXW8mj img, ._396cs4, ._2r_T1I');
+      return img ? img.getAttribute('src') : null;
+    }).catch(() => null);
+
+    const description = await page.evaluate(() => {
+      const descElement = document.querySelector('._1mXcCf, ._3qDDRJ');
+      return descElement ? descElement.textContent?.trim().substring(0, 500) : null;
+    }).catch(() => null);
+
+    return { name, price, image, description };
+  } catch (error) {
+    console.error('Error extracting Flipkart product:', error);
+    return { name: null, price: null, image: null, description: null };
+  }
+};
+
+serve(async (req: Request) => {
   // Handle CORS preflight request
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders, status: 204 });
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
   }
 
   try {
-    // Parse request JSON
-    let reqJson;
-    try {
-      reqJson = await req.json();
-    } catch (e) {
-      console.error("Error parsing request JSON:", e);
-      return new Response(
-        JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
+    // Parse request
+    if (req.method !== "POST") {
+      return new Response(JSON.stringify({ success: false, error: "Method not allowed" }), {
+        status: 405,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Validate URL parameter
-    const url = reqJson?.url;
+    const payload: RequestPayload = await req.json();
+    const { url, retryCount = 0 } = payload;
+
+    console.log(`Processing URL: ${url}, Retry count: ${retryCount}`);
+
     if (!url) {
       return new Response(
-        JSON.stringify({ success: false, error: "URL parameter is required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        JSON.stringify({ success: false, error: "URL is required" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
-
-    console.log(`Processing URL: ${url}`);
 
     // Detect platform (Amazon or Flipkart)
-    const platform = detectPlatform(url);
-    if (!platform) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Unsupported platform. Only Amazon and Flipkart are currently supported." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
+    let platform: 'amazon' | 'flipkart' | null = null;
+    if (url.includes('amazon')) {
+      platform = 'amazon';
+    } else if (url.includes('flipkart')) {
+      platform = 'flipkart';
     }
 
-    // Set custom headers for the request
-    const headers = new Headers({
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.5',
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-    });
-
-    // Make request to the product URL
-    console.log(`Sending request to ${url}`);
-    const response = await fetch(url, { headers });
-    
-    // Handle non-successful response
-    if (!response.ok) {
-      const status = response.status;
-      console.error(`Failed to fetch URL: ${status}`);
+    if (!platform) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Failed to fetch URL: ${status}`,
-          url: url,
+          error: "Unsupported platform. Currently only Amazon and Flipkart are supported." 
         }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 502 }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
-    // Get HTML content
-    const html = await response.text();
-    console.log(`Received HTML content of length: ${html.length}`);
+    console.log(`Detected platform: ${platform}`);
 
-    // Parse HTML using DOMParser
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    if (!doc) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Failed to parse HTML content" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+    // Launch browser
+    console.log("Launching browser...");
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+    try {
+      const page = await browser.newPage();
+      
+      // Set user agent to avoid detection
+      await page.setUserAgent(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
       );
+
+      // Timeout for navigation (15 seconds)
+      const navigationTimeout = 15000;
+      
+      console.log(`Navigating to URL: ${url}`);
+      await page.goto(url, { 
+        waitUntil: 'domcontentloaded',
+        timeout: navigationTimeout
+      });
+
+      // Wait for a bit to let the page load fully
+      await page.waitForTimeout(2000);
+
+      console.log("Extracting product data...");
+      let productData: ExtractedProduct;
+
+      if (platform === 'amazon') {
+        productData = await extractAmazonProduct(page);
+      } else {
+        productData = await extractFlipkartProduct(page);
+      }
+
+      console.log("Extracted product data:", productData);
+
+      // Validate extracted data
+      const isDataComplete = productData.name && productData.price;
+      
+      if (isDataComplete) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            productData,
+            platform
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      } else {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Failed to extract complete product data",
+            partialData: productData,
+            platform
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    } finally {
+      await browser.close();
+      console.log("Browser closed");
     }
-
-    // Extract product data based on platform
-    let productData;
-    if (platform === "amazon") {
-      productData = extractAmazonProductData(doc);
-    } else if (platform === "flipkart") {
-      productData = extractFlipkartProductData(doc);
-    }
-
-    console.log(`Extracted product data:`, productData);
-
-    // Return the extracted data
-    return new Response(
-      JSON.stringify({ success: true, productData }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
   } catch (error) {
     console.error("Error processing request:", error);
+    
+    // Check if it's a timeout error (common for 529 responses)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const status = errorMessage.includes("timeout") || errorMessage.includes("529") ? 
+      529 : 500;
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: `Error extracting product data: ${error.message || "Unknown error"}` 
+        error: `Failed to fetch URL: ${status === 529 ? '529' : errorMessage}`,
+        url: payload?.url 
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      {
+        status: 200, // Always return 200 to the client even for server errors
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
     );
   }
 });
-
-// Function to detect the e-commerce platform from URL
-function detectPlatform(url: string): "amazon" | "flipkart" | null {
-  if (url.includes("amazon")) return "amazon";
-  if (url.includes("flipkart")) return "flipkart";
-  return null;
-}
-
-// Function to extract Amazon product data
-function extractAmazonProductData(doc: Document) {
-  try {
-    // Product title
-    let productName = null;
-    const titleElement = doc.querySelector("#productTitle");
-    if (titleElement) {
-      productName = titleElement.textContent?.trim();
-    }
-
-    // Product price
-    let price = null;
-    const priceElements = [
-      doc.querySelector(".a-price .a-offscreen"),
-      doc.querySelector("#priceblock_ourprice"),
-      doc.querySelector("#priceblock_dealprice"),
-      doc.querySelector(".a-price-whole")
-    ];
-
-    for (const element of priceElements) {
-      if (element && element.textContent) {
-        price = element.textContent.trim();
-        break;
-      }
-    }
-
-    // Product image
-    let image = null;
-    const imageElement = doc.querySelector("#landingImage") || doc.querySelector("#imgBlkFront");
-    if (imageElement) {
-      image = imageElement.getAttribute("src") || imageElement.getAttribute("data-old-hires");
-    }
-
-    // Product description
-    let description = null;
-    const descriptionElement = doc.querySelector("#productDescription p") || 
-                               doc.querySelector("#feature-bullets .a-list-item");
-    if (descriptionElement) {
-      description = descriptionElement.textContent?.trim();
-    }
-
-    return { name: productName, price, image, description };
-  } catch (error) {
-    console.error("Error extracting Amazon product data:", error);
-    return { name: null, price: null, image: null, description: null };
-  }
-}
-
-// Function to extract Flipkart product data
-function extractFlipkartProductData(doc: Document) {
-  try {
-    // Product title
-    let productName = null;
-    const titleElement = doc.querySelector(".B_NuCI") || doc.querySelector("h1.yhB1nd") || doc.querySelector("span.B_NuCI");
-    if (titleElement) {
-      productName = titleElement.textContent?.trim();
-    }
-
-    // Product price
-    let price = null;
-    const priceElement = doc.querySelector("div._30jeq3._16Jk6d") || doc.querySelector("div._30jeq3");
-    if (priceElement) {
-      price = priceElement.textContent?.trim();
-    }
-
-    // Product image
-    let image = null;
-    const imageElement = doc.querySelector("img._396cs4") || doc.querySelector("div._3kidJX img");
-    if (imageElement) {
-      image = imageElement.getAttribute("src");
-    }
-
-    // Product description
-    let description = null;
-    const descriptionElement = doc.querySelector("div._1mXcCf.RmoJUa") || doc.querySelector("div._2o-xpa");
-    if (descriptionElement) {
-      description = descriptionElement.textContent?.trim();
-    }
-
-    // If description is not found, try to extract from specification table
-    if (!description) {
-      const specRows = doc.querySelectorAll("div._14cfVK");
-      if (specRows && specRows.length > 0) {
-        const specs = Array.from(specRows).map(row => {
-          const label = row.querySelector("div._1hKmbr")?.textContent?.trim();
-          const value = row.querySelector("div.URwL2w")?.textContent?.trim();
-          return label && value ? `${label}: ${value}` : null;
-        }).filter(Boolean);
-        
-        if (specs.length > 0) {
-          description = specs.join("\n");
-        }
-      }
-    }
-
-    return { name: productName, price, image, description };
-  } catch (error) {
-    console.error("Error extracting Flipkart product data:", error);
-    return { name: null, price: null, image: null, description: null };
-  }
-}

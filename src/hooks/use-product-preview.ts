@@ -44,6 +44,7 @@ export const useProductPreview = () => {
   const [isFetchingProduct, setIsFetchingProduct] = useState(false);
   const [fetchProgress, setFetchProgress] = useState(0);
   const [productPreview, setProductPreview] = useState<ProductDetails>(DEFAULT_PRODUCT);
+  const [error, setError] = useState<string | null>(null);
 
   // Helper: Determine platform from URL
   const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
@@ -104,6 +105,7 @@ export const useProductPreview = () => {
         description: "Please enter a product URL",
         variant: "destructive",
       });
+      setError("Please enter a product URL");
       return;
     }
 
@@ -116,12 +118,14 @@ export const useProductPreview = () => {
         description: "Please enter a valid product URL",
         variant: "destructive",
       });
+      setError("Invalid URL format");
       return;
     }
 
     // Start fetching process
     setIsFetchingProduct(true);
     setFetchProgress(20);
+    setError(null);
     
     try {
       // Step 1: Detect platform
@@ -194,10 +198,12 @@ export const useProductPreview = () => {
       
     } catch (error) {
       console.error("Error fetching product:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
       
       toast({
         title: "Error",
-        description: `Failed to fetch product details: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Failed to fetch product details: ${errorMessage}`,
         variant: "destructive",
       });
       
@@ -213,9 +219,10 @@ export const useProductPreview = () => {
 
   return {
     productPreview,
-    setProductPreview, // Expose the setter for the WebAutomation component
+    setProductPreview,
     isFetchingProduct,
     fetchProgress,
-    handlePreviewProduct
+    handlePreviewProduct,
+    error
   };
 };
