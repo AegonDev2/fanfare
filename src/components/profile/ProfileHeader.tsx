@@ -17,23 +17,37 @@ interface ProfileHeaderProps {
 const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, profileId }: ProfileHeaderProps) => {
   const navigate = useNavigate();
   const [canEdit, setCanEdit] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Redirects to place order page with influencer ID
   const handleSendGift = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      // Redirect to auth page if not authenticated
+      navigate(`/auth?redirectTo=/place-order?influencer=${profileId}`);
+      return;
+    }
+    
+    // If authenticated, proceed to place order
     navigate(`/place-order?influencer=${profileId}`);
   };
 
-  // Check if the current user can edit this profile
-  const checkEditPermission = async () => {
+  // Check if the current user can edit this profile and if they're authenticated
+  const checkUserPermissions = async () => {
     const { data: { user } } = await supabase.auth.getUser();
+    
+    // Set authentication status
+    setIsAuthenticated(!!user);
+    
+    // Set edit permission (only if user is owner of profile)
     if (user && user.id === profileId) {
       setCanEdit(true);
     }
   };
 
-  // Call checkEditPermission when component mounts
+  // Call checkUserPermissions when component mounts
   useEffect(() => {
-    checkEditPermission();
+    checkUserPermissions();
   }, [profileId]);
 
   return (

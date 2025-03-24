@@ -125,9 +125,11 @@ export const useNavigation = () => {
     },
   ];
 
-  // Combine navitems, filtering by user role
-  const allNavItems = [...mainNavItems, ...roleNavItems]
-    .filter(item => item.roles.includes(userRole));
+  // For authenticated users, filter by role
+  // For guests, show all public nav items and hide role-specific ones
+  const allNavItems = user
+    ? [...mainNavItems, ...roleNavItems].filter(item => item.roles.includes(userRole))
+    : mainNavItems; // For guests, only show main navigation items
 
   const activeUrl = location.pathname;
 
