@@ -23,16 +23,20 @@ const Landing = ({ setNavOpen }: LandingProps) => {
 
   const fetchInfluencers = async () => {
     try {
-      // Remove any auth check and just fetch the data directly
+      console.log("Fetching influencers...");
+      setLoading(true);
+      
       const { data, error } = await supabase
         .from('influencer_profiles')
         .select('*');
 
       if (error) {
+        console.error("Supabase error:", error);
         throw error;
       }
 
-      setInfluencers(data);
+      console.log("Fetched influencers:", data);
+      setInfluencers(data || []);
     } catch (error: any) {
       console.error('Error fetching influencers:', error);
       toast({
@@ -102,8 +106,12 @@ const Landing = ({ setNavOpen }: LandingProps) => {
         <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
           {loading ? (
             <div className="text-center py-8">Loading influencers...</div>
-          ) : (
+          ) : influencers.length > 0 ? (
             <InfluencerSection influencers={influencers} />
+          ) : (
+            <div className="text-center py-8">
+              No influencers found. Check back later!
+            </div>
           )}
           <GiftSection gifts={gifts} />
           <OrderTrackingSection />

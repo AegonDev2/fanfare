@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ const InfluencerCard = memo(({ influencer, onProfileClick }: {
 InfluencerCard.displayName = "InfluencerCard";
 
 const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
+  console.log("InfluencerSection rendered with influencers:", influencers);
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSlide, setActiveSlide] = useState(0);
@@ -275,8 +277,6 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
             )}
           </CarouselContent>
         </Carousel>
-        
-        {/* Pagination dots removed */}
       </div>
     </section>
   );

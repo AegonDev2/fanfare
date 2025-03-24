@@ -4,6 +4,7 @@ import { Gift, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ProfileHeaderProps {
   name: string;
@@ -18,11 +19,18 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
   const navigate = useNavigate();
   const [canEdit, setCanEdit] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { toast } = useToast();
 
   // Redirects to place order page with influencer ID
   const handleSendGift = () => {
     // Check if user is authenticated
     if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to send gifts to influencers",
+        variant: "default"
+      });
+      
       // Redirect to auth page if not authenticated
       navigate(`/auth?redirectTo=/place-order?influencer=${profileId}`);
       return;
@@ -34,14 +42,18 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
 
   // Check if the current user can edit this profile and if they're authenticated
   const checkUserPermissions = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // Set authentication status
-    setIsAuthenticated(!!user);
-    
-    // Set edit permission (only if user is owner of profile)
-    if (user && user.id === profileId) {
-      setCanEdit(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Set authentication status
+      setIsAuthenticated(!!user);
+      
+      // Set edit permission (only if user is owner of profile)
+      if (user && user.id === profileId) {
+        setCanEdit(true);
+      }
+    } catch (error) {
+      console.error("Error checking user permissions:", error);
     }
   };
 

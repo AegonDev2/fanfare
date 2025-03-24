@@ -21,6 +21,8 @@ const Profile = () => {
   const { data: influencer, isLoading, error } = useQuery({
     queryKey: ['influencer', id],
     queryFn: async () => {
+      console.log("Fetching profile for ID:", id);
+      
       if (!id || !isValidUUID(id)) {
         throw new Error("Invalid profile ID");
       }
@@ -31,8 +33,17 @@ const Profile = () => {
         .eq('id', id)
         .maybeSingle();
       
-      if (error) throw error;
-      if (!data) throw new Error("Influencer not found");
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.log("Influencer not found");
+        throw new Error("Influencer not found");
+      }
+      
+      console.log("Fetched influencer:", data);
       return data;
     },
     retry: false
@@ -80,7 +91,18 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-gray-100">
         <Header />
-        <div className="container mx-auto px-4 py-8 pt-20">Loading...</div>
+        <div className="container mx-auto px-4 py-8 pt-20">
+          <div className="bg-white shadow-md rounded-lg p-6 animate-pulse">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-32 h-32 rounded-full bg-gray-200"></div>
+              <div className="flex-1">
+                <div className="h-8 w-48 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 w-32 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 w-40 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -126,8 +148,8 @@ const Profile = () => {
           />
           
           <ProfileBio
-            about={influencer.about}
-            hobbies={influencer.hobbies}
+            about={influencer.about || "No bio available."}
+            hobbies={influencer.hobbies || []}
           />
           
           <SocialLinks
