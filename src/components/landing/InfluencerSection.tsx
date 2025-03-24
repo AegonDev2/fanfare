@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,14 +92,12 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
     );
   }, [influencers, searchQuery]);
 
-  // Suggestions for dropdown - limit to 5
   const searchSuggestions = useMemo(() => {
     if (!searchQuery.trim()) return [];
     
     return filteredInfluencers.slice(0, 5);
   }, [filteredInfluencers, searchQuery]);
 
-  // Calculate visible card counts based on screen size
   const getVisibleCardCount = () => {
     if (typeof window !== 'undefined') {
       if (window.innerWidth >= 1024) return 4; // lg
@@ -123,7 +120,6 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
     };
   }, []);
 
-  // Handle clicks outside of the search suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
@@ -137,19 +133,16 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
     };
   }, []);
 
-  // Maximum number of slides (non-looping)
   const maxSlideIndex = Math.max(0, filteredInfluencers.length - visibleCards);
 
-  // Autoplay functionality (non-looping)
   useEffect(() => {
     if (autoplayEnabled && filteredInfluencers.length > 0) {
       autoplayTimerRef.current = setInterval(() => {
         setActiveSlide(current => {
-          // Stop at the last slide instead of looping
           if (current >= maxSlideIndex) return maxSlideIndex;
           return current + 1;
         });
-      }, 5000); // Change slide every 5 seconds
+      }, 5000);
     }
 
     return () => {
@@ -159,7 +152,6 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
     };
   }, [autoplayEnabled, filteredInfluencers.length, maxSlideIndex]);
 
-  // Memoized function to scroll to a slide
   const scrollToSlide = useCallback((index: number) => {
     const container = carouselRef.current?.querySelector('.embla__container');
     const items = container?.querySelectorAll('.embla__slide');
@@ -170,31 +162,26 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
     }
   }, []);
 
-  // Scroll to the active slide when it changes
   useEffect(() => {
     scrollToSlide(activeSlide);
   }, [activeSlide, scrollToSlide]);
 
-  // Pause autoplay on hover
   const handleCarouselHover = (isHovering: boolean) => {
     setAutoplayEnabled(!isHovering);
   };
 
-  // Handle search input focus
   const handleSearchFocus = () => {
     if (searchQuery.trim().length > 0) {
       setShowSuggestions(true);
     }
   };
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
     setShowSuggestions(value.trim().length > 0);
   };
 
-  // Handle suggestion click
   const handleSuggestionClick = (id: string) => {
     const influencer = influencers.find(inf => inf.id === id);
     if (influencer) {
@@ -218,7 +205,6 @@ const InfluencerSection = ({ influencers }: InfluencerSectionProps) => {
           />
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500" />
           
-          {/* Search Suggestions Dropdown */}
           {showSuggestions && searchSuggestions.length > 0 && (
             <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200">
               <ul className="max-h-60 overflow-auto py-1">
