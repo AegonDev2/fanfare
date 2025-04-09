@@ -15,23 +15,56 @@ const CreateAdmin = () => {
     setIsLoading(true);
 
     try {
-      // Check if the user exists
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('email', adminEmail)
-        .maybeSingle();
+      // First check if admin already exists in auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: adminEmail,
+        password: adminPassword,
+      });
+      
+      if (!authError && authData.user) {
+        console.log("Admin user already exists in auth system");
+        
+        // Check profile
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', adminEmail)
+          .maybeSingle();
+          
+        if (!existingProfile) {
+          // Create profile if it doesn't exist
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              email: adminEmail,
+              user_type: 'admin'
+            });
+            
+          if (profileError) {
+            throw new Error(`Failed to create profile: ${profileError.message}`);
+          }
+        }
+        
+        // Assign admin role
+        await assignAdminRole(authData.user.id);
+        return;
+      }
+      
+      // If user doesn't exist or password is wrong, create a new user
+      console.log("Creating new admin user");
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email: adminEmail,
+        password: adminPassword,
+        email_confirm: true,
+        user_metadata: {
+          user_type: 'admin'
+        }
+      });
 
-      let userId;
-
-      if (existingUser) {
-        // User exists, use their ID
-        userId = existingUser.id;
-        console.log("User exists, using their ID:", userId);
-      } else {
-        // User doesn't exist, we need to create them
-        // Use the specified password
-        const { data: newUser, error: createError } = await supabase.auth.signUp({
+      if (createError) {
+        // Try alternative method if admin API fails
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: adminEmail,
           password: adminPassword,
           options: {
@@ -40,59 +73,31 @@ const CreateAdmin = () => {
             }
           }
         });
-
-        if (createError) {
-          throw new Error(`Failed to create user: ${createError.message}`);
+        
+        if (signUpError) {
+          throw new Error(`Failed to create user: ${signUpError.message}`);
         }
         
-        if (!newUser.user) {
+        if (!signUpData.user) {
           throw new Error('Failed to create user');
         }
-
-        userId = newUser.user.id;
-        console.log("Created new user with ID:", userId);
         
-        // Tell the user about the fixed password
+        await assignAdminRole(signUpData.user.id);
+        
         toast({
           title: "Admin User Created",
-          description: `Admin user created with email: ${adminEmail} - Please login with the specified password!`,
+          description: `Admin user created with email: ${adminEmail} - Please login with password: ${adminPassword}`,
+          duration: 10000,
+        });
+      } else if (newUser && newUser.user) {
+        await assignAdminRole(newUser.user.id);
+        
+        toast({
+          title: "Admin User Created",
+          description: `Admin user created with email: ${adminEmail} - Please login with password: ${adminPassword}`,
           duration: 10000,
         });
       }
-
-      // Check if user already has admin role
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (existingRole) {
-        toast({
-          title: "Admin Role Already Assigned",
-          description: `${adminEmail} already has admin privileges.`,
-        });
-        return;
-      }
-
-      // Assign admin role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: 'admin'
-        });
-
-      if (roleError) {
-        throw new Error(`Failed to assign admin role: ${roleError.message}`);
-      }
-
-      toast({
-        title: "Success",
-        description: `Admin privileges granted to ${adminEmail}`,
-      });
-
     } catch (error: any) {
       console.error("Error creating admin:", error);
       toast({
@@ -103,6 +108,42 @@ const CreateAdmin = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Helper function to assign admin role
+  const assignAdminRole = async (userId: string) => {
+    // Check if user already has admin role
+    const { data: existingRole } = await supabase
+      .from('user_roles')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (existingRole) {
+      toast({
+        title: "Admin Role Already Assigned",
+        description: `${adminEmail} already has admin privileges.`,
+      });
+      return;
+    }
+
+    // Assign admin role
+    const { error: roleError } = await supabase
+      .from('user_roles')
+      .insert({
+        user_id: userId,
+        role: 'admin'
+      });
+
+    if (roleError) {
+      throw new Error(`Failed to assign admin role: ${roleError.message}`);
+    }
+
+    toast({
+      title: "Success",
+      description: `Admin privileges granted to ${adminEmail}`,
+    });
   };
 
   return (
