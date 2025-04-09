@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { useNavigate } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -37,6 +38,19 @@ const Auth = () => {
               <SignUpForm />
             </TabsContent>
           </Tabs>
+          
+          {/* Admin setup link - very discreet */}
+          <div className="mt-6 text-xs text-right">
+            <Button 
+              variant="link" 
+              size="sm" 
+              className="text-muted-foreground/50 h-auto p-0 text-xs"
+              onClick={() => navigate("/create-admin")}
+            >
+              <ExternalLink className="h-3 w-3 mr-1" />
+              Admin Setup
+            </Button>
+          </div>
         </Card>
       </div>
     </div>
