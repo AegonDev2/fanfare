@@ -9,6 +9,7 @@ const CreateAdmin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const adminEmail = "fanfare11work@gmail.com";
+  const adminPassword = "FanFare@Admin12"; // Fixed admin password
 
   const createAdminUser = async () => {
     setIsLoading(true);
@@ -29,13 +30,10 @@ const CreateAdmin = () => {
         console.log("User exists, using their ID:", userId);
       } else {
         // User doesn't exist, we need to create them
-        // Generate a random password
-        const tempPassword = Math.random().toString(36).slice(-10);
-        
-        // Create new user
+        // Use the specified password
         const { data: newUser, error: createError } = await supabase.auth.signUp({
           email: adminEmail,
-          password: tempPassword,
+          password: adminPassword,
           options: {
             data: {
               user_type: 'admin'
@@ -54,10 +52,10 @@ const CreateAdmin = () => {
         userId = newUser.user.id;
         console.log("Created new user with ID:", userId);
         
-        // Tell the user about the temporary password
+        // Tell the user about the fixed password
         toast({
           title: "Admin User Created",
-          description: `Temporary password: ${tempPassword} - Please login and change it immediately!`,
+          description: `Admin user created with email: ${adminEmail} - Please login with the specified password!`,
           duration: 10000,
         });
       }
@@ -95,7 +93,7 @@ const CreateAdmin = () => {
         description: `Admin privileges granted to ${adminEmail}`,
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating admin:", error);
       toast({
         title: "Error",
