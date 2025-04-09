@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Header from "@/components/landing/Header";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +31,7 @@ interface GiftRequest {
     id: string;
     email: string;
   };
+  influencer_id: string;
 }
 
 const GiftRequests = () => {
@@ -52,6 +54,7 @@ const GiftRequests = () => {
           message,
           created_at,
           status,
+          influencer_id,
           sender:sender_id (id, email)
         `)
         .order('created_at', { ascending: false });
@@ -99,7 +102,7 @@ const GiftRequests = () => {
           const { data: addressData, error: addressError } = await supabase
             .from('influencer_addresses')
             .select('*')
-            .eq('influencer_id', request.sender_id)
+            .eq('influencer_id', request.influencer_id)
             .eq('is_primary', true)
             .single();
 
@@ -108,23 +111,24 @@ const GiftRequests = () => {
             throw new Error('Could not find shipping address');
           }
 
+          // Create order for admin handling
           const { error: orderError } = await supabase
             .from('orders')
             .insert({
               influencer_id: request.influencer_id,
-              user_id: request.sender_id,
+              user_id: request.sender.id,
               product_url: request.gift_item,
               product_title: "Gift from fan",
               status: 'accepted',
               shipping_address: {
-                name: addressData.name || "Recipient",
-                address_line1: addressData.address_line1 || addressData.street_address,
-                address_line2: addressData.address_line2 || "",
+                name: addressData.street_address ? addressData.street_address.split(',')[0] : "Recipient",
+                address_line1: addressData.street_address || "",
+                address_line2: "",
                 city: addressData.city,
                 state: addressData.state,
                 postal_code: addressData.postal_code,
                 country: addressData.country || "India",
-                phone: addressData.phone || "Not provided"
+                phone: "Not provided"
               },
               message: request.message
             });
