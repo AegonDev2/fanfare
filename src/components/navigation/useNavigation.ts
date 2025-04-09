@@ -110,6 +110,13 @@ export const useNavigation = () => {
       roles: ['influencer'],
     },
     {
+      id: 'admin-dashboard',
+      title: 'Admin Dashboard',
+      path: '/admin',
+      icon: 'LayoutDashboard',
+      roles: ['admin'],
+    },
+    {
       id: 'profile',
       title: 'My Profile',
       path: user ? `/profile/${user.id}` : '/profile',

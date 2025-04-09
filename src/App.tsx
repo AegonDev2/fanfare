@@ -14,6 +14,8 @@ import EditProfile from "./pages/EditProfile";
 import NotFound from "./pages/NotFound";
 import GiftRequests from "./pages/GiftRequests";
 import Settings from "./pages/Settings";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminOrderDetails from "./pages/AdminOrderDetails";
 import Navbar from "./components/navigation/Navbar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -66,6 +68,11 @@ const AppContent = () => {
             <Route path="/place-order" element={<PlaceOrder setNavOpen={setIsNavOpen} />} />
             <Route path="/gift-requests" element={<GiftRequests />} />
             <Route path="/settings" element={<Settings />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/order-details/:id" element={<AdminOrderDetails />} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

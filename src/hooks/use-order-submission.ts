@@ -80,34 +80,6 @@ export const useOrderSubmission = () => {
 
       console.log("Order created successfully:", order);
 
-      // Call Axiom AI service for order automation via Supabase Edge Function
-      try {
-        const { data: automationData, error: automationError } = await supabase.functions.invoke("axiom-order-automation", {
-          body: { 
-            orderId: order.id,
-            productUrl: giftItem,
-            // Fix: Access shipping address from the correct location
-            // Since shipping_address isn't a field in the orders table, we pass the address directly
-            shippingAddress: influencerAddress,
-            platform: productDetails.platform || detectPlatform(giftItem)
-          },
-        });
-        
-        if (automationError) {
-          console.error("Order automation error:", automationError);
-          // Continue with the process even if automation fails
-          toast({
-            title: "Automation Notice",
-            description: "Order created, but automated processing encountered an issue. Our team will handle it manually.",
-          });
-        } else {
-          console.log("Order automation successful:", automationData);
-        }
-      } catch (automationError) {
-        console.error("Order automation exception:", automationError);
-        // Continue with the process even if automation fails
-      }
-
       // Update order status after payment
       const { error: updateError } = await supabase
         .from('orders')
@@ -124,6 +96,14 @@ export const useOrderSubmission = () => {
       toast({
         title: "Order Placed Successfully",
         description: "Your gift order has been placed and will be delivered soon!",
+      });
+
+      // Create notification for the influencer about the new order
+      await supabase.from("notifications").insert({
+        recipient_id: influencerId,
+        type: "new_order",
+        message: `Someone has purchased a gift for you! Check your gift requests.`,
+        reference_id: order.id,
       });
 
       // Redirect to success page or show success message

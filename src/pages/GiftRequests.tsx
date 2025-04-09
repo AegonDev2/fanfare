@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Header from "@/components/landing/Header";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,7 +44,6 @@ const GiftRequests = () => {
   const fetchGiftRequests = async () => {
     try {
       setLoading(true);
-      // In a real app, this would filter by the current influencer's ID
       const { data, error } = await supabase
         .from('gifts_to_influencers')
         .select(`
@@ -60,11 +58,9 @@ const GiftRequests = () => {
 
       if (error) throw error;
       
-      // Make sure we're only setting data that matches our GiftRequest type
       if (data) {
         const typedRequests: GiftRequest[] = data.map(item => ({
           ...item,
-          // Ensure status is one of the allowed values
           status: (item.status as 'pending' | 'approved' | 'rejected') || 'pending'
         }));
         setRequests(typedRequests);
@@ -90,12 +86,55 @@ const GiftRequests = () => {
 
       if (error) throw error;
 
-      // Update local state
       setRequests(prev => 
         prev.map(request => 
           request.id === id ? { ...request, status } : request
         )
       );
+
+      if (status === 'approved') {
+        const request = requests.find(r => r.id === id);
+        
+        if (request) {
+          const { data: addressData, error: addressError } = await supabase
+            .from('influencer_addresses')
+            .select('*')
+            .eq('influencer_id', request.sender_id)
+            .eq('is_primary', true)
+            .single();
+
+          if (addressError) {
+            console.error('Error getting address:', addressError);
+            throw new Error('Could not find shipping address');
+          }
+
+          const { error: orderError } = await supabase
+            .from('orders')
+            .insert({
+              influencer_id: request.influencer_id,
+              user_id: request.sender_id,
+              product_url: request.gift_item,
+              product_title: "Gift from fan",
+              status: 'accepted',
+              shipping_address: {
+                name: addressData.name || "Recipient",
+                address_line1: addressData.address_line1 || addressData.street_address,
+                address_line2: addressData.address_line2 || "",
+                city: addressData.city,
+                state: addressData.state,
+                postal_code: addressData.postal_code,
+                country: addressData.country || "India",
+                phone: addressData.phone || "Not provided"
+              },
+              message: request.message
+            });
+
+          if (orderError) {
+            console.error('Error creating order:', orderError);
+            throw new Error('Could not create order for admin');
+          }
+        }
+      }
 
       toast({
         title: "Success",
