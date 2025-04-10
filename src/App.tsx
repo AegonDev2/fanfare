@@ -1,3 +1,4 @@
+
 import { StrictMode, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,7 +16,6 @@ import GiftRequests from "./pages/GiftRequests";
 import Settings from "./pages/Settings";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrderDetails from "./pages/AdminOrderDetails";
-import CreateAdmin from "./pages/CreateAdmin";
 import Navbar from "./components/navigation/Navbar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -69,7 +69,6 @@ const AppContent = () => {
             
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/order-details/:id" element={<AdminOrderDetails />} />
-            <Route path="/create-admin" element={<CreateAdmin />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
