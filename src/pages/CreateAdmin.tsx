@@ -1,19 +1,65 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = "https://utuguowpwezberrmqabw.supabase.co";
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0dWd1b3dwd2V6YmVycm1xYWJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczOTE3MTA4NiwiZXhwIjoyMDU0NzQ3MDg2fQ.QQs-MLDhBE42nQVuQP2iR_YeQS6WrdrcPMKP45uA_R0";
+
+// Create a Supabase client with the service role key for admin operations
+const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 const CreateAdmin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isAssigningRole, setIsAssigningRole] = useState(false);
   const [specificUserId, setSpecificUserId] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const adminEmail = "fanfare11work@gmail.com";
   const adminPassword = "FanFare@Admin12"; // Fixed admin password
+
+  useEffect(() => {
+    const checkAuthAndAdminStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setIsAuthenticated(false);
+          return;
+        }
+        
+        setIsAuthenticated(true);
+        
+        // Check if user has admin role
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+          
+        if (roleError && roleError.code !== 'PGRST116') {
+          console.error("Error checking admin role:", roleError);
+        }
+        
+        setIsAdmin(!!roleData);
+      } catch (error) {
+        console.error("Error checking auth status:", error);
+      }
+    };
+    
+    checkAuthAndAdminStatus();
+  }, []);
 
   const createAdminUser = async () => {
     setIsLoading(true);
@@ -22,7 +68,7 @@ const CreateAdmin = () => {
       console.log("Starting admin creation process");
       
       // First try to sign in to check if admin exists with correct password
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await adminClient.auth.signInWithPassword({
         email: adminEmail,
         password: adminPassword,
       });
@@ -47,8 +93,8 @@ const CreateAdmin = () => {
       
       console.log("Admin doesn't exist or password is incorrect, checking if user exists");
       
-      // Check if user exists but with wrong password
-      const { data, error: getUserError } = await supabase.auth.admin.listUsers();
+      // Check if user exists but with wrong password - using admin client
+      const { data, error: getUserError } = await adminClient.auth.admin.listUsers();
       
       if (getUserError) {
         throw new Error(`Failed to list users: ${getUserError.message}`);
@@ -60,8 +106,8 @@ const CreateAdmin = () => {
       if (existingUser) {
         console.log("Admin user exists but with wrong password, updating password");
         
-        // Update password for existing user
-        const { error: updateError } = await supabase.auth.admin.updateUserById(
+        // Update password for existing user - using admin client
+        const { error: updateError } = await adminClient.auth.admin.updateUserById(
           existingUser.id,
           { password: adminPassword }
         );
@@ -87,8 +133,8 @@ const CreateAdmin = () => {
       
       console.log("Admin user doesn't exist, creating new user");
       
-      // Create new admin user
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+      // Create new admin user - using admin client
+      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
         email: adminEmail,
         password: adminPassword,
         email_confirm: true,
@@ -99,35 +145,10 @@ const CreateAdmin = () => {
 
       if (createError) {
         console.error("Error creating admin via admin API:", createError);
-        
-        // Try fallback method with regular signup
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: adminEmail,
-          password: adminPassword,
-          options: {
-            data: {
-              user_type: 'admin'
-            }
-          }
-        });
-        
-        if (signUpError) {
-          throw new Error(`Failed to create user: ${signUpError.message}`);
-        }
-        
-        if (!signUpData.user) {
-          throw new Error('Failed to create user');
-        }
-        
-        await ensureProfileExists(signUpData.user.id);
-        await assignAdminRole(signUpData.user.id);
-        
-        toast({
-          title: "Admin User Created",
-          description: `Admin user created with email: ${adminEmail} - Please login with password: ${adminPassword}`,
-          duration: 10000,
-        });
-      } else if (newUser && newUser.user) {
+        throw new Error(`Failed to create user: ${createError.message}`);
+      }
+      
+      if (newUser && newUser.user) {
         await ensureProfileExists(newUser.user.id);
         await assignAdminRole(newUser.user.id);
         
@@ -149,10 +170,10 @@ const CreateAdmin = () => {
     }
   };
   
-  // Helper function to ensure profile exists
+  // Helper function to ensure profile exists using admin client
   const ensureProfileExists = async (userId: string) => {
     // Check if profile exists
-    const { data: existingProfile } = await supabase
+    const { data: existingProfile } = await adminClient
       .from('profiles')
       .select('id')
       .eq('id', userId)
@@ -160,7 +181,7 @@ const CreateAdmin = () => {
       
     if (!existingProfile) {
       // Create profile if it doesn't exist
-      const { error: profileError } = await supabase
+      const { error: profileError } = await adminClient
         .from('profiles')
         .insert({
           id: userId,
@@ -175,10 +196,10 @@ const CreateAdmin = () => {
     }
   };
   
-  // Helper function to assign admin role
+  // Helper function to assign admin role using admin client
   const assignAdminRole = async (userId: string) => {
     // Check if user already has admin role
-    const { data: existingRole } = await supabase
+    const { data: existingRole } = await adminClient
       .from('user_roles')
       .select('*')
       .eq('user_id', userId)
@@ -195,7 +216,7 @@ const CreateAdmin = () => {
     }
 
     // Assign admin role
-    const { error: roleError } = await supabase
+    const { error: roleError } = await adminClient
       .from('user_roles')
       .insert({
         user_id: userId,
@@ -210,11 +231,11 @@ const CreateAdmin = () => {
     console.log("Admin role assigned successfully");
     toast({
       title: "Success",
-      description: `Admin privileges granted successfully`,
+      description: `Admin privileges granted successfully to user`,
     });
   };
 
-  // Function to assign admin role to a specific user ID
+  // Function to assign admin role to a specific user ID using admin client
   const assignAdminToSpecificUser = async () => {
     if (!specificUserId || specificUserId.trim() === "") {
       toast({
@@ -227,15 +248,35 @@ const CreateAdmin = () => {
 
     setIsAssigningRole(true);
     try {
-      // Check if the user exists
-      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(specificUserId);
+      // Check if the user exists using admin client
+      const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(specificUserId);
       
       if (userError || !userData.user) {
         throw new Error(`User not found: ${userError?.message || "Invalid user ID"}`);
       }
       
       // Ensure profile exists
-      await ensureProfileExists(specificUserId);
+      const { data: existingProfile } = await adminClient
+        .from('profiles')
+        .select('id')
+        .eq('id', specificUserId)
+        .maybeSingle();
+        
+      if (!existingProfile) {
+        // Create profile if it doesn't exist
+        const { error: profileError } = await adminClient
+          .from('profiles')
+          .insert({
+            id: specificUserId,
+            email: userData.user.email || "unknown@example.com",
+            user_type: 'admin'
+          });
+          
+        if (profileError) {
+          console.error("Error creating profile:", profileError);
+          throw new Error(`Failed to create profile: ${profileError.message}`);
+        }
+      }
       
       // Assign admin role
       await assignAdminRole(specificUserId);
@@ -256,6 +297,32 @@ const CreateAdmin = () => {
       setIsAssigningRole(false);
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto py-10">
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Authentication Required</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                You need to be logged in to access this page.
+              </AlertDescription>
+            </Alert>
+            <Button 
+              onClick={() => navigate("/auth")}
+              className="w-full"
+            >
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-10">
