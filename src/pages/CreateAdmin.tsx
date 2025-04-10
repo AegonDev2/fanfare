@@ -1,12 +1,16 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const CreateAdmin = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isAssigningRole, setIsAssigningRole] = useState(false);
+  const [specificUserId, setSpecificUserId] = useState("");
   const { toast } = useToast();
   const adminEmail = "fanfare11work@gmail.com";
   const adminPassword = "FanFare@Admin12"; // Fixed admin password
@@ -44,9 +48,14 @@ const CreateAdmin = () => {
       console.log("Admin doesn't exist or password is incorrect, checking if user exists");
       
       // Check if user exists but with wrong password
-      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers();
+      const { data, error: getUserError } = await supabase.auth.admin.listUsers();
       
-      const existingUser = users?.find(u => u.email === adminEmail);
+      if (getUserError) {
+        throw new Error(`Failed to list users: ${getUserError.message}`);
+      }
+      
+      const users = data?.users || [];
+      const existingUser = users.find(u => u.email === adminEmail);
       
       if (existingUser) {
         console.log("Admin user exists but with wrong password, updating password");
@@ -180,7 +189,7 @@ const CreateAdmin = () => {
       console.log("Admin role already assigned");
       toast({
         title: "Admin Role Already Assigned",
-        description: `${adminEmail} already has admin privileges.`,
+        description: `User already has admin privileges.`,
       });
       return;
     }
@@ -201,13 +210,56 @@ const CreateAdmin = () => {
     console.log("Admin role assigned successfully");
     toast({
       title: "Success",
-      description: `Admin privileges granted to ${adminEmail}`,
+      description: `Admin privileges granted successfully`,
     });
+  };
+
+  // Function to assign admin role to a specific user ID
+  const assignAdminToSpecificUser = async () => {
+    if (!specificUserId || specificUserId.trim() === "") {
+      toast({
+        title: "Error",
+        description: "Please enter a valid user ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAssigningRole(true);
+    try {
+      // Check if the user exists
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(specificUserId);
+      
+      if (userError || !userData.user) {
+        throw new Error(`User not found: ${userError?.message || "Invalid user ID"}`);
+      }
+      
+      // Ensure profile exists
+      await ensureProfileExists(specificUserId);
+      
+      // Assign admin role
+      await assignAdminRole(specificUserId);
+      
+      toast({
+        title: "Admin Role Assigned",
+        description: `Admin privileges granted to user ID: ${specificUserId}`,
+      });
+      
+    } catch (error: any) {
+      console.error("Error assigning admin role:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to assign admin role",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAssigningRole(false);
+    }
   };
 
   return (
     <div className="container mx-auto py-10">
-      <Card className="max-w-md mx-auto">
+      <Card className="max-w-md mx-auto mb-8">
         <CardHeader>
           <CardTitle>Create Admin User</CardTitle>
         </CardHeader>
@@ -223,6 +275,37 @@ const CreateAdmin = () => {
             {isLoading ? "Processing..." : "Create Admin User"}
           </Button>
         </CardContent>
+      </Card>
+      
+      <Card className="max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>Assign Admin Role to Specific User</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="userId">User ID</Label>
+              <Input
+                id="userId"
+                placeholder="Enter user ID to assign admin role"
+                value={specificUserId}
+                onChange={(e) => setSpecificUserId(e.target.value)}
+              />
+            </div>
+            <Button 
+              onClick={assignAdminToSpecificUser} 
+              disabled={isAssigningRole}
+              className="w-full"
+            >
+              {isAssigningRole ? "Assigning..." : "Assign Admin Role"}
+            </Button>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col items-start">
+          <p className="text-sm text-muted-foreground">
+            Use this to assign admin role to an existing user by their ID.
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
