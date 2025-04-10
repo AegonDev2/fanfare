@@ -30,10 +30,12 @@ const AppContent = () => {
   
   return (
     <div className="min-h-screen w-full bg-[var(--background)] relative overflow-x-hidden">
+      {/* Navigation */}
       {!isAuthPage && (
         <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
       )}
 
+      {/* Overlay for navigation */}
       {!isAuthPage && (
         <div 
           className={cn(
@@ -67,6 +69,7 @@ const AppContent = () => {
             <Route path="/gift-requests" element={<GiftRequests />} />
             <Route path="/settings" element={<Settings />} />
             
+            {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/order-details/:id" element={<AdminOrderDetails />} />
             

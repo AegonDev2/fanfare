@@ -19,54 +19,27 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      console.log("Attempting login for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("Login error:", error);
         throw error;
       }
 
       if (data.user) {
-        console.log("Login successful for user:", data.user.id);
-        
-        // Get user profile to check role
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('id', data.user.id)
-          .maybeSingle();
-          
-        // Check for admin role
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
-          
-        const isAdmin = roleData?.role === 'admin' || profileData?.user_type === 'admin';
-        
         toast({
           title: "Success",
           description: "You have successfully logged in!",
         });
-        
-        // Redirect admin users to admin dashboard
-        if (isAdmin) {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        }
+        navigate("/");
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Login Failed",
-        description: error.message || "Invalid email or password. Please try again.",
+        title: "Error",
+        description: error.message || "An error occurred during login",
       });
     } finally {
       setIsLoading(false);
