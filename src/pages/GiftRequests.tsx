@@ -124,14 +124,14 @@ const GiftRequests = () => {
 
           // Create a properly formatted shipping address object
           const shippingAddress: Address = {
-            name: addressData.name || "Recipient", 
+            name: "Recipient", // Default name since it doesn't exist in the database
             address_line1: addressData.street_address,
             address_line2: "",
             city: addressData.city,
             state: addressData.state,
             postal_code: addressData.postal_code,
             country: addressData.country || "India",
-            phone: addressData.phone || "Not provided"
+            phone: "Not provided" // Default phone since it doesn't exist in the database
           };
 
           const { error: orderError } = await supabase
