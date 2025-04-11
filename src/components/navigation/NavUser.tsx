@@ -9,6 +9,9 @@ const NavUser = ({ user, userEmail, userRole }: NavUserProps) => {
   // Use user object if provided, otherwise fall back to userEmail and userRole
   const email = user?.email || userEmail || "Guest";
   const role = userRole || (user ? "User" : "Not logged in");
+  
+  // Format role with uppercase first letter for display
+  const formattedRole = role.charAt(0).toUpperCase() + role.slice(1);
 
   return (
     <div className="p-6 bg-[var(--navbar-dark-secondary)] text-[var(--navbar-light-primary)]">
@@ -23,7 +26,7 @@ const NavUser = ({ user, userEmail, userRole }: NavUserProps) => {
         <div className="ml-4 flex flex-col">
           <span className="text-sm truncate">{email}</span>
           <span className="text-xs text-[var(--navbar-light-secondary)] capitalize">
-            {role}
+            {formattedRole}
           </span>
         </div>
       </div>

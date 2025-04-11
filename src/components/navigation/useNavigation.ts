@@ -1,7 +1,7 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getUserRoles } from "@/utils/roleManager";
 
 export type NavRole = 'fan' | 'influencer' | 'admin';
 
@@ -32,30 +32,35 @@ export const useNavigation = () => {
             throw profileError;
           }
           
-          // Get user role from user_roles table
-          const { data: roleData, error: roleError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', data.user.id)
-            .maybeSingle();
-            
-          if (roleError && roleError.code !== 'PGRST116') {
-            throw roleError;
-          }
+          // Get user roles directly from user_roles table
+          const rolesResponse = await getUserRoles(data.user.id);
           
           setUser(data.user);
           setUserEmail(profileData?.email || data.user.email);
           
-          // Set the role based on the user_roles table, or fall back to user_type from profiles
-          if (roleData?.role) {
-            setUserRole(roleData.role as NavRole);
-          } else if (profileData?.user_type) {
+          // Set role priority: admin > influencer > fan
+          // If user has admin role, set it regardless of other roles
+          if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
+            setUserRole('admin');
+          } 
+          // Otherwise if user has influencer role, set it
+          else if (rolesResponse.success && rolesResponse.roles.includes('influencer')) {
+            setUserRole('influencer');
+          } 
+          // Otherwise set fan role or use profile user_type as fallback
+          else if (profileData?.user_type) {
             // Convert user_type to a NavRole if possible
             const userType = profileData.user_type.toLowerCase();
             if (userType === 'fan' || userType === 'influencer' || userType === 'admin') {
               setUserRole(userType as NavRole);
+            } else {
+              setUserRole('fan'); // Default role
             }
           }
+          
+          // Log the assigned role for debugging
+          console.log('User roles from DB:', rolesResponse.roles);
+          console.log('Assigned navigation role:', userRole);
         }
       } catch (err) {
         console.error("Navigation error:", err);
