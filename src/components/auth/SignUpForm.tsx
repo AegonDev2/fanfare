@@ -71,19 +71,7 @@ const SignUpForm = () => {
         throw new Error("No user data returned");
       }
 
-      // Check if the profile was created by querying it
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-
-      console.log("Profile check:", { profileData, profileError });
-
-      if (profileError) {
-        console.error("Error checking profile:", profileError);
-        throw new Error("Failed to create user profile");
-      }
+      // The profile creation and role assignment now happen automatically via database triggers
 
       toast({
         title: "Success",

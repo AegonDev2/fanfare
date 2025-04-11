@@ -24,7 +24,7 @@ export const useNavigation = () => {
           // Get user profile to get email
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .select('email, user_type')
+            .select('email')
             .eq('id', data.user.id)
             .maybeSingle();
             
@@ -47,15 +47,13 @@ export const useNavigation = () => {
           else if (rolesResponse.success && rolesResponse.roles.includes('influencer')) {
             setUserRole('influencer');
           } 
-          // Otherwise set fan role or use profile user_type as fallback
-          else if (profileData?.user_type) {
-            // Convert user_type to a NavRole if possible
-            const userType = profileData.user_type.toLowerCase();
-            if (userType === 'fan' || userType === 'influencer' || userType === 'admin') {
-              setUserRole(userType as NavRole);
-            } else {
-              setUserRole('fan'); // Default role
-            }
+          // Otherwise set fan role as default
+          else if (rolesResponse.success && rolesResponse.roles.includes('fan')) {
+            setUserRole('fan');
+          }
+          // If no roles found, default to fan
+          else {
+            setUserRole('fan');
           }
           
           // Log the assigned role for debugging
