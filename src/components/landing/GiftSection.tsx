@@ -59,7 +59,7 @@ const GiftSection = ({
               </CarouselItem>)}
           </CarouselContent>
           <CarouselPrevious className="hidden md:flex -left-11 font-normal" />
-          <CarouselNext className="hidden md:flex -right-12" />
+          <CarouselNext className="hidden md:flex -right-12\n" />
         </Carousel>
       </div>
     </section>;
