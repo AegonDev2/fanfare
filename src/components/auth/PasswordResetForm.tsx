@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const PasswordResetForm = () => {
   const [email, setEmail] = useState("");
@@ -21,8 +22,11 @@ const PasswordResetForm = () => {
     setError(null);
     
     try {
+      // Get the current origin for the redirect URL
+      const redirectTo = `${window.location.origin}/auth#type=recovery`;
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/auth",
+        redirectTo
       });
 
       if (error) {
@@ -35,7 +39,8 @@ const PasswordResetForm = () => {
         description: "Check your email for a password reset link.",
       });
     } catch (error: any) {
-      setError(error.message);
+      console.error("Password reset error:", error);
+      setError(error.message || "Failed to send password reset email");
       toast({
         variant: "destructive",
         title: "Error",
@@ -52,7 +57,7 @@ const PasswordResetForm = () => {
         <Alert>
           <Mail className="h-4 w-4" />
           <AlertDescription>
-            We've sent a password reset link to {email}. Please check your inbox and spam folder.
+            We've sent a password reset link to <strong>{email}</strong>. Please check your inbox and spam folder.
           </AlertDescription>
         </Alert>
       </div>
@@ -63,6 +68,7 @@ const PasswordResetForm = () => {
     <form onSubmit={handleSubmit} className="space-y-4 py-4">
       {error && (
         <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}

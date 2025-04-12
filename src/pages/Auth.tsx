@@ -13,21 +13,41 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showPasswordUpdate, setShowPasswordUpdate] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("login");
   
   useEffect(() => {
-    // Check if this is a password reset or email verification flow
-    const checkActionType = async () => {
-      const params = new URLSearchParams(location.hash.substring(1));
+    // Check for password reset flow or tab selection from URL
+    const checkFlow = async () => {
+      // Check URL hash for recovery type
+      const hash = location.hash.substring(1);
+      const params = new URLSearchParams(hash);
       const type = params.get("type");
       
-      // If this is a password recovery action, show password update form
+      // If this is a recovery action, show password update form
       if (type === "recovery") {
         setShowPasswordUpdate(true);
       }
+      
+      // Check for tab param in the URL
+      const urlParams = new URLSearchParams(location.search);
+      const tabParam = urlParams.get("tab");
+      if (tabParam === "signup") {
+        setActiveTab("signup");
+      }
     };
     
-    checkActionType();
-  }, [location]);
+    // Check for existing session
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        // User is already logged in, redirect to home
+        navigate("/");
+      }
+    };
+    
+    checkFlow();
+    checkSession();
+  }, [location, navigate]);
 
   return (
     <div className="min-h-screen p-4 bg-background">
@@ -51,7 +71,7 @@ const Auth = () => {
               <UpdatePasswordForm />
             </div>
           ) : (
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs defaultValue={activeTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
