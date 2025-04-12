@@ -35,6 +35,7 @@ const UpdatePasswordForm = () => {
     setIsLoading(true);
     
     try {
+      console.log("Updating password...");
       const { error } = await supabase.auth.updateUser({ 
         password: password 
       });
@@ -45,6 +46,8 @@ const UpdatePasswordForm = () => {
         title: "Password updated",
         description: "Your password has been updated successfully.",
       });
+      
+      console.log("Password updated successfully");
       
       // Redirect to login page after successful password update
       setTimeout(() => navigate("/auth"), 1500);

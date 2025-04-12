@@ -8,11 +8,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
+import PasswordResetForm from "@/components/auth/PasswordResetForm";
 
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showPasswordUpdate, setShowPasswordUpdate] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
   
   useEffect(() => {
@@ -22,6 +24,9 @@ const Auth = () => {
       const hash = location.hash.substring(1);
       const params = new URLSearchParams(hash);
       const type = params.get("type");
+      
+      console.log("Auth flow type:", type);
+      console.log("Current URL hash:", location.hash);
       
       // If this is a recovery action, show password update form
       if (type === "recovery") {
@@ -33,6 +38,8 @@ const Auth = () => {
       const tabParam = urlParams.get("tab");
       if (tabParam === "signup") {
         setActiveTab("signup");
+      } else if (tabParam === "reset") {
+        setShowPasswordReset(true);
       }
     };
     
@@ -48,6 +55,11 @@ const Auth = () => {
     checkFlow();
     checkSession();
   }, [location, navigate]);
+
+  const togglePasswordReset = () => {
+    setShowPasswordReset(!showPasswordReset);
+    setShowPasswordUpdate(false);
+  };
 
   return (
     <div className="min-h-screen p-4 bg-background">
@@ -70,6 +82,18 @@ const Auth = () => {
               <h2 className="text-xl font-semibold text-center">Update Your Password</h2>
               <UpdatePasswordForm />
             </div>
+          ) : showPasswordReset ? (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-center">Reset Your Password</h2>
+              <PasswordResetForm />
+              <Button 
+                variant="link" 
+                className="w-full mt-2" 
+                onClick={togglePasswordReset}
+              >
+                Back to Login
+              </Button>
+            </div>
           ) : (
             <Tabs defaultValue={activeTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -77,7 +101,7 @@ const Auth = () => {
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
-                <LoginForm />
+                <LoginForm onForgotPassword={togglePasswordReset} />
               </TabsContent>
               <TabsContent value="signup">
                 <SignUpForm />
