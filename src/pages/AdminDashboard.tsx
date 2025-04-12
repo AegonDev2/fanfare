@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +16,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { ShoppingBag, CheckCircle } from "lucide-react";
+import { hasRole } from "@/utils/roleManager";
 
 interface OrderDetails {
   id: string;
@@ -53,20 +53,10 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Check if user has admin role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (roleError) {
-        console.error("Error checking role:", roleError);
-        navigate('/');
-        return;
-      }
-
-      if (roleData?.role !== 'admin') {
+      // Check if user has admin role using the roleManager's hasRole function
+      const isAdmin = await hasRole(user.id, 'admin');
+      
+      if (!isAdmin) {
         toast({
           title: "Access Denied",
           description: "You don't have permission to view this page.",
@@ -76,7 +66,7 @@ const AdminDashboard = () => {
         return;
       }
 
-      setUserRole(roleData?.role);
+      setUserRole('admin');
     } catch (error) {
       console.error("Authentication error:", error);
       navigate('/auth');

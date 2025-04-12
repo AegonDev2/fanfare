@@ -20,6 +20,41 @@ import Navbar from "./components/navigation/Navbar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+// Create a component for protected admin routes
+import { hasRole } from "./utils/roleManager";
+import { useEffect, useState as useStateFn } from "react";
+import { supabase } from "./integrations/supabase/client";
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const [isAdmin, setIsAdmin] = useStateFn(false);
+  const [isLoading, setIsLoading] = useStateFn(true);
+  const navigate = useLocation();
+  
+  useEffect(() => {
+    const checkAdminAccess = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const adminAccess = await hasRole(user.id, 'admin');
+          setIsAdmin(adminAccess);
+        }
+      } catch (error) {
+        console.error("Error checking admin access:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAdminAccess();
+  }, []);
+  
+  if (isLoading) {
+    return <div>Checking permissions...</div>;
+  }
+  
+  return isAdmin ? <>{children}</> : <Navigate to="/" />;
+};
+
 const queryClient = new QueryClient();
 
 const AppContent = () => {

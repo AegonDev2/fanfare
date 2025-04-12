@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getUserRoles } from "@/utils/roleManager";
+import { getUserRoles, hasRole } from "@/utils/roleManager";
 
 export type NavRole = 'fan' | 'influencer' | 'admin';
 
@@ -38,9 +38,13 @@ export const useNavigation = () => {
           setUser(data.user);
           setUserEmail(profileData?.email || data.user.email);
           
+          // Special case for admin UID
+          if (data.user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237") {
+            setUserRole('admin');
+          }
           // Set role priority: admin > influencer > fan
           // If user has admin role, set it regardless of other roles
-          if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
+          else if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
             setUserRole('admin');
           } 
           // Otherwise if user has influencer role, set it
@@ -135,10 +139,14 @@ export const useNavigation = () => {
     },
   ];
 
-  // For authenticated users, filter by role
-  // For guests, show all public nav items and hide role-specific ones
   const allNavItems = user
-    ? [...mainNavItems, ...roleNavItems].filter(item => item.roles.includes(userRole))
+    ? [...mainNavItems, ...roleNavItems].filter(item => {
+        // Special admin access for specific UID
+        if (user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237" && item.roles.includes('admin')) {
+          return true;
+        }
+        return item.roles.includes(userRole);
+      })
     : mainNavItems; // For guests, only show main navigation items
 
   const activeUrl = location.pathname;
