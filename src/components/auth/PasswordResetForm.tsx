@@ -22,9 +22,9 @@ const PasswordResetForm = () => {
     setError(null);
     
     try {
-      // Get the current origin with explicit protocol for the redirect URL
-      const currentURL = window.location.origin;
-      const redirectTo = `${currentURL}/auth#type=recovery`;
+      // Use the current window location to build a proper redirect URL
+      const currentOrigin = window.location.origin;
+      const redirectTo = `${currentOrigin}/auth#type=recovery`;
       
       console.log("Reset password redirect URL:", redirectTo);
       

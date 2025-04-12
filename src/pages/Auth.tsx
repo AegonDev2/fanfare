@@ -20,16 +20,19 @@ const Auth = () => {
   useEffect(() => {
     // Check for password reset flow or tab selection from URL
     const checkFlow = async () => {
-      // Check URL hash for recovery type
-      const hash = location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      const type = params.get("type");
+      // Parse the hash parameters properly
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      
+      // Check for recovery type in hash or type parameter
+      const type = hashParams.get("type");
+      const hasAccessToken = hashParams.has("access_token");
       
       console.log("Auth flow type:", type);
       console.log("Current URL hash:", location.hash);
+      console.log("Has access token:", hasAccessToken);
       
-      // If this is a recovery action, show password update form
-      if (type === "recovery") {
+      // If this is a recovery action with access token, show password update form
+      if (type === "recovery" || (hasAccessToken && location.hash.includes("type=recovery"))) {
         setShowPasswordUpdate(true);
       }
       
