@@ -8,10 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import PasswordResetForm from "./PasswordResetForm";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-const LoginForm = () => {
+interface LoginFormProps {
+  onForgotPassword?: () => void;
+}
+
+const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -88,22 +90,11 @@ const LoginForm = () => {
       </Button>
       
       <div className="text-center mt-4">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="link" className="text-sm text-primary hover:text-primary/80 p-0">
-              Forgot your password?
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reset Password</DialogTitle>
-              <DialogDescription>
-                Enter your email address and we'll send you a password reset link.
-              </DialogDescription>
-            </DialogHeader>
-            <PasswordResetForm />
-          </DialogContent>
-        </Dialog>
+        {onForgotPassword && (
+          <Button variant="link" className="text-sm text-primary hover:text-primary/80 p-0" onClick={onForgotPassword}>
+            Forgot your password?
+          </Button>
+        )}
       </div>
     </form>
   );
