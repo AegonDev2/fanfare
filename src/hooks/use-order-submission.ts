@@ -54,19 +54,19 @@ export const useOrderSubmission = () => {
         throw new Error("You must be logged in to place an order");
       }
       
-      // Check wallet balance using raw SQL query to work around TypeScript limitations
+      // Check wallet balance directly from the wallets table
       const { data: walletData, error: walletError } = await supabase
-        .rpc('execute_sql', { 
-          sql_query: `SELECT * FROM wallets WHERE user_id = '${user.id}' LIMIT 1`
-        })
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', user.id)
         .single();
       
-      if (walletError && !walletError.message.includes('not_found')) {
+      if (walletError && !walletError.message.includes('No rows found')) {
         throw new Error("Failed to check wallet balance. Please try again.");
       }
       
       const totalAmount = productDetails.priceInr + productDetails.platformFee;
-      const walletBalance = walletData ? parseFloat(walletData.balance) : 0;
+      const walletBalance = walletData?.balance || 0;
       
       // If wallet doesn't exist or has insufficient balance
       if (!walletData || walletBalance < totalAmount) {

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Wallet, Transaction } from "@/types/wallet";
@@ -21,45 +21,33 @@ export const useWallet = () => {
         throw new Error("User not authenticated");
       }
       
-      // Get user wallet using a raw SQL query to work around TypeScript limitations
+      // Get user wallet
       const { data, error } = await supabase
-        .rpc('execute_sql', { 
-          sql_query: `SELECT * FROM wallets WHERE user_id = '${user.id}' LIMIT 1`
-        })
+        .from('wallets')
+        .select()
+        .eq('user_id', user.id)
         .single();
       
       if (error) {
         // If error is because wallet doesn't exist, create one
-        if (error.message.includes('not_found')) {
-          // Create a wallet with 0 balance
+        if (error.message.includes('No rows found')) {
+          // Create a wallet with 0 balance by inserting directly
           const { data: newWallet, error: createError } = await supabase
-            .rpc('execute_sql', { 
-              sql_query: `INSERT INTO wallets (user_id, balance) VALUES ('${user.id}', 0) RETURNING *`
-            })
+            .from('wallets')
+            .insert({ user_id: user.id, balance: 0 })
+            .select()
             .single();
             
           if (createError) throw createError;
           
           if (newWallet) {
-            setWallet({
-              id: newWallet.id,
-              user_id: newWallet.user_id,
-              balance: parseFloat(newWallet.balance),
-              created_at: newWallet.created_at,
-              updated_at: newWallet.updated_at
-            });
+            setWallet(newWallet as Wallet);
           }
         } else {
           throw error;
         }
       } else if (data) {
-        setWallet({
-          id: data.id,
-          user_id: data.user_id,
-          balance: parseFloat(data.balance),
-          created_at: data.created_at,
-          updated_at: data.updated_at
-        });
+        setWallet(data as Wallet);
       }
     } catch (error: any) {
       console.error("Error fetching wallet:", error);
@@ -78,33 +66,23 @@ export const useWallet = () => {
     try {
       if (!wallet) {
         await fetchWallet();
+        if (!wallet) return;
       }
       
       setLoading(true);
       
-      // Use raw SQL query to work around TypeScript limitations
       const { data, error } = await supabase
-        .rpc('execute_sql', { 
-          sql_query: `SELECT * FROM transactions WHERE wallet_id = '${wallet?.id}' ORDER BY created_at DESC`
-        });
+        .from('transactions')
+        .select()
+        .eq('wallet_id', wallet.id)
+        .order('created_at', { ascending: false });
       
       if (error) {
         throw error;
       }
       
       if (data) {
-        const formattedTransactions: Transaction[] = data.map((item: any) => ({
-          id: item.id,
-          wallet_id: item.wallet_id,
-          amount: parseFloat(item.amount),
-          type: item.type,
-          status: item.status,
-          description: item.description,
-          reference_id: item.reference_id,
-          created_at: item.created_at
-        }));
-        
-        setTransactions(formattedTransactions);
+        setTransactions(data as Transaction[]);
       }
     } catch (error: any) {
       console.error("Error fetching transactions:", error);
@@ -129,10 +107,12 @@ export const useWallet = () => {
         throw new Error("User not authenticated");
       }
       
-      // Use execute_sql RPC to call our top_up_wallet function
+      // Call the top_up_wallet function
       const { data, error } = await supabase
-        .rpc('execute_sql', { 
-          sql_query: `SELECT top_up_wallet('${user.id}', ${amount}, 'Top up via ${paymentMethod}')`
+        .rpc('top_up_wallet', {
+          p_user_id: user.id,
+          p_amount: amount,
+          p_description: `Top up via ${paymentMethod}`
         });
       
       if (error) {
@@ -174,6 +154,18 @@ export const useWallet = () => {
       return false;
     }
   };
+
+  // Effect to fetch wallet on mount if user is logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        fetchWallet();
+      }
+    };
+    
+    checkSession();
+  }, []);
   
   return {
     wallet,
