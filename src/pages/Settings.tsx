@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Bell, User, Lock, Image } from "lucide-react";
+import { Settings as SettingsIcon, Bell, User, Lock, Image, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
@@ -10,17 +10,33 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/landing/Header";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useUserManager } from "@/utils/userManager";
 
 const Settings = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { deleteUser } = useUserManager();
 
   const handleSignOut = async () => {
     try {
@@ -36,6 +52,36 @@ const Settings = () => {
         description: "Failed to sign out. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setIsDeleting(true);
+      const { data } = await supabase.auth.getUser();
+      
+      if (!data.user) {
+        throw new Error("User not authenticated");
+      }
+      
+      const success = await deleteUser(data.user.id);
+      
+      if (success) {
+        setDialogOpen(false);
+        // Redirect to landing page
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -118,6 +164,49 @@ const Settings = () => {
                   </Button>
                 </div>
               </CardContent>
+              <CardFooter className="border-t pt-6">
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Delete Account
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="text-destructive">Delete Account</DialogTitle>
+                      <DialogDescription>
+                        This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <p className="text-sm font-medium">
+                        To confirm, type "DELETE" in the field below
+                      </p>
+                      <Input 
+                        value={confirmText}
+                        onChange={(e) => setConfirmText(e.target.value)}
+                        placeholder="Type DELETE to confirm"
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        disabled={confirmText !== "DELETE" || isDeleting}
+                        onClick={handleDeleteAccount}
+                      >
+                        {isDeleting ? "Deleting..." : "Delete Account"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardFooter>
             </Card>
 
             {/* Notification Settings Card */}

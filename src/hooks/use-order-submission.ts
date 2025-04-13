@@ -54,22 +54,20 @@ export const useOrderSubmission = () => {
         throw new Error("You must be logged in to place an order");
       }
       
-      // Check wallet balance directly from the wallets table
-      const { data: walletData, error: walletError } = await supabase
-        .from('wallets')
-        .select('balance')
-        .eq('user_id', user.id)
-        .single();
+      // Check wallet balance using raw query to bypass type issues
+      const { data: walletData, error: walletError } = await supabase.rpc('query_raw', {
+        query: `SELECT balance FROM wallets WHERE user_id = '${user.id}'`
+      });
       
-      if (walletError && !walletError.message.includes('No rows found')) {
+      if (walletError) {
         throw new Error("Failed to check wallet balance. Please try again.");
       }
       
       const totalAmount = productDetails.priceInr + productDetails.platformFee;
-      const walletBalance = walletData?.balance || 0;
+      const walletBalance = Array.isArray(walletData) && walletData.length > 0 ? walletData[0].balance : 0;
       
       // If wallet doesn't exist or has insufficient balance
-      if (!walletData || walletBalance < totalAmount) {
+      if (!walletData || walletData.length === 0 || walletBalance < totalAmount) {
         setPaymentStep('initial');
         toast({
           title: "Insufficient wallet balance",
