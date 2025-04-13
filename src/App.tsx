@@ -1,4 +1,3 @@
-
 import { StrictMode, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -16,18 +15,15 @@ import GiftRequests from "./pages/GiftRequests";
 import Settings from "./pages/Settings";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrderDetails from "./pages/AdminOrderDetails";
+import Wallet from "./pages/Wallet";
+import OrderSuccess from "./pages/OrderSuccess";
 import Navbar from "./components/navigation/Navbar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Create a component for protected admin routes
-import { hasRole } from "./utils/roleManager";
-import { useEffect, useState as useStateFn } from "react";
-import { supabase } from "./integrations/supabase/client";
-
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAdmin, setIsAdmin] = useStateFn(false);
-  const [isLoading, setIsLoading] = useStateFn(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useLocation();
   
   useEffect(() => {
@@ -65,12 +61,10 @@ const AppContent = () => {
   
   return (
     <div className="min-h-screen w-full bg-[var(--background)] relative overflow-x-hidden">
-      {/* Navigation */}
       {!isAuthPage && (
         <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
       )}
 
-      {/* Overlay for navigation */}
       {!isAuthPage && (
         <div 
           className={cn(
@@ -103,8 +97,9 @@ const AppContent = () => {
             <Route path="/place-order" element={<PlaceOrder setNavOpen={setIsNavOpen} />} />
             <Route path="/gift-requests" element={<GiftRequests />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
             
-            {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/order-details/:id" element={<AdminOrderDetails />} />
             

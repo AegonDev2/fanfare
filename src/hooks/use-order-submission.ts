@@ -47,68 +47,80 @@ export const useOrderSubmission = () => {
     try {
       console.log("Submitting order with product details:", productDetails);
       
-      // Create order in database with shipping address information directly in the orders table
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
+      // Get the current authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("You must be logged in to place an order");
+      }
+      
+      // Check wallet balance first
+      const { data: wallet } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+      
+      const totalAmount = productDetails.priceInr + productDetails.platformFee;
+      
+      // If wallet doesn't exist or has insufficient balance
+      if (!wallet || wallet.balance < totalAmount) {
+        setPaymentStep('initial');
+        toast({
+          title: "Insufficient wallet balance",
+          description: `Your order total is ₹${totalAmount.toFixed(2)} but your wallet balance is ₹${wallet?.balance?.toFixed(2) || '0.00'}. Please top up your wallet.`,
+          variant: "destructive",
+        });
+        
+        // Redirect to wallet page after a delay
+        setTimeout(() => {
+          window.location.href = "/wallet";
+        }, 2000);
+        
+        return;
+      }
+      
+      // Create gift request instead of direct order
+      const { data: giftRequest, error: giftRequestError } = await supabase
+        .from('gift_requests')
         .insert({
           influencer_id: influencerId,
+          sender_id: user.id,
           product_url: giftItem,
           product_title: productDetails.name,
           product_price: productDetails.priceInr,
-          platform_fee: productDetails.platformFee,
-          total_amount: productDetails.priceInr + productDetails.platformFee,
           message: message,
-          status: "pending",
-          shipping_address: {
-            name: influencerAddress.name, 
-            address_line1: influencerAddress.address_line1,
-            address_line2: influencerAddress.address_line2 || "",
-            city: influencerAddress.city,
-            state: influencerAddress.state,
-            postal_code: influencerAddress.postal_code,
-            country: influencerAddress.country || "India",
-            phone: influencerAddress.phone
-          }
+          status: "pending"
         })
         .select()
         .single();
 
-      if (orderError) {
-        console.error("Database order creation error:", orderError);
-        throw new Error(orderError.message);
+      if (giftRequestError) {
+        console.error("Database gift request creation error:", giftRequestError);
+        throw new Error(giftRequestError.message);
       }
 
-      console.log("Order created successfully:", order);
-
-      // Update order status after payment
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({ status: "accepted" })
-        .eq('id', order.id);
-
-      if (updateError) {
-        console.error("Order status update error:", updateError);
-        throw new Error(updateError.message);
-      }
-
+      console.log("Gift request created successfully:", giftRequest);
+      
       setPaymentStep('complete');
       
       toast({
-        title: "Order Placed Successfully",
-        description: "Your gift order has been placed and will be delivered soon!",
+        title: "Gift Request Submitted",
+        description: "Your gift request has been submitted to the influencer for approval.",
       });
 
-      // Create notification for the influencer about the new order
+      // Create notification for the influencer about the new gift request
       await supabase.from("notifications").insert({
         recipient_id: influencerId,
-        type: "new_order",
-        message: `Someone has purchased a gift for you! Check your gift requests.`,
-        reference_id: order.id,
+        sender_id: user.id,
+        type: "new_gift_request",
+        message: `Someone wants to send you a gift! Check your gift requests.`,
+        reference_id: giftRequest.id,
       });
 
-      // Redirect to success page or show success message
+      // Redirect to success page after a delay
       setTimeout(() => {
-        window.location.href = `/order-success?id=${order.id}`;
+        window.location.href = `/gift-requests`;
       }, 2000);
 
     } catch (error) {
@@ -117,20 +129,13 @@ export const useOrderSubmission = () => {
       setOrderError(error instanceof Error ? error.message : "An unknown error occurred");
       
       toast({
-        title: "Order Failed",
+        title: "Request Failed",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Helper function to detect platform from URL
-  const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
-    if (url.includes('amazon')) return 'amazon';
-    if (url.includes('flipkart')) return 'flipkart';
-    return undefined;
   };
 
   return {
