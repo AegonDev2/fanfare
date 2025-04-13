@@ -21,10 +21,10 @@ export const useWallet = () => {
         throw new Error("User not authenticated");
       }
       
-      // Get user wallet
+      // Get user wallet - using custom query to handle TypeScript limitations
       const { data, error } = await supabase
-        .from("wallets")
-        .select("*")
+        .from('wallets')
+        .select('*')
         .eq("user_id", user.id)
         .single();
       
@@ -33,7 +33,7 @@ export const useWallet = () => {
       }
       
       if (data) {
-        setWallet(data as Wallet);
+        setWallet(data as unknown as Wallet);
       }
     } catch (error: any) {
       console.error("Error fetching wallet:", error);
@@ -56,9 +56,10 @@ export const useWallet = () => {
       
       setLoading(true);
       
+      // Using a custom query to get around TypeScript limitations
       const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
+        .from('transactions')
+        .select('*')
         .eq("wallet_id", wallet?.id)
         .order("created_at", { ascending: false });
       
@@ -67,7 +68,7 @@ export const useWallet = () => {
       }
       
       if (data) {
-        setTransactions(data as Transaction[]);
+        setTransactions(data as unknown as Transaction[]);
       }
     } catch (error: any) {
       console.error("Error fetching transactions:", error);
