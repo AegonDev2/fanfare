@@ -19,16 +19,16 @@ const HeroCarousel = ({
       return () => clearInterval(interval);
     }
   }, [isPaused]);
-  return <div className="relative pb-4 pt-8 py-[8px] my-[5px] bg-slate-50">
+  return <div className="relative pb-4 pt-8 my-0 py-[14px] bg-rose-100">
       <Carousel opts={{
       loop: true,
       align: "center"
     }} className="w-full" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
         <CarouselContent>
           {slides.map((slide, index) => <CarouselItem key={index} className="flex justify-center items-center">
-              <div className="w-full max-w-4xl mx-auto px-4">
+              <div className="w-full max-w-4xl mx-auto px-[8px]">
                 <div className="relative aspect-[21/9] overflow-hidden rounded-lg shadow-md">
-                  <img src={slide.src} alt={slide.alt} className="w-full h-full object-cover" />
+                  <img src={slide.src} alt={slide.alt} className="w-full h-full object-fill" />
                 </div>
               </div>
             </CarouselItem>)}

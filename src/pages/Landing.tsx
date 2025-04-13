@@ -93,9 +93,7 @@ const Landing = ({
           <OrderTrackingSection />
         </main>
         <footer className="bg-white shadow-md mt-8">
-          <div className="container mx-auto px-4 py-4 text-center text-gray-600">
-            © 2023 Fan Fare. All rights reserved.
-          </div>
+          <div className="container mx-auto px-4 py-4 text-center text-gray-600">© 2025 FanFare. All rights reserved.</div>
         </footer>
       </div>
     </div>;
