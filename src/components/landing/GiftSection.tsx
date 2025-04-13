@@ -21,7 +21,7 @@ const GiftCard = memo(({
   const handleGiftClick = () => {
     navigate(`/place-order?gift=${encodeURIComponent(gift.name)}`);
   };
-  return <div className="bg-white p-3 rounded-lg shadow-md h-full">
+  return <div className="bg-white p-3 rounded-lg shadow-md h-full px-[17px]">
       <div className="w-full aspect-square mb-2 overflow-hidden rounded-lg">
         <img src={gift.image} alt={gift.name} className="w-full h-full object-cover" loading="lazy" />
       </div>

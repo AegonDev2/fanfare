@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import Header from "@/components/landing/Header";
 import HeroCarousel from "@/components/landing/HeroCarousel";
@@ -7,34 +6,32 @@ import GiftSection from "@/components/landing/GiftSection";
 import OrderTrackingSection from "@/components/landing/OrderTrackingSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-
 interface LandingProps {
   setNavOpen: (isOpen: boolean) => void;
 }
-
-const Landing = ({ setNavOpen }: LandingProps) => {
-  const { toast } = useToast();
+const Landing = ({
+  setNavOpen
+}: LandingProps) => {
+  const {
+    toast
+  } = useToast();
   const [influencers, setInfluencers] = useState([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchInfluencers();
   }, []);
-
   const fetchInfluencers = async () => {
     try {
       console.log("Fetching influencers...");
       setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('influencer_profiles')
-        .select('*');
-
+      const {
+        data,
+        error
+      } = await supabase.from('influencer_profiles').select('*');
       if (error) {
         console.error("Supabase error:", error);
         throw error;
       }
-
       console.log("Fetched influencers:", data);
       setInfluencers(data || []);
     } catch (error: any) {
@@ -42,77 +39,56 @@ const Landing = ({ setNavOpen }: LandingProps) => {
       toast({
         title: "Error",
         description: "Failed to load influencers",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  const slides = [
-    {
-      src: "https://storage.googleapis.com/a1aa/image/nEyyMJHY73DoGPRrtOSXC1KvCAwbILiKV78pvYqeexs.jpg",
-      alt: "Advertisement banner for Sponsor 1 featuring a new product launch"
-    },
-    {
-      src: "https://storage.googleapis.com/a1aa/image/M5nq5Hez3ef78AaLPSm-YJrIxUoHWGsaayDw16JqaCE.jpg",
-      alt: "Advertisement banner for Sponsor 2 featuring a discount offer"
-    },
-    {
-      src: "https://storage.googleapis.com/a1aa/image/Z2Kqw4XzbQzPaXB2LzQB4Rce-FMmCB0pAxCN5JOjxo0.jpg",
-      alt: "Advertisement banner for Sponsor 3 featuring a special event"
-    }
-  ];
-
-  const gifts = [
-    {
-      name: "Stylish Handbag",
-      price: "$49.99",
-      image: "https://storage.googleapis.com/a1aa/image/ti84hphytV7QmWZbpAiDQTtHxz4Qsw7-Wf99DSn3DH8.jpg"
-    },
-    {
-      name: "Gaming Headset",
-      price: "$79.99",
-      image: "https://storage.googleapis.com/a1aa/image/pLNeJ8LcljztHIanr9TuTSpnh7ilkb3zKl3EmL_sAH8.jpg"
-    },
-    {
-      name: "Travel Backpack",
-      price: "$59.99",
-      image: "https://storage.googleapis.com/a1aa/image/3w2Nb6lAZ73GNHF_EsRxGE_8ei1THVU1GsAxp-BQ494.jpg"
-    },
-    {
-      name: "Smart Watch",
-      price: "$199.99",
-      image: "https://images.unsplash.com/photo-1501286353178-1ec881214838"
-    },
-    {
-      name: "Wireless Earbuds",
-      price: "$129.99",
-      image: "https://images.unsplash.com/photo-1469041797191-50ace28483c3"
-    },
-    {
-      name: "Digital Camera",
-      price: "$399.99",
-      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901"
-    }
-  ];
-
-  return (
-    <div className="min-h-screen w-full bg-gray-100 font-roboto">
+  const slides = [{
+    src: "https://storage.googleapis.com/a1aa/image/nEyyMJHY73DoGPRrtOSXC1KvCAwbILiKV78pvYqeexs.jpg",
+    alt: "Advertisement banner for Sponsor 1 featuring a new product launch"
+  }, {
+    src: "https://storage.googleapis.com/a1aa/image/M5nq5Hez3ef78AaLPSm-YJrIxUoHWGsaayDw16JqaCE.jpg",
+    alt: "Advertisement banner for Sponsor 2 featuring a discount offer"
+  }, {
+    src: "https://storage.googleapis.com/a1aa/image/Z2Kqw4XzbQzPaXB2LzQB4Rce-FMmCB0pAxCN5JOjxo0.jpg",
+    alt: "Advertisement banner for Sponsor 3 featuring a special event"
+  }];
+  const gifts = [{
+    name: "Stylish Handbag",
+    price: "$49.99",
+    image: "https://storage.googleapis.com/a1aa/image/ti84hphytV7QmWZbpAiDQTtHxz4Qsw7-Wf99DSn3DH8.jpg"
+  }, {
+    name: "Gaming Headset",
+    price: "$79.99",
+    image: "https://storage.googleapis.com/a1aa/image/pLNeJ8LcljztHIanr9TuTSpnh7ilkb3zKl3EmL_sAH8.jpg"
+  }, {
+    name: "Travel Backpack",
+    price: "$59.99",
+    image: "https://storage.googleapis.com/a1aa/image/3w2Nb6lAZ73GNHF_EsRxGE_8ei1THVU1GsAxp-BQ494.jpg"
+  }, {
+    name: "Smart Watch",
+    price: "$199.99",
+    image: "https://images.unsplash.com/photo-1501286353178-1ec881214838"
+  }, {
+    name: "Wireless Earbuds",
+    price: "$129.99",
+    image: "https://images.unsplash.com/photo-1469041797191-50ace28483c3"
+  }, {
+    name: "Digital Camera",
+    price: "$399.99",
+    image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901"
+  }];
+  return <div className="min-h-screen w-full bg-gray-100 font-roboto">
       <Header setNavOpen={setNavOpen} />
       
       <div className="pt-16">
         <HeroCarousel slides={slides} />
-        <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
-          {loading ? (
-            <div className="text-center py-8">Loading influencers...</div>
-          ) : influencers.length > 0 ? (
-            <InfluencerSection influencers={influencers} />
-          ) : (
-            <div className="text-center py-8">
+        <main className="container mx-auto sm:px-6 lg:px-8 max-w-7xl py-0 px-[3px] bg-zinc-300">
+          {loading ? <div className="text-center py-8">Loading influencers...</div> : influencers.length > 0 ? <InfluencerSection influencers={influencers} /> : <div className="text-center py-8">
               No influencers found. Check back later!
-            </div>
-          )}
+            </div>}
           <GiftSection gifts={gifts} />
           <OrderTrackingSection />
         </main>
@@ -122,8 +98,6 @@ const Landing = ({ setNavOpen }: LandingProps) => {
           </div>
         </footer>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;

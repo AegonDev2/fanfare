@@ -55,7 +55,7 @@ const Header = ({
   };
   return <header className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm shadow-sm">
       <div className="container mx-auto md:px-6 lg:px-8 px-0">
-        <div className="flex items-center justify-between h-16 bg-stone-300 px-[19px]">
+        <div className="flex items-center justify-between h-16 bg-stone-300 px-[19px] rounded-md">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={handleNavToggle} className="mr-2 px-[6px]">
               <Menu className="h-5 w-5" />
