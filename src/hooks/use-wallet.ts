@@ -21,19 +21,45 @@ export const useWallet = () => {
         throw new Error("User not authenticated");
       }
       
-      // Get user wallet - using custom query to handle TypeScript limitations
+      // Get user wallet using a raw SQL query to work around TypeScript limitations
       const { data, error } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq("user_id", user.id)
+        .rpc('execute_sql', { 
+          sql_query: `SELECT * FROM wallets WHERE user_id = '${user.id}' LIMIT 1`
+        })
         .single();
       
       if (error) {
-        throw error;
-      }
-      
-      if (data) {
-        setWallet(data as unknown as Wallet);
+        // If error is because wallet doesn't exist, create one
+        if (error.message.includes('not_found')) {
+          // Create a wallet with 0 balance
+          const { data: newWallet, error: createError } = await supabase
+            .rpc('execute_sql', { 
+              sql_query: `INSERT INTO wallets (user_id, balance) VALUES ('${user.id}', 0) RETURNING *`
+            })
+            .single();
+            
+          if (createError) throw createError;
+          
+          if (newWallet) {
+            setWallet({
+              id: newWallet.id,
+              user_id: newWallet.user_id,
+              balance: parseFloat(newWallet.balance),
+              created_at: newWallet.created_at,
+              updated_at: newWallet.updated_at
+            });
+          }
+        } else {
+          throw error;
+        }
+      } else if (data) {
+        setWallet({
+          id: data.id,
+          user_id: data.user_id,
+          balance: parseFloat(data.balance),
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        });
       }
     } catch (error: any) {
       console.error("Error fetching wallet:", error);
@@ -56,19 +82,29 @@ export const useWallet = () => {
       
       setLoading(true);
       
-      // Using a custom query to get around TypeScript limitations
+      // Use raw SQL query to work around TypeScript limitations
       const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq("wallet_id", wallet?.id)
-        .order("created_at", { ascending: false });
+        .rpc('execute_sql', { 
+          sql_query: `SELECT * FROM transactions WHERE wallet_id = '${wallet?.id}' ORDER BY created_at DESC`
+        });
       
       if (error) {
         throw error;
       }
       
       if (data) {
-        setTransactions(data as unknown as Transaction[]);
+        const formattedTransactions: Transaction[] = data.map((item: any) => ({
+          id: item.id,
+          wallet_id: item.wallet_id,
+          amount: parseFloat(item.amount),
+          type: item.type,
+          status: item.status,
+          description: item.description,
+          reference_id: item.reference_id,
+          created_at: item.created_at
+        }));
+        
+        setTransactions(formattedTransactions);
       }
     } catch (error: any) {
       console.error("Error fetching transactions:", error);
@@ -93,12 +129,10 @@ export const useWallet = () => {
         throw new Error("User not authenticated");
       }
       
-      // Call the RPC function to top up wallet
+      // Use execute_sql RPC to call our top_up_wallet function
       const { data, error } = await supabase
-        .rpc("top_up_wallet", {
-          p_user_id: user.id,
-          p_amount: amount,
-          p_description: `Top up via ${paymentMethod}`
+        .rpc('execute_sql', { 
+          sql_query: `SELECT top_up_wallet('${user.id}', ${amount}, 'Top up via ${paymentMethod}')`
         });
       
       if (error) {

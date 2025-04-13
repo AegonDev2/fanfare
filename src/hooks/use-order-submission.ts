@@ -54,26 +54,26 @@ export const useOrderSubmission = () => {
         throw new Error("You must be logged in to place an order");
       }
       
-      // Check wallet balance first using direct query (TypeScript workaround)
+      // Check wallet balance using raw SQL query to work around TypeScript limitations
       const { data: walletData, error: walletError } = await supabase
-        .from('wallets')
-        .select('balance')
-        .eq('user_id', user.id)
+        .rpc('execute_sql', { 
+          sql_query: `SELECT * FROM wallets WHERE user_id = '${user.id}' LIMIT 1`
+        })
         .single();
       
-      if (walletError) {
+      if (walletError && !walletError.message.includes('not_found')) {
         throw new Error("Failed to check wallet balance. Please try again.");
       }
       
       const totalAmount = productDetails.priceInr + productDetails.platformFee;
-      const walletBalance = walletData ? walletData.balance : 0;
+      const walletBalance = walletData ? parseFloat(walletData.balance) : 0;
       
       // If wallet doesn't exist or has insufficient balance
       if (!walletData || walletBalance < totalAmount) {
         setPaymentStep('initial');
         toast({
           title: "Insufficient wallet balance",
-          description: `Your order total is ₹${totalAmount.toFixed(2)} but your wallet balance is ₹${walletBalance.toFixed(2) || '0.00'}. Please top up your wallet.`,
+          description: `Your order total is ₹${totalAmount.toFixed(2)} but your wallet balance is ₹${walletBalance.toFixed(2)}. Please top up your wallet.`,
           variant: "destructive",
         });
         
