@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import WalletWidget from "@/components/wallet/WalletWidget";
 
 interface HeaderProps {
   setNavOpen?: (isOpen: boolean) => void;
@@ -17,7 +17,6 @@ const Header = ({ setNavOpen }: HeaderProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  // Check if user is logged in
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
@@ -74,7 +73,6 @@ const Header = ({ setNavOpen }: HeaderProps) => {
             </a>
           </div>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8 items-center">
             <a
               href="/"
@@ -102,10 +100,10 @@ const Header = ({ setNavOpen }: HeaderProps) => {
             </a>
           </nav>
 
-          {/* Auth buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <>
+                <WalletWidget />
                 <Button
                   variant="ghost"
                   className="text-gray-700"

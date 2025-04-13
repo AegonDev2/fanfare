@@ -1,3 +1,4 @@
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,6 +123,13 @@ export const useNavigation = () => {
       path: '/admin',
       icon: 'LayoutDashboard',
       roles: ['admin'],
+    },
+    {
+      id: 'wallet',
+      title: 'Wallet',
+      path: '/wallet',
+      icon: 'Wallet',
+      roles: ['fan', 'influencer', 'admin'],
     },
     {
       id: 'profile',
