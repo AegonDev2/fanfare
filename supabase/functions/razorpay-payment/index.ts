@@ -147,10 +147,10 @@ serve(async (req) => {
           }
         })
         
-        const paymentData = await paymentResponse.json()
+        const paymentDetails = await paymentResponse.json()
         
-        if (!paymentResponse.ok || paymentData.status !== 'captured') {
-          console.error('Invalid payment status:', paymentData)
+        if (!paymentResponse.ok || paymentDetails.status !== 'captured') {
+          console.error('Invalid payment status:', paymentDetails)
           return new Response(JSON.stringify({
             success: false,
             message: 'Payment not successful'
@@ -161,10 +161,10 @@ serve(async (req) => {
         }
         
         // Extract amount (convert from paisa to rupees)
-        const amountPaid = paymentData.amount / 100
+        const amountPaid = paymentDetails.amount / 100
         
         // Update user's wallet using Supabase RPC
-        const { data, error } = await supabaseClient.rpc('top_up_wallet', {
+        const { data: walletData, error } = await supabaseClient.rpc('top_up_wallet', {
           p_user_id: userId,
           p_amount: amountPaid,
           p_description: `Razorpay payment: ${paymentId}`
