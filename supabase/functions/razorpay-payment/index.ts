@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.1"
 
@@ -60,8 +59,10 @@ serve(async (req) => {
         // Amount in paisa (Razorpay uses smallest currency unit)
         const amountInPaisa = Math.round(amount * 100)
         
-        // Create receipt reference with timestamp
-        const receipt = `wallet_topup_${userId}_${Date.now()}`
+        // Create receipt reference with timestamp - limit to 40 chars max
+        // Use only the first 8 chars of userId to keep receipt under 40 chars
+        const truncatedUserId = userId.substring(0, 8);
+        const receipt = `wallet_${truncatedUserId}_${Date.now()}`.substring(0, 40);
         
         // Create order in Razorpay
         const response = await fetch('https://api.razorpay.com/v1/orders', {
