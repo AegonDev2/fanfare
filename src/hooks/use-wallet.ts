@@ -97,7 +97,106 @@ export const useWallet = () => {
     }
   };
   
-  // Top up wallet
+  // Create Razorpay order
+  const createRazorpayOrder = async (amount: number): Promise<{id: string, key: string} | null> => {
+    try {
+      setLoading(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+      
+      // Call our edge function to create a Razorpay order
+      const { data, error } = await supabase.functions.invoke("razorpay-payment", {
+        body: {
+          action: "create_order",
+          userId: user.id,
+          amount: amount
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (!data || !data.id || !data.key) {
+        throw new Error("Invalid response from payment service");
+      }
+      
+      return {
+        id: data.id,
+        key: data.key
+      };
+      
+    } catch (error: any) {
+      console.error("Error creating payment order:", error);
+      toast({
+        title: "Payment initialization failed",
+        description: error.message || "Please try again later",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Verify Razorpay payment
+  const verifyRazorpayPayment = async (
+    orderId: string, 
+    paymentId: string, 
+    signature: string
+  ): Promise<boolean> => {
+    try {
+      setLoading(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+      
+      // Call our edge function to verify the payment
+      const { data, error } = await supabase.functions.invoke("razorpay-payment", {
+        body: {
+          action: "verify_payment",
+          userId: user.id,
+          orderId: orderId,
+          paymentId: paymentId,
+          signature: signature
+        }
+      });
+      
+      if (error || !data?.success) {
+        throw new Error(data?.message || "Payment verification failed");
+      }
+      
+      // Show success toast
+      toast({
+        title: "Payment successful",
+        description: data.message || "Your wallet has been topped up",
+      });
+      
+      // Refresh wallet data
+      await fetchWallet();
+      
+      return true;
+    } catch (error: any) {
+      console.error("Error verifying payment:", error);
+      toast({
+        title: "Payment verification failed",
+        description: error.message || "Please contact customer support",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Legacy top up wallet method (for backward compatibility)
   const topUpWallet = async (amount: number, paymentMethod: string): Promise<boolean> => {
     try {
       setLoading(true);
@@ -174,6 +273,8 @@ export const useWallet = () => {
     fetchWallet,
     fetchTransactions,
     topUpWallet,
+    createRazorpayOrder,
+    verifyRazorpayPayment,
     checkWalletBalance,
   };
 };

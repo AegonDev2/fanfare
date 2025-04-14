@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@/hooks/use-wallet";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CreditCard, Banknote, Coins, CheckCircle2, Loader2 } from "lucide-react";
 import { TopUpFormData } from "@/types/wallet";
 
+// Define Razorpay types
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const PRESET_AMOUNTS = [100, 500, 1000, 5000];
 
 const TopUpWallet = () => {
-  const { topUpWallet } = useWallet();
+  const { createRazorpayOrder, verifyRazorpayPayment, loading: walletLoading } = useWallet();
   const [formData, setFormData] = useState<TopUpFormData>({
     amount: 0,
     paymentMethod: "credit_card",
@@ -20,6 +27,34 @@ const TopUpWallet = () => {
   const [customAmount, setCustomAmount] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  
+  // Load Razorpay script
+  useEffect(() => {
+    const loadRazorpayScript = () => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => {
+        console.log("Razorpay script loaded successfully");
+        setScriptLoaded(true);
+      };
+      script.onerror = () => {
+        console.error("Failed to load Razorpay script");
+      };
+      document.body.appendChild(script);
+    };
+    
+    loadRazorpayScript();
+    
+    return () => {
+      // Clean up script on component unmount
+      const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+      }
+    };
+  }, []);
   
   const handleAmountSelect = (amount: number) => {
     setFormData({...formData, amount});
@@ -49,20 +84,70 @@ const TopUpWallet = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real app, we would integrate with a payment gateway here
-      // For demo purposes, we're directly topping up the wallet
-      const success = await topUpWallet(formData.amount, formData.paymentMethod);
-      
-      if (success) {
-        setPaymentSuccess(true);
-        
-        // Reset form after 3 seconds
-        setTimeout(() => {
-          setFormData({amount: 0, paymentMethod: "credit_card"});
-          setCustomAmount("");
-          setPaymentSuccess(false);
-        }, 3000);
+      if (!scriptLoaded) {
+        throw new Error("Payment gateway is still loading. Please try again.");
       }
+      
+      // Create Razorpay order
+      const orderData = await createRazorpayOrder(formData.amount);
+      
+      if (!orderData) {
+        throw new Error("Failed to create payment order");
+      }
+      
+      // Get user details for Razorpay
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !user.email) {
+        throw new Error("User information not available");
+      }
+      
+      // Extract name from email or use default
+      const name = user.user_metadata?.name || user.email.split('@')[0] || "User";
+      
+      // Initialize Razorpay payment
+      const razorpay = new window.Razorpay({
+        key: orderData.key,
+        amount: formData.amount * 100, // Amount in paisa
+        currency: 'INR',
+        name: 'FanFare',
+        description: 'Wallet Top-up',
+        order_id: orderData.id,
+        prefill: {
+          name: name,
+          email: user.email,
+        },
+        theme: {
+          color: '#6366f1',
+        },
+        handler: async function(response: any) {
+          // Handle successful payment
+          const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = response;
+          
+          // Verify payment on server
+          const verificationSuccess = await verifyRazorpayPayment(
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature
+          );
+          
+          if (verificationSuccess) {
+            setPaymentSuccess(true);
+            
+            // Reset form after 3 seconds
+            setTimeout(() => {
+              setFormData({ amount: 0, paymentMethod: "credit_card" });
+              setCustomAmount("");
+              setPaymentSuccess(false);
+            }, 3000);
+          }
+        }
+      });
+      
+      // Open Razorpay checkout
+      razorpay.open();
+      
+    } catch (error) {
+      console.error("Payment error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,13 +268,15 @@ const TopUpWallet = () => {
         <Button 
           onClick={handleSubmit} 
           className="w-full" 
-          disabled={formData.amount <= 0 || isSubmitting}
+          disabled={formData.amount <= 0 || isSubmitting || walletLoading || !scriptLoaded}
         >
-          {isSubmitting ? (
+          {isSubmitting || walletLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
             </>
+          ) : !scriptLoaded ? (
+            <>Loading payment gateway...</>
           ) : (
             <>Add ₹{formData.amount || 0}</>
           )}

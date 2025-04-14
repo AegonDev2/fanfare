@@ -22,3 +22,17 @@ export interface TopUpFormData {
   amount: number;
   paymentMethod: "credit_card" | "upi" | "netbanking";
 }
+
+export interface RazorpayOrder {
+  id: string;
+  amount: number;
+  currency: string;
+  receipt: string;
+  key: string;
+}
+
+export interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
