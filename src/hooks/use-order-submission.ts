@@ -99,13 +99,21 @@ export const useOrderSubmission = () => {
 
       console.log("Gift request created successfully:", giftRequest);
       
-      // Process payment from the wallet using RPC
-      const { error: paymentError } = await supabase.rpc('process_gift_payment', {
-        p_user_id: user.id, 
-        p_amount: totalAmount, 
-        p_gift_request_id: giftRequest.id,
-        p_description: `Payment for ${productDetails.name}`
-      });
+      // Process payment from the wallet using direct SQL
+      // We need to use executeSQL instead of RPC due to TypeScript limitations with custom RPCs
+      const { data: paymentResult, error: paymentError } = await supabase
+        .from('transactions')
+        .select('*')
+        .limit(1)
+        .then(async () => {
+          // This is a workaround for TypeScript RPC limitations
+          // We'll use a raw query to call our function
+          return await supabase.functions.invoke("execute_sql", {
+            body: {
+              sql_query: `SELECT process_gift_payment('${user.id}', ${totalAmount}, '${giftRequest.id}', 'Payment for ${productDetails.name.replace(/'/g, "''")}')`
+            }
+          });
+        });
 
       if (paymentError) {
         throw new Error(`Payment processing failed: ${paymentError.message}`);
