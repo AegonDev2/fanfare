@@ -21,18 +21,23 @@ export const useWallet = () => {
         throw new Error("User not authenticated");
       }
       
-      // Execute direct SQL query to get wallet
+      // Execute query to get wallet - using select() instead of maybeSingle() to handle multiple rows
       const { data, error } = await supabase
         .from('wallets')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       
-      // Check if wallet exists
-      if (data) {
-        setWallet(data as Wallet);
+      // Check if wallet exists - use the most recent one if multiple exist
+      if (data && data.length > 0) {
+        setWallet(data[0] as Wallet);
+        
+        // If we found multiple wallets, log a warning - this shouldn't normally happen
+        if (data.length > 1) {
+          console.warn(`Found ${data.length} wallets for user ${user.id}. Using most recent one.`);
+        }
       } else {
         // Create a wallet with 0 balance
         const { data: newWallet, error: createError } = await supabase

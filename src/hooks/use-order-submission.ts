@@ -3,11 +3,13 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductDetails, InfluencerAddress } from "@/types/order";
+import { useWallet } from "@/hooks/use-wallet";
 
 export type PaymentStep = 'initial' | 'pending' | 'complete';
 
 export const useOrderSubmission = () => {
   const { toast } = useToast();
+  const { checkWalletBalance, fetchWallet } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>('initial');
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -54,26 +56,16 @@ export const useOrderSubmission = () => {
         throw new Error("You must be logged in to place an order");
       }
       
-      // Check wallet balance
-      const { data: walletData, error: walletError } = await supabase
-        .from('wallets')
-        .select('balance')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (walletError) {
-        throw new Error("Failed to check wallet balance. Please try again.");
-      }
-      
       const totalAmount = productDetails.priceInr + productDetails.platformFee;
       
-      // If wallet doesn't exist or has insufficient balance
-      if (!walletData || walletData.balance < totalAmount) {
-        const currentBalance = walletData ? walletData.balance : 0;
+      // Check wallet balance directly using our hook
+      const hasEnoughBalance = await checkWalletBalance(totalAmount);
+      
+      if (!hasEnoughBalance) {
         setPaymentStep('initial');
         toast({
           title: "Insufficient wallet balance",
-          description: `Your order total is ₹${totalAmount.toFixed(2)} but your wallet balance is ₹${currentBalance.toFixed(2)}. Please top up your wallet.`,
+          description: `Your order total is ₹${totalAmount.toFixed(2)}. Please top up your wallet.`,
           variant: "destructive",
         });
         
@@ -106,6 +98,21 @@ export const useOrderSubmission = () => {
       }
 
       console.log("Gift request created successfully:", giftRequest);
+      
+      // Process payment from the wallet using RPC
+      const { error: paymentError } = await supabase.rpc('process_gift_payment', {
+        p_user_id: user.id, 
+        p_amount: totalAmount, 
+        p_gift_request_id: giftRequest.id,
+        p_description: `Payment for ${productDetails.name}`
+      });
+
+      if (paymentError) {
+        throw new Error(`Payment processing failed: ${paymentError.message}`);
+      }
+      
+      // Refresh the wallet data after payment
+      await fetchWallet();
       
       setPaymentStep('complete');
       
