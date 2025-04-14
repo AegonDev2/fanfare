@@ -21,27 +21,31 @@ export const useWallet = () => {
         throw new Error("User not authenticated");
       }
       
-      // Get user wallet using query_raw to bypass type issues
-      const { data, error } = await supabase.rpc('query_raw', {
-        query: `SELECT * FROM wallets WHERE user_id = '${user.id}'`
-      });
+      // Execute direct SQL query to get wallet
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
       
       if (error) throw error;
       
       // Check if wallet exists
-      if (Array.isArray(data) && data.length > 0) {
-        setWallet(data[0] as Wallet);
+      if (data) {
+        setWallet(data as Wallet);
       } else {
         // Create a wallet with 0 balance
-        const { data: newWallet, error: createError } = await supabase.rpc('query_raw', {
-          query: `INSERT INTO wallets (user_id, balance) VALUES ('${user.id}', 0) RETURNING *`
-        });
-            
-        if (createError) throw createError;
+        const { data: newWallet, error: createError } = await supabase
+          .from('wallets')
+          .insert({
+            user_id: user.id,
+            balance: 0
+          })
+          .select()
+          .single();
         
-        if (Array.isArray(newWallet) && newWallet.length > 0) {
-          setWallet(newWallet[0] as Wallet);
-        }
+        if (createError) throw createError;
+        setWallet(newWallet as Wallet);
       }
     } catch (error: any) {
       console.error("Error fetching wallet:", error);
@@ -60,22 +64,22 @@ export const useWallet = () => {
     try {
       if (!wallet) {
         await fetchWallet();
-        if (!wallet) return;
+        return; // Return early as fetchWallet will trigger this function again
       }
       
       setLoading(true);
       
-      const { data, error } = await supabase.rpc('query_raw', {
-        query: `SELECT * FROM transactions WHERE wallet_id = '${wallet.id}' ORDER BY created_at DESC`
-      });
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('wallet_id', wallet.id)
+        .order('created_at', { ascending: false });
       
       if (error) {
         throw error;
       }
       
-      if (Array.isArray(data)) {
-        setTransactions(data as Transaction[]);
-      }
+      setTransactions(data as Transaction[]);
     } catch (error: any) {
       console.error("Error fetching transactions:", error);
       toast({

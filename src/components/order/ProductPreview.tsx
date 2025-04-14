@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ProductDetails, InfluencerAddress } from "@/types/order";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Gift } from "lucide-react";
-import PaymentForm from "@/components/payment/PaymentForm";
+import { ShoppingCart, Gift, CheckCircle2, Wallet } from "lucide-react";
 
 interface ProductPreviewProps {
   productPreview: ProductDetails;
@@ -31,12 +30,26 @@ const ProductPreview = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (activeTab === "payment") {
+    if (activeTab === "message") {
       onSubmit(e);
     } else {
-      setActiveTab("payment");
+      setActiveTab("message");
     }
   };
+
+  if (paymentStep === 'complete') {
+    return (
+      <div className="bg-white p-6 shadow-md rounded-lg mt-8 max-w-md mx-auto">
+        <div className="flex flex-col items-center text-center">
+          <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
+          <h3 className="text-lg font-semibold">Request Submitted</h3>
+          <p className="text-sm text-gray-500 mt-2">
+            Your gift request has been submitted successfully. The influencer will be notified.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-8">
@@ -46,9 +59,9 @@ const ProductPreview = ({
             <ShoppingCart className="h-4 w-4 mr-2" />
             Product Details
           </TabsTrigger>
-          <TabsTrigger value="payment" disabled={isLoading}>
+          <TabsTrigger value="message" disabled={isLoading}>
             <Gift className="h-4 w-4 mr-2" />
-            Payment & Message
+            Gift Message
           </TabsTrigger>
         </TabsList>
 
@@ -88,8 +101,6 @@ const ProductPreview = ({
                   </div>
                 </div>
 
-                {/* Shipping address section removed to maintain privacy */}
-                
                 <div className="bg-gray-50 p-4 rounded-md mb-4">
                   <p className="text-gray-600 text-sm">
                     Your gift will be sent directly to the influencer's verified shipping address.
@@ -98,46 +109,66 @@ const ProductPreview = ({
                 </div>
 
                 <Button
-                  onClick={() => setActiveTab("payment")}
+                  onClick={() => setActiveTab("message")}
                   className="w-full mt-4"
                   disabled={isLoading}
                 >
-                  Proceed to Payment
+                  Next: Add a Message
                 </Button>
               </div>
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="payment" className="mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 shadow-md rounded-lg">
-              <h3 className="text-lg font-medium mb-4">Add a Personal Message</h3>
-              <Textarea
-                placeholder="Write a personal message to the influencer..."
-                value={message}
-                onChange={(e) => onMessageChange(e.target.value)}
-                rows={6}
-                className="mb-4"
-                disabled={isLoading}
-              />
+        <TabsContent value="message" className="mt-4">
+          <div className="bg-white p-6 shadow-md rounded-lg">
+            <h3 className="text-lg font-medium mb-4">Add a Personal Message</h3>
+            <Textarea
+              placeholder="Write a personal message to the influencer..."
+              value={message}
+              onChange={(e) => onMessageChange(e.target.value)}
+              rows={6}
+              className="mb-6"
+              disabled={isLoading}
+            />
+            
+            <div className="bg-gray-50 p-4 rounded-md mb-6">
+              <div className="flex items-center mb-4">
+                <Wallet className="h-5 w-5 mr-2 text-primary" />
+                <span className="font-semibold">Payment via Wallet</span>
+              </div>
+              
+              <div className="flex justify-between mb-2 text-sm">
+                <span>Subtotal</span>
+                <span>₹{productPreview.priceInr.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between mb-2 text-sm">
+                <span>Platform Fee</span>
+                <span>₹{productPreview.platformFee.toFixed(2)}</span>
+              </div>
+              <Separator className="my-2" />
+              <div className="flex justify-between font-semibold">
+                <span>Total Amount</span>
+                <span>₹{(productPreview.priceInr + productPreview.platformFee).toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 onClick={() => setActiveTab("product")}
                 variant="outline"
-                className="w-full"
+                className="w-full sm:w-1/2"
                 disabled={isLoading}
               >
                 Back to Product Details
               </Button>
-            </div>
-
-            <div>
-              <PaymentForm
-                productPreview={productPreview}
-                isProcessing={isLoading}
-                paymentStep={paymentStep}
-                onSubmit={handleSubmit}
-              />
+              <Button
+                onClick={handleSubmit}
+                className="w-full sm:w-1/2"
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : "Submit Gift Request"}
+              </Button>
             </div>
           </div>
         </TabsContent>

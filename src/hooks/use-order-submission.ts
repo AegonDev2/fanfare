@@ -54,24 +54,26 @@ export const useOrderSubmission = () => {
         throw new Error("You must be logged in to place an order");
       }
       
-      // Check wallet balance using raw query to bypass type issues
-      const { data: walletData, error: walletError } = await supabase.rpc('query_raw', {
-        query: `SELECT balance FROM wallets WHERE user_id = '${user.id}'`
-      });
+      // Check wallet balance
+      const { data: walletData, error: walletError } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
       
       if (walletError) {
         throw new Error("Failed to check wallet balance. Please try again.");
       }
       
       const totalAmount = productDetails.priceInr + productDetails.platformFee;
-      const walletBalance = Array.isArray(walletData) && walletData.length > 0 ? walletData[0].balance : 0;
       
       // If wallet doesn't exist or has insufficient balance
-      if (!walletData || walletData.length === 0 || walletBalance < totalAmount) {
+      if (!walletData || walletData.balance < totalAmount) {
+        const currentBalance = walletData ? walletData.balance : 0;
         setPaymentStep('initial');
         toast({
           title: "Insufficient wallet balance",
-          description: `Your order total is ₹${totalAmount.toFixed(2)} but your wallet balance is ₹${walletBalance.toFixed(2)}. Please top up your wallet.`,
+          description: `Your order total is ₹${totalAmount.toFixed(2)} but your wallet balance is ₹${currentBalance.toFixed(2)}. Please top up your wallet.`,
           variant: "destructive",
         });
         
@@ -83,7 +85,7 @@ export const useOrderSubmission = () => {
         return;
       }
       
-      // Create gift request instead of direct order
+      // Create gift request
       const { data: giftRequest, error: giftRequestError } = await supabase
         .from('gift_requests')
         .insert({

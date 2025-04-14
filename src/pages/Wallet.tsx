@@ -6,6 +6,7 @@ import { useWallet } from "@/hooks/use-wallet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Wallet as WalletIcon, CreditCard, Receipt, PlusCircle } from "lucide-react";
+import Header from "@/components/landing/Header";
 import WalletHeader from "@/components/wallet/WalletHeader";
 import TransactionHistory from "@/components/wallet/TransactionHistory";
 import TopUpWallet from "@/components/wallet/TopUpWallet";
@@ -45,8 +46,9 @@ const WalletPage = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-100 pt-20">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-100">
+      <Header />
+      <div className="container mx-auto px-4 py-8 pt-20">
         <div className="flex items-center mb-6">
           <WalletIcon className="w-8 h-8 mr-2 text-primary" />
           <h1 className="text-3xl font-bold">My Wallet</h1>
