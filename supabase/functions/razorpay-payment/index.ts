@@ -59,10 +59,10 @@ serve(async (req) => {
         // Amount in paisa (Razorpay uses smallest currency unit)
         const amountInPaisa = Math.round(amount * 100)
         
-        // Create receipt reference with timestamp - limit to 40 chars max
-        // Use only the first 8 chars of userId to keep receipt under 40 chars
-        const truncatedUserId = userId.substring(0, 8);
-        const receipt = `wallet_${truncatedUserId}_${Date.now()}`.substring(0, 40);
+        // Create a more unique receipt reference
+        // Use last 8 of userId + timestamp + random component
+        const uniqueComponent = Math.random().toString(36).substring(2, 10);
+        const receipt = `wallet_${userId.slice(-8)}_${Date.now()}_${uniqueComponent}`.substring(0, 40);
         
         // Create order in Razorpay
         const response = await fetch('https://api.razorpay.com/v1/orders', {
