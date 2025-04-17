@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ShoppingCart, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, Loader2, AlertCircle, CheckCircle2, RefreshCcw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ProductUrlInputProps {
@@ -77,7 +77,7 @@ const ProductUrlInput = ({
       return (
         <>
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Fetching...
+          Fetching Product...
         </>
       );
     }
@@ -96,12 +96,16 @@ const ProductUrlInput = ({
     let statusMessage = "Initializing...";
     let statusIcon = <Loader2 className="h-4 w-4 animate-spin" />;
     
-    if (fetchProgress < 30) {
+    if (fetchProgress < 20) {
       statusMessage = "Connecting to product page...";
+    } else if (fetchProgress < 40) {
+      statusMessage = "Loading product data...";
     } else if (fetchProgress < 60) {
       statusMessage = "Extracting product details...";
-    } else if (fetchProgress < 90) {
+    } else if (fetchProgress < 80) {
       statusMessage = "Processing information...";
+    } else if (fetchProgress < 95) {
+      statusMessage = "Almost there...";
     } else {
       statusMessage = "Finalizing...";
       statusIcon = <CheckCircle2 className="h-4 w-4 text-green-500" />;
@@ -114,6 +118,12 @@ const ProductUrlInput = ({
       </div>
     );
   };
+
+  const recommendations = [
+    "https://www.flipkart.com/fastrack-optimus-pro-1-43-amoled-display-aod-466x466-functional-crown-bt-calling-smartwatch/p/itma4744c9053b72?pid=SMWGV3ZY9YJYEYEC",
+    "https://www.flipkart.com/timex-automatic-black-dial-analog-watch-men/p/itm5d039dcaeb0c8?pid=WATGPGR7QCYTFHRG",
+    "https://www.flipkart.com/fossil-fs5905-machine-chronograph-analog-watch-men/p/itm149c14ed76e50"
+  ];
 
   return (
     <section className="mb-8">
@@ -146,15 +156,31 @@ const ProductUrlInput = ({
             )}
           </div>
           
-          <div className="mb-4">
+          <div className="mb-6">
             <Alert className="bg-blue-50 border-blue-200">
               <AlertDescription className="text-sm text-blue-700">
-                For best results, copy and paste complete product URLs from Amazon or Flipkart. 
-                Try this example: 
-                <br />
-                <span className="text-xs mt-1 font-mono break-all">
-                  https://www.flipkart.com/timex-automatic-black-dial-analog-watch-men/p/itm5d039dcaeb0c8?pid=WATGPGR7QCYTFHRG
-                </span>
+                <span className="font-bold">Tips for best results:</span>
+                <ul className="mt-1 ml-4 list-disc">
+                  <li>Use complete product URLs from Flipkart for best results</li>
+                  <li>Make sure the URL includes the product ID ("pid=" parameter)</li>
+                  <li>Try one of our example URLs for testing</li>
+                </ul>
+                <div className="mt-2">
+                  <p className="font-semibold text-xs">Recommended test URLs:</p>
+                  <div className="mt-1 flex flex-col gap-1">
+                    {recommendations.map((url, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleUrlChange(url)}
+                        className="text-xs px-2 py-1 bg-white hover:bg-blue-50 border border-blue-100 rounded truncate text-left"
+                        disabled={isFetchingProduct}
+                      >
+                        {url.length > 60 ? url.substring(0, 60) + '...' : url}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </AlertDescription>
             </Alert>
           </div>

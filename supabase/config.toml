@@ -13,3 +13,4 @@ project_id = "lovable"
 [functions.product-extraction]
   verify_jwt = false
   timeoutMs = 60000
+  importmap = "./importmap.json"

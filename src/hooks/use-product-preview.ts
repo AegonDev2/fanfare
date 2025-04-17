@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,13 +25,13 @@ export const useProductPreview = () => {
   const [retryCount, setRetryCount] = useState(0);
 
   // Reset all extraction state
-  const resetExtractionState = () => {
+  const resetExtractionState = useCallback(() => {
     setError(null);
     setRetryCount(prev => prev + 1);
-  };
+  }, []);
 
   // Function to handle product previewing from URL
-  const handlePreviewProduct = async (url: string) => {
+  const handlePreviewProduct = useCallback(async (url: string) => {
     if (!url) {
       toast({
         title: "URL Required",
@@ -73,11 +74,11 @@ export const useProductPreview = () => {
       // Simulate progress updates with more granular steps
       const progressInterval = setInterval(() => {
         setFetchProgress(prev => {
-          const increment = Math.floor(Math.random() * 5) + 3; // Smaller increments for smoother progress
+          const increment = Math.floor(Math.random() * 5) + 2; // Smaller increments for smoother progress
           const newValue = Math.min(prev + increment, 85);
           return newValue >= 85 ? 85 : newValue; // Cap at 85% until actual completion
         });
-      }, 500);
+      }, 800);
 
       console.log("Calling product extraction service with URL:", url);
       
@@ -90,19 +91,40 @@ export const useProductPreview = () => {
       const simplifiedUrl = simplifyUrl(url);
       console.log("Simplified URL for extraction:", simplifiedUrl);
       
-      // Call Supabase function to extract product data
-      const { data, error: functionError } = await supabase.functions.invoke("product-extraction", {
-        body: { 
-          url: simplifiedUrl || url, 
-          platform, 
-          retryCount,
-          timestamp: new Date().getTime() // Prevent caching
-        },
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+      // Call Supabase function to extract product data with retry mechanism
+      const maxRetries = 1;
+      let attemptCount = 0;
+      let success = false;
+      let data = null;
+      let functionError = null;
+      
+      while (!success && attemptCount <= maxRetries) {
+        try {
+          attemptCount++;
+          console.log(`Attempt ${attemptCount} to extract product data...`);
+          
+          const response = await supabase.functions.invoke("product-extraction", {
+            body: { 
+              url: simplifiedUrl || url, 
+              platform, 
+              retryCount,
+              timestamp: new Date().getTime() // Prevent caching
+            },
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          
+          functionError = response.error;
+          data = response.data;
+          success = !functionError && data?.productData;
+          
+        } catch (retryError) {
+          console.error(`Attempt ${attemptCount} failed:`, retryError);
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
         }
-      });
+      }
 
       clearInterval(progressInterval);
       setFetchProgress(95);
@@ -157,26 +179,26 @@ export const useProductPreview = () => {
       if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
         toast({
           title: "Network Error",
-          description: "Could not connect to extraction service. Please try again later.",
+          description: "Could not connect to extraction service. Please check your internet connection and try again.",
           variant: "destructive",
         });
       } else if (errorMessage.includes("timeout")) {
         toast({
           title: "Extraction Timeout",
-          description: "The extraction process took too long. Try a different product URL.",
+          description: "The extraction process took too long. Please try a different product URL.",
           variant: "destructive",
         });
       } else {
         toast({
           title: "Error Fetching Product",
-          description: "Could not extract product details. Please try a Flipkart product link instead of Amazon.",
+          description: "Could not extract product details. Please try a different product URL or try again later.",
           variant: "destructive",
         });
       }
     } finally {
       setIsFetchingProduct(false);
     }
-  };
+  }, [toast, retryCount]);
 
   // Helper function to detect platform from URL
   const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
