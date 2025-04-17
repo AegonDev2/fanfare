@@ -1,7 +1,7 @@
 
 // Follow ES module imports
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38-alpha.2/deno-dom-wasm.ts";
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.36/deno-dom-wasm.ts";
 
 // CORS headers for browser requests
 const corsHeaders = {
