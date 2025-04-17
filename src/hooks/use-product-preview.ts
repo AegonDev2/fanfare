@@ -83,7 +83,7 @@ export const useProductPreview = () => {
       }, 500);
 
       // Call Supabase function to extract product data
-      const { data, error } = await supabase.functions.invoke("axiom-product-extraction", {
+      const { data, error } = await supabase.functions.invoke("product-extraction", {
         body: { url, platform, retryCount }
       });
 

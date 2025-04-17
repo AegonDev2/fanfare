@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,14 +85,14 @@ export const WebAutomation = ({ onProductExtracted }: WebAutomationProps) => {
     setProductData(null);
     
     try {
-      console.log("Calling Axiom AI extraction service with URL:", submittedUrl);
+      console.log("Calling product extraction service with URL:", submittedUrl);
       
       toast({
         title: "Starting Extraction",
-        description: "Using Axiom AI to extract product details. This may take up to 20 seconds...",
+        description: "Extracting product details. This may take up to 20 seconds...",
       });
       
-      const { data, error } = await supabase.functions.invoke("axiom-product-extraction", {
+      const { data, error } = await supabase.functions.invoke("product-extraction", {
         body: { url: submittedUrl, retryCount, platform },
       });
 
@@ -167,7 +168,7 @@ export const WebAutomation = ({ onProductExtracted }: WebAutomationProps) => {
   const getStatusMessage = () => {
     if (!isLoading) return "";
     
-    if (extractionProgress <= 10) return "Connecting to Axiom AI...";
+    if (extractionProgress <= 10) return "Connecting to extraction service...";
     if (extractionProgress <= 30) return "Analyzing product URL...";
     if (extractionProgress <= 50) return "Extracting product details...";
     if (extractionProgress <= 70) return "Processing data...";
@@ -183,9 +184,9 @@ export const WebAutomation = ({ onProductExtracted }: WebAutomationProps) => {
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>Product Extraction with Axiom AI</CardTitle>
+        <CardTitle>Product Extraction</CardTitle>
         <CardDescription>
-          Extract product details using our advanced AI service
+          Extract product details from e-commerce websites
         </CardDescription>
       </CardHeader>
       <CardContent>

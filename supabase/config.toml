@@ -10,5 +10,5 @@ project_id = "lovable"
 [functions]
   serve_port = 54323
 
-[functions.axiom-product-extraction]
+[functions.product-extraction]
   verify_jwt = true
