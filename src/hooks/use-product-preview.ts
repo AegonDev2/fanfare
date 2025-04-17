@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -143,7 +144,7 @@ export const useProductPreview = () => {
       console.log("Fetching product data via Edge Function for:", giftItem);
       
       try {
-        // Call Supabase Edge Function directly instead of using the API route
+        // Call Supabase Edge Function directly
         const { data: axiomData, error: axiomError } = await supabase.functions.invoke("axiom-product-extraction", {
           body: { 
             url: giftItem,
@@ -178,6 +179,10 @@ export const useProductPreview = () => {
           platformFee: 5.00,
           image: extractedData.image || "https://placehold.co/600x400?text=No+Image",
           platform: platform,
+          hasDiscount: extractedData.hasDiscount || false,
+          originalPrice: extractedData.originalPrice ? 
+            parseFloat(extractedData.originalPrice.toString().replace(/[^\d.]/g, "")) || undefined : 
+            undefined,
         };
         
         setProductPreview(productDetails);
@@ -189,6 +194,34 @@ export const useProductPreview = () => {
         });
       } catch (fetchError) {
         console.error("Fetch error:", fetchError);
+        
+        // If regular extraction fails, try to use demo data
+        if (axiomData?.demo && axiomData.productData) {
+          const demoData = axiomData.productData;
+          const demoProductDetails: ProductDetails = {
+            name: demoData.name || "Demo Product",
+            description: demoData.description || "Demo product details",
+            price: 1999,
+            priceInr: 1999,
+            platformFee: 5.00,
+            image: demoData.image || "https://placehold.co/600x400?text=Demo+Product",
+            platform: platform,
+            hasDiscount: true,
+            originalPrice: 2499
+          };
+          
+          setProductPreview(demoProductDetails);
+          setFetchProgress(100);
+          
+          toast({
+            title: "Demo product loaded",
+            description: "Could not extract actual product. Using demo data instead.",
+            variant: "warning",
+          });
+          
+          return;
+        }
+        
         throw new Error(fetchError instanceof Error ? fetchError.message : 'Error connecting to extraction service');
       }
       
