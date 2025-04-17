@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -91,18 +92,48 @@ export const useProductPreview = () => {
       console.log("Simplified URL for extraction:", simplifiedUrl);
       
       // Call Supabase function to extract product data
-      const { data, error: functionError } = await supabase.functions.invoke("buildship-extraction", {
-        body: { 
-          url: simplifiedUrl || url, 
-          platform,
-          retryCount,
-          timestamp: new Date().getTime() // Prevent caching
-        },
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+      // Try with fallback logic - if buildship-extraction fails, try product-extraction as fallback
+      let data, functionError;
+      try {
+        console.log("Trying buildship-extraction endpoint first...");
+        const response = await supabase.functions.invoke("buildship-extraction", {
+          body: { 
+            url: simplifiedUrl || url, 
+            platform,
+            retryCount,
+            timestamp: new Date().getTime() // Prevent caching
+          },
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        data = response.data;
+        functionError = response.error;
+      } catch (primaryError) {
+        console.error("Primary extraction endpoint failed:", primaryError);
+        // Try fallback endpoint
+        try {
+          console.log("Trying fallback product-extraction endpoint...");
+          const fallbackResponse = await supabase.functions.invoke("product-extraction", {
+            body: { 
+              url: simplifiedUrl || url, 
+              platform,
+              retryCount,
+              timestamp: new Date().getTime()
+            },
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          data = fallbackResponse.data;
+          functionError = fallbackResponse.error;
+        } catch (fallbackError) {
+          console.error("Fallback extraction also failed:", fallbackError);
+          throw new Error("All product extraction methods failed");
         }
-      });
+      }
 
       clearInterval(progressInterval);
       setFetchProgress(95);
