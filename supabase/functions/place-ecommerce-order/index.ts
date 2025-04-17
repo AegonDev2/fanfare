@@ -1,6 +1,6 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.36/deno-dom-wasm.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -87,14 +87,13 @@ serve(async (req) => {
     const productResponse = await fetch(productUrl, { headers })
     const productHtml = await productResponse.text()
     
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(productHtml, 'text/html')
-    if (!doc) {
-      throw new Error('Failed to parse product page')
-    }
-
-    // Extract product ID from URL or page content
-    const productId = new URL(productUrl).pathname.split('/').pop()
+    // Extract product ID using regex instead of DOM parser
+    const productIdMatch = productHtml.match(/productId['"]\s*:\s*['"]([^'"]+)['"]/i) || 
+                         productUrl.match(/\/([A-Za-z0-9]+)(?:\?|\/$|$)/) ||
+                         [];
+    
+    const productId = productIdMatch[1] || new URL(productUrl).pathname.split('/').pop();
+    
     if (!productId) {
       throw new Error('Could not extract product ID')
     }
