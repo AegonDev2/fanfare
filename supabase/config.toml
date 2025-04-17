@@ -13,3 +13,5 @@ project_id = "lovable"
 [functions.product-extraction]
   verify_jwt = false
 
+[functions.place-ecommerce-order]
+  verify_jwt = false

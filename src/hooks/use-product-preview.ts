@@ -80,9 +80,14 @@ export const useProductPreview = () => {
           }
           return prev + 5;
         });
-      }, 500);
+      }, 1000); // Longer intervals because Puppeteer extraction takes more time
 
       console.log("Calling product extraction service with URL:", url);
+      
+      toast({
+        title: "Starting Extraction",
+        description: "Extracting product details. This may take up to 30 seconds with Puppeteer...",
+      });
       
       // Call Supabase function to extract product data
       const { data, error } = await supabase.functions.invoke("product-extraction", {
@@ -126,7 +131,7 @@ export const useProductPreview = () => {
         
         toast({
           title: "Product Retrieved",
-          description: "Product details have been fetched successfully"
+          description: "Product details have been fetched successfully using Puppeteer"
         });
       } else {
         throw new Error("Failed to extract product name");
