@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -74,13 +73,13 @@ export const useProductPreview = () => {
       // Simulate progress updates with more granular steps
       const progressInterval = setInterval(() => {
         setFetchProgress(prev => {
-          const increment = Math.floor(Math.random() * 5) + 2; // Smaller increments for smoother progress
+          const increment = Math.floor(Math.random() * 5) + 2;
           const newValue = Math.min(prev + increment, 85);
-          return newValue >= 85 ? 85 : newValue; // Cap at 85% until actual completion
+          return newValue >= 85 ? 85 : newValue;
         });
       }, 800);
 
-      console.log("Calling product extraction service with URL:", url);
+      console.log("Calling buildship extraction service with URL:", url);
       
       toast({
         title: "Starting Extraction",
@@ -91,40 +90,19 @@ export const useProductPreview = () => {
       const simplifiedUrl = simplifyUrl(url);
       console.log("Simplified URL for extraction:", simplifiedUrl);
       
-      // Call Supabase function to extract product data with retry mechanism
-      const maxRetries = 1;
-      let attemptCount = 0;
-      let success = false;
-      let data = null;
-      let functionError = null;
-      
-      while (!success && attemptCount <= maxRetries) {
-        try {
-          attemptCount++;
-          console.log(`Attempt ${attemptCount} to extract product data...`);
-          
-          const response = await supabase.functions.invoke("product-extraction", {
-            body: { 
-              url: simplifiedUrl || url, 
-              platform, 
-              retryCount,
-              timestamp: new Date().getTime() // Prevent caching
-            },
-            headers: {
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            }
-          });
-          
-          functionError = response.error;
-          data = response.data;
-          success = !functionError && data?.productData;
-          
-        } catch (retryError) {
-          console.error(`Attempt ${attemptCount} failed:`, retryError);
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+      // Call Supabase function to extract product data
+      const { data, error: functionError } = await supabase.functions.invoke("buildship-extraction", {
+        body: { 
+          url: simplifiedUrl || url, 
+          platform,
+          retryCount,
+          timestamp: new Date().getTime() // Prevent caching
+        },
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
-      }
+      });
 
       clearInterval(progressInterval);
       setFetchProgress(95);
@@ -175,7 +153,6 @@ export const useProductPreview = () => {
       
       setError(errorMessage);
       
-      // More specific error messages for the user
       if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
         toast({
           title: "Network Error",
