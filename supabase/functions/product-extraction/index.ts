@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as cheerio from "https://esm.sh/cheerio@1.0.0-rc.12";
 
@@ -40,20 +41,36 @@ serve(async (req) => {
       );
     }
 
-    // Fetch the product page
+    // Fetch the product page with enhanced user agent rotation and headers
+    console.log(`Attempting to fetch ${detectedPlatform} product page...`);
+    
+    // Use a more sophisticated user agent that appears more like a real browser
+    const userAgents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36'
+    ];
+    
+    const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+    
+    // Enhanced headers to appear more like a regular browser
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'User-Agent': randomUserAgent,
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache',
         'Sec-Fetch-Dest': 'document',
         'Sec-Fetch-Mode': 'navigate',
         'Sec-Fetch-Site': 'none',
         'Sec-Fetch-User': '?1',
-        'Upgrade-Insecure-Requests': '1'
-      }
+        'Upgrade-Insecure-Requests': '1',
+        'DNT': '1'
+      },
+      redirect: 'follow'
     });
 
     if (!response.ok) {
@@ -64,7 +81,7 @@ serve(async (req) => {
     const html = await response.text();
     const $ = cheerio.load(html);
     
-    console.log(`Loaded HTML of length: ${html.length} characters`);
+    console.log(`Successfully loaded HTML of length: ${html.length} characters`);
     
     let productData;
     if (detectedPlatform === 'amazon') {
@@ -109,22 +126,73 @@ function extractAmazonProduct($: cheerio.CheerioAPI, html: string) {
     
     // Product name using existing selector
     let name = $('#productTitle').text().trim();
+    if (!name) {
+      console.log("Could not find product name with primary selector, trying alternatives");
+      name = $('#title').text().trim();
+      
+      if (!name) {
+        const metaTitle = $('meta[name="title"]').attr('content');
+        if (metaTitle) {
+          name = metaTitle.replace(/Amazon\.in:.*?:/, '').trim();
+        }
+      }
+      
+      if (!name) {
+        name = $('title').text().replace(/: Amazon\.in:.*$/, '').trim();
+      }
+    }
+    console.log("Extracted name:", name || "Not found");
     
     // Price using the specific selector you requested
     let price = $('span.a-price-whole').first().text();
+    if (!price) {
+      console.log("Could not find price with primary selector, trying alternatives");
+      price = $('#priceblock_ourprice').text().trim();
+      if (!price) price = $('#priceblock_dealprice').text().trim();
+      if (!price) price = $('.a-price .a-offscreen').first().text().trim();
+    }
     
     // Remove non-numeric characters and trim
     price = price.replace(/[^\d.,]/g, '').trim();
+    console.log("Extracted price:", price || "Not found");
     
-    // Image extraction remains the same
-    let image = $('#landingImage').attr('src') || 
-                $('#imgBlkFront').attr('src') ||
-                $('.a-dynamic-image').attr('src');
+    // Image extraction with enhanced fallbacks
+    let image = $('#landingImage').attr('src');
+    if (!image) image = $('#imgBlkFront').attr('src');
+    if (!image) image = $('.a-dynamic-image').attr('src');
+    if (!image) {
+      // Try to find images in JSON data embedded in scripts
+      const scripts = $('script').map((i, el) => $(el).html()).get();
+      for (const script of scripts) {
+        if (script && script.includes('imageGalleryData')) {
+          const match = script.match(/"large":"(https:\/\/[^"]+)"/);
+          if (match && match[1]) {
+            image = match[1];
+            break;
+          }
+        }
+      }
+    }
+    console.log("Extracted image URL:", image || "Not found");
     
-    // Description using the specific selector you requested
+    // Description using the specific selector you requested and fallback
     let description = $('#productTitle').text().trim();
-    
-    console.log("Extracted product details:", { name, price, description });
+    // If you prefer to get more detailed description, uncomment this:
+    /*
+    if (!description || description.length < 30) {
+      const bullets = [];
+      $('#feature-bullets li span').each((i, el) => {
+        bullets.push($(el).text().trim());
+      });
+      
+      if (bullets.length > 0) {
+        description = bullets.join('\n');
+      } else {
+        description = $('#productDescription').text().trim();
+      }
+    }
+    */
+    console.log("Extracted description:", description ? "Yes" : "No");
 
     return {
       name,

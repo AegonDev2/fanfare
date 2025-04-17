@@ -74,11 +74,9 @@ export const useProductPreview = () => {
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setFetchProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + 10;
+          const increment = Math.floor(Math.random() * 10) + 5; // Random increment between 5-15
+          const newValue = Math.min(prev + increment, 85);
+          return newValue >= 85 ? 85 : newValue; // Cap at 85% until actual completion
         });
       }, 800);
 
@@ -91,7 +89,16 @@ export const useProductPreview = () => {
       
       // Call Supabase function to extract product data
       const { data, error: functionError } = await supabase.functions.invoke("product-extraction", {
-        body: { url, platform, retryCount }
+        body: { 
+          url, 
+          platform, 
+          retryCount,
+          timestamp: new Date().getTime() // Prevent caching
+        },
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
 
       clearInterval(progressInterval);
@@ -145,7 +152,7 @@ export const useProductPreview = () => {
       
       toast({
         title: "Error Fetching Product",
-        description: errorMessage,
+        description: "Could not extract product details. This could be due to Amazon's anti-scraping measures. Please try a Flipkart product link instead.",
         variant: "destructive",
       });
     } finally {
