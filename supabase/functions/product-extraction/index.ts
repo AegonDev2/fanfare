@@ -42,7 +42,11 @@ serve(async (req) => {
     }
 
     console.log('Fetching page with ScrapingBee...');
-    const response = await fetch(scrapingBeeUrl.toString());
+    const response = await fetch(scrapingBeeUrl.toString(), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
     
     if (!response.ok) {
       throw new Error(`ScrapingBee request failed: ${response.status} ${response.statusText}`);
@@ -96,19 +100,25 @@ serve(async (req) => {
 function extractAmazonProduct($: cheerio.CheerioAPI) {
   console.log("Extracting Amazon product data");
   
-  // Product name
+  // Product name - try multiple selectors
   let name = $('#productTitle').text().trim();
   if (!name) {
-    name = $('h1 span').text().trim();
+    name = $('h1 span.a-size-large').text().trim();
+  }
+  if (!name) {
+    name = $('h1').text().trim();
   }
   
   // Price - handle multiple price formats
   let price = '';
-  const priceElement = $('.a-price-whole').first();
-  if (priceElement.length) {
-    price = priceElement.text().trim();
+  const priceWhole = $('.a-price-whole').first().text().trim();
+  const priceFraction = $('.a-price-fraction').first().text().trim();
+  
+  if (priceWhole) {
+    price = priceWhole + (priceFraction ? '.' + priceFraction : '');
   } else {
-    const altPriceElement = $('#priceblock_ourprice, #priceblock_dealprice, .a-price .a-offscreen').first();
+    // Try alternative price selectors
+    const altPriceElement = $('#priceblock_ourprice, #priceblock_dealprice, .a-price .a-offscreen, #price').first();
     price = altPriceElement.text().trim();
   }
   
@@ -116,22 +126,25 @@ function extractAmazonProduct($: cheerio.CheerioAPI) {
   let description = '';
   const bulletPoints: string[] = [];
   $('#feature-bullets li').each((_, el) => {
-    bulletPoints.push($(el).text().trim());
+    const text = $(el).text().trim();
+    if (text) bulletPoints.push(text);
   });
-  description = bulletPoints.join('\n');
   
-  if (!description) {
-    description = $('#productDescription').text().trim();
+  if (bulletPoints.length > 0) {
+    description = bulletPoints.join('\n');
+  } else {
+    description = $('#productDescription p').text().trim() || 
+                 $('.a-expander-content').text().trim() || 
+                 $('meta[name="description"]').attr('content') || 
+                 'No description available';
   }
   
-  // Image URL
+  // Image URL - try multiple selectors
   let image = $('#landingImage').attr('src');
-  if (!image) {
-    image = $('.a-dynamic-image').attr('src');
-  }
-  if (!image) {
-    image = $('meta[property="og:image"]').attr('content');
-  }
+  if (!image) image = $('.a-dynamic-image').attr('src');
+  if (!image) image = $('img#main-image').attr('src');
+  if (!image) image = $('meta[property="og:image"]').attr('content');
+  if (!image) image = $('img.a-dynamic-image').first().attr('src');
 
   return {
     name,
@@ -145,41 +158,53 @@ function extractAmazonProduct($: cheerio.CheerioAPI) {
 function extractFlipkartProduct($: cheerio.CheerioAPI) {
   console.log("Extracting Flipkart product data");
   
-  // Product name
+  // Product name - try multiple selectors
   let name = $('.B_NuCI').text().trim();
   if (!name) {
     name = $('h1 span').text().trim();
   }
+  if (!name) {
+    name = $('h1').text().trim();
+  }
   
-  // Price
+  // Price - try multiple selectors
   let price = $('._30jeq3._16Jk6d').text().trim();
   if (!price) {
     price = $('._30jeq3').text().trim();
+  }
+  if (!price) {
+    price = $('div._16Jk6d').text().trim();
   }
   
   // Remove currency symbol and convert to number
   price = price.replace(/^₹/, '').trim();
   
-  // Description
+  // Description - try multiple approaches
   let description = '';
   const specs: string[] = [];
+  
+  // Try feature bullet points first
   $('._2418kt li, ._1AN87F').each((_, el) => {
-    specs.push($(el).text().trim());
+    const text = $(el).text().trim();
+    if (text) specs.push(text);
   });
-  description = specs.join('\n');
   
-  if (!description) {
-    description = $('._1mXcCf').text().trim();
+  // If no bullet points, try other description elements
+  if (specs.length > 0) {
+    description = specs.join('\n');
+  } else {
+    description = $('._1mXcCf, .RmoJUa').text().trim() || 
+                 $('div._1AN87F').text().trim() ||
+                 $('meta[name="description"]').attr('content') || 
+                 'No description available';
   }
   
-  // Image URL
+  // Image URL - try multiple selectors
   let image = $('img._396cs4._2amPTt._3qGmMb').attr('src');
-  if (!image) {
-    image = $('._396cs4').attr('src');
-  }
-  if (!image) {
-    image = $('meta[property="og:image"]').attr('content');
-  }
+  if (!image) image = $('._396cs4').attr('src');
+  if (!image) image = $('img._396cs4').attr('src');
+  if (!image) image = $('meta[property="og:image"]').attr('content');
+  if (!image) image = $('div._3kidJX img').attr('src');
 
   return {
     name,
