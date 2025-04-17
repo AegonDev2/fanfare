@@ -16,22 +16,29 @@ serve(async (req) => {
 
   try {
     console.log("Received product extraction request");
-    const { url, platform } = await req.json();
+    const { url, platform, retryCount } = await req.json();
     
     if (!url) {
       throw new Error("URL is required");
     }
 
-    console.log(`Extracting data from ${platform || 'unknown'} URL: ${url}`);
+    console.log(`Extracting data from ${platform || 'unknown'} URL: ${url}, retry attempt: ${retryCount || 0}`);
 
     // Call Buildship endpoint
     const buildshipUrl = 'https://jspn8s.buildship.run/untitledFlow-c234cebe00fd';
+    console.log(`Calling Buildship endpoint: ${buildshipUrl}`);
+    
     const response = await fetch(buildshipUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       },
-      body: JSON.stringify({ url })
+      body: JSON.stringify({ 
+        url,
+        timestamp: new Date().getTime() // Prevent caching issues
+      })
     });
 
     if (!response.ok) {
@@ -47,7 +54,7 @@ serve(async (req) => {
     // Transform the data into our expected format
     const productData = {
       name: extractedData.title || "Product Name Not Found",
-      price: extractedData.price?.replace(/[^0-9.]/g, '') || "0",
+      price: extractedData.price || "0",
       description: extractedData.description || "No description available",
       image: extractedData.image || "",
       platform: platform || 'unknown'

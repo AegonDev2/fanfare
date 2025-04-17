@@ -12,5 +12,6 @@ project_id = "lovable"
   
 [functions.product-extraction]
   verify_jwt = false
-  timeoutMs = 30000
+  timeoutMs = 60000
   importmap = "./importmap.json"
+  cors = true
