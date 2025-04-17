@@ -82,6 +82,8 @@ export const useProductPreview = () => {
         });
       }, 500);
 
+      console.log("Calling product extraction service with URL:", url);
+      
       // Call Supabase function to extract product data
       const { data, error } = await supabase.functions.invoke("product-extraction", {
         body: { url, platform, retryCount }
@@ -90,12 +92,15 @@ export const useProductPreview = () => {
       clearInterval(progressInterval);
 
       if (error) {
+        console.error("Error invoking function:", error);
         throw new Error(error.message || "Failed to extract product details");
       }
 
       if (!data?.productData) {
         throw new Error("No product data returned");
       }
+
+      console.log("Extraction result:", data);
 
       // Extract product data
       const extractedProduct = data.productData as ExtractedProduct;

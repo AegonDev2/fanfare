@@ -11,4 +11,5 @@ project_id = "lovable"
   serve_port = 54323
 
 [functions.product-extraction]
-  verify_jwt = true
+  verify_jwt = false
+
