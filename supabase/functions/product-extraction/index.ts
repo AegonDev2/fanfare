@@ -20,7 +20,6 @@ serve(async (req) => {
     console.log("Processing extraction request");
     const { url, platform } = await req.json();
     
-    // Validate inputs
     if (!url) {
       return new Response(
         JSON.stringify({ success: false, error: "URL is required" }),
@@ -28,20 +27,17 @@ serve(async (req) => {
       );
     }
 
-    // Validate platform
-    if (!['amazon', 'flipkart'].includes(platform)) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Unsupported platform" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
-
-    console.log(`Extracting data from ${platform} URL: ${url} using Puppeteer`);
+    console.log(`Extracting data from ${platform} URL: ${url}`);
     
-    // Launch browser
-    console.log("Launching browser");
+    // Launch browser with specific configuration for Deno/Supabase environment
     const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-software-rasterizer'
+      ]
     });
     
     try {
@@ -55,13 +51,10 @@ serve(async (req) => {
       console.log(`Navigating to: ${url}`);
       await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
       
-      console.log("Page loaded, extracting data");
-      
-      // Extract product data based on platform
       let productData;
-      if (platform === 'amazon') {
+      if (url.includes('amazon')) {
         productData = await extractAmazonProduct(page);
-      } else if (platform === 'flipkart') {
+      } else if (url.includes('flipkart')) {
         productData = await extractFlipkartProduct(page);
       }
       
@@ -72,13 +65,11 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } finally {
-      // Make sure to close the browser
       await browser.close();
       console.log("Browser closed");
     }
   } catch (error) {
     console.error("Error in product extraction:", error);
-    
     return new Response(
       JSON.stringify({ 
         success: false, 
@@ -93,60 +84,37 @@ async function extractAmazonProduct(page) {
   try {
     console.log("Extracting Amazon product data");
     
-    // Wait for critical elements to load
-    await Promise.race([
-      page.waitForSelector('#productTitle', { timeout: 10000 }),
-      page.waitForSelector('.a-price-whole', { timeout: 10000 })
-    ]).catch(() => console.log("Some elements didn't load, continuing anyway"));
+    // Wait for price element
+    const priceSelector = 'span.a-price-whole';
+    await page.waitForSelector(priceSelector, { timeout: 20000 });
+    const price = await page.$eval(priceSelector, el => el.innerText);
     
-    // Extract product name
-    const name = await page.evaluate(() => {
-      const nameElement = document.querySelector('#productTitle');
-      return nameElement ? nameElement.textContent.trim() : null;
-    });
-    
-    // Extract price
-    const price = await page.evaluate(() => {
-      const priceElement = document.querySelector('.a-price-whole') || 
-                          document.querySelector('#priceblock_ourprice') ||
-                          document.querySelector('.a-price .a-offscreen');
-      return priceElement ? priceElement.textContent.trim() : null;
-    });
+    // Wait for title element
+    const titleSelector = '#productTitle';
+    await page.waitForSelector(titleSelector, { timeout: 20000 });
+    const name = await page.$eval(titleSelector, el => el.innerText.trim());
     
     // Extract image
-    const image = await page.evaluate(() => {
-      const imgElement = document.querySelector('#landingImage') || 
-                         document.querySelector('#imgBlkFront') || 
-                         document.querySelector('.a-dynamic-image');
-      return imgElement ? imgElement.getAttribute('src') : null;
-    });
+    const imageSelector = '#landingImage';
+    await page.waitForSelector(imageSelector, { timeout: 20000 });
+    const image = await page.$eval(imageSelector, el => el.getAttribute('src'));
     
-    // Extract description
+    // Extract description from feature bullets
     const description = await page.evaluate(() => {
-      let desc = '';
-      const featureBullets = document.querySelector('#feature-bullets');
-      if (featureBullets) {
-        const bulletPoints = featureBullets.querySelectorAll('li');
-        bulletPoints.forEach(bullet => {
-          if (bullet.textContent) {
-            desc += '• ' + bullet.textContent.trim() + '\n';
-          }
-        });
-      }
-      
-      if (!desc) {
-        const productDesc = document.querySelector('#productDescription');
-        if (productDesc) {
-          desc = productDesc.textContent.trim();
-        }
-      }
-      return desc || 'No description available';
+      const bullets = Array.from(document.querySelectorAll('#feature-bullets li span')).map(el => el.textContent.trim());
+      return bullets.join('\n');
     });
-    
-    return { name, price, image, description, platform: 'amazon' };
+
+    return { 
+      name, 
+      price, 
+      image, 
+      description: description || 'No description available',
+      platform: 'amazon'
+    };
   } catch (error) {
     console.error("Error extracting Amazon product:", error);
-    return { name: "Error extracting product information", price: null, image: null, description: "Failed to extract product details", platform: 'amazon' };
+    throw error;
   }
 }
 
@@ -154,57 +122,36 @@ async function extractFlipkartProduct(page) {
   try {
     console.log("Extracting Flipkart product data");
     
-    // Wait for critical elements to load
-    await Promise.race([
-      page.waitForSelector('.B_NuCI', { timeout: 10000 }),
-      page.waitForSelector('._30jeq3', { timeout: 10000 })
-    ]).catch(() => console.log("Some elements didn't load, continuing anyway"));
+    // Wait for price element
+    const priceSelector = '._30jeq3';
+    await page.waitForSelector(priceSelector, { timeout: 20000 });
+    const price = await page.$eval(priceSelector, el => el.innerText.replace('₹', '').trim());
     
-    // Extract product name
-    const name = await page.evaluate(() => {
-      const nameElement = document.querySelector('.B_NuCI');
-      return nameElement ? nameElement.textContent.trim() : null;
-    });
-    
-    // Extract price
-    const price = await page.evaluate(() => {
-      const priceElement = document.querySelector('._30jeq3');
-      return priceElement ? priceElement.textContent.trim() : null;
-    });
+    // Wait for title element
+    const titleSelector = '.B_NuCI';
+    await page.waitForSelector(titleSelector, { timeout: 20000 });
+    const name = await page.$eval(titleSelector, el => el.innerText.trim());
     
     // Extract image
-    const image = await page.evaluate(() => {
-      const imgElement = document.querySelector('._396cs4') || document.querySelector('._2r_T1I');
-      return imgElement ? imgElement.getAttribute('src') : null;
-    });
+    const imageSelector = '._396cs4';
+    await page.waitForSelector(imageSelector, { timeout: 20000 });
+    const image = await page.$eval(imageSelector, el => el.getAttribute('src'));
     
     // Extract description
     const description = await page.evaluate(() => {
-      let desc = '';
-      const specTable = document.querySelector('._14cfVK');
-      if (specTable) {
-        const rows = specTable.querySelectorAll('._1s_Smc');
-        rows.forEach(row => {
-          const label = row.querySelector('._1hKmbr')?.textContent?.trim();
-          const value = row.querySelector('._21lJbe')?.textContent?.trim();
-          if (label && value) {
-            desc += label + ': ' + value + '\n';
-          }
-        });
-      }
-      
-      if (!desc) {
-        const descElement = document.querySelector('._1mXcCf');
-        if (descElement) {
-          desc = descElement.textContent?.trim() || '';
-        }
-      }
-      return desc || 'No description available';
+      const specs = Array.from(document.querySelectorAll('._2418kt li')).map(el => el.textContent.trim());
+      return specs.join('\n');
     });
-    
-    return { name, price, image, description, platform: 'flipkart' };
+
+    return { 
+      name, 
+      price, 
+      image, 
+      description: description || 'No description available',
+      platform: 'flipkart'
+    };
   } catch (error) {
     console.error("Error extracting Flipkart product:", error);
-    return { name: "Error extracting product information", price: null, image: null, description: "Failed to extract product details", platform: 'flipkart' };
+    throw error;
   }
 }
