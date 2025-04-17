@@ -12,4 +12,5 @@ project_id = "lovable"
   
 [functions.product-extraction]
   verify_jwt = false
-  timeoutMs = 25000
+  timeoutMs = 60000
+

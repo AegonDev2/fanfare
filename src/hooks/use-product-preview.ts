@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -71,26 +70,30 @@ export const useProductPreview = () => {
     setError(null);
 
     try {
-      // Simulate progress updates
+      // Simulate progress updates with more granular steps
       const progressInterval = setInterval(() => {
         setFetchProgress(prev => {
-          const increment = Math.floor(Math.random() * 10) + 5; // Random increment between 5-15
+          const increment = Math.floor(Math.random() * 5) + 3; // Smaller increments for smoother progress
           const newValue = Math.min(prev + increment, 85);
           return newValue >= 85 ? 85 : newValue; // Cap at 85% until actual completion
         });
-      }, 800);
+      }, 500);
 
       console.log("Calling product extraction service with URL:", url);
       
       toast({
         title: "Starting Extraction",
-        description: "Extracting product details. This may take a few seconds...",
+        description: "Extracting product details. This may take up to 30 seconds...",
       });
+      
+      // Add a simplified URL version to potentially improve scraping success
+      const simplifiedUrl = simplifyUrl(url);
+      console.log("Simplified URL for extraction:", simplifiedUrl);
       
       // Call Supabase function to extract product data
       const { data, error: functionError } = await supabase.functions.invoke("product-extraction", {
         body: { 
-          url, 
+          url: simplifiedUrl || url, 
           platform, 
           retryCount,
           timestamp: new Date().getTime() // Prevent caching
@@ -150,11 +153,26 @@ export const useProductPreview = () => {
       
       setError(errorMessage);
       
-      toast({
-        title: "Error Fetching Product",
-        description: "Could not extract product details. This could be due to Amazon's anti-scraping measures. Please try a Flipkart product link instead.",
-        variant: "destructive",
-      });
+      // More specific error messages for the user
+      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
+        toast({
+          title: "Network Error",
+          description: "Could not connect to extraction service. Please try again later.",
+          variant: "destructive",
+        });
+      } else if (errorMessage.includes("timeout")) {
+        toast({
+          title: "Extraction Timeout",
+          description: "The extraction process took too long. Try a different product URL.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error Fetching Product",
+          description: "Could not extract product details. Please try a Flipkart product link instead of Amazon.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsFetchingProduct(false);
     }
@@ -165,6 +183,40 @@ export const useProductPreview = () => {
     if (url.includes('amazon')) return 'amazon';
     if (url.includes('flipkart')) return 'flipkart';
     return undefined;
+  };
+  
+  // Helper function to simplify complex URLs by removing tracking parameters
+  const simplifyUrl = (url: string): string | null => {
+    try {
+      const parsedUrl = new URL(url);
+      
+      if (parsedUrl.hostname.includes('amazon')) {
+        // For Amazon, keep only the domain, path and dp parameter which has the product ID
+        const productIdMatch = parsedUrl.pathname.match(/\/dp\/([A-Z0-9]{10})/i);
+        if (productIdMatch && productIdMatch[1]) {
+          return `https://${parsedUrl.hostname}/dp/${productIdMatch[1]}`;
+        }
+        
+        // If we couldn't extract from path, try from query params
+        const asinParam = parsedUrl.searchParams.get('ASIN') || parsedUrl.searchParams.get('asin');
+        if (asinParam) {
+          return `https://${parsedUrl.hostname}/dp/${asinParam}`;
+        }
+      } 
+      else if (parsedUrl.hostname.includes('flipkart')) {
+        // For Flipkart, keep the domain, path and pid parameter
+        const pidParam = parsedUrl.searchParams.get('pid');
+        if (pidParam && parsedUrl.pathname.includes('/p/')) {
+          const mainPath = parsedUrl.pathname.split('?')[0];
+          return `https://${parsedUrl.hostname}${mainPath}?pid=${pidParam}`;
+        }
+      }
+      
+      return null; // Couldn't simplify, use original URL
+    } catch (e) {
+      console.error("Error simplifying URL:", e);
+      return null; // On error, use original URL
+    }
   };
 
   return {
