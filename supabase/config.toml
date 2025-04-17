@@ -1,32 +1,14 @@
 
-project_id = "utuguowpwezberrmqabw"
+project_id = "lovable"
 
 [api]
-# Port to use for the API URL.
-port = 54321
-# Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
-# endpoints. public and storage are always included.
-schemas = ["public", "storage"]
-# Extra schemas to add to the search_path of every request. public is always included.
-extra_search_path = ["public", "extensions"]
-# Maximum rows returns in a single response. Default is 1000.
-max_rows = 1000
+  port = 54321
 
 [db]
-# Port to use for the local database URL.
-port = 54322
-# The database major version to use. This has to be the same as your remote database's. Run `SHOW
-# server_version;` on the remote database to check.
-major_version = 15
-
-[studio]
-# Port to use for Supabase Studio.
-port = 54323
-# External URL of the API server that Studio should connect to.
-api_url = "http://localhost"
+  port = 54322
 
 [functions]
-[functions.execute_sql]
-verify_jwt = true
-[functions.razorpay-payment]
-verify_jwt = true
+  serve_port = 54323
+
+[functions.axiom-product-extraction]
+  verify_jwt = true
