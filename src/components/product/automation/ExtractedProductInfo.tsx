@@ -23,7 +23,7 @@ export const ExtractedProductInfo = ({
 
   return (
     <div className="mt-6">
-      <h3 className="text-lg font-semibold mb-2">Extracted Product Information</h3>
+      <h3 className="text-lg font-semibold mb-2">Product Information</h3>
       <Separator className="my-2" />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -31,7 +31,7 @@ export const ExtractedProductInfo = ({
           <div className="md:col-span-1">
             <img 
               src={productData.image} 
-              alt={productData.name || "Product"} 
+              alt={productData.name || "Product"}
               className="w-full h-auto object-contain rounded-md"
               style={{ maxHeight: "200px" }}
             />

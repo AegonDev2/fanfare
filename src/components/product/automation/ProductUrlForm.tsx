@@ -29,7 +29,7 @@ export const ProductUrlForm = ({ onSubmit, isLoading }: ProductUrlFormProps) => 
             id="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://www.amazon.com/product-page or https://www.flipkart.com/product-page"
+            placeholder="Enter product URL..."
             className="flex-1"
             disabled={isLoading}
           />
@@ -48,10 +48,7 @@ export const ProductUrlForm = ({ onSubmit, isLoading }: ProductUrlFormProps) => 
       
       <Alert className="bg-blue-50 border-blue-200">
         <AlertDescription className="text-sm text-blue-700">
-          Try this example: 
-          <span className="text-xs mt-1 block font-mono break-all">
-            https://www.flipkart.com/timex-automatic-black-dial-analog-watch-men/p/itm5d039dcaeb0c8?pid=WATGPGR7QCYTFHRG
-          </span>
+          Enter a product URL from Amazon or Flipkart to extract its details.
         </AlertDescription>
       </Alert>
     </form>
