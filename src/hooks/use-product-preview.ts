@@ -1,7 +1,7 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
+import { supabase } from "@/integrations/supabase/client";
 
 // Default product details when no product is selected
 const DEFAULT_PRODUCT: ProductDetails = {
@@ -139,44 +139,34 @@ export const useProductPreview = () => {
       
       setFetchProgress(40);
       
-      // Step 3: Try to fetch actual product data from the Edge Function
+      // Step 3: Try to fetch actual product data from the Edge Function directly
       console.log("Fetching product data via Edge Function for:", giftItem);
       
       try {
-        const response = await fetch('/api/fetch-product', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
+        // Call Supabase Edge Function directly instead of using the API route
+        const { data: axiomData, error: axiomError } = await supabase.functions.invoke("axiom-product-extraction", {
+          body: { 
             url: giftItem,
             retryCount: retryCount,
-            // Pass necessary context for extraction
             platform: platform
-          }),
+          },
         });
-        
-        if (!response.ok) {
-          throw new Error(`API responded with status: ${response.status}`);
-        }
-        
-        const { data, error } = await response.json();
-        
-        if (error) {
-          console.error("Edge function error:", error);
-          throw new Error(error.message || "Failed to fetch product details");
+
+        if (axiomError) {
+          console.error("Edge function error:", axiomError);
+          throw new Error(axiomError.message || "Failed to extract product details");
         }
         
         setFetchProgress(80);
         
-        if (!data || !data.productData || !data.productData.name) {
+        if (!axiomData || !axiomData.productData || !axiomData.productData.name) {
           throw new Error("Could not extract product details. Please try a different product or URL.");
         }
         
-        console.log("Extracted product data:", data.productData);
+        console.log("Extracted product data:", axiomData.productData);
         
         // Process the extracted data
-        const extractedData = data.productData;
+        const extractedData = axiomData.productData;
         const priceString = extractedData.price?.toString() || "0";
         const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, "")) || 0;
         
