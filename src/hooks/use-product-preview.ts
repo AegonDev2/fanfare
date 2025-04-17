@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -77,27 +78,28 @@ export const useProductPreview = () => {
             clearInterval(progressInterval);
             return prev;
           }
-          return prev + 5;
+          return prev + 10;
         });
-      }, 1000); // Longer intervals because Puppeteer extraction takes more time
+      }, 800);
 
       console.log("Calling product extraction service with URL:", url);
       
       toast({
         title: "Starting Extraction",
-        description: "Extracting product details. This may take up to 30 seconds with Puppeteer...",
+        description: "Extracting product details. This may take a few seconds...",
       });
       
       // Call Supabase function to extract product data
-      const { data, error } = await supabase.functions.invoke("product-extraction", {
+      const { data, error: functionError } = await supabase.functions.invoke("product-extraction", {
         body: { url, platform, retryCount }
       });
 
       clearInterval(progressInterval);
+      setFetchProgress(95);
 
-      if (error) {
-        console.error("Error invoking function:", error);
-        throw new Error(error.message || "Failed to extract product details");
+      if (functionError) {
+        console.error("Error invoking function:", functionError);
+        throw new Error(functionError.message || "Failed to extract product details");
       }
 
       if (!data?.productData) {
@@ -130,7 +132,7 @@ export const useProductPreview = () => {
         
         toast({
           title: "Product Retrieved",
-          description: "Product details have been fetched successfully using Puppeteer"
+          description: "Product details have been fetched successfully"
         });
       } else {
         throw new Error("Failed to extract product name");

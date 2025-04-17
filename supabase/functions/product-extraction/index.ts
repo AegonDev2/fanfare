@@ -1,13 +1,13 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
+import * as cheerio from "https://esm.sh/cheerio@1.0.0-rc.12";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-console.log("Product extraction service started with Puppeteer");
+console.log("Product extraction service started");
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -29,45 +29,35 @@ serve(async (req) => {
 
     console.log(`Extracting data from ${platform} URL: ${url}`);
     
-    // Launch browser with specific configuration for Deno/Supabase environment
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-software-rasterizer'
-      ]
-    });
-    
-    try {
-      console.log("Creating new page");
-      const page = await browser.newPage();
-      
-      // Set viewport and user agent
-      await page.setViewport({ width: 1280, height: 800 });
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-      
-      console.log(`Navigating to: ${url}`);
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-      
-      let productData;
-      if (url.includes('amazon')) {
-        productData = await extractAmazonProduct(page);
-      } else if (url.includes('flipkart')) {
-        productData = await extractFlipkartProduct(page);
+    // Fetch the product page
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5'
       }
-      
-      console.log("Extracted product data:", productData);
-      
-      return new Response(
-        JSON.stringify({ success: true, productData }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    } finally {
-      await browser.close();
-      console.log("Browser closed");
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch product page: ${response.status} ${response.statusText}`);
     }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    
+    let productData;
+    if (url.includes('amazon')) {
+      productData = extractAmazonProduct($);
+    } else if (url.includes('flipkart')) {
+      productData = extractFlipkartProduct($);
+    }
+    
+    console.log("Extracted product data:", productData);
+    
+    return new Response(
+      JSON.stringify({ success: true, productData }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (error) {
     console.error("Error in product extraction:", error);
     return new Response(
@@ -80,35 +70,34 @@ serve(async (req) => {
   }
 });
 
-async function extractAmazonProduct(page) {
+function extractAmazonProduct($) {
   try {
     console.log("Extracting Amazon product data");
     
-    // Wait for price element
-    const priceSelector = 'span.a-price-whole';
-    await page.waitForSelector(priceSelector, { timeout: 20000 });
-    const price = await page.$eval(priceSelector, el => el.innerText);
+    // Extract product name
+    const name = $('#productTitle').text().trim();
     
-    // Wait for title element
-    const titleSelector = '#productTitle';
-    await page.waitForSelector(titleSelector, { timeout: 20000 });
-    const name = await page.$eval(titleSelector, el => el.innerText.trim());
+    // Extract price
+    let price = $('.a-price-whole').first().text();
+    const priceFraction = $('.a-price-fraction').first().text();
+    if (price && priceFraction) {
+      price = `${price}${priceFraction}`;
+    }
     
     // Extract image
-    const imageSelector = '#landingImage';
-    await page.waitForSelector(imageSelector, { timeout: 20000 });
-    const image = await page.$eval(imageSelector, el => el.getAttribute('src'));
+    const image = $('#landingImage').attr('src') || $('#imgBlkFront').attr('src');
     
     // Extract description from feature bullets
-    const description = await page.evaluate(() => {
-      const bullets = Array.from(document.querySelectorAll('#feature-bullets li span')).map(el => el.textContent.trim());
-      return bullets.join('\n');
+    const bullets = [];
+    $('#feature-bullets li span').each((i, el) => {
+      bullets.push($(el).text().trim());
     });
+    const description = bullets.join('\n');
 
-    return { 
-      name, 
-      price, 
-      image, 
+    return {
+      name,
+      price,
+      image,
       description: description || 'No description available',
       platform: 'amazon'
     };
@@ -118,35 +107,30 @@ async function extractAmazonProduct(page) {
   }
 }
 
-async function extractFlipkartProduct(page) {
+function extractFlipkartProduct($) {
   try {
     console.log("Extracting Flipkart product data");
     
-    // Wait for price element
-    const priceSelector = '._30jeq3';
-    await page.waitForSelector(priceSelector, { timeout: 20000 });
-    const price = await page.$eval(priceSelector, el => el.innerText.replace('₹', '').trim());
+    // Extract product name
+    const name = $('.B_NuCI').text().trim() || $('h1 span').text().trim();
     
-    // Wait for title element
-    const titleSelector = '.B_NuCI';
-    await page.waitForSelector(titleSelector, { timeout: 20000 });
-    const name = await page.$eval(titleSelector, el => el.innerText.trim());
+    // Extract price
+    let price = $('._30jeq3').text().trim().replace('₹', '');
     
     // Extract image
-    const imageSelector = '._396cs4';
-    await page.waitForSelector(imageSelector, { timeout: 20000 });
-    const image = await page.$eval(imageSelector, el => el.getAttribute('src'));
+    const image = $('._396cs4').attr('src') || $('img._2r_T1I').attr('src');
     
     // Extract description
-    const description = await page.evaluate(() => {
-      const specs = Array.from(document.querySelectorAll('._2418kt li')).map(el => el.textContent.trim());
-      return specs.join('\n');
+    const specs = [];
+    $('._2418kt li, ._1AN87F').each((i, el) => {
+      specs.push($(el).text().trim());
     });
+    const description = specs.join('\n') || $('._1mXcCf').text().trim();
 
-    return { 
-      name, 
-      price, 
-      image, 
+    return {
+      name,
+      price,
+      image,
       description: description || 'No description available',
       platform: 'flipkart'
     };

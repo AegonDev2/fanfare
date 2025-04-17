@@ -12,3 +12,4 @@ project_id = "lovable"
   
 [functions.product-extraction]
   verify_jwt = false
+
