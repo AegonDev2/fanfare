@@ -10,7 +10,6 @@ const corsHeaders = {
 console.log("Buildship product extraction service started");
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 204, 
@@ -27,13 +26,11 @@ serve(async (req) => {
       throw new Error("URL is required");
     }
 
-    console.log(`Processing extraction request for URL: ${url}, platform: ${platform || 'unknown'}, retry: ${retryCount || 0}`);
-
-    // Call Buildship endpoint with proper formatting
-    const buildshipUrl = 'https://jspn8s.buildship.run/untitledFlow-c234cebe00fd';
-    console.log(`Calling Buildship endpoint: ${buildshipUrl}`);
+    console.log(`Processing extraction request for URL: ${url}`);
     
-    const fetchOptions = {
+    const buildshipUrl = 'https://jspn8s.buildship.run/untitledFlow-c234cebe00fd';
+    
+    const response = await fetch(buildshipUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,44 +42,39 @@ serve(async (req) => {
         timestamp: new Date().getTime(),
         retryCount: retryCount || 0
       })
-    };
-
-    console.log("Fetch options:", JSON.stringify(fetchOptions));
-    
-    let response;
-    try {
-      console.log("Starting fetch request to Buildship...");
-      response = await fetch(buildshipUrl, fetchOptions);
-      console.log(`Buildship response status: ${response.status}`);
-    } catch (fetchError) {
-      console.error("Fetch error:", fetchError);
-      throw new Error(`Network error when calling Buildship: ${fetchError.message}`);
-    }
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Buildship request failed with status: ${response.status}`);
-      console.error(`Error details: ${errorText}`);
-      throw new Error(`Product extraction failed: ${response.status} ${response.statusText}`);
+      throw new Error(`Product extraction failed: ${response.status}`);
     }
 
-    let extractedData;
-    try {
-      extractedData = await response.json();
-      console.log("Successfully extracted product data:", JSON.stringify(extractedData));
-    } catch (parseError) {
-      console.error("Error parsing JSON response:", parseError);
-      throw new Error(`Failed to parse Buildship response: ${parseError.message}`);
-    }
+    const extractedData = await response.json();
+    console.log("Successfully extracted product data:", extractedData);
 
-    // Transform the data into our expected format
+    // Transform to simplified format
     const productData = {
-      name: extractedData.title || "Product Name Not Found",
+      name: extractedData.title || "Product Title Not Found",
       price: extractedData.price || "0",
-      description: extractedData.description || "No description available",
-      image: extractedData.image || "",
       platform: platform || 'unknown'
     };
+
+    // Store in Supabase table
+    const { data: insertedData, error: insertError } = await supabase
+      .from('product_preview_data')
+      .insert([{
+        url: url,
+        title: productData.name,
+        price: parseFloat(productData.price) || 0,
+        platform: productData.platform
+      }])
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("Error storing product data:", insertError);
+    }
 
     return new Response(
       JSON.stringify({ 
@@ -92,17 +84,13 @@ serve(async (req) => {
         timestamp: new Date().toISOString()
       }),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200
       }
     );
 
   } catch (error) {
     console.error('Error in product extraction:', error);
-    
     return new Response(
       JSON.stringify({ 
         success: false, 

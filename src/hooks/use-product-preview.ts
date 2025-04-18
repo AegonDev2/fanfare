@@ -4,14 +4,12 @@ import { ProductDetails } from "@/types/order";
 import { supabase } from "@/integrations/supabase/client";
 import { ExtractedProduct } from "@/components/product/types/product";
 
-// Default product details
 const DEFAULT_PRODUCT: ProductDetails = {
   name: "Enter a product URL to preview",
-  description: "Product details will appear here once you enter a valid URL.",
   price: 0,
   priceInr: 0,
   platformFee: 5.00,
-  image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg",
+  image: "https://placehold.co/600x400?text=No+Image",
   id: ""
 };
 
@@ -23,13 +21,11 @@ export const useProductPreview = () => {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Reset all extraction state
   const resetExtractionState = useCallback(() => {
     setError(null);
     setRetryCount(prev => prev + 1);
   }, []);
 
-  // Function to handle product previewing from URL
   const handlePreviewProduct = useCallback(async (url: string) => {
     if (!url) {
       toast({
@@ -40,7 +36,6 @@ export const useProductPreview = () => {
       return;
     }
 
-    // Validate URL format
     try {
       new URL(url);
     } catch (e) {
@@ -53,7 +48,6 @@ export const useProductPreview = () => {
       return;
     }
 
-    // Check if URL is from supported platform
     const platform = detectPlatform(url);
     if (!platform) {
       toast({
@@ -70,7 +64,6 @@ export const useProductPreview = () => {
     setError(null);
 
     try {
-      // Simulate progress updates
       const progressInterval = setInterval(() => {
         setFetchProgress(prev => {
           const increment = Math.floor(Math.random() * 5) + 2;
@@ -79,28 +72,12 @@ export const useProductPreview = () => {
         });
       }, 800);
 
-      console.log("Calling buildship extraction service with URL:", url);
-      
-      toast({
-        title: "Starting Extraction",
-        description: "Extracting product details. This may take up to 30 seconds...",
-      });
-      
-      // Add a simplified URL version to potentially improve scraping success
-      const simplifiedUrl = simplifyUrl(url);
-      console.log("Simplified URL for extraction:", simplifiedUrl);
-      
-      // Call Supabase function to extract product data
       const { data, error: functionError } = await supabase.functions.invoke("buildship-extraction", {
         body: { 
-          url: simplifiedUrl || url, 
+          url: url, 
           platform: detectPlatform(url),
           retryCount,
           timestamp: new Date().getTime()
-        },
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
         }
       });
 
@@ -108,7 +85,6 @@ export const useProductPreview = () => {
       setFetchProgress(95);
 
       if (functionError) {
-        console.error("Error invoking function:", functionError);
         throw new Error(functionError.message || "Failed to extract product details");
       }
 
@@ -118,21 +94,18 @@ export const useProductPreview = () => {
 
       console.log("Extraction result:", data);
 
-      // Extract product data
       const extractedProduct = data.productData as ExtractedProduct;
       
-      // Convert to product details
       if (extractedProduct && extractedProduct.name) {
         const priceString = extractedProduct.price || '0';
         const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, '')) || 0;
         
         const productDetails: ProductDetails = {
           name: extractedProduct.name,
-          description: extractedProduct.description || "No description available",
           price: priceNumber,
           priceInr: priceNumber,
           platformFee: 5.00,
-          image: extractedProduct.image || "https://placehold.co/600x400?text=No+Image",
+          image: "https://placehold.co/600x400?text=No+Image",
           platform: extractedProduct.platform,
           id: url
         };
@@ -177,33 +150,28 @@ export const useProductPreview = () => {
     }
   }, [toast, retryCount]);
 
-  // Helper function to detect platform from URL
   const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
     if (url.includes('amazon')) return 'amazon';
     if (url.includes('flipkart')) return 'flipkart';
     return undefined;
   };
   
-  // Helper function to simplify complex URLs by removing tracking parameters
   const simplifyUrl = (url: string): string | null => {
     try {
       const parsedUrl = new URL(url);
       
       if (parsedUrl.hostname.includes('amazon')) {
-        // For Amazon, keep only the domain, path and dp parameter which has the product ID
         const productIdMatch = parsedUrl.pathname.match(/\/dp\/([A-Z0-9]{10})/i);
         if (productIdMatch && productIdMatch[1]) {
           return `https://${parsedUrl.hostname}/dp/${productIdMatch[1]}`;
         }
         
-        // If we couldn't extract from path, try from query params
         const asinParam = parsedUrl.searchParams.get('ASIN') || parsedUrl.searchParams.get('asin');
         if (asinParam) {
           return `https://${parsedUrl.hostname}/dp/${asinParam}`;
         }
       } 
       else if (parsedUrl.hostname.includes('flipkart')) {
-        // For Flipkart, keep the domain, path and pid parameter
         const pidParam = parsedUrl.searchParams.get('pid');
         if (pidParam && parsedUrl.pathname.includes('/p/')) {
           const mainPath = parsedUrl.pathname.split('?')[0];
@@ -211,10 +179,10 @@ export const useProductPreview = () => {
         }
       }
       
-      return null; // Couldn't simplify, use original URL
+      return null;
     } catch (e) {
       console.error("Error simplifying URL:", e);
-      return null; // On error, use original URL
+      return null;
     }
   };
 
