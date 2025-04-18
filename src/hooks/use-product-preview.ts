@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -71,7 +70,7 @@ export const useProductPreview = () => {
     setError(null);
 
     try {
-      // Simulate progress updates with more granular steps
+      // Simulate progress updates
       const progressInterval = setInterval(() => {
         setFetchProgress(prev => {
           const increment = Math.floor(Math.random() * 5) + 2;
@@ -92,48 +91,18 @@ export const useProductPreview = () => {
       console.log("Simplified URL for extraction:", simplifiedUrl);
       
       // Call Supabase function to extract product data
-      // Try with fallback logic - if buildship-extraction fails, try product-extraction as fallback
-      let data, functionError;
-      try {
-        console.log("Trying buildship-extraction endpoint first...");
-        const response = await supabase.functions.invoke("buildship-extraction", {
-          body: { 
-            url: simplifiedUrl || url, 
-            platform,
-            retryCount,
-            timestamp: new Date().getTime() // Prevent caching
-          },
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-        data = response.data;
-        functionError = response.error;
-      } catch (primaryError) {
-        console.error("Primary extraction endpoint failed:", primaryError);
-        // Try fallback endpoint
-        try {
-          console.log("Trying fallback product-extraction endpoint...");
-          const fallbackResponse = await supabase.functions.invoke("product-extraction", {
-            body: { 
-              url: simplifiedUrl || url, 
-              platform,
-              retryCount,
-              timestamp: new Date().getTime()
-            },
-            headers: {
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            }
-          });
-          data = fallbackResponse.data;
-          functionError = fallbackResponse.error;
-        } catch (fallbackError) {
-          console.error("Fallback extraction also failed:", fallbackError);
-          throw new Error("All product extraction methods failed");
+      const { data, error: functionError } = await supabase.functions.invoke("buildship-extraction", {
+        body: { 
+          url: simplifiedUrl || url, 
+          platform: detectPlatform(url),
+          retryCount,
+          timestamp: new Date().getTime()
+        },
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
-      }
+      });
 
       clearInterval(progressInterval);
       setFetchProgress(95);
@@ -164,7 +133,7 @@ export const useProductPreview = () => {
           priceInr: priceNumber,
           platformFee: 5.00,
           image: extractedProduct.image || "https://placehold.co/600x400?text=No+Image",
-          platform: platform,
+          platform: extractedProduct.platform,
           id: url
         };
 
@@ -176,7 +145,7 @@ export const useProductPreview = () => {
           description: "Product details have been fetched successfully"
         });
       } else {
-        throw new Error("Failed to extract product name");
+        throw new Error("Failed to extract product details");
       }
     } catch (error) {
       console.error("Error fetching product:", error);

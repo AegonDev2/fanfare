@@ -29,7 +29,7 @@ serve(async (req) => {
 
     console.log(`Processing extraction request for URL: ${url}, platform: ${platform || 'unknown'}, retry: ${retryCount || 0}`);
 
-    // Call Buildship endpoint
+    // Call Buildship endpoint with proper formatting
     const buildshipUrl = 'https://jspn8s.buildship.run/untitledFlow-c234cebe00fd';
     console.log(`Calling Buildship endpoint: ${buildshipUrl}`);
     
@@ -42,7 +42,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({ 
         url,
-        timestamp: new Date().getTime(), // Prevent caching issues
+        timestamp: new Date().getTime(),
         retryCount: retryCount || 0
       })
     };
