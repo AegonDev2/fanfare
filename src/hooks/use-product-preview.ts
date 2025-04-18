@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -100,6 +101,23 @@ export const useProductPreview = () => {
         const priceString = extractedProduct.price || '0';
         const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, '')) || 0;
         
+        // Insert product preview data into Supabase
+        const { data: insertData, error: insertError } = await supabase
+          .from('product_preview_data')
+          .insert([{
+            url: url,
+            title: extractedProduct.name,
+            price: priceNumber,
+            platform: platform
+          }])
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("Error storing product preview:", insertError);
+          throw new Error("Failed to store product preview");
+        }
+        
         const productDetails: ProductDetails = {
           name: extractedProduct.name,
           price: priceNumber,
@@ -154,36 +172,6 @@ export const useProductPreview = () => {
     if (url.includes('amazon')) return 'amazon';
     if (url.includes('flipkart')) return 'flipkart';
     return undefined;
-  };
-  
-  const simplifyUrl = (url: string): string | null => {
-    try {
-      const parsedUrl = new URL(url);
-      
-      if (parsedUrl.hostname.includes('amazon')) {
-        const productIdMatch = parsedUrl.pathname.match(/\/dp\/([A-Z0-9]{10})/i);
-        if (productIdMatch && productIdMatch[1]) {
-          return `https://${parsedUrl.hostname}/dp/${productIdMatch[1]}`;
-        }
-        
-        const asinParam = parsedUrl.searchParams.get('ASIN') || parsedUrl.searchParams.get('asin');
-        if (asinParam) {
-          return `https://${parsedUrl.hostname}/dp/${asinParam}`;
-        }
-      } 
-      else if (parsedUrl.hostname.includes('flipkart')) {
-        const pidParam = parsedUrl.searchParams.get('pid');
-        if (pidParam && parsedUrl.pathname.includes('/p/')) {
-          const mainPath = parsedUrl.pathname.split('?')[0];
-          return `https://${parsedUrl.hostname}${mainPath}?pid=${pidParam}`;
-        }
-      }
-      
-      return null;
-    } catch (e) {
-      console.error("Error simplifying URL:", e);
-      return null;
-    }
   };
 
   return {
