@@ -10,6 +10,7 @@ const corsHeaders = {
 console.log("Jigsawstack product extraction service started");
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 204, 
@@ -18,91 +19,108 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Received product extraction request");
-    const requestData = await req.json();
-    const { url, platform, retryCount } = requestData;
+    const { url } = await req.json();
     
     if (!url) {
       throw new Error("URL is required");
     }
 
-    console.log(`Processing extraction request for URL: ${url}, platform: ${platform || 'unknown'}`);
+    console.log(`Starting Jigsawstack extraction for URL: ${url}`);
     
-    // Get API key from environment
     const apiKey = Deno.env.get("JIGSAWSTACK_API_KEY");
     if (!apiKey) {
       throw new Error("Jigsawstack API key not configured");
     }
 
-    // Prepare the scraping request
-    const jigsawstackUrl = "https://api.jigsawstack.com/v1/scrape";
-    const response = await fetch(jigsawstackUrl, {
+    // Make request to Jigsawstack API
+    const response = await fetch("https://api.jigsawstack.com/v1/scrape", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        url: url,
-        // Specific selectors for different platforms
-        selectors: platform === 'amazon' ? {
-          title: '#productTitle',
-          price: '.a-price .a-offscreen',
-          image: '#landingImage',
-          description: '#feature-bullets .a-list-item'
-        } : {
-          // Flipkart selectors
-          title: '.B_NuCI',
-          price: '._30jeq3',
-          image: '._396cs4',
-          description: '._1mXcCf'
+        url,
+        // Request specific elements based on common e-commerce selectors
+        selectors: {
+          title: [
+            'h1', // Common product title selector
+            'meta[property="og:title"]', // OpenGraph title
+            'meta[name="title"]' // Meta title
+          ],
+          price: [
+            'meta[property="product:price:amount"]',
+            'meta[property="og:price:amount"]',
+            '.price',
+            '[data-price]'
+          ],
+          image: [
+            'meta[property="og:image"]',
+            'meta[property="product:image"]',
+            'img[id*="product"]',
+            'img[class*="product"]'
+          ],
+          description: [
+            'meta[property="og:description"]',
+            'meta[name="description"]',
+            '[class*="description"]',
+            '[id*="description"]'
+          ]
         }
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Jigsawstack request failed with status: ${response.status}`);
+      console.error(`Jigsawstack API error: ${response.status}`);
       console.error(`Error details: ${errorText}`);
-      throw new Error(`Product extraction failed: ${response.status} ${response.statusText || ''}`);
+      throw new Error(`Extraction failed: ${response.status} ${response.statusText}`);
     }
 
-    const scrapedData = await response.json();
-    console.log("Successfully extracted product data:", scrapedData);
+    const data = await response.json();
+    console.log("Raw scraped data:", data);
 
-    // Transform to our standard format
-    const productData = {
-      name: scrapedData.data?.title || "Product Title Not Found",
-      price: scrapedData.data?.price?.replace(/[^0-9.]/g, '') || "0",
-      platform: platform || 'unknown',
-      image: scrapedData.data?.image || "",
-      description: scrapedData.data?.description || "No description available"
+    // Transform the data into our application's format
+    const extractedProduct = {
+      name: data.data?.title?.[0] || "Product Title Not Found",
+      price: data.data?.price?.[0]?.replace(/[^0-9.]/g, '') || "0",
+      image: data.data?.image?.[0] || "",
+      description: data.data?.description?.[0] || "No description available"
     };
 
+    console.log("Transformed product data:", extractedProduct);
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        productData,
+      JSON.stringify({
+        success: true,
+        productData: extractedProduct,
         source: "jigsawstack",
         timestamp: new Date().toISOString()
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
         status: 200
       }
     );
 
   } catch (error) {
-    console.error('Error in product extraction:', error);
+    console.error('Extraction error:', error);
+    
     return new Response(
-      JSON.stringify({ 
-        success: false, 
+      JSON.stringify({
+        success: false,
         error: error instanceof Error ? error.message : "Unknown error occurred",
         timestamp: new Date().toISOString()
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
+        status: 400
       }
     );
   }
