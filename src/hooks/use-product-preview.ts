@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -76,7 +75,7 @@ export const useProductPreview = () => {
       const { data, error: functionError } = await supabase.functions.invoke("buildship-extraction", {
         body: { 
           url: url, 
-          platform: detectPlatform(url),
+          platform: platform,
           retryCount,
           timestamp: new Date().getTime()
         }
@@ -101,17 +100,14 @@ export const useProductPreview = () => {
         const priceString = extractedProduct.price || '0';
         const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, '')) || 0;
         
-        // Insert product preview data into Supabase
-        const { data: insertData, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from('product_preview_data')
-          .insert([{
+          .insert({
             url: url,
             title: extractedProduct.name,
             price: priceNumber,
             platform: platform
-          }])
-          .select()
-          .single();
+          });
 
         if (insertError) {
           console.error("Error storing product preview:", insertError);
@@ -124,7 +120,7 @@ export const useProductPreview = () => {
           priceInr: priceNumber,
           platformFee: 5.00,
           image: "https://placehold.co/600x400?text=No+Image",
-          platform: extractedProduct.platform,
+          platform: platform,
           id: url
         };
 

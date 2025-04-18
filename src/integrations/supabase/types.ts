@@ -366,6 +366,36 @@ export type Database = {
           },
         ]
       }
+      product_preview_data: {
+        Row: {
+          created_at: string | null
+          id: string
+          platform: string | null
+          price: number
+          title: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          platform?: string | null
+          price: number
+          title: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          platform?: string | null
+          price?: number
+          title?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           created_at: string
