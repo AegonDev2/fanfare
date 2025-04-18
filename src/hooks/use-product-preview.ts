@@ -73,6 +73,8 @@ export const useProductPreview = () => {
         });
       }, 800);
 
+      console.log(`Extracting product from URL: ${url}, platform: ${platform}`);
+      
       const { data, error: functionError } = await supabase.functions.invoke("buildship-extraction", {
         body: { 
           url: url, 
@@ -86,10 +88,12 @@ export const useProductPreview = () => {
       setFetchProgress(95);
 
       if (functionError) {
+        console.error("Function error:", functionError);
         throw new Error(functionError.message || "Failed to extract product details");
       }
 
       if (!data?.productData) {
+        console.error("No product data returned:", data);
         throw new Error("No product data returned");
       }
 
@@ -124,7 +128,7 @@ export const useProductPreview = () => {
           price: priceNumber,
           priceInr: priceNumber,
           platformFee: 5.00,
-          image: "https://placehold.co/600x400?text=No+Image",
+          image: extractedProduct.image || "https://placehold.co/600x400?text=No+Image",
           platform: platform,
           id: url
         };

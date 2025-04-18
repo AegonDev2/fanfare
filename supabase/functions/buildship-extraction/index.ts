@@ -26,7 +26,7 @@ serve(async (req) => {
       throw new Error("URL is required");
     }
 
-    console.log(`Processing extraction request for URL: ${url}`);
+    console.log(`Processing extraction request for URL: ${url}, platform: ${platform || 'unknown'}`);
     
     // Handle Amazon shortened URLs (amzn.in format)
     let processedUrl = url;
@@ -35,6 +35,7 @@ serve(async (req) => {
     }
     
     const buildshipUrl = 'https://jspn8s.buildship.run/untitledFlow-c234cebe00fd';
+    console.log(`Sending request to Buildship: ${buildshipUrl}`);
     
     const response = await fetch(buildshipUrl, {
       method: 'POST',
@@ -53,7 +54,8 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Buildship request failed with status: ${response.status}`);
-      throw new Error(`Product extraction failed: ${response.status}`);
+      console.error(`Error details: ${errorText}`);
+      throw new Error(`Product extraction failed: ${response.status} ${response.statusText || ''}`);
     }
 
     const extractedData = await response.json();
@@ -63,7 +65,9 @@ serve(async (req) => {
     const productData = {
       name: extractedData.title || "Product Title Not Found",
       price: extractedData.price || "0",
-      platform: platform || 'unknown'
+      platform: platform || 'unknown',
+      image: extractedData.image || "",
+      description: extractedData.description || "No description available"
     };
 
     return new Response(

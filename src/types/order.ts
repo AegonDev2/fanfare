@@ -7,6 +7,7 @@ export interface ProductDetails {
   image: string;
   id?: string;
   platform?: 'amazon' | 'flipkart';
+  description?: string;
 }
 
 export interface InfluencerAddress {

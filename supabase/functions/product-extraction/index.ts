@@ -24,6 +24,12 @@ serve(async (req) => {
 
     console.log(`Extracting data from ${platform || 'unknown'} URL: ${url}, retry attempt: ${retryCount || 0}`);
 
+    // Handle Amazon shortened URLs (amzn.in format)
+    let processedUrl = url;
+    if (url.includes('amzn.in') && platform === 'amazon') {
+      console.log("Detected shortened Amazon URL, will follow redirects");
+    }
+
     // Call Buildship endpoint
     const buildshipUrl = 'https://jspn8s.buildship.run/untitledFlow-c234cebe00fd';
     console.log(`Calling Buildship endpoint: ${buildshipUrl}`);
@@ -36,7 +42,7 @@ serve(async (req) => {
         'Pragma': 'no-cache'
       },
       body: JSON.stringify({ 
-        url,
+        url: processedUrl,
         timestamp: new Date().getTime() // Prevent caching issues
       })
     });
@@ -45,7 +51,7 @@ serve(async (req) => {
       const errorText = await response.text();
       console.error(`Buildship request failed with status: ${response.status}`);
       console.error(`Error details: ${errorText}`);
-      throw new Error(`Product extraction failed: ${response.status} ${response.statusText}`);
+      throw new Error(`Product extraction failed: ${response.status} ${response.statusText || ''}`);
     }
 
     const extractedData = await response.json();
