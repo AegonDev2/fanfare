@@ -10,12 +10,6 @@ project_id = "lovable"
 [functions]
   serve_port = 54323
   
-[functions.product-extraction]
-  verify_jwt = false
-  timeoutMs = 60000
-  importmap = "./functions/importmap.json"
-  cors = true
-
 [functions.buildship-extraction]
   verify_jwt = false
   timeoutMs = 90000
