@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -100,18 +101,22 @@ export const useProductPreview = () => {
         const priceString = extractedProduct.price || '0';
         const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, '')) || 0;
         
-        const { error: insertError } = await supabase
-          .from('product_preview_data')
-          .insert({
-            url: url,
-            title: extractedProduct.name,
-            price: priceNumber,
-            platform: platform
-          });
+        // Store product preview data in Supabase
+        try {
+          const { error: insertError } = await supabase
+            .from('product_preview_data')
+            .insert({
+              url: url,
+              title: extractedProduct.name,
+              price: priceNumber,
+              platform: platform
+            });
 
-        if (insertError) {
-          console.error("Error storing product preview:", insertError);
-          throw new Error("Failed to store product preview");
+          if (insertError) {
+            console.error("Error storing product preview:", insertError);
+          }
+        } catch (storageError) {
+          console.error("Failed to store product preview data:", storageError);
         }
         
         const productDetails: ProductDetails = {
