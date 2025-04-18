@@ -49,17 +49,6 @@ export const useProductPreview = () => {
       return;
     }
 
-    const platform = detectPlatform(url);
-    if (!platform) {
-      toast({
-        title: "Unsupported Platform",
-        description: "Currently only Amazon and Flipkart URLs are supported",
-        variant: "destructive",
-      });
-      setError("Unsupported platform. Only Amazon and Flipkart are supported.");
-      return;
-    }
-
     setIsFetchingProduct(true);
     setFetchProgress(10);
     setError(null);
@@ -73,13 +62,11 @@ export const useProductPreview = () => {
         });
       }, 800);
 
-      console.log(`Extracting product from URL: ${url}, platform: ${platform}`);
+      console.log(`Extracting product from URL: ${url}`);
       
-      const { data, error: functionError } = await supabase.functions.invoke("buildship-extraction", {
+      const { data, error: functionError } = await supabase.functions.invoke("jigsawstack-extraction", {
         body: { 
-          url: url, 
-          platform: platform,
-          retryCount,
+          url: url,
           timestamp: new Date().getTime()
         }
       });
@@ -113,7 +100,7 @@ export const useProductPreview = () => {
               url: url,
               title: extractedProduct.name,
               price: priceNumber,
-              platform: platform
+              platform: extractedProduct.platform
             });
 
           if (insertError) {
@@ -129,8 +116,9 @@ export const useProductPreview = () => {
           priceInr: priceNumber,
           platformFee: 5.00,
           image: extractedProduct.image || "https://placehold.co/600x400?text=No+Image",
-          platform: platform,
-          id: url
+          platform: extractedProduct.platform,
+          id: url,
+          description: extractedProduct.description
         };
 
         setProductPreview(productDetails);
@@ -172,17 +160,6 @@ export const useProductPreview = () => {
       setIsFetchingProduct(false);
     }
   }, [toast, retryCount]);
-
-  const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
-    // Check for different Amazon URL formats (amzn.in, amazon.com, amazon.in, etc.)
-    if (url.includes('amazon') || url.includes('amzn.')) {
-      return 'amazon';
-    }
-    if (url.includes('flipkart')) {
-      return 'flipkart';
-    }
-    return undefined;
-  };
 
   return {
     productPreview,
