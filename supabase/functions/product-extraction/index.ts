@@ -9,7 +9,6 @@ const corsHeaders = {
 console.log("Enhanced product extraction service started");
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,8 +29,8 @@ serve(async (req) => {
       console.log("Detected shortened Amazon URL, will follow redirects");
     }
 
-    // Call Buildship endpoint
-    const buildshipUrl = 'https://jspn8s.buildship.run/untitledFlow-c234cebe00fd';
+    // Call Buildship endpoint with updated URL
+    const buildshipUrl = 'https://jspn8s.buildship.run/amazonWebScrape-8f814d6bf16c';
     console.log(`Calling Buildship endpoint: ${buildshipUrl}`);
     
     const response = await fetch(buildshipUrl, {

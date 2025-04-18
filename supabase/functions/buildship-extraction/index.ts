@@ -34,7 +34,7 @@ serve(async (req) => {
       console.log("Detected shortened Amazon URL, will follow redirects");
     }
     
-    const buildshipUrl = 'https://jspn8s.buildship.run/untitledFlow-c234cebe00fd';
+    const buildshipUrl = 'https://jspn8s.buildship.run/amazonWebScrape-8f814d6bf16c';
     console.log(`Sending request to Buildship: ${buildshipUrl}`);
     
     const response = await fetch(buildshipUrl, {
