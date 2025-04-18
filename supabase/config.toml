@@ -15,3 +15,10 @@ project_id = "lovable"
   timeoutMs = 90000
   importmap = "./functions/importmap.json"
   cors = true
+
+[functions.jigsawstack-extraction]
+  verify_jwt = false
+  timeoutMs = 90000
+  importmap = "./functions/importmap.json"
+  cors = true
+
