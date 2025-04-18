@@ -170,8 +170,13 @@ export const useProductPreview = () => {
   }, [toast, retryCount]);
 
   const detectPlatform = (url: string): 'amazon' | 'flipkart' | undefined => {
-    if (url.includes('amazon')) return 'amazon';
-    if (url.includes('flipkart')) return 'flipkart';
+    // Check for different Amazon URL formats (amzn.in, amazon.com, amazon.in, etc.)
+    if (url.includes('amazon') || url.includes('amzn.')) {
+      return 'amazon';
+    }
+    if (url.includes('flipkart')) {
+      return 'flipkart';
+    }
     return undefined;
   };
 

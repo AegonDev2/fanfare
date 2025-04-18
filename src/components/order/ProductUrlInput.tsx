@@ -34,7 +34,7 @@ const ProductUrlInput = ({
     
     try {
       const parsedUrl = new URL(url);
-      const isAmazon = parsedUrl.hostname.includes("amazon");
+      const isAmazon = parsedUrl.hostname.includes("amazon") || parsedUrl.hostname.includes("amzn.");
       const isFlipkart = parsedUrl.hostname.includes("flipkart");
       
       if (!isAmazon && !isFlipkart) {
@@ -122,7 +122,7 @@ const ProductUrlInput = ({
   const recommendations = [
     "https://www.flipkart.com/fastrack-optimus-pro-1-43-amoled-display-aod-466x466-functional-crown-bt-calling-smartwatch/p/itma4744c9053b72?pid=SMWGV3ZY9YJYEYEC",
     "https://www.flipkart.com/timex-automatic-black-dial-analog-watch-men/p/itm5d039dcaeb0c8?pid=WATGPGR7QCYTFHRG",
-    "https://www.flipkart.com/fossil-fs5905-machine-chronograph-analog-watch-men/p/itm149c14ed76e50"
+    "https://amzn.in/d/2pPwjuQ" // Added shortened Amazon URL example
   ];
 
   return (
@@ -161,8 +161,9 @@ const ProductUrlInput = ({
               <AlertDescription className="text-sm text-blue-700">
                 <span className="font-bold">Tips for best results:</span>
                 <ul className="mt-1 ml-4 list-disc">
+                  <li>Both standard and shortened Amazon URLs (amzn.in) are supported</li>
                   <li>Use complete product URLs from Flipkart for best results</li>
-                  <li>Make sure the URL includes the product ID ("pid=" parameter)</li>
+                  <li>Make sure the URL includes the product ID or reference</li>
                   <li>Try one of our example URLs for testing</li>
                 </ul>
                 <div className="mt-2">

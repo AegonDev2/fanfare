@@ -28,6 +28,12 @@ serve(async (req) => {
 
     console.log(`Processing extraction request for URL: ${url}`);
     
+    // Handle Amazon shortened URLs (amzn.in format)
+    let processedUrl = url;
+    if (url.includes('amzn.in') && platform === 'amazon') {
+      console.log("Detected shortened Amazon URL, will follow redirects");
+    }
+    
     const buildshipUrl = 'https://jspn8s.buildship.run/untitledFlow-c234cebe00fd';
     
     const response = await fetch(buildshipUrl, {
@@ -38,7 +44,7 @@ serve(async (req) => {
         'Pragma': 'no-cache'
       },
       body: JSON.stringify({ 
-        url,
+        url: processedUrl,
         timestamp: new Date().getTime(),
         retryCount: retryCount || 0
       })
@@ -59,22 +65,6 @@ serve(async (req) => {
       price: extractedData.price || "0",
       platform: platform || 'unknown'
     };
-
-    // Store in Supabase table
-    const { data: insertedData, error: insertError } = await supabase
-      .from('product_preview_data')
-      .insert([{
-        url: url,
-        title: productData.name,
-        price: parseFloat(productData.price) || 0,
-        platform: productData.platform
-      }])
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error("Error storing product data:", insertError);
-    }
 
     return new Response(
       JSON.stringify({ 
