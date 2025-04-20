@@ -1,6 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { placeFlipkartOrder } from "./platforms/flipkart.ts"
+import { placeSouledStoreOrder } from "./platforms/souledstore.ts"
+import { getSupabaseClient, getActiveCredentials, getDeliveryAddress } from "./utils.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,226 +15,49 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    const { platform, productUrl, addressId, quantity } = await req.json()
+    const supabaseClient = getSupabaseClient()
+    
+    // Get platform credentials
+    const credentials = await getActiveCredentials(supabaseClient, platform)
+    
+    // Get delivery address
+    const address = await getDeliveryAddress(supabaseClient, addressId)
+
+    // Common order parameters
+    const orderParams = {
+      productUrl,
+      quantity,
+      addressId: address.id,
+      credentials
+    }
+
+    let orderResult
+
+    // Route to appropriate platform handler
+    switch (platform) {
+      case 'flipkart':
+        orderResult = await placeFlipkartOrder(orderParams)
+        break
+      case 'souledstore':
+        orderResult = await placeSouledStoreOrder(orderParams)
+        break
+      default:
+        throw new Error(`Platform ${platform} is not supported yet`)
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        ...orderResult,
+        platform
+      }),
       {
-        auth: {
-          persistSession: false,
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
       }
     )
 
-    const { platform, productUrl, addressId, quantity } = await req.json()
-
-    // Get active credentials for the platform
-    const { data: credentials, error: credError } = await supabaseClient
-      .from('ecommerce_credentials')
-      .select('*')
-      .eq('platform', platform)
-      .eq('is_active', true)
-      .single()
-
-    if (credError || !credentials) {
-      throw new Error(`No active credentials found for ${platform}`)
-    }
-
-    // Initialize browser-like headers
-    const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Connection': 'keep-alive',
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120"',
-      'Sec-Ch-Ua-Mobile': '?0',
-      'Sec-Ch-Ua-Platform': '"Windows"',
-      'Sec-Fetch-Dest': 'document',
-      'Sec-Fetch-Mode': 'navigate',
-      'Sec-Fetch-Site': 'none',
-      'Sec-Fetch-User': '?1',
-      'Upgrade-Insecure-Requests': '1',
-      'Cookie': '', // Will be populated after login
-    }
-
-    // Handle different platforms
-    if (platform === 'flipkart') {
-      // Step 1: Login to Flipkart
-      console.log('Attempting to login to Flipkart...')
-      
-      const loginData = {
-        username: credentials.username,
-        password: credentials.encrypted_password,
-      }
-
-      const loginResponse = await fetch('https://www.flipkart.com/api/login', {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData)
-      })
-
-      if (!loginResponse.ok) {
-        throw new Error('Failed to login to Flipkart')
-      }
-
-      // Extract and store cookies from login response
-      const sessionCookies = loginResponse.headers.get('set-cookie')
-      headers.Cookie = sessionCookies || ''
-
-      // Step 2: Fetch product page to get product ID and other details
-      console.log('Fetching product details...')
-      const productResponse = await fetch(productUrl, { headers })
-      const productHtml = await productResponse.text()
-      
-      // Extract product ID using regex instead of DOM parser
-      const productIdMatch = productHtml.match(/productId['"]\s*:\s*['"]([^'"]+)['"]/i) || 
-                          productUrl.match(/\/([A-Za-z0-9]+)(?:\?|\/$|$)/) ||
-                          [];
-      
-      const productId = productIdMatch[1] || new URL(productUrl).pathname.split('/').pop();
-      
-      if (!productId) {
-        throw new Error('Could not extract product ID')
-      }
-
-      // Step 3: Add to cart
-      console.log('Adding product to cart...')
-      const addToCartResponse = await fetch('https://www.flipkart.com/api/cart/add', {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId,
-          quantity
-        })
-      })
-
-      if (!addToCartResponse.ok) {
-        throw new Error('Failed to add product to cart')
-      }
-
-      // Step 4: Initialize checkout
-      console.log('Initializing checkout...')
-      const checkoutResponse = await fetch('https://www.flipkart.com/api/checkout/initialize', {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        }
-      })
-
-      if (!checkoutResponse.ok) {
-        throw new Error('Failed to initialize checkout')
-      }
-
-      // Step 5: Set delivery address
-      console.log('Setting delivery address...')
-      const { data: address, error: addressError } = await supabaseClient
-        .from('influencer_addresses')
-        .select('*')
-        .eq('id', addressId)
-        .single()
-
-      if (addressError || !address) {
-        throw new Error('Failed to fetch delivery address')
-      }
-
-      const addressResponse = await fetch('https://www.flipkart.com/api/checkout/address', {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          addressId: address.id,
-          address: {
-            street: address.street_address,
-            city: address.city,
-            state: address.state,
-            pincode: address.postal_code,
-            country: address.country
-          }
-        })
-      })
-
-      if (!addressResponse.ok) {
-        throw new Error('Failed to set delivery address')
-      }
-
-      // Step 6: Place order
-      console.log('Placing final order...')
-      const placeOrderResponse = await fetch('https://www.flipkart.com/api/checkout/place-order', {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paymentMethod: 'COD' // Cash on Delivery as default
-        })
-      })
-
-      if (!placeOrderResponse.ok) {
-        throw new Error('Failed to place order')
-      }
-
-      const orderConfirmation = await placeOrderResponse.json()
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          orderId: orderConfirmation.orderId,
-          platform,
-          status: 'pending',
-          trackingInfo: orderConfirmation.trackingInfo
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    } else if (platform === 'souledstore') {
-      // Temporary mock implementation for SouledStore
-      console.log(`Processing order for SouledStore product: ${productUrl}`);
-      
-      // For now, we'll simulate a successful order without actually placing it
-      // This is a placeholder until we implement the actual SouledStore checkout flow
-      return new Response(
-        JSON.stringify({
-          success: true,
-          orderId: `SS-${Math.floor(Math.random() * 1000000)}`,
-          platform,
-          status: 'pending',
-          message: 'SouledStore order processing is in development. This is a simulated success response.'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    } else {
-      // Default fallback for unsupported platforms
-      return new Response(
-        JSON.stringify({
-          success: true,
-          orderId: `MOCK-${Math.floor(Math.random() * 1000000)}`,
-          platform,
-          status: 'pending',
-          message: `Platform ${platform} is not fully supported yet. This is a simulated success response.`
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
   } catch (error) {
     console.error('Error placing order:', error)
     return new Response(
@@ -240,7 +65,7 @@ serve(async (req) => {
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
-      },
+      }
     )
   }
 })
