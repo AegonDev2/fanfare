@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -10,11 +11,11 @@ const corsHeaders = {
 };
 
 // Helper function to interact with JigsawStack APIs
-const fetchJigsawStack = async (path: string, body: any) => {
+const fetchJigsawStack = async (path, body) => {
   try {
     const headers = {
       "Content-Type": "application/json",
-      "x-api-key": apiKey!,
+      "x-api-key": apiKey,
     };
 
     console.log(`Making request to ${JIGSAWSTACK_URL}${path} with body:`, JSON.stringify(body));
@@ -41,16 +42,16 @@ const fetchJigsawStack = async (path: string, body: any) => {
   }
 };
 
-// Define element prompts for different platforms
-const getElementPrompts = (platform: 'amazon' | 'flipkart' | 'other') => {
+// Get element prompts based on platform
+const getElementPrompts = (platform) => {
   if (platform === 'amazon' || platform === 'flipkart') {
     return ["product_title", "product_price"];
   }
   return [];
 };
 
-// Fall back to CSS selectors if AI scraping doesn't work well
-const getSelectors = (platform: 'amazon' | 'flipkart' | 'other') => {
+// Get CSS selectors for fallback
+const getSelectors = (platform) => {
   if (platform === 'amazon') {
     return [
       { selector: "#productTitle" }, // title
@@ -63,6 +64,17 @@ const getSelectors = (platform: 'amazon' | 'flipkart' | 'other') => {
     ];
   }
   return [];
+};
+
+// Detect the platform from URL
+const detectPlatform = (url) => {
+  if (url.includes('amazon') || url.includes('amzn.')) {
+    return 'amazon';
+  }
+  if (url.includes('flipkart')) {
+    return 'flipkart';
+  }
+  return 'other';
 };
 
 serve(async (req) => {
@@ -107,31 +119,28 @@ serve(async (req) => {
       const aiScrapeResponse = await fetchJigsawStack("/ai/scrape", aiRequestBody);
       console.log("AI Scrape response:", aiScrapeResponse);
 
-      // Process AI scrape response
       if (!aiScrapeResponse.data) {
         throw new Error("No data returned from AI scrape");
       }
 
-      const productTitle = aiScrapeResponse.data.find((d: any) => 
+      const productTitle = aiScrapeResponse.data.find(d => 
         d.element_prompt === "product_title" && d.results?.length > 0
       )?.results[0]?.text?.trim() || "";
 
-      const productPrice = aiScrapeResponse.data.find((d: any) => 
+      const productPrice = aiScrapeResponse.data.find(d => 
         d.element_prompt === "product_price" && d.results?.length > 0
       )?.results[0]?.text?.trim() || "0";
 
       console.log("Extracted with AI scraping - Title:", productTitle, "Price:", productPrice);
 
-      const extractedData = {
-        name: productTitle,
-        price: productPrice,
-        platform: platform
-      };
-
       return new Response(
         JSON.stringify({
           success: true,
-          productData: extractedData,
+          productData: {
+            name: productTitle,
+            price: productPrice,
+            platform: platform
+          },
           source: "jigsawstack-ai",
           timestamp: new Date().toISOString()
         }),
@@ -174,22 +183,18 @@ serve(async (req) => {
         platform: platform
       };
 
-      // Process the scraped data with more robust handling
       try {
-        // Extract product name
-        if (scrapeResponse.data[0]?.results && scrapeResponse.data[0].results.length > 0) {
+        if (scrapeResponse.data[0]?.results?.length > 0) {
           extractedData.name = scrapeResponse.data[0].results[0].text?.trim() || "";
           console.log("Extracted name:", extractedData.name);
         }
         
-        // Extract product price
-        if (scrapeResponse.data[1]?.results && scrapeResponse.data[1].results.length > 0) {
+        if (scrapeResponse.data[1]?.results?.length > 0) {
           extractedData.price = scrapeResponse.data[1].results[0].text?.trim() || "0";
           console.log("Extracted price:", extractedData.price);
         }
       } catch (parseError) {
         console.error("Error parsing scraped data:", parseError);
-        // Continue with potentially incomplete data rather than failing completely
       }
 
       console.log("Final extracted product data:", extractedData);
@@ -230,12 +235,3 @@ serve(async (req) => {
   }
 });
 
-function detectPlatform(url: string): 'amazon' | 'flipkart' | 'other' {
-  if (url.includes('amazon') || url.includes('amzn.')) {
-    return 'amazon';
-  }
-  if (url.includes('flipkart')) {
-    return 'flipkart';
-  }
-  return 'other';
-}
