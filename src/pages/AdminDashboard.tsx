@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +25,7 @@ interface OrderDetails {
   product_url: string;
   product_title: string | null;
   product_price: number | null;
+  platform_fee: number | null;
   fan_id?: string;
   fan_email?: string;
   influencer_id: string | null;
@@ -55,7 +55,6 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Check if user has admin role using the roleManager's hasRole function
       const isAdmin = await hasRole(user.id, 'admin');
       
       if (!isAdmin) {
@@ -78,7 +77,6 @@ const AdminDashboard = () => {
   const fetchAllOrders = async () => {
     setIsLoading(true);
     try {
-      // Fetch all orders with accepted status where manual processing is needed
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select('*, influencer:influencer_id(*)')
@@ -89,17 +87,14 @@ const AdminDashboard = () => {
         throw orderError;
       }
 
-      // Get additional data for each order
       const enrichedOrders = await Promise.all(
         (orderData || []).map(async (order) => {
-          // Get fan information
           const { data: fanData } = await supabase
             .from('profiles')
             .select('email')
             .eq('id', order.user_id)
             .maybeSingle();
 
-          // Get influencer name
           const influencerName = order.influencer?.name || "Unknown";
           
           return {
@@ -125,7 +120,6 @@ const AdminDashboard = () => {
 
   const handleOrderProcessing = async (orderId: string) => {
     try {
-      // Update the order status to "processing" to indicate admin is working on it
       const { error } = await supabase
         .from('orders')
         .update({ status: "processing" })
@@ -133,7 +127,6 @@ const AdminDashboard = () => {
 
       if (error) throw error;
 
-      // Refresh orders list
       fetchAllOrders();
       
       toast({
@@ -152,16 +145,13 @@ const AdminDashboard = () => {
 
   const handleOrderComplete = async (orderId: string) => {
     try {
-      // Get the order details
       const order = orders.find(o => o.id === orderId);
       if (!order) {
         throw new Error("Order not found");
       }
       
-      // Calculate total amount
       const totalAmount = (order.product_price || 0) + (order.platform_fee || 5.00);
       
-      // Process payment from user's wallet
       const { data: paymentResult, error: paymentError } = await supabase.functions.invoke("execute_sql", {
         body: {
           sql_query: `SELECT process_gift_payment('${order.user_id}', ${totalAmount}, '${orderId}', 'Payment for ${order.product_title?.replace(/'/g, "''") || "gift order"}')`
@@ -174,18 +164,16 @@ const AdminDashboard = () => {
       
       console.log("Payment successfully processed:", paymentResult);
 
-      // Update order status to "completed"
       const { error } = await supabase
         .from('orders')
         .update({ 
           status: "completed",
-          delivery_estimate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Estimated delivery in 7 days
+          delivery_estimate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         })
         .eq('id', orderId);
 
       if (error) throw error;
 
-      // Create notification for the influencer
       if (order.influencer_id) {
         await supabase.from("notifications").insert({
           recipient_id: order.influencer_id,
@@ -195,7 +183,6 @@ const AdminDashboard = () => {
         });
       }
       
-      // Create notification for the sender/fan
       if (order.user_id) {
         await supabase.from("notifications").insert({
           recipient_id: order.user_id,
@@ -205,7 +192,6 @@ const AdminDashboard = () => {
         });
       }
 
-      // Refresh orders list
       fetchAllOrders();
       
       toast({

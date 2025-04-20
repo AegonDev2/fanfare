@@ -27,7 +27,7 @@ interface GiftRequest {
   product_url: string;
   message: string;
   created_at: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered';
   sender: {
     id: string;
     email: string;
@@ -45,6 +45,21 @@ interface Address {
   state: string;
   postal_code: string;
   country: string;
+  phone?: string;
+}
+
+interface InfluencerAddress {
+  id: string;
+  street_address: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  is_primary: boolean;
+  influencer_id: string;
+  created_at: string;
+  name?: string;
+  address_line2?: string;
   phone?: string;
 }
 
@@ -78,12 +93,17 @@ const GiftRequests = () => {
       if (error) throw error;
       
       if (data) {
-        const typedRequests: GiftRequest[] = data.map(item => ({
+        const typedRequests = data.map(item => ({
           ...item,
           gift_item: item.product_title || item.product_url,
-          status: (item.status as 'pending' | 'approved' | 'rejected') || 'pending'
+          status: (item.status as 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered') || 'pending',
+          // Ensure sender has correct shape
+          sender: {
+            id: item.sender.id || '',
+            email: item.sender.email || ''
+          }
         }));
-        setRequests(typedRequests);
+        setRequests(typedRequests as GiftRequest[]);
       }
     } catch (error) {
       console.error('Error fetching gift requests:', error);
@@ -97,7 +117,7 @@ const GiftRequests = () => {
     }
   };
 
-  const updateRequestStatus = async (id: string, status: 'approved' | 'rejected') => {
+  const updateRequestStatus = async (id: string, status: 'accepted' | 'rejected') => {
     try {
       const { error } = await supabase
         .from('gift_requests')
@@ -112,7 +132,7 @@ const GiftRequests = () => {
         )
       );
 
-      if (status === 'approved') {
+      if (status === 'accepted') {
         const request = requests.find(r => r.id === id);
         
         if (request) {
@@ -128,16 +148,19 @@ const GiftRequests = () => {
             throw new Error('Could not find shipping address');
           }
 
+          // Cast addressData to InfluencerAddress type
+          const influencerAddress = addressData as InfluencerAddress;
+
           // Create a properly formatted shipping address object
           const shippingAddress: Address = {
-            name: addressData.name || "Recipient",
-            address_line1: addressData.street_address,
-            address_line2: addressData.address_line2 || "",
-            city: addressData.city,
-            state: addressData.state,
-            postal_code: addressData.postal_code,
-            country: addressData.country || "India",
-            phone: addressData.phone || "Not provided"
+            name: influencerAddress.name || "Recipient",
+            address_line1: influencerAddress.street_address,
+            address_line2: influencerAddress.address_line2 || "",
+            city: influencerAddress.city,
+            state: influencerAddress.state,
+            postal_code: influencerAddress.postal_code,
+            country: influencerAddress.country || "India",
+            phone: influencerAddress.phone || "Not provided"
           };
 
           // Create order for admin with product URL
@@ -174,13 +197,13 @@ const GiftRequests = () => {
 
       toast({
         title: "Success",
-        description: `Gift request ${status === 'approved' ? 'approved' : 'rejected'} successfully!`,
+        description: `Gift request ${status === 'accepted' ? 'approved' : 'rejected'} successfully!`,
       });
     } catch (error) {
-      console.error(`Error ${status === 'approved' ? 'approving' : 'rejecting'} gift request:`, error);
+      console.error(`Error ${status === 'accepted' ? 'approving' : 'rejecting'} gift request:`, error);
       toast({
         title: "Error",
-        description: `Failed to ${status === 'approved' ? 'approve' : 'reject'} gift request`,
+        description: `Failed to ${status === 'accepted' ? 'approve' : 'reject'} gift request`,
         variant: "destructive",
       });
     }
