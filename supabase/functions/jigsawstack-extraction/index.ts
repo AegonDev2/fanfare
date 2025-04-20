@@ -42,6 +42,17 @@ const fetchJigsawStack = async (path: string, body: any) => {
   }
 };
 
+// Define element prompts for different platforms
+const getElementPrompts = (platform: 'amazon' | 'flipkart' | 'other') => {
+  if (platform === 'amazon') {
+    return ["product title", "product price"];
+  } else if (platform === 'flipkart') {
+    return ["product title", "product price"];
+  }
+  return [];
+};
+
+// Fall back to CSS selectors if AI scraping doesn't work well
 const getSelectors = (platform: 'amazon' | 'flipkart' | 'other') => {
   if (platform === 'amazon') {
     return [
@@ -81,67 +92,126 @@ serve(async (req) => {
     const platform = detectPlatform(url);
     console.log(`Detected platform: ${platform}`);
 
-    const elements = getSelectors(platform);
-    
-    if (elements.length === 0) {
-      console.error("Unsupported platform");
-      throw new Error("Unsupported platform");
-    }
-
-    const requestBody = {
-      url: url,
-      elements: elements
-    };
-
-    console.log("Making request to JigsawStack API with selectors...");
-    const scrapeResponse = await fetchJigsawStack("/scrape", requestBody);
-    console.log("Raw JigsawStack response:", scrapeResponse);
-
-    if (!scrapeResponse.data) {
-      console.error("No data returned from JigsawStack");
-      throw new Error("No data returned from JigsawStack");
-    }
-
-    const extractedData = {
-      name: "",
-      price: "0",
-      platform: platform
-    };
-
-    // Process the scraped data with more robust handling
+    // First try the AI-based scraping
     try {
-      // Extract product name
-      if (scrapeResponse.data[0]?.results && scrapeResponse.data[0].results.length > 0) {
-        extractedData.name = scrapeResponse.data[0].results[0].text?.trim() || "";
-        console.log("Extracted name:", extractedData.name);
-      }
+      console.log("Attempting AI-based scraping first...");
+      const elementPrompts = getElementPrompts(platform);
       
-      // Extract product price
-      if (scrapeResponse.data[1]?.results && scrapeResponse.data[1].results.length > 0) {
-        extractedData.price = scrapeResponse.data[1].results[0].text?.trim() || "0";
-        console.log("Extracted price:", extractedData.price);
+      if (elementPrompts.length === 0) {
+        throw new Error("Unsupported platform for AI scraping");
       }
-    } catch (parseError) {
-      console.error("Error parsing scraped data:", parseError);
-      // Continue with potentially incomplete data rather than failing completely
-    }
 
-    console.log("Final extracted product data:", extractedData);
+      const aiRequestBody = {
+        url: url,
+        element_prompts: elementPrompts
+      };
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        productData: extractedData,
-        source: "jigsawstack",
-        timestamp: new Date().toISOString()
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
+      console.log("Making request to JigsawStack AI scrape API...");
+      const aiScrapeResponse = await fetchJigsawStack("/ai/scrape", aiRequestBody);
+      console.log("AI Scrape response:", aiScrapeResponse);
+
+      // Process AI scrape response
+      if (!aiScrapeResponse.data) {
+        throw new Error("No data returned from AI scrape");
+      }
+
+      const productTitle = aiScrapeResponse.data.find((d: any) => 
+        d.element_prompt === "product title" && d.results?.length > 0
+      )?.results[0]?.text?.trim() || "";
+
+      const productPrice = aiScrapeResponse.data.find((d: any) => 
+        d.element_prompt === "product price" && d.results?.length > 0
+      )?.results[0]?.text?.trim() || "0";
+
+      console.log("Extracted with AI scraping - Title:", productTitle, "Price:", productPrice);
+
+      const extractedData = {
+        name: productTitle,
+        price: productPrice,
+        platform: platform
+      };
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          productData: extractedData,
+          source: "jigsawstack-ai",
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
         }
+      );
+
+    } catch (aiError) {
+      // If AI scraping fails, fall back to CSS selectors
+      console.error("AI scraping failed, falling back to CSS selectors:", aiError);
+      
+      const elements = getSelectors(platform);
+      
+      if (elements.length === 0) {
+        console.error("Unsupported platform");
+        throw new Error("Unsupported platform");
       }
-    );
+
+      const requestBody = {
+        url: url,
+        elements: elements
+      };
+
+      console.log("Making request to JigsawStack scrape API with selectors...");
+      const scrapeResponse = await fetchJigsawStack("/scrape", requestBody);
+      console.log("Raw JigsawStack response:", scrapeResponse);
+
+      if (!scrapeResponse.data) {
+        console.error("No data returned from JigsawStack");
+        throw new Error("No data returned from JigsawStack");
+      }
+
+      const extractedData = {
+        name: "",
+        price: "0",
+        platform: platform
+      };
+
+      // Process the scraped data with more robust handling
+      try {
+        // Extract product name
+        if (scrapeResponse.data[0]?.results && scrapeResponse.data[0].results.length > 0) {
+          extractedData.name = scrapeResponse.data[0].results[0].text?.trim() || "";
+          console.log("Extracted name:", extractedData.name);
+        }
+        
+        // Extract product price
+        if (scrapeResponse.data[1]?.results && scrapeResponse.data[1].results.length > 0) {
+          extractedData.price = scrapeResponse.data[1].results[0].text?.trim() || "0";
+          console.log("Extracted price:", extractedData.price);
+        }
+      } catch (parseError) {
+        console.error("Error parsing scraped data:", parseError);
+        // Continue with potentially incomplete data rather than failing completely
+      }
+
+      console.log("Final extracted product data:", extractedData);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          productData: extractedData,
+          source: "jigsawstack-css",
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
 
   } catch (error) {
     console.error('Extraction error:', error);
