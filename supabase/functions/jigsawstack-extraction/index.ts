@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -66,7 +67,7 @@ const isErrorPage = (response) => {
 };
 
 const getElementPrompts = (platform) => {
-  if (platform === 'amazon' || platform === 'flipkart') {
+  if (platform === 'amazon' || platform === 'flipkart' || platform === 'souledstore') {
     return ["product_title", "product_price"];
   }
   return [];
@@ -83,6 +84,11 @@ const getSelectors = (platform) => {
       { selector: "h1 span" }, // title
       { selector: "div._30jeq3._16Jk6d" } // price
     ];
+  } else if (platform === 'souledstore') {
+    return [
+      { selector: "h1.pdp-title" }, // title
+      { selector: "div.price-box span.price" } // price
+    ];
   }
   return [];
 };
@@ -93,6 +99,9 @@ const detectPlatform = (url) => {
   }
   if (url.includes('flipkart')) {
     return 'flipkart';
+  }
+  if (url.includes('thesouledstore')) {
+    return 'souledstore';
   }
   return 'other';
 };
@@ -133,7 +142,7 @@ const extractProductData = (response, platform) => {
     let price = "0";
     
     try {
-      if (platform === 'flipkart' && response.selectors.product_title) {
+      if ((platform === 'flipkart' || platform === 'souledstore') && response.selectors.product_title) {
         title = response.selectors.product_title[0] || "";
         price = response.selectors.product_price ? 
                 response.selectors.product_price[0] || "0" : "0";
