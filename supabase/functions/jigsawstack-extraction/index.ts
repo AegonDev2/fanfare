@@ -42,6 +42,34 @@ const fetchJigsawStack = async (path, body) => {
   }
 };
 
+// Check if response is an error page
+const isErrorPage = (response) => {
+  // Check for Amazon error page indicators
+  if (response.link && response.link.some(link => 
+      link.href && (
+        link.href.includes('ref=cs_503') || 
+        link.href.includes('ref=cs_500') ||
+        link.href.includes('ref=cs_404')
+      )
+    )) {
+    console.log("Detected Amazon error page (503/500/404)");
+    return true;
+  }
+  
+  // Check for empty data and selectors
+  if (
+    (!response.data || response.data.length === 0) && 
+    response.selectors && 
+    (!response.selectors.product_title || response.selectors.product_title.length === 0) &&
+    (!response.selectors.product_price || response.selectors.product_price.length === 0)
+  ) {
+    console.log("Detected empty response with no product data");
+    return true;
+  }
+  
+  return false;
+};
+
 // Get element prompts based on platform
 const getElementPrompts = (platform) => {
   if (platform === 'amazon' || platform === 'flipkart') {
@@ -77,6 +105,46 @@ const detectPlatform = (url) => {
   return 'other';
 };
 
+// Fallback to Buildship extraction for Amazon products
+const fallbackToBuildship = async (url, platform) => {
+  console.log("Falling back to Buildship extraction service");
+  
+  try {
+    // Call the buildship-extraction function
+    const buildshipUrl = Deno.env.get("SUPABASE_URL") + "/functions/v1/buildship-extraction";
+    
+    console.log(`Calling Buildship extraction at ${buildshipUrl}`);
+    
+    const response = await fetch(buildshipUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+      },
+      body: JSON.stringify({ 
+        url: url,
+        platform: platform,
+        retryCount: 0
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Buildship request failed with status: ${response.status}`);
+      console.error(`Error details: ${errorText}`);
+      throw new Error("Buildship extraction failed");
+    }
+
+    const buildshipData = await response.json();
+    console.log("Buildship extraction result:", buildshipData);
+    
+    return buildshipData;
+  } catch (error) {
+    console.error("Error in Buildship fallback:", error);
+    throw error;
+  }
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -101,6 +169,9 @@ serve(async (req) => {
     const platform = detectPlatform(url);
     console.log(`Detected platform: ${platform}`);
 
+    let extractionResult = null;
+    let extractionSource = "";
+
     // First try the AI-based scraping
     try {
       console.log("Attempting AI-based scraping first...");
@@ -119,6 +190,23 @@ serve(async (req) => {
       const aiScrapeResponse = await fetchJigsawStack("/ai/scrape", aiRequestBody);
       console.log("AI Scrape response:", aiScrapeResponse);
 
+      // Check if we got an error page
+      if (isErrorPage(aiScrapeResponse)) {
+        console.log("Detected error page response, trying fallback");
+        
+        // For Amazon, try Buildship directly
+        if (platform === 'amazon') {
+          const buildshipResult = await fallbackToBuildship(url, platform);
+          return new Response(
+            JSON.stringify(buildshipResult),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        // For others, try CSS selector approach
+        throw new Error("Error page detected, trying selector fallback");
+      }
+
       if (!aiScrapeResponse.data) {
         throw new Error("No data returned from AI scrape");
       }
@@ -133,28 +221,42 @@ serve(async (req) => {
 
       console.log("Extracted with AI scraping - Title:", productTitle, "Price:", productPrice);
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          productData: {
-            name: productTitle,
-            price: productPrice,
-            platform: platform
-          },
-          source: "jigsawstack-ai",
-          timestamp: new Date().toISOString()
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      // If title is empty and it's an Amazon link, try Buildship
+      if ((!productTitle || productTitle === "") && platform === 'amazon') {
+        console.log("Empty title detected for Amazon product, trying Buildship fallback");
+        const buildshipResult = await fallbackToBuildship(url, platform);
+        return new Response(
+          JSON.stringify(buildshipResult),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      extractionResult = {
+        name: productTitle,
+        price: productPrice,
+        platform: platform
+      };
+      extractionSource = "jigsawstack-ai";
 
     } catch (aiError) {
-      // If AI scraping fails, fall back to CSS selectors
-      console.error("AI scraping failed, falling back to CSS selectors:", aiError);
+      console.error("AI scraping failed:", aiError);
+      
+      // For Amazon, try Buildship as second fallback
+      if (platform === 'amazon') {
+        try {
+          console.log("Trying Buildship for Amazon products");
+          const buildshipResult = await fallbackToBuildship(url, platform);
+          return new Response(
+            JSON.stringify(buildshipResult),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (buildshipError) {
+          console.error("Buildship fallback failed:", buildshipError);
+        }
+      }
+      
+      // If not Amazon or Buildship failed, fall back to CSS selectors
+      console.log("Falling back to CSS selectors");
       
       const elements = getSelectors(platform);
       
@@ -177,7 +279,7 @@ serve(async (req) => {
         throw new Error("No data returned from JigsawStack");
       }
 
-      const extractedData = {
+      extractionResult = {
         name: "",
         price: "0",
         platform: platform
@@ -185,35 +287,37 @@ serve(async (req) => {
 
       try {
         if (scrapeResponse.data[0]?.results?.length > 0) {
-          extractedData.name = scrapeResponse.data[0].results[0].text?.trim() || "";
-          console.log("Extracted name:", extractedData.name);
+          extractionResult.name = scrapeResponse.data[0].results[0].text?.trim() || "";
+          console.log("Extracted name:", extractionResult.name);
         }
         
         if (scrapeResponse.data[1]?.results?.length > 0) {
-          extractedData.price = scrapeResponse.data[1].results[0].text?.trim() || "0";
-          console.log("Extracted price:", extractedData.price);
+          extractionResult.price = scrapeResponse.data[1].results[0].text?.trim() || "0";
+          console.log("Extracted price:", extractionResult.price);
         }
       } catch (parseError) {
         console.error("Error parsing scraped data:", parseError);
       }
-
-      console.log("Final extracted product data:", extractedData);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          productData: extractedData,
-          source: "jigsawstack-css",
-          timestamp: new Date().toISOString()
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      
+      extractionSource = "jigsawstack-css";
     }
+
+    console.log("Final extracted product data:", extractionResult);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        productData: extractionResult,
+        source: extractionSource,
+        timestamp: new Date().toISOString()
+      }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
   } catch (error) {
     console.error('Extraction error:', error);
@@ -234,4 +338,3 @@ serve(async (req) => {
     );
   }
 });
-

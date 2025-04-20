@@ -15,3 +15,9 @@ project_id = "lovable"
   timeoutMs = 120000
   importmap = "./functions/importmap.json"
   cors = true
+
+[functions.buildship-extraction]
+  verify_jwt = false
+  timeoutMs = 120000
+  importmap = "./functions/buildship-extraction/importmap.json"
+  cors = true
