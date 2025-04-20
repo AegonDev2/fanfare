@@ -48,19 +48,6 @@ export const useProductPreview = () => {
       return;
     }
 
-    const isAmazon = url.includes('amazon') || url.includes('amzn.');
-    const isFlipkart = url.includes('flipkart');
-    
-    if (!isAmazon && !isFlipkart) {
-      toast({
-        title: "Unsupported Platform",
-        description: "Currently only Amazon and Flipkart URLs are supported",
-        variant: "destructive",
-      });
-      setError("Unsupported platform. Only Amazon and Flipkart are supported.");
-      return;
-    }
-
     setIsFetchingProduct(true);
     setFetchProgress(10);
     setError(null);
@@ -162,7 +149,7 @@ export const useProductPreview = () => {
       } else {
         toast({
           title: "Error Fetching Product",
-          description: "Could not extract product details. Please try a different product URL or try again later.",
+          description: "Could not extract product details. Please try again later.",
           variant: "destructive",
         });
       }
