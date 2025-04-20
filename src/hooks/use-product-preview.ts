@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDetails } from "@/types/order";
@@ -49,7 +48,6 @@ export const useProductPreview = () => {
       return;
     }
 
-    // Validate if URL is from supported platform (Amazon or Flipkart)
     const isAmazon = url.includes('amazon') || url.includes('amzn.');
     const isFlipkart = url.includes('flipkart');
     
@@ -78,7 +76,6 @@ export const useProductPreview = () => {
 
       console.log(`Extracting product from URL: ${url}`);
       
-      // Call the Jigsawstack extraction function
       const { data, error: functionError } = await supabase.functions.invoke("jigsawstack-extraction", {
         body: { 
           url: url,
@@ -107,7 +104,6 @@ export const useProductPreview = () => {
         const priceString = extractedProduct.price || '0';
         const priceNumber = parseFloat(priceString.replace(/[^\d.]/g, '')) || 0;
         
-        // Store product preview data in Supabase
         try {
           const { error: insertError } = await supabase
             .from('product_preview_data')
@@ -130,10 +126,9 @@ export const useProductPreview = () => {
           price: priceNumber,
           priceInr: priceNumber,
           platformFee: 5.00,
-          image: extractedProduct.image || "https://placehold.co/600x400?text=No+Image",
+          image: "https://placehold.co/600x400?text=Product+Preview",
           platform: extractedProduct.platform,
-          id: url,
-          description: extractedProduct.description
+          id: url
         };
 
         setProductPreview(productDetails);
