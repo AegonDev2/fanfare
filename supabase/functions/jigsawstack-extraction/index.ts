@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -10,7 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to interact with JigsawStack APIs
 const fetchJigsawStack = async (path, body) => {
   try {
     const headers = {
@@ -42,9 +40,7 @@ const fetchJigsawStack = async (path, body) => {
   }
 };
 
-// Check if response is an error page
 const isErrorPage = (response) => {
-  // Check for Amazon error page indicators
   if (response.link && response.link.some(link => 
       link.href && (
         link.href.includes('ref=cs_503') || 
@@ -56,7 +52,6 @@ const isErrorPage = (response) => {
     return true;
   }
   
-  // Check for empty data and selectors
   if (
     (!response.data || response.data.length === 0) && 
     response.selectors && 
@@ -70,7 +65,6 @@ const isErrorPage = (response) => {
   return false;
 };
 
-// Get element prompts based on platform
 const getElementPrompts = (platform) => {
   if (platform === 'amazon' || platform === 'flipkart') {
     return ["product_title", "product_price"];
@@ -78,7 +72,6 @@ const getElementPrompts = (platform) => {
   return [];
 };
 
-// Get CSS selectors for fallback
 const getSelectors = (platform) => {
   if (platform === 'amazon') {
     return [
@@ -94,7 +87,6 @@ const getSelectors = (platform) => {
   return [];
 };
 
-// Detect the platform from URL
 const detectPlatform = (url) => {
   if (url.includes('amazon') || url.includes('amzn.')) {
     return 'amazon';
@@ -105,11 +97,27 @@ const detectPlatform = (url) => {
   return 'other';
 };
 
-// Extract product data from different response formats
 const extractProductData = (response, platform) => {
   console.log("Extracting product data from response format:", response);
   
-  // If the response has data in the traditional format
+  if (response.context) {
+    const title = response.context.product_title && 
+                  response.context.product_title.length > 0 ? 
+                  response.context.product_title[0] : "";
+                  
+    const price = response.context.product_price && 
+                  response.context.product_price.length > 0 ? 
+                  response.context.product_price[0] : "0";
+    
+    console.log(`Extracted title: ${title}, First price: ${price}`);
+    
+    return { 
+      name: title, 
+      price: price, 
+      platform: platform 
+    };
+  }
+  
   if (response.data && Array.isArray(response.data)) {
     const productTitle = response.data.find(d => 
       d.element_prompt === "product_title" && d.results?.length > 0
@@ -122,29 +130,12 @@ const extractProductData = (response, platform) => {
     return { name: productTitle, price: productPrice };
   }
   
-  // If the response has data in the context format (Flipkart)
-  if (response.context) {
-    const title = response.context.product_title && 
-                  response.context.product_title.length > 0 ? 
-                  response.context.product_title[0] : "";
-                  
-    // For price, take the first value which is usually the current price
-    const price = response.context.product_price && 
-                  response.context.product_price.length > 0 ? 
-                  response.context.product_price[0] : "0";
-    
-    return { name: title, price: price };
-  }
-  
-  // Fallback for selector-based extraction
   if (response.selectors) {
     let title = "";
     let price = "0";
     
-    // Try to extract from selectors results
     try {
       if (platform === 'flipkart' && response.selectors.product_title) {
-        // For Flipkart: use the first selector result
         title = response.selectors.product_title[0] || "";
         price = response.selectors.product_price ? 
                 response.selectors.product_price[0] || "0" : "0";
@@ -156,16 +147,13 @@ const extractProductData = (response, platform) => {
     return { name: title, price: price };
   }
   
-  // If nothing works, return empty data
   return { name: "", price: "0" };
 };
 
-// Fallback to Buildship extraction for Amazon products
 const fallbackToBuildship = async (url, platform) => {
   console.log("Falling back to Buildship extraction service");
   
   try {
-    // Call the buildship-extraction function
     const buildshipUrl = Deno.env.get("SUPABASE_URL") + "/functions/v1/buildship-extraction";
     
     console.log(`Calling Buildship extraction at ${buildshipUrl}`);
@@ -201,7 +189,6 @@ const fallbackToBuildship = async (url, platform) => {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -227,7 +214,6 @@ serve(async (req) => {
     let extractionResult = null;
     let extractionSource = "";
 
-    // First try the AI-based scraping
     try {
       console.log("Attempting AI-based scraping first...");
       const elementPrompts = getElementPrompts(platform);
@@ -245,11 +231,9 @@ serve(async (req) => {
       const aiScrapeResponse = await fetchJigsawStack("/ai/scrape", aiRequestBody);
       console.log("AI Scrape response:", aiScrapeResponse);
 
-      // Check if we got an error page
       if (isErrorPage(aiScrapeResponse)) {
         console.log("Detected error page response, trying fallback");
         
-        // For Amazon, try Buildship directly
         if (platform === 'amazon') {
           const buildshipResult = await fallbackToBuildship(url, platform);
           return new Response(
@@ -258,15 +242,12 @@ serve(async (req) => {
           );
         }
         
-        // For others, try CSS selector approach
         throw new Error("Error page detected, trying selector fallback");
       }
 
-      // Extract product data using our helper function
       const productData = extractProductData(aiScrapeResponse, platform);
       console.log("Extracted with AI scraping - Title:", productData.name, "Price:", productData.price);
 
-      // If title is empty and it's an Amazon link, try Buildship
       if ((!productData.name || productData.name === "") && platform === 'amazon') {
         console.log("Empty title detected for Amazon product, trying Buildship fallback");
         const buildshipResult = await fallbackToBuildship(url, platform);
@@ -286,7 +267,6 @@ serve(async (req) => {
     } catch (aiError) {
       console.error("AI scraping failed:", aiError);
       
-      // For Amazon, try Buildship as second fallback
       if (platform === 'amazon') {
         try {
           console.log("Trying Buildship for Amazon products");
@@ -300,7 +280,6 @@ serve(async (req) => {
         }
       }
       
-      // If not Amazon or Buildship failed, fall back to CSS selectors
       console.log("Falling back to CSS selectors");
       
       const elements = getSelectors(platform);
@@ -319,7 +298,6 @@ serve(async (req) => {
       const scrapeResponse = await fetchJigsawStack("/scrape", requestBody);
       console.log("Raw JigsawStack response:", scrapeResponse);
 
-      // Extract product data using our helper function
       const productData = extractProductData(scrapeResponse, platform);
       
       extractionResult = {
