@@ -12,35 +12,46 @@ const corsHeaders = {
 
 // Helper function to interact with JigsawStack APIs
 const fetchJigsawStack = async (path: string, body: any) => {
-  const headers = {
-    "Content-Type": "application/json",
-    "x-api-key": apiKey!,
-  };
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey!,
+    };
 
-  const res = await fetch(`${JIGSAWSTACK_URL}${path}`, {
-    headers,
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+    console.log(`Making request to ${JIGSAWSTACK_URL}${path} with body:`, JSON.stringify(body));
+    
+    const res = await fetch(`${JIGSAWSTACK_URL}${path}`, {
+      headers,
+      method: "POST",
+      body: JSON.stringify(body),
+    });
 
-  if (!res.ok) {
-    const errorObj = await res.json();
-    throw new Error(errorObj?.message || "Something went wrong with JigsawStack API");
+    console.log(`JigsawStack API response status: ${res.status}`);
+    
+    const responseJson = await res.json();
+    
+    if (!res.ok) {
+      console.error("JigsawStack API error:", responseJson);
+      throw new Error(responseJson?.message || `Error from JigsawStack API: ${res.status}`);
+    }
+
+    return responseJson;
+  } catch (error) {
+    console.error("Error in fetchJigsawStack:", error);
+    throw error;
   }
-
-  return res.json();
 };
 
 const getSelectors = (platform: 'amazon' | 'flipkart' | 'other') => {
   if (platform === 'amazon') {
     return [
       { selector: "#productTitle" }, // title
-      { selector: "#corePriceDisplay_desktop_feature_div > div.a-section.a-spacing-none.aok-align-center.aok-relative > span.a-price.aok-align-center.reinventPricePriceToPayMargin.priceToPay > span:nth-child(2) > span.a-price-whole" } // price
+      { selector: ".a-price-whole" } // simplified price selector for more reliability
     ];
   } else if (platform === 'flipkart') {
     return [
-      { selector: "#container > div > div._39kFie.N3De93.JxFEK3._48O0EI > div.DOjaWF.YJG4Cf > div.DOjaWF.gdgoEp.col-8-12 > div:nth-child(2) > div > div:nth-child(1) > h1 > span" }, // title
-      { selector: "#container > div > div._39kFie.N3De93.JxFEK3._48O0EI > div.DOjaWF.YJG4Cf > div.DOjaWF.gdgoEp.col-8-12 > div:nth-child(2) > div > div.x\\+7QT1 > div.UOCQB1 > div > div.Nx9bqj.CxhGGd" } // price
+      { selector: "h1 span" }, // simplified title selector
+      { selector: "div._30jeq3._16Jk6d" } // typical Flipkart price selector
     ];
   }
   return [];
@@ -54,12 +65,14 @@ serve(async (req) => {
 
   try {
     if (!apiKey) {
+      console.error("Missing JigsawStack API key");
       throw new Error("JigsawStack API key not configured");
     }
 
     const { url } = await req.json();
     
     if (!url) {
+      console.error("No URL provided");
       throw new Error("URL is required");
     }
 
@@ -71,6 +84,7 @@ serve(async (req) => {
     const elements = getSelectors(platform);
     
     if (elements.length === 0) {
+      console.error("Unsupported platform");
       throw new Error("Unsupported platform");
     }
 
@@ -84,6 +98,7 @@ serve(async (req) => {
     console.log("Raw JigsawStack response:", scrapeResponse);
 
     if (!scrapeResponse.data) {
+      console.error("No data returned from JigsawStack");
       throw new Error("No data returned from JigsawStack");
     }
 
@@ -93,15 +108,25 @@ serve(async (req) => {
       platform: platform
     };
 
-    // Process the scraped data
-    if (scrapeResponse.data[0]?.results?.[0]) {
-      extractedData.name = scrapeResponse.data[0].results[0].text?.trim() || "";
-    }
-    if (scrapeResponse.data[1]?.results?.[0]) {
-      extractedData.price = scrapeResponse.data[1].results[0].text?.trim() || "0";
+    // Process the scraped data with more robust handling
+    try {
+      // Extract product name
+      if (scrapeResponse.data[0]?.results && scrapeResponse.data[0].results.length > 0) {
+        extractedData.name = scrapeResponse.data[0].results[0].text?.trim() || "";
+        console.log("Extracted name:", extractedData.name);
+      }
+      
+      // Extract product price
+      if (scrapeResponse.data[1]?.results && scrapeResponse.data[1].results.length > 0) {
+        extractedData.price = scrapeResponse.data[1].results[0].text?.trim() || "0";
+        console.log("Extracted price:", extractedData.price);
+      }
+    } catch (parseError) {
+      console.error("Error parsing scraped data:", parseError);
+      // Continue with potentially incomplete data rather than failing completely
     }
 
-    console.log("Transformed product data:", extractedData);
+    console.log("Final extracted product data:", extractedData);
 
     return new Response(
       JSON.stringify({
