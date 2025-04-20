@@ -6,7 +6,7 @@ export interface ProductDetails {
   platformFee: number;
   image: string;
   id?: string;
-  platform?: 'amazon' | 'flipkart';
+  platform?: 'amazon' | 'flipkart' | 'other';
   description?: string;
 }
 
