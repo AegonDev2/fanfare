@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -44,10 +43,8 @@ const fetchJigsawStack = async (path: string, body: any) => {
 
 // Define element prompts for different platforms
 const getElementPrompts = (platform: 'amazon' | 'flipkart' | 'other') => {
-  if (platform === 'amazon') {
-    return ["product title", "product price"];
-  } else if (platform === 'flipkart') {
-    return ["product title", "product price"];
+  if (platform === 'amazon' || platform === 'flipkart') {
+    return ["product_title", "product_price"];
   }
   return [];
 };
@@ -57,12 +54,12 @@ const getSelectors = (platform: 'amazon' | 'flipkart' | 'other') => {
   if (platform === 'amazon') {
     return [
       { selector: "#productTitle" }, // title
-      { selector: ".a-price-whole" } // simplified price selector for more reliability
+      { selector: ".a-price-whole" } // price
     ];
   } else if (platform === 'flipkart') {
     return [
-      { selector: "h1 span" }, // simplified title selector
-      { selector: "div._30jeq3._16Jk6d" } // typical Flipkart price selector
+      { selector: "h1 span" }, // title
+      { selector: "div._30jeq3._16Jk6d" } // price
     ];
   }
   return [];
@@ -116,11 +113,11 @@ serve(async (req) => {
       }
 
       const productTitle = aiScrapeResponse.data.find((d: any) => 
-        d.element_prompt === "product title" && d.results?.length > 0
+        d.element_prompt === "product_title" && d.results?.length > 0
       )?.results[0]?.text?.trim() || "";
 
       const productPrice = aiScrapeResponse.data.find((d: any) => 
-        d.element_prompt === "product price" && d.results?.length > 0
+        d.element_prompt === "product_price" && d.results?.length > 0
       )?.results[0]?.text?.trim() || "0";
 
       console.log("Extracted with AI scraping - Title:", productTitle, "Price:", productPrice);
