@@ -31,6 +31,21 @@ const fetchJigsawStack = async (path: string, body: any) => {
   return res.json();
 };
 
+const getSelectors = (platform: 'amazon' | 'flipkart' | 'other') => {
+  if (platform === 'amazon') {
+    return [
+      { selector: "#productTitle" }, // title
+      { selector: "#corePriceDisplay_desktop_feature_div > div.a-section.a-spacing-none.aok-align-center.aok-relative > span.a-price.aok-align-center.reinventPricePriceToPayMargin.priceToPay > span:nth-child(2) > span.a-price-whole" } // price
+    ];
+  } else if (platform === 'flipkart') {
+    return [
+      { selector: "#container > div > div._39kFie.N3De93.JxFEK3._48O0EI > div.DOjaWF.YJG4Cf > div.DOjaWF.gdgoEp.col-8-12 > div:nth-child(2) > div > div:nth-child(1) > h1 > span" }, // title
+      { selector: "#container > div > div._39kFie.N3De93.JxFEK3._48O0EI > div.DOjaWF.YJG4Cf > div.DOjaWF.gdgoEp.col-8-12 > div:nth-child(2) > div > div.x\\+7QT1 > div.UOCQB1 > div > div.Nx9bqj.CxhGGd" } // price
+    ];
+  }
+  return [];
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -53,16 +68,19 @@ serve(async (req) => {
     const platform = detectPlatform(url);
     console.log(`Detected platform: ${platform}`);
 
-    // Define prompts based on platform
-    const elementPrompts = ["product title", "product price"];
+    const elements = getSelectors(platform);
+    
+    if (elements.length === 0) {
+      throw new Error("Unsupported platform");
+    }
 
     const requestBody = {
       url: url,
-      element_prompts: elementPrompts
+      elements: elements
     };
 
-    console.log("Making request to JigsawStack API...");
-    const scrapeResponse = await fetchJigsawStack("/ai/scrape", requestBody);
+    console.log("Making request to JigsawStack API with selectors...");
+    const scrapeResponse = await fetchJigsawStack("/scrape", requestBody);
     console.log("Raw JigsawStack response:", scrapeResponse);
 
     if (!scrapeResponse.data) {
@@ -76,15 +94,12 @@ serve(async (req) => {
     };
 
     // Process the scraped data
-    scrapeResponse.data.forEach((item: any) => {
-      if (item.results && item.results.length > 0) {
-        if (item.element_prompt === "product title") {
-          extractedData.name = item.results[0].text || "";
-        } else if (item.element_prompt === "product price") {
-          extractedData.price = item.results[0].text || "0";
-        }
-      }
-    });
+    if (scrapeResponse.data[0]?.results?.[0]) {
+      extractedData.name = scrapeResponse.data[0].results[0].text?.trim() || "";
+    }
+    if (scrapeResponse.data[1]?.results?.[0]) {
+      extractedData.price = scrapeResponse.data[1].results[0].text?.trim() || "0";
+    }
 
     console.log("Transformed product data:", extractedData);
 
