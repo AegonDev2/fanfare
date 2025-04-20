@@ -10,7 +10,6 @@ const corsHeaders = {
 console.log("Jigsawstack product extraction service started");
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 204, 
@@ -32,11 +31,9 @@ serve(async (req) => {
       throw new Error("Jigsawstack API key not configured");
     }
 
-    // Determine the platform from the URL
     const platform = detectPlatform(url);
     console.log(`Detected platform: ${platform}`);
 
-    // Make request to Jigsawstack API
     const scrapeResponse = await fetch("https://api.jigsawstack.com/v1/scrape", {
       method: 'POST',
       headers: {
@@ -45,7 +42,6 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         url,
-        // Request specific elements based on common e-commerce selectors
         selectors: getPlatformSelectors(platform)
       })
     });
@@ -60,7 +56,6 @@ serve(async (req) => {
     const data = await scrapeResponse.json();
     console.log("Raw scraped data:", data);
 
-    // Transform the data into our application's format
     const extractedProduct = transformProductData(data, platform);
     console.log("Transformed product data:", extractedProduct);
 
@@ -100,7 +95,6 @@ serve(async (req) => {
   }
 });
 
-// Helper functions
 function detectPlatform(url: string): 'amazon' | 'flipkart' | 'other' {
   if (url.includes('amazon') || url.includes('amzn.')) {
     return 'amazon';
@@ -108,25 +102,16 @@ function detectPlatform(url: string): 'amazon' | 'flipkart' | 'other' {
   if (url.includes('flipkart')) {
     return 'flipkart';
   }
-  return 'other'; // Default for unknown platforms
+  return 'other';
 }
 
 function getPlatformSelectors(platform: string) {
+  // Focus only on title and price selectors
   const commonSelectors = {
     title: [
-      'h1', 
-      'meta[property="og:title"]', 
+      'h1',
+      'meta[property="og:title"]',
       'meta[name="title"]'
-    ],
-    description: [
-      'meta[property="og:description"]',
-      'meta[name="description"]',
-      '[class*="description"]',
-      '[id*="description"]'
-    ],
-    image: [
-      'meta[property="og:image"]',
-      'meta[property="product:image"]'
     ]
   };
 
@@ -138,29 +123,18 @@ function getPlatformSelectors(platform: string) {
         '.a-price .a-offscreen',
         '#price_inside_buybox',
         '#newPitchPriceWrapper_feature_div .a-price .a-offscreen',
-        'span[data-a-color="price"] span.a-offscreen'
-      ],
-      image: [
-        ...commonSelectors.image,
-        '#landingImage',
-        '#imgBlkFront',
-        'img[data-old-hires]'
+        'span[data-a-color="price"] span.a-offscreen',
+        '#corePrice_feature_div .a-offscreen'
       ]
     },
     flipkart: {
       ...commonSelectors,
       price: [
-        '.CEmiEU',
         '._30jeq3',
+        '.CEmiEU',
         '.dyC4hf',
         '.CEmiEU ._30jeq3',
         '[class*="price"]'
-      ],
-      image: [
-        ...commonSelectors.image,
-        'img[class*="product-image"]',
-        '.CXW8mj img',
-        '._396cs4'
       ]
     },
     other: commonSelectors
@@ -175,16 +149,11 @@ function transformProductData(data: any, platform: string) {
     return {
       name: "Product information not available",
       price: "0",
-      image: "",
-      description: "Could not extract product details",
       platform: platform
     };
   }
 
-  // Extract the product data from the Jigsawstack response
   const scrapeData = data.data;
-
-  // Log the full structure to help with debugging
   console.log("Full scrape data structure:", JSON.stringify(scrapeData));
 
   const productName = Array.isArray(scrapeData.title) && scrapeData.title.length > 0 
@@ -195,19 +164,9 @@ function transformProductData(data: any, platform: string) {
     ? scrapeData.price[0] 
     : "0";
 
-  const imageUrl = Array.isArray(scrapeData.image) && scrapeData.image.length > 0 
-    ? scrapeData.image[0] 
-    : "";
-
-  const description = Array.isArray(scrapeData.description) && scrapeData.description.length > 0 
-    ? scrapeData.description[0] 
-    : "No description available";
-
   return {
     name: productName,
     price: priceValue,
-    image: imageUrl,
-    description: description,
     platform: platform
   };
 }

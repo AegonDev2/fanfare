@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -78,12 +77,7 @@ const ProductPreview = ({
               </div>
               <div className="flex flex-col justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold mb-2">{productPreview.name}</h2>
-                  {productPreview.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                      {productPreview.description}
-                    </p>
-                  )}
+                  <h2 className="text-xl font-semibold mb-4">{productPreview.name}</h2>
                   <div className="bg-gray-50 p-4 rounded-md mb-4">
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-600">Price:</span>
