@@ -105,6 +105,61 @@ const detectPlatform = (url) => {
   return 'other';
 };
 
+// Extract product data from different response formats
+const extractProductData = (response, platform) => {
+  console.log("Extracting product data from response format:", response);
+  
+  // If the response has data in the traditional format
+  if (response.data && Array.isArray(response.data)) {
+    const productTitle = response.data.find(d => 
+      d.element_prompt === "product_title" && d.results?.length > 0
+    )?.results[0]?.text?.trim() || "";
+
+    const productPrice = response.data.find(d => 
+      d.element_prompt === "product_price" && d.results?.length > 0
+    )?.results[0]?.text?.trim() || "0";
+    
+    return { name: productTitle, price: productPrice };
+  }
+  
+  // If the response has data in the context format (Flipkart)
+  if (response.context) {
+    const title = response.context.product_title && 
+                  response.context.product_title.length > 0 ? 
+                  response.context.product_title[0] : "";
+                  
+    // For price, take the first value which is usually the current price
+    const price = response.context.product_price && 
+                  response.context.product_price.length > 0 ? 
+                  response.context.product_price[0] : "0";
+    
+    return { name: title, price: price };
+  }
+  
+  // Fallback for selector-based extraction
+  if (response.selectors) {
+    let title = "";
+    let price = "0";
+    
+    // Try to extract from selectors results
+    try {
+      if (platform === 'flipkart' && response.selectors.product_title) {
+        // For Flipkart: use the first selector result
+        title = response.selectors.product_title[0] || "";
+        price = response.selectors.product_price ? 
+                response.selectors.product_price[0] || "0" : "0";
+      }
+    } catch (error) {
+      console.error("Error extracting from selectors:", error);
+    }
+    
+    return { name: title, price: price };
+  }
+  
+  // If nothing works, return empty data
+  return { name: "", price: "0" };
+};
+
 // Fallback to Buildship extraction for Amazon products
 const fallbackToBuildship = async (url, platform) => {
   console.log("Falling back to Buildship extraction service");
@@ -207,22 +262,12 @@ serve(async (req) => {
         throw new Error("Error page detected, trying selector fallback");
       }
 
-      if (!aiScrapeResponse.data) {
-        throw new Error("No data returned from AI scrape");
-      }
-
-      const productTitle = aiScrapeResponse.data.find(d => 
-        d.element_prompt === "product_title" && d.results?.length > 0
-      )?.results[0]?.text?.trim() || "";
-
-      const productPrice = aiScrapeResponse.data.find(d => 
-        d.element_prompt === "product_price" && d.results?.length > 0
-      )?.results[0]?.text?.trim() || "0";
-
-      console.log("Extracted with AI scraping - Title:", productTitle, "Price:", productPrice);
+      // Extract product data using our helper function
+      const productData = extractProductData(aiScrapeResponse, platform);
+      console.log("Extracted with AI scraping - Title:", productData.name, "Price:", productData.price);
 
       // If title is empty and it's an Amazon link, try Buildship
-      if ((!productTitle || productTitle === "") && platform === 'amazon') {
+      if ((!productData.name || productData.name === "") && platform === 'amazon') {
         console.log("Empty title detected for Amazon product, trying Buildship fallback");
         const buildshipResult = await fallbackToBuildship(url, platform);
         return new Response(
@@ -232,8 +277,8 @@ serve(async (req) => {
       }
 
       extractionResult = {
-        name: productTitle,
-        price: productPrice,
+        name: productData.name,
+        price: productData.price,
         platform: platform
       };
       extractionSource = "jigsawstack-ai";
@@ -274,30 +319,14 @@ serve(async (req) => {
       const scrapeResponse = await fetchJigsawStack("/scrape", requestBody);
       console.log("Raw JigsawStack response:", scrapeResponse);
 
-      if (!scrapeResponse.data) {
-        console.error("No data returned from JigsawStack");
-        throw new Error("No data returned from JigsawStack");
-      }
-
+      // Extract product data using our helper function
+      const productData = extractProductData(scrapeResponse, platform);
+      
       extractionResult = {
-        name: "",
-        price: "0",
+        name: productData.name || "Product Title Not Found",
+        price: productData.price || "0",
         platform: platform
       };
-
-      try {
-        if (scrapeResponse.data[0]?.results?.length > 0) {
-          extractionResult.name = scrapeResponse.data[0].results[0].text?.trim() || "";
-          console.log("Extracted name:", extractionResult.name);
-        }
-        
-        if (scrapeResponse.data[1]?.results?.length > 0) {
-          extractionResult.price = scrapeResponse.data[1].results[0].text?.trim() || "0";
-          console.log("Extracted price:", extractionResult.price);
-        }
-      } catch (parseError) {
-        console.error("Error parsing scraped data:", parseError);
-      }
       
       extractionSource = "jigsawstack-css";
     }
