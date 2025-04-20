@@ -75,6 +75,7 @@ const GiftRequests = () => {
   const fetchGiftRequests = async () => {
     try {
       setLoading(true);
+      // Fix the query to properly join the profiles table using explicit join
       const { data, error } = await supabase
         .from('gift_requests')
         .select(`
@@ -86,24 +87,50 @@ const GiftRequests = () => {
           created_at,
           status,
           influencer_id,
-          sender:sender_id (id, email)
+          sender_id
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
       if (data) {
-        const typedRequests = data.map(item => ({
-          ...item,
-          gift_item: item.product_title || item.product_url,
-          status: (item.status as 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered') || 'pending',
-          // Ensure sender has correct shape
-          sender: {
-            id: item.sender.id || '',
-            email: item.sender.email || ''
-          }
-        }));
-        setRequests(typedRequests as GiftRequest[]);
+        // For each gift request, fetch the sender's profile separately
+        const requestsWithSenders = await Promise.all(
+          data.map(async (request) => {
+            // Get sender profile
+            const { data: senderData, error: senderError } = await supabase
+              .from('profiles')
+              .select('id, email')
+              .eq('id', request.sender_id)
+              .single();
+
+            if (senderError) {
+              console.error('Error fetching sender profile:', senderError);
+              // Provide fallback data if profile fetch fails
+              return {
+                ...request,
+                gift_item: request.product_title || request.product_url,
+                status: (request.status as 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered') || 'pending',
+                sender: { 
+                  id: request.sender_id || '', 
+                  email: 'Unknown email'
+                }
+              };
+            }
+
+            return {
+              ...request,
+              gift_item: request.product_title || request.product_url,
+              status: (request.status as 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered') || 'pending',
+              sender: {
+                id: senderData?.id || request.sender_id || '',
+                email: senderData?.email || 'Unknown email'
+              }
+            };
+          })
+        );
+
+        setRequests(requestsWithSenders as GiftRequest[]);
       }
     } catch (error) {
       console.error('Error fetching gift requests:', error);
@@ -210,7 +237,7 @@ const GiftRequests = () => {
   };
 
   const getPendingRequests = () => requests.filter(r => r.status === 'pending');
-  const getApprovedRequests = () => requests.filter(r => r.status === 'approved');
+  const getAcceptedRequests = () => requests.filter(r => r.status === 'accepted');
   const getRejectedRequests = () => requests.filter(r => r.status === 'rejected');
 
   return (
@@ -255,7 +282,7 @@ const GiftRequests = () => {
                   <RequestCard 
                     key={request.id}
                     request={request}
-                    onApprove={() => updateRequestStatus(request.id, 'approved')}
+                    onApprove={() => updateRequestStatus(request.id, 'accepted')}
                     onReject={() => updateRequestStatus(request.id, 'rejected')}
                   />
                 ))}
@@ -266,7 +293,7 @@ const GiftRequests = () => {
           <TabsContent value="approved">
             {loading ? (
               <div className="text-center py-8">Loading approved requests...</div>
-            ) : getApprovedRequests().length === 0 ? (
+            ) : getAcceptedRequests().length === 0 ? (
               <Card>
                 <CardContent className="pt-6 text-center text-muted-foreground">
                   No approved gift requests.
@@ -274,7 +301,7 @@ const GiftRequests = () => {
               </Card>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {getApprovedRequests().map((request) => (
+                {getAcceptedRequests().map((request) => (
                   <RequestCard 
                     key={request.id}
                     request={request}
@@ -329,7 +356,7 @@ const RequestCard = ({ request, onApprove, onReject, showActions = true }: Reque
           <CardTitle className="text-lg">{request.product_title || "Gift Request"}</CardTitle>
           <Badge variant={
             request.status === 'pending' ? 'outline' : 
-            request.status === 'approved' ? 'default' : 'destructive'
+            request.status === 'accepted' ? 'default' : 'destructive'
           }>
             {request.status}
           </Badge>
