@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ShoppingCart, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ProductUrlInputProps {
   giftItem: string;
@@ -143,35 +142,6 @@ const ProductUrlInput = ({
             {!isValid && validationMessage && (
               <p className="text-red-500 text-sm mt-1">{validationMessage}</p>
             )}
-          </div>
-          
-          <div className="mb-6">
-            <Alert className="bg-blue-50 border-blue-200">
-              <AlertDescription className="text-sm text-blue-700">
-                <span className="font-bold">Tips for best results:</span>
-                <ul className="mt-1 ml-4 list-disc">
-                  <li>Use complete product URLs for best results</li>
-                  <li>Make sure the URL includes the product ID or reference</li>
-                  <li>Try one of our example URLs for testing</li>
-                </ul>
-                <div className="mt-2">
-                  <p className="font-semibold text-xs">Recommended test URLs:</p>
-                  <div className="mt-1 flex flex-col gap-1">
-                    {recommendations.map((url, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => handleUrlChange(url)}
-                        className="text-xs px-2 py-1 bg-white hover:bg-blue-50 border border-blue-100 rounded truncate text-left"
-                        disabled={isFetchingProduct}
-                      >
-                        {url.length > 60 ? url.substring(0, 60) + '...' : url}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </AlertDescription>
-            </Alert>
           </div>
           
           <Button
