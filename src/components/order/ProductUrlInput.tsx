@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ShoppingCart, Loader2, AlertCircle, CheckCircle2, RefreshCcw } from "lucide-react";
+import { ShoppingCart, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ProductUrlInputProps {
@@ -25,29 +24,19 @@ const ProductUrlInput = ({
   const [validationMessage, setValidationMessage] = useState("");
   
   const validateUrl = (url: string) => {
-    // Basic validation
     if (!url) {
-      setIsValid(true); // Empty is technically valid from a UI perspective
+      setIsValid(true);
       setValidationMessage("");
       return;
     }
     
     try {
-      const parsedUrl = new URL(url);
-      const isAmazon = parsedUrl.hostname.includes("amazon") || parsedUrl.hostname.includes("amzn.");
-      const isFlipkart = parsedUrl.hostname.includes("flipkart");
-      
-      if (!isAmazon && !isFlipkart) {
-        setIsValid(false);
-        setValidationMessage("Only Amazon and Flipkart URLs are supported");
-        return;
-      }
-      
+      new URL(url);
       setIsValid(true);
       setValidationMessage("");
     } catch (e) {
       setIsValid(false);
-      setValidationMessage("Invalid URL format");
+      setValidationMessage("Please enter a valid URL");
     }
   };
   
@@ -121,8 +110,8 @@ const ProductUrlInput = ({
 
   const recommendations = [
     "https://www.flipkart.com/fastrack-optimus-pro-1-43-amoled-display-aod-466x466-functional-crown-bt-calling-smartwatch/p/itma4744c9053b72?pid=SMWGV3ZY9YJYEYEC",
-    "https://www.flipkart.com/timex-automatic-black-dial-analog-watch-men/p/itm5d039dcaeb0c8?pid=WATGPGR7QCYTFHRG",
-    "https://amzn.in/d/2pPwjuQ" // Added shortened Amazon URL example
+    "https://amzn.in/d/2pPwjuQ",
+    "https://www.myntra.com/watches/fastrack/fastrack-unisex-black-digital-watch-38045pp02/14599416/buy"
   ];
 
   return (
@@ -134,7 +123,7 @@ const ProductUrlInput = ({
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="productUrl" className="block text-sm font-medium text-gray-700 mb-1">
-              Product URL from Amazon or Flipkart
+              Product URL
             </label>
             <div className="relative">
               <Input 
@@ -142,7 +131,7 @@ const ProductUrlInput = ({
                 value={giftItem}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 className={`w-full p-2 border ${!isValid ? 'border-red-500' : 'border-gray-300'} rounded-lg pr-10`}
-                placeholder="Paste Amazon or Flipkart product link here..."
+                placeholder="Paste any product URL here..."
                 disabled={isFetchingProduct}
               />
               {!isValid && (
@@ -161,8 +150,7 @@ const ProductUrlInput = ({
               <AlertDescription className="text-sm text-blue-700">
                 <span className="font-bold">Tips for best results:</span>
                 <ul className="mt-1 ml-4 list-disc">
-                  <li>Both standard and shortened Amazon URLs (amzn.in) are supported</li>
-                  <li>Use complete product URLs from Flipkart for best results</li>
+                  <li>Use complete product URLs for best results</li>
                   <li>Make sure the URL includes the product ID or reference</li>
                   <li>Try one of our example URLs for testing</li>
                 </ul>
