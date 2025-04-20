@@ -101,13 +101,11 @@ const extractProductData = (response, platform) => {
   console.log("Extracting product data from response format:", response);
   
   if (response.context) {
-    const title = response.context.product_title && 
-                  response.context.product_title.length > 0 ? 
-                  response.context.product_title[0] : "";
-                  
-    const price = response.context.product_price && 
-                  response.context.product_price.length > 0 ? 
-                  response.context.product_price[0] : "0";
+    const titles = response.context.product_title || [];
+    const prices = response.context.product_price || [];
+    
+    const title = titles.length > 0 ? titles[0] : "";
+    const price = prices.length > 0 ? prices[0] : "0";
     
     console.log(`Extracted title: ${title}, First price: ${price}`);
     
