@@ -32,8 +32,12 @@ serve(async (req) => {
       throw new Error("Jigsawstack API key not configured");
     }
 
+    // Determine the platform from the URL
+    const platform = detectPlatform(url);
+    console.log(`Detected platform: ${platform}`);
+
     // Make request to Jigsawstack API
-    const response = await fetch("https://api.jigsawstack.com/v1/scrape", {
+    const scrapeResponse = await fetch("https://api.jigsawstack.com/v1/scrape", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -42,52 +46,22 @@ serve(async (req) => {
       body: JSON.stringify({
         url,
         // Request specific elements based on common e-commerce selectors
-        selectors: {
-          title: [
-            'h1', // Common product title selector
-            'meta[property="og:title"]', // OpenGraph title
-            'meta[name="title"]' // Meta title
-          ],
-          price: [
-            'meta[property="product:price:amount"]',
-            'meta[property="og:price:amount"]',
-            '.price',
-            '[data-price]'
-          ],
-          image: [
-            'meta[property="og:image"]',
-            'meta[property="product:image"]',
-            'img[id*="product"]',
-            'img[class*="product"]'
-          ],
-          description: [
-            'meta[property="og:description"]',
-            'meta[name="description"]',
-            '[class*="description"]',
-            '[id*="description"]'
-          ]
-        }
+        selectors: getPlatformSelectors(platform)
       })
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Jigsawstack API error: ${response.status}`);
+    if (!scrapeResponse.ok) {
+      const errorText = await scrapeResponse.text();
+      console.error(`Jigsawstack API error: ${scrapeResponse.status}`);
       console.error(`Error details: ${errorText}`);
-      throw new Error(`Extraction failed: ${response.status} ${response.statusText}`);
+      throw new Error(`Extraction failed: ${scrapeResponse.status} ${scrapeResponse.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await scrapeResponse.json();
     console.log("Raw scraped data:", data);
 
     // Transform the data into our application's format
-    const extractedProduct = {
-      name: data.data?.title?.[0] || "Product Title Not Found",
-      price: data.data?.price?.[0]?.replace(/[^0-9.]/g, '') || "0",
-      image: data.data?.image?.[0] || "",
-      description: data.data?.description?.[0] || "No description available"
-    };
-
+    const extractedProduct = transformProductData(data, platform);
     console.log("Transformed product data:", extractedProduct);
 
     return new Response(
@@ -125,3 +99,115 @@ serve(async (req) => {
     );
   }
 });
+
+// Helper functions
+function detectPlatform(url: string): 'amazon' | 'flipkart' | 'other' {
+  if (url.includes('amazon') || url.includes('amzn.')) {
+    return 'amazon';
+  }
+  if (url.includes('flipkart')) {
+    return 'flipkart';
+  }
+  return 'other'; // Default for unknown platforms
+}
+
+function getPlatformSelectors(platform: string) {
+  const commonSelectors = {
+    title: [
+      'h1', 
+      'meta[property="og:title"]', 
+      'meta[name="title"]'
+    ],
+    description: [
+      'meta[property="og:description"]',
+      'meta[name="description"]',
+      '[class*="description"]',
+      '[id*="description"]'
+    ],
+    image: [
+      'meta[property="og:image"]',
+      'meta[property="product:image"]'
+    ]
+  };
+
+  const platformSpecificSelectors = {
+    amazon: {
+      ...commonSelectors,
+      price: [
+        '#priceblock_ourprice',
+        '.a-price .a-offscreen',
+        '#price_inside_buybox',
+        '#newPitchPriceWrapper_feature_div .a-price .a-offscreen',
+        'span[data-a-color="price"] span.a-offscreen'
+      ],
+      image: [
+        ...commonSelectors.image,
+        '#landingImage',
+        '#imgBlkFront',
+        'img[data-old-hires]'
+      ]
+    },
+    flipkart: {
+      ...commonSelectors,
+      price: [
+        '.CEmiEU',
+        '._30jeq3',
+        '.dyC4hf',
+        '.CEmiEU ._30jeq3',
+        '[class*="price"]'
+      ],
+      image: [
+        ...commonSelectors.image,
+        'img[class*="product-image"]',
+        '.CXW8mj img',
+        '._396cs4'
+      ]
+    },
+    other: commonSelectors
+  };
+
+  return platformSpecificSelectors[platform as keyof typeof platformSpecificSelectors] || commonSelectors;
+}
+
+function transformProductData(data: any, platform: string) {
+  if (!data || !data.data) {
+    console.error("Invalid data structure returned from Jigsawstack");
+    return {
+      name: "Product information not available",
+      price: "0",
+      image: "",
+      description: "Could not extract product details",
+      platform: platform
+    };
+  }
+
+  // Extract the product data from the Jigsawstack response
+  const scrapeData = data.data;
+
+  // Log the full structure to help with debugging
+  console.log("Full scrape data structure:", JSON.stringify(scrapeData));
+
+  const productName = Array.isArray(scrapeData.title) && scrapeData.title.length > 0 
+    ? scrapeData.title[0] 
+    : "Product Title Not Found";
+
+  const priceValue = Array.isArray(scrapeData.price) && scrapeData.price.length > 0 
+    ? scrapeData.price[0] 
+    : "0";
+
+  const imageUrl = Array.isArray(scrapeData.image) && scrapeData.image.length > 0 
+    ? scrapeData.image[0] 
+    : "";
+
+  const description = Array.isArray(scrapeData.description) && scrapeData.description.length > 0 
+    ? scrapeData.description[0] 
+    : "No description available";
+
+  return {
+    name: productName,
+    price: priceValue,
+    image: imageUrl,
+    description: description,
+    platform: platform
+  };
+}

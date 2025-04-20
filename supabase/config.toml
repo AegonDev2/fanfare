@@ -21,4 +21,3 @@ project_id = "lovable"
   timeoutMs = 90000
   importmap = "./functions/importmap.json"
   cors = true
-

@@ -49,6 +49,20 @@ export const useProductPreview = () => {
       return;
     }
 
+    // Validate if URL is from supported platform (Amazon or Flipkart)
+    const isAmazon = url.includes('amazon') || url.includes('amzn.');
+    const isFlipkart = url.includes('flipkart');
+    
+    if (!isAmazon && !isFlipkart) {
+      toast({
+        title: "Unsupported Platform",
+        description: "Currently only Amazon and Flipkart URLs are supported",
+        variant: "destructive",
+      });
+      setError("Unsupported platform. Only Amazon and Flipkart are supported.");
+      return;
+    }
+
     setIsFetchingProduct(true);
     setFetchProgress(10);
     setError(null);
@@ -64,6 +78,7 @@ export const useProductPreview = () => {
 
       console.log(`Extracting product from URL: ${url}`);
       
+      // Call the Jigsawstack extraction function
       const { data, error: functionError } = await supabase.functions.invoke("jigsawstack-extraction", {
         body: { 
           url: url,
