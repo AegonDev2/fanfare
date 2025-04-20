@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +16,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { ShoppingBag, CheckCircle } from "lucide-react";
+import { ShoppingBag, CheckCircle, ExternalLink } from "lucide-react";
 import { hasRole } from "@/utils/roleManager";
 
 interface OrderDetails {
@@ -31,6 +32,7 @@ interface OrderDetails {
   influencer_name?: string;
   shipping_address?: any;
   message?: string;
+  user_id?: string;
 }
 
 const AdminDashboard = () => {
@@ -150,7 +152,29 @@ const AdminDashboard = () => {
 
   const handleOrderComplete = async (orderId: string) => {
     try {
-      // Update order status to "completed" once the admin has manually placed the order
+      // Get the order details
+      const order = orders.find(o => o.id === orderId);
+      if (!order) {
+        throw new Error("Order not found");
+      }
+      
+      // Calculate total amount
+      const totalAmount = (order.product_price || 0) + (order.platform_fee || 5.00);
+      
+      // Process payment from user's wallet
+      const { data: paymentResult, error: paymentError } = await supabase.functions.invoke("execute_sql", {
+        body: {
+          sql_query: `SELECT process_gift_payment('${order.user_id}', ${totalAmount}, '${orderId}', 'Payment for ${order.product_title?.replace(/'/g, "''") || "gift order"}')`
+        }
+      });
+
+      if (paymentError) {
+        throw new Error(`Payment processing failed: ${paymentError.message}`);
+      }
+      
+      console.log("Payment successfully processed:", paymentResult);
+
+      // Update order status to "completed"
       const { error } = await supabase
         .from('orders')
         .update({ 
@@ -162,12 +186,21 @@ const AdminDashboard = () => {
       if (error) throw error;
 
       // Create notification for the influencer
-      const order = orders.find(o => o.id === orderId);
-      if (order && order.influencer_id) {
+      if (order.influencer_id) {
         await supabase.from("notifications").insert({
           recipient_id: order.influencer_id,
           type: "order_completed",
           message: `Your gift order has been processed and will be delivered soon!`,
+          reference_id: orderId,
+        });
+      }
+      
+      // Create notification for the sender/fan
+      if (order.user_id) {
+        await supabase.from("notifications").insert({
+          recipient_id: order.user_id,
+          type: "payment_processed",
+          message: `Your payment of ₹${totalAmount.toFixed(2)} for the gift has been processed.`,
           reference_id: orderId,
         });
       }
@@ -177,13 +210,13 @@ const AdminDashboard = () => {
       
       toast({
         title: "Order Completed",
-        description: "Order has been marked as completed",
+        description: "Order has been processed and payment has been collected",
       });
     } catch (error) {
       console.error("Error completing order:", error);
       toast({
         title: "Error",
-        description: "Failed to complete the order",
+        description: error instanceof Error ? error.message : "Failed to complete the order",
         variant: "destructive"
       });
     }
@@ -222,12 +255,15 @@ const AdminDashboard = () => {
             <TableRow key={order.id} className="hover:bg-muted/50">
               <TableCell className="font-medium">{formatDate(order.created_at)}</TableCell>
               <TableCell>
-                <div className="max-w-[200px] truncate">
+                <div className="max-w-[200px]">
                   <div className="font-medium truncate">{order.product_title || "Product"}</div>
-                  <div className="text-xs text-muted-foreground truncate">
+                  <div className="text-xs text-blue-600 hover:text-blue-800 flex items-center">
                     <a href={order.product_url} target="_blank" rel="noopener noreferrer">
-                      View Product
+                      View Product <ExternalLink className="ml-1 h-3 w-3" />
                     </a>
+                  </div>
+                  <div className="text-xs mt-1">
+                    {order.product_price ? `₹${order.product_price.toFixed(2)}` : ''}
                   </div>
                 </div>
               </TableCell>

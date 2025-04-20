@@ -9,7 +9,7 @@ export type PaymentStep = 'initial' | 'pending' | 'complete';
 
 export const useOrderSubmission = () => {
   const { toast } = useToast();
-  const { checkWalletBalance, fetchWallet } = useWallet();
+  const { checkWalletBalance } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStep, setPaymentStep] = useState<PaymentStep>('initial');
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -31,17 +31,6 @@ export const useOrderSubmission = () => {
       return;
     }
 
-    // Validate product details
-    if (!productDetails || !productDetails.name || productDetails.priceInr <= 0) {
-      toast({
-        title: "Error",
-        description: "Invalid product details. Please try again with a different product URL.",
-        variant: "destructive",
-      });
-      setOrderError("Invalid product details");
-      return;
-    }
-
     setIsLoading(true);
     setPaymentStep('pending');
     setOrderError(null);
@@ -58,7 +47,7 @@ export const useOrderSubmission = () => {
       
       const totalAmount = productDetails.priceInr + productDetails.platformFee;
       
-      // Check wallet balance directly using our hook
+      // Instead of charging immediately, just check if user has enough balance
       const hasEnoughBalance = await checkWalletBalance(totalAmount);
       
       if (!hasEnoughBalance) {
@@ -77,7 +66,7 @@ export const useOrderSubmission = () => {
         return;
       }
       
-      // Create gift request
+      // Create gift request without charging the wallet yet
       const { data: giftRequest, error: giftRequestError } = await supabase
         .from('gift_requests')
         .insert({
@@ -98,29 +87,6 @@ export const useOrderSubmission = () => {
       }
 
       console.log("Gift request created successfully:", giftRequest);
-      
-      // Process payment from the wallet using direct SQL
-      // We need to use executeSQL instead of RPC due to TypeScript limitations with custom RPCs
-      const { data: paymentResult, error: paymentError } = await supabase
-        .from('transactions')
-        .select('*')
-        .limit(1)
-        .then(async () => {
-          // This is a workaround for TypeScript RPC limitations
-          // We'll use a raw query to call our function
-          return await supabase.functions.invoke("execute_sql", {
-            body: {
-              sql_query: `SELECT process_gift_payment('${user.id}', ${totalAmount}, '${giftRequest.id}', 'Payment for ${productDetails.name.replace(/'/g, "''")}')`
-            }
-          });
-        });
-
-      if (paymentError) {
-        throw new Error(`Payment processing failed: ${paymentError.message}`);
-      }
-      
-      // Refresh the wallet data after payment
-      await fetchWallet();
       
       setPaymentStep('complete');
       

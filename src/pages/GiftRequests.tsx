@@ -17,13 +17,14 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { CheckIcon, XIcon } from "lucide-react";
+import { CheckIcon, XIcon, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 interface GiftRequest {
   id: string;
   gift_item: string;
+  product_url: string;
   message: string;
   created_at: string;
   status: 'pending' | 'approved' | 'rejected';
@@ -32,6 +33,8 @@ interface GiftRequest {
     email: string;
   };
   influencer_id: string;
+  product_title: string | null;
+  product_price: number | null;
 }
 
 interface Address {
@@ -58,10 +61,12 @@ const GiftRequests = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('gifts_to_influencers')
+        .from('gift_requests')
         .select(`
           id,
-          gift_item,
+          product_url,
+          product_title,
+          product_price,
           message,
           created_at,
           status,
@@ -75,6 +80,7 @@ const GiftRequests = () => {
       if (data) {
         const typedRequests: GiftRequest[] = data.map(item => ({
           ...item,
+          gift_item: item.product_title || item.product_url,
           status: (item.status as 'pending' | 'approved' | 'rejected') || 'pending'
         }));
         setRequests(typedRequests);
@@ -94,7 +100,7 @@ const GiftRequests = () => {
   const updateRequestStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {
       const { error } = await supabase
-        .from('gifts_to_influencers')
+        .from('gift_requests')
         .update({ status })
         .eq('id', id);
 
@@ -124,23 +130,25 @@ const GiftRequests = () => {
 
           // Create a properly formatted shipping address object
           const shippingAddress: Address = {
-            name: "Recipient", // Default name since it doesn't exist in the database
+            name: addressData.name || "Recipient",
             address_line1: addressData.street_address,
-            address_line2: "",
+            address_line2: addressData.address_line2 || "",
             city: addressData.city,
             state: addressData.state,
             postal_code: addressData.postal_code,
             country: addressData.country || "India",
-            phone: "Not provided" // Default phone since it doesn't exist in the database
+            phone: addressData.phone || "Not provided"
           };
 
+          // Create order for admin with product URL
           const { error: orderError } = await supabase
             .from('orders')
             .insert({
               influencer_id: request.influencer_id,
               user_id: request.sender.id,
-              product_url: request.gift_item,
-              product_title: "Gift from fan",
+              product_url: request.product_url,
+              product_title: request.product_title || "Gift from fan",
+              product_price: request.product_price,
               status: 'accepted',
               shipping_address: shippingAddress,
               message: request.message
@@ -150,6 +158,17 @@ const GiftRequests = () => {
             console.error('Error creating order:', orderError);
             throw new Error('Could not create order for admin');
           }
+
+          // Send notification to admin
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              type: 'new_approved_gift',
+              recipientId: null, // Will be handled by edge function for admins
+              senderId: request.sender.id,
+              giftRequestId: request.id,
+              message: `New gift order approved by influencer and ready for processing`
+            }
+          });
         }
       }
 
@@ -284,7 +303,7 @@ const RequestCard = ({ request, onApprove, onReject, showActions = true }: Reque
     <Card>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{request.gift_item}</CardTitle>
+          <CardTitle className="text-lg">{request.product_title || "Gift Request"}</CardTitle>
           <Badge variant={
             request.status === 'pending' ? 'outline' : 
             request.status === 'approved' ? 'default' : 'destructive'
@@ -295,6 +314,21 @@ const RequestCard = ({ request, onApprove, onReject, showActions = true }: Reque
         <CardDescription>From: {request.sender.email}</CardDescription>
       </CardHeader>
       <CardContent>
+        <a 
+          href={request.product_url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 flex items-center mb-3"
+        >
+          View Product <ExternalLink className="ml-1 h-3 w-3" />
+        </a>
+        
+        {request.product_price && (
+          <p className="text-sm font-medium mb-2">
+            Price: ₹{request.product_price.toFixed(2)}
+          </p>
+        )}
+        
         <p className="text-gray-700 mb-2">
           {request.message || <span className="text-gray-400 italic">No message</span>}
         </p>
