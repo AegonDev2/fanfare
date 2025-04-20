@@ -13,8 +13,11 @@ export const detectPlatform = (url: string): string => {
 };
 
 export const getElementPrompts = (platform: string): string[] => {
-  if (platform === 'amazon' || platform === 'flipkart' || platform === 'souledstore') {
+  if (platform === 'amazon' || platform === 'flipkart') {
     return ["product_title", "product_price"];
+  }
+  if (platform === 'souledstore') {
+    return ["h1.fbold.mb-0.title-size", "span.fbold"];
   }
   return [];
 };
@@ -32,8 +35,8 @@ export const getSelectors = (platform: string): Array<{ selector: string }> => {
     ];
   } else if (platform === 'souledstore') {
     return [
-      { selector: "h1.pdp-title" }, // title
-      { selector: "div.price-box span.price" } // price
+      { selector: "h1.fbold.mb-0.title-size" }, // title
+      { selector: "span.fbold" } // price
     ];
   }
   return [];
