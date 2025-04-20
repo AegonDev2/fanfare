@@ -1,5 +1,5 @@
 
-import { PlatformOrder } from './flipkart';
+import { PlatformOrder } from './flipkart.ts';
 
 export const placeSouledStoreOrder = async (params: PlatformOrder) => {
   const { productUrl, quantity, addressId, credentials } = params;
