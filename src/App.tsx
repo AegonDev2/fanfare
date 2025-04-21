@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { hasRole } from "@/utils/roleManager";
+import InfluencerGiftRequests from "./pages/InfluencerGiftRequests";
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -104,6 +105,8 @@ const AppContent = () => {
             
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/order-details/:id" element={<AdminOrderDetails />} />
+            
+            <Route path="/influencer/gift-requests" element={<InfluencerGiftRequests />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

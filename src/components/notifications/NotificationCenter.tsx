@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,15 +51,15 @@ const NotificationCenter = () => {
         (payload) => {
           const newNotification = payload.new as Notification;
           
-          // Check if this notification is for the current user
           supabase.auth.getUser().then(({ data }) => {
             if (data.user && newNotification.recipient_id === data.user.id) {
               setNotifications((prev) => [newNotification, ...prev]);
               setUnreadCount((prev) => prev + 1);
-              
               toast({
                 title: "New Notification",
-                description: newNotification.message,
+                description: newNotification.type === "new_gift_request"
+                  ? "You have received a new gift request."
+                  : newNotification.message,
               });
             }
           });
