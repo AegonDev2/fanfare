@@ -104,7 +104,14 @@ export const useNavigation = () => {
       path: '/about',
       icon: 'Info',
       roles: ['fan', 'influencer', 'admin'],
-    }
+    },
+    {
+      id: 'track-orders',
+      title: 'Track Order',
+      path: '/track-order',
+      icon: 'truck',
+      roles: ['fan', 'influencer'],
+    },
   ];
 
   // Role-specific items

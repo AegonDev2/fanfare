@@ -1,4 +1,3 @@
-
 import { StrictMode, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -102,11 +101,10 @@ const AppContent = () => {
             <Route path="/settings" element={<Settings />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/track-order" element={<TrackOrder />} />
             
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/order-details/:id" element={<AdminOrderDetails />} />
-            
-            {/* Removed the influencer/gift-requests route */}
             
             <Route path="*" element={<NotFound />} />
           </Routes>
