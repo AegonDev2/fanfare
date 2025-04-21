@@ -9,6 +9,7 @@ export interface OrderDetails {
   platform_fee: number | null;
   total_amount: number | null;
   message?: string;
+  user_id: string; // Added this property to fix the TypeScript errors
   fan_id?: string;
   fan_email?: string;
   influencer_id: string | null;
