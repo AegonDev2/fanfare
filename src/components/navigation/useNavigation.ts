@@ -1,3 +1,4 @@
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,7 +114,7 @@ export const useNavigation = () => {
       id: "gift-requests",
       title: "Gift Requests",
       path: "/influencer/gift-requests",
-      icon: "gift",
+      icon: "Gift",  // Uppercase G to match lucide icon name
       roles: ["influencer"],
     },
     {
