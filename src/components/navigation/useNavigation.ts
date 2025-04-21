@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,13 +115,6 @@ export const useNavigation = () => {
       path: "/gift-requests",
       icon: "Gift",
       roles: ["fan", "influencer"],
-    },
-    {
-      id: "influencer-gift-requests",
-      title: "Gift Requests",
-      path: "/influencer/gift-requests",
-      icon: "Gift",
-      roles: ["influencer"],
     },
     {
       id: 'admin-dashboard',
