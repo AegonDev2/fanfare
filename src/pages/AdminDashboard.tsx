@@ -4,14 +4,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { OrderList } from "@/components/admin/OrderList";
 import { useAdmin } from "@/hooks/use-admin";
+import { useEffect } from "react";
 
 const AdminDashboard = () => {
   const {
     orders,
     isLoading,
+    userRole,
+    fetchAllOrders,
     handleOrderProcessing,
     handleOrderComplete
   } = useAdmin();
+
+  // Refresh orders when dashboard loads
+  useEffect(() => {
+    fetchAllOrders();
+    // Set up a polling interval to check for new orders every 30 seconds
+    const interval = setInterval(() => {
+      fetchAllOrders();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [fetchAllOrders]);
 
   const getPendingOrders = () => orders.filter(o => o.status === 'accepted');
   const getProcessingOrders = () => orders.filter(o => o.status === 'processing');

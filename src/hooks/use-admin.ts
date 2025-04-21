@@ -43,6 +43,7 @@ export const useAdmin = () => {
   const fetchAllOrders = async () => {
     setIsLoading(true);
     try {
+      // Query for all orders that need admin attention
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select('*, influencer:influencer_id(*)')
@@ -53,8 +54,12 @@ export const useAdmin = () => {
         throw orderError;
       }
 
+      console.log("Fetched orders:", orderData);
+
+      // Enrich orders with additional data
       const enrichedOrders = await Promise.all(
         (orderData || []).map(async (order) => {
+          // Get fan's email
           const { data: fanData } = await supabase
             .from('profiles')
             .select('email')
@@ -86,6 +91,7 @@ export const useAdmin = () => {
 
   const handleOrderProcessing = async (orderId: string) => {
     try {
+      // Update order status to processing
       const { error } = await supabase
         .from('orders')
         .update({ status: "processing" })
@@ -93,6 +99,7 @@ export const useAdmin = () => {
 
       if (error) throw error;
 
+      // Refresh orders list
       fetchAllOrders();
       
       toast({
@@ -111,13 +118,18 @@ export const useAdmin = () => {
 
   const handleOrderComplete = async (orderId: string) => {
     try {
+      // Find the order details
       const order = orders.find(o => o.id === orderId);
       if (!order) {
         throw new Error("Order not found");
       }
       
+      // Calculate the total amount to charge
       const totalAmount = (order.product_price || 0) + (order.platform_fee || 5.00);
       
+      console.log(`Processing payment for order ${orderId}, amount: ${totalAmount}`);
+      
+      // Process payment from fan's wallet
       const { data: paymentResult, error: paymentError } = await supabase.functions.invoke("execute_sql", {
         body: {
           sql_query: `SELECT process_gift_payment('${order.user_id}', ${totalAmount}, '${orderId}', 'Payment for ${order.product_title?.replace(/'/g, "''") || "gift order"}')`
@@ -130,6 +142,7 @@ export const useAdmin = () => {
       
       console.log("Payment successfully processed:", paymentResult);
 
+      // Update order status to completed and set delivery estimate
       const { error } = await supabase
         .from('orders')
         .update({ 
@@ -140,6 +153,7 @@ export const useAdmin = () => {
 
       if (error) throw error;
 
+      // Send notification to influencer
       if (order.influencer_id) {
         await supabase.from("notifications").insert({
           recipient_id: order.influencer_id,
@@ -149,6 +163,7 @@ export const useAdmin = () => {
         });
       }
       
+      // Send notification to fan
       if (order.user_id) {
         await supabase.from("notifications").insert({
           recipient_id: order.user_id,
@@ -158,6 +173,7 @@ export const useAdmin = () => {
         });
       }
 
+      // Refresh orders list
       fetchAllOrders();
       
       toast({
@@ -174,15 +190,16 @@ export const useAdmin = () => {
     }
   };
 
+  // Initial setup when component mounts
   useEffect(() => {
     checkAdminAccess();
-    fetchAllOrders();
   }, []);
 
   return {
     orders,
     isLoading,
     userRole,
+    fetchAllOrders,
     handleOrderProcessing,
     handleOrderComplete
   };

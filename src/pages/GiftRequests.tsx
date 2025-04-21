@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Header from "@/components/landing/Header";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,6 +173,7 @@ const GiftRequests = () => {
         const request = requests.find(r => r.id === id);
         
         if (request) {
+          // Get the influencer's shipping address
           const { data: addressData, error: addressError } = await supabase
             .from('influencer_addresses')
             .select('*')
@@ -186,6 +188,7 @@ const GiftRequests = () => {
 
           const influencerAddress = addressData as InfluencerAddress;
 
+          // Format the shipping address
           const shippingAddress: Address = {
             name: influencerAddress.name || "Recipient",
             address_line1: influencerAddress.street_address,
@@ -197,6 +200,7 @@ const GiftRequests = () => {
             phone: influencerAddress.phone || "Not provided"
           };
 
+          // Create an order entry for the admin to process
           const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .insert({
@@ -205,7 +209,7 @@ const GiftRequests = () => {
               product_url: request.product_url,
               product_title: request.product_title || "Gift from fan",
               product_price: request.product_price,
-              status: 'accepted',
+              status: 'accepted',  // Start with 'accepted' status
               shipping_address: shippingAddress,
               message: request.message
             })
@@ -217,12 +221,36 @@ const GiftRequests = () => {
             throw new Error('Could not create order for admin');
           }
 
+          console.log('Created order for admin:', orderData);
+
+          // Send notification to admin about the new approved gift
           await sendAdminNotification(
             'new_approved_gift',
             `New gift order approved by influencer and ready for processing`,
             orderData.id,
             request.sender.id
           );
+          
+          // Also notify the fan that their gift request was approved
+          await supabase.from("notifications").insert({
+            recipient_id: request.sender.id,
+            type: "gift_request_approved",
+            message: `Your gift request has been approved by the influencer and is being processed.`,
+            reference_id: orderData.id,
+            sender_id: request.influencer_id
+          });
+        }
+      } else if (status === 'rejected') {
+        // Notify the fan that their gift request was rejected
+        const request = requests.find(r => r.id === id);
+        if (request) {
+          await supabase.from("notifications").insert({
+            recipient_id: request.sender.id,
+            type: "gift_request_rejected",
+            message: `Your gift request has been rejected by the influencer.`,
+            reference_id: id,
+            sender_id: request.influencer_id
+          });
         }
       }
 
