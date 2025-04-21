@@ -57,7 +57,21 @@ const GiftsSent = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setRequests((data || []) as GiftRequest[]);
+      
+      // Fix for the TypeScript error: Transform the data to ensure it matches the GiftRequest type
+      const formattedData = (data || []).map(item => {
+        // Handle potential errors in the joined data
+        const influencer = typeof item.influencer === 'object' && item.influencer !== null
+          ? item.influencer
+          : { name: "Unknown Influencer" };
+          
+        return {
+          ...item,
+          influencer
+        };
+      });
+      
+      setRequests(formattedData as GiftRequest[]);
     } catch (error) {
       toast({
         title: "Error loading gifts",
@@ -110,7 +124,7 @@ const GiftsSent = () => {
                 </div>
                 {req.message && (
                   <div className="mt-2 text-gray-700 text-sm bg-gray-50 rounded px-3 py-2">
-                    “{req.message}”
+                    "{req.message}"
                   </div>
                 )}
                 <div className="mt-3 text-xs text-gray-400">
