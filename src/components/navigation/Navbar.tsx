@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
@@ -59,12 +58,10 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     }
   };
 
-  // Update the navigation styles based on the provided designs with new animations
   const navPosition = isMobile 
     ? "top-0 left-0 right-0 h-screen max-h-screen w-full overflow-hidden" 
     : "top-0 left-0 h-screen w-[280px] overflow-hidden";
 
-  // Implement animation style based on the SCSS code provided
   const navOpenStyle = isOpen ? `
     transform-none opacity-100 visible
   ` : isMobile ? `

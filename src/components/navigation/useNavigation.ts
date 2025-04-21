@@ -113,8 +113,15 @@ export const useNavigation = () => {
     {
       id: "gift-requests",
       title: "Gift Requests",
+      path: "/gift-requests",
+      icon: "Gift",
+      roles: ["fan", "influencer"],
+    },
+    {
+      id: "influencer-gift-requests",
+      title: "Gift Requests",
       path: "/influencer/gift-requests",
-      icon: "Gift",  // Uppercase G to match lucide icon name
+      icon: "Gift",
       roles: ["influencer"],
     },
     {
