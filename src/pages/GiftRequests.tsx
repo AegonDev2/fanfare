@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import Header from "@/components/landing/Header";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -16,10 +17,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { CheckIcon, XIcon, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import RequestCard from "@/components/gift-requests/RequestCard";
+import { sendAdminNotification } from "@/utils/notifications";
 
 interface GiftRequest {
   id: string;
@@ -184,7 +184,7 @@ const GiftRequests = () => {
             phone: influencerAddress.phone || "Not provided"
           };
 
-          const { error: orderError } = await supabase
+          const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .insert({
               influencer_id: request.influencer_id,
@@ -195,22 +195,22 @@ const GiftRequests = () => {
               status: 'accepted',
               shipping_address: shippingAddress,
               message: request.message
-            });
+            })
+            .select()
+            .single();
 
           if (orderError) {
             console.error('Error creating order:', orderError);
             throw new Error('Could not create order for admin');
           }
 
-          await supabase.functions.invoke('send-notification', {
-            body: {
-              type: 'new_approved_gift',
-              recipientId: null,
-              senderId: request.sender.id,
-              giftRequestId: request.id,
-              message: `New gift order approved by influencer and ready for processing`
-            }
-          });
+          // Notify admins about the new approved gift that needs processing
+          await sendAdminNotification(
+            'new_approved_gift',
+            `New gift order approved by influencer and ready for processing`,
+            orderData.id,
+            request.sender.id
+          );
         }
       }
 
