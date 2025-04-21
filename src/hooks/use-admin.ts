@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -36,11 +36,16 @@ export const useAdmin = () => {
       setUserRole('admin');
     } catch (error) {
       console.error("Authentication error:", error);
+      toast({
+        title: "Authentication Error",
+        description: "Please login again.",
+        variant: "destructive"
+      });
       navigate('/auth');
     }
   };
 
-  const fetchAllOrders = async () => {
+  const fetchAllOrders = useCallback(async () => {
     setIsLoading(true);
     try {
       // Query for all orders that need admin attention
@@ -54,25 +59,44 @@ export const useAdmin = () => {
         throw orderError;
       }
 
-      console.log("Fetched orders:", orderData);
+      // If no orders are found, set empty array and return early
+      if (!orderData || orderData.length === 0) {
+        setOrders([]);
+        setIsLoading(false);
+        return;
+      }
 
       // Enrich orders with additional data
       const enrichedOrders = await Promise.all(
-        (orderData || []).map(async (order) => {
-          // Get fan's email
-          const { data: fanData } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('id', order.user_id)
-            .maybeSingle();
+        orderData.map(async (order) => {
+          try {
+            // Get fan's email
+            const { data: fanData, error: fanError } = await supabase
+              .from('profiles')
+              .select('email')
+              .eq('id', order.user_id)
+              .maybeSingle();
 
-          const influencerName = order.influencer?.name || "Unknown";
-          
-          return {
-            ...order,
-            fan_email: fanData?.email || "Unknown",
-            influencer_name: influencerName,
-          };
+            if (fanError) {
+              console.warn(`Error fetching fan data for order ${order.id}:`, fanError);
+            }
+
+            const influencerName = order.influencer?.name || "Unknown";
+            
+            return {
+              ...order,
+              fan_email: fanData?.email || "Unknown",
+              influencer_name: influencerName,
+            };
+          } catch (err) {
+            console.error(`Error enriching order ${order.id}:`, err);
+            // Return order with default values if enrichment fails
+            return {
+              ...order,
+              fan_email: "Unknown",
+              influencer_name: "Unknown",
+            };
+          }
         })
       );
 
@@ -87,7 +111,7 @@ export const useAdmin = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   const handleOrderProcessing = async (orderId: string) => {
     try {
@@ -100,7 +124,7 @@ export const useAdmin = () => {
       if (error) throw error;
 
       // Refresh orders list
-      fetchAllOrders();
+      await fetchAllOrders();
       
       toast({
         title: "Order Status Updated",
@@ -129,57 +153,62 @@ export const useAdmin = () => {
       
       console.log(`Processing payment for order ${orderId}, amount: ${totalAmount}`);
       
-      // Process payment from fan's wallet
-      const { data: paymentResult, error: paymentError } = await supabase.functions.invoke("execute_sql", {
-        body: {
-          sql_query: `SELECT process_gift_payment('${order.user_id}', ${totalAmount}, '${orderId}', 'Payment for ${order.product_title?.replace(/'/g, "''") || "gift order"}')`
+      try {
+        // Process payment from fan's wallet
+        const { data: paymentResult, error: paymentError } = await supabase.functions.invoke("execute_sql", {
+          body: {
+            sql_query: `SELECT process_gift_payment('${order.user_id}', ${totalAmount}, '${orderId}', 'Payment for ${order.product_title?.replace(/'/g, "''") || "gift order"}')`
+          }
+        });
+
+        if (paymentError) {
+          throw new Error(`Payment processing failed: ${paymentError.message}`);
         }
-      });
+        
+        console.log("Payment successfully processed:", paymentResult);
 
-      if (paymentError) {
-        throw new Error(`Payment processing failed: ${paymentError.message}`);
-      }
-      
-      console.log("Payment successfully processed:", paymentResult);
+        // Update order status to completed and set delivery estimate
+        const { error } = await supabase
+          .from('orders')
+          .update({ 
+            status: "completed",
+            delivery_estimate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          })
+          .eq('id', orderId);
 
-      // Update order status to completed and set delivery estimate
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
-          status: "completed",
-          delivery_estimate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        })
-        .eq('id', orderId);
+        if (error) throw error;
 
-      if (error) throw error;
+        // Send notification to influencer
+        if (order.influencer_id) {
+          await supabase.from("notifications").insert({
+            recipient_id: order.influencer_id,
+            type: "order_completed",
+            message: `Your gift order has been processed and will be delivered soon!`,
+            reference_id: orderId,
+          });
+        }
+        
+        // Send notification to fan
+        if (order.user_id) {
+          await supabase.from("notifications").insert({
+            recipient_id: order.user_id,
+            type: "payment_processed",
+            message: `Your payment of ₹${totalAmount.toFixed(2)} for the gift has been processed.`,
+            reference_id: orderId,
+          });
+        }
 
-      // Send notification to influencer
-      if (order.influencer_id) {
-        await supabase.from("notifications").insert({
-          recipient_id: order.influencer_id,
-          type: "order_completed",
-          message: `Your gift order has been processed and will be delivered soon!`,
-          reference_id: orderId,
+        // Refresh orders list
+        await fetchAllOrders();
+        
+        toast({
+          title: "Order Completed",
+          description: "Order has been processed and payment has been collected",
         });
+      } catch (paymentError) {
+        console.error("Payment processing error:", paymentError);
+        throw new Error(paymentError instanceof Error ? paymentError.message : "Payment processing failed");
       }
-      
-      // Send notification to fan
-      if (order.user_id) {
-        await supabase.from("notifications").insert({
-          recipient_id: order.user_id,
-          type: "payment_processed",
-          message: `Your payment of ₹${totalAmount.toFixed(2)} for the gift has been processed.`,
-          reference_id: orderId,
-        });
-      }
-
-      // Refresh orders list
-      fetchAllOrders();
-      
-      toast({
-        title: "Order Completed",
-        description: "Order has been processed and payment has been collected",
-      });
     } catch (error) {
       console.error("Error completing order:", error);
       toast({

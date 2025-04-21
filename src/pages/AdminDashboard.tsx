@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { OrderList } from "@/components/admin/OrderList";
 import { useAdmin } from "@/hooks/use-admin";
 import { useEffect } from "react";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const AdminDashboard = () => {
   const {
@@ -18,7 +20,9 @@ const AdminDashboard = () => {
 
   // Refresh orders when dashboard loads
   useEffect(() => {
+    // Initial fetch
     fetchAllOrders();
+    
     // Set up a polling interval to check for new orders every 30 seconds
     const interval = setInterval(() => {
       fetchAllOrders();
@@ -52,6 +56,16 @@ const AdminDashboard = () => {
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
             <p className="text-gray-600">Manage orders and manual fulfillment</p>
           </div>
+
+          {orders.length === 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>No orders to process</AlertTitle>
+              <AlertDescription>
+                There are currently no orders that need admin attention.
+              </AlertDescription>
+            </Alert>
+          )}
 
           <Tabs defaultValue="pending" className="w-full">
             <TabsList className="mb-4">
