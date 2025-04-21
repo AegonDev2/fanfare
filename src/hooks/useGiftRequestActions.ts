@@ -38,6 +38,7 @@ export const useGiftRequestActions = (
 
   const updateRequestStatus = async (id: string, status: 'accepted' | 'rejected') => {
     try {
+      // Update gift_request row status, and create order for accepted
       const { error } = await supabase
         .from('gift_requests')
         .update({ status })
@@ -52,6 +53,7 @@ export const useGiftRequestActions = (
       );
 
       if (status === 'accepted') {
+        // Influencer accepted: create order with status "under_process"
         const request = requests.find(r => r.id === id);
         if (request) {
           const { data: addressData, error: addressError } = await supabase
@@ -77,7 +79,7 @@ export const useGiftRequestActions = (
             phone: influencerAddress.phone || "Not provided"
           };
 
-          // Create an order entry for admin to process
+          // Create an order entry for admin to process (now status under_process)
           const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .insert({
@@ -86,7 +88,7 @@ export const useGiftRequestActions = (
               product_url: request.product_url,
               product_title: request.product_title || "Gift from fan",
               product_price: request.product_price,
-              status: 'accepted', // This ensures it shows up in admin dashboard as pending
+              status: 'under_process', // NEW: status is under_process after influencer accepts
               shipping_address: shippingAddress,
               message: request.message
             })
@@ -115,6 +117,7 @@ export const useGiftRequestActions = (
           });
         }
       } else if (status === 'rejected') {
+        // If rejected, also mark order (if any) as rejected, though generally no order is created
         const request = requests.find(r => r.id === id);
         if (request) {
           await supabase.from("notifications").insert({

@@ -24,8 +24,9 @@ interface OrderListProps {
 
 export const OrderList = ({ orders, onProcess, onComplete, type }: OrderListProps) => {
   const navigate = useNavigate();
+  // Now "pending" == under_process, "processing" == accepted
   const filteredOrders = orders.filter(o => 
-    type === 'pending' ? o.status === 'accepted' : o.status === 'processing'
+    type === 'pending' ? o.status === 'under_process' : o.status === 'accepted'
   );
 
   return (
@@ -68,21 +69,29 @@ export const OrderList = ({ orders, onProcess, onComplete, type }: OrderListProp
               <TableCell>{order.fan_email || "Unknown"}</TableCell>
               <TableCell>{order.influencer_name || "Unknown"}</TableCell>
               <TableCell>
-                <Badge variant={order.status === 'accepted' ? 'outline' : 'secondary'}>
+                <Badge variant={order.status === 'under_process' ? 'outline' : 'secondary'}>
                   {order.status}
                 </Badge>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  {order.status === 'accepted' ? (
+                  {order.status === 'under_process' ? (
                     <Button size="sm" onClick={() => onProcess(order.id)}>
                       <ShoppingBag className="h-4 w-4 mr-1" />
-                      Process
+                      Accept & Process
                     </Button>
-                  ) : (
+                  ) : order.status === 'accepted' ? (
                     <Button size="sm" variant="outline" onClick={() => onComplete(order.id)}>
                       <CheckCircle className="h-4 w-4 mr-1" />
-                      Complete
+                      Mark As Completed
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      onClick={() => navigate(`/admin/order-details/${order.id}`)}
+                    >
+                      Details
                     </Button>
                   )}
                   <Button 

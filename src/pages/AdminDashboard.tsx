@@ -31,8 +31,10 @@ const AdminDashboard = () => {
     return () => clearInterval(interval);
   }, [fetchAllOrders]);
 
-  const getPendingOrders = () => orders.filter(o => o.status === 'accepted');
-  const getProcessingOrders = () => orders.filter(o => o.status === 'processing');
+  // Orders with status under_process need admin attention (now mapped to "New Orders" tab)
+  const getNewOrders = () => orders.filter(o => o.status === 'under_process');
+  // Orders with status accepted (admin indicated manual processing started)
+  const getProcessingOrders = () => orders.filter(o => o.status === 'accepted');
 
   if (isLoading) {
     return (
@@ -57,7 +59,7 @@ const AdminDashboard = () => {
             <p className="text-gray-600">Manage orders and manual fulfillment</p>
           </div>
 
-          {orders.length === 0 && (
+          {(orders.length === 0 || (getNewOrders().length === 0 && getProcessingOrders().length === 0)) && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>No orders to process</AlertTitle>
@@ -71,9 +73,9 @@ const AdminDashboard = () => {
             <TabsList className="mb-4">
               <TabsTrigger value="pending" className="relative">
                 New Orders
-                {getPendingOrders().length > 0 && (
+                {getNewOrders().length > 0 && (
                   <Badge variant="destructive" className="ml-2">
-                    {getPendingOrders().length}
+                    {getNewOrders().length}
                   </Badge>
                 )}
               </TabsTrigger>

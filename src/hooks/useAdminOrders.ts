@@ -13,10 +13,11 @@ export const useAdminOrders = () => {
     setIsLoading(true);
     try {
       // Query for all orders that need admin attention
+      // Now include under_process and accepted for pending, completed for delivered, etc
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select('*, influencer:influencer_id(*)')
-        .in('status', ['accepted', 'processing', 'pending'])
+        .in('status', ['under_process', 'accepted'])
         .order('created_at', { ascending: false });
 
       if (orderError) {

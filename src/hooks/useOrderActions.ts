@@ -9,12 +9,13 @@ export const useOrderActions = (
 ) => {
   const { toast } = useToast();
 
+  // ADMIN marks as "Accepted" -- now means: change "under_process" to "accepted"
   const handleOrderProcessing = async (orderId: string) => {
     try {
-      // Update order status to processing
+      // Update order status from under_process to accepted (admin's review)
       const { error } = await supabase
         .from('orders')
-        .update({ status: "processing" })
+        .update({ status: "accepted" })
         .eq('id', orderId);
 
       if (error) throw error;
@@ -24,7 +25,7 @@ export const useOrderActions = (
       
       toast({
         title: "Order Status Updated",
-        description: "Order marked as processing",
+        description: "Order marked as accepted (processing started)",
       });
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -36,6 +37,7 @@ export const useOrderActions = (
     }
   };
 
+  // ADMIN marks as "Completed"
   const handleOrderComplete = async (orderId: string) => {
     try {
       const order = orders.find(o => o.id === orderId);
