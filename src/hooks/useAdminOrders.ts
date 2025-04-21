@@ -64,6 +64,7 @@ export const useAdminOrders = () => {
         })
       );
 
+      console.log('Fetched admin orders:', enrichedOrders);
       setOrders(enrichedOrders);
     } catch (error) {
       console.error("Error fetching orders:", error);

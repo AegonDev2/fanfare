@@ -86,7 +86,7 @@ export const useGiftRequestActions = (
               product_url: request.product_url,
               product_title: request.product_title || "Gift from fan",
               product_price: request.product_price,
-              status: 'accepted',
+              status: 'accepted', // This ensures it shows up in admin dashboard as pending
               shipping_address: shippingAddress,
               message: request.message
             })
@@ -97,6 +97,7 @@ export const useGiftRequestActions = (
             throw new Error('Could not create order for admin');
           }
 
+          // Send notification to admin about new approved gift
           await sendAdminNotification(
             'new_approved_gift',
             `New gift order approved by influencer and ready for processing`,
