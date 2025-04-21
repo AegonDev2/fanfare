@@ -106,11 +106,11 @@ export const useNavigation = () => {
       roles: ['fan', 'influencer', 'admin'],
     },
     {
-      id: 'track-orders',
-      title: 'Track Order',
-      path: '/track-order',
-      icon: 'truck',
-      roles: ['fan', 'influencer'],
+      id: 'gifts-sent',
+      title: 'Gifts Sent',
+      path: '/gifts-sent',
+      icon: 'Gift',
+      roles: ['fan'],
     },
   ];
 

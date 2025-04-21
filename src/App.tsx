@@ -1,5 +1,3 @@
-
-// Add import for TrackOrder at the top along with other pages
 import { StrictMode, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -19,12 +17,12 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrderDetails from "./pages/AdminOrderDetails";
 import Wallet from "./pages/Wallet";
 import OrderSuccess from "./pages/OrderSuccess";
-import TrackOrder from "./pages/TrackOrder"; // <-- Added this import
 import Navbar from "./components/navigation/Navbar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { hasRole } from "@/utils/roleManager";
+import GiftsSent from "./pages/GiftsSent"; // <-- Rename import to GiftsSent
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -104,10 +102,10 @@ const AppContent = () => {
             <Route path="/settings" element={<Settings />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/order-success" element={<OrderSuccess />} />
-            <Route path="/track-order" element={<TrackOrder />} />
             
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/order-details/:id" element={<AdminOrderDetails />} />
+            <Route path="/gifts-sent" element={<GiftsSent />} /> {/* Update route path and component name */}
             
             <Route path="*" element={<NotFound />} />
           </Routes>
