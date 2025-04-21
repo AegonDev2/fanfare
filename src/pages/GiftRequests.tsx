@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Header from "@/components/landing/Header";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +6,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -75,6 +73,20 @@ const GiftRequests = () => {
   const fetchGiftRequests = async () => {
     try {
       setLoading(true);
+      
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) throw userError;
+      if (!userData.user) {
+        toast({
+          title: "Authentication Error",
+          description: "You need to be logged in to view gift requests",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('gift_requests')
         .select(`
@@ -88,6 +100,7 @@ const GiftRequests = () => {
           influencer_id,
           sender_id
         `)
+        .eq('influencer_id', userData.user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -204,7 +217,6 @@ const GiftRequests = () => {
             throw new Error('Could not create order for admin');
           }
 
-          // Notify admins about the new approved gift that needs processing
           await sendAdminNotification(
             'new_approved_gift',
             `New gift order approved by influencer and ready for processing`,
