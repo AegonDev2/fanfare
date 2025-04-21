@@ -1,8 +1,5 @@
 
-import { useState, useEffect } from "react";
 import Header from "@/components/landing/Header";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -18,259 +15,20 @@ import {
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import RequestCard from "@/components/gift-requests/RequestCard";
-import { sendAdminNotification } from "@/utils/notifications";
-
-interface GiftRequest {
-  id: string;
-  gift_item: string;
-  product_url: string;
-  message: string;
-  created_at: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered';
-  sender: {
-    id: string;
-    email: string;
-  };
-  influencer_id: string;
-  product_title: string | null;
-  product_price: number | null;
-}
-
-interface Address {
-  name?: string;
-  address_line1: string;
-  address_line2?: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-  phone?: string;
-}
-
-interface InfluencerAddress {
-  id: string;
-  street_address: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-  is_primary: boolean;
-  influencer_id: string;
-  created_at: string;
-  name?: string;
-  address_line2?: string;
-  phone?: string;
-}
+import { useGiftRequests } from "@/hooks/useGiftRequests";
+import { useGiftRequestActions } from "@/hooks/useGiftRequestActions";
 
 const GiftRequests = () => {
-  const [requests, setRequests] = useState<GiftRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const {
+    requests,
+    loading,
+    setRequests,
+    getPendingRequests,
+    getAcceptedRequests,
+    getRejectedRequests,
+  } = useGiftRequests();
 
-  useEffect(() => {
-    fetchGiftRequests();
-  }, []);
-
-  const fetchGiftRequests = async () => {
-    try {
-      setLoading(true);
-      
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) throw userError;
-      if (!userData.user) {
-        toast({
-          title: "Authentication Error",
-          description: "You need to be logged in to view gift requests",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from('gift_requests')
-        .select(`
-          id,
-          product_url,
-          product_title,
-          product_price,
-          message,
-          created_at,
-          status,
-          influencer_id,
-          sender_id
-        `)
-        .eq('influencer_id', userData.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      if (data) {
-        const requestsWithSenders = await Promise.all(
-          data.map(async (request) => {
-            const { data: senderData, error: senderError } = await supabase
-              .from('profiles')
-              .select('id, email')
-              .eq('id', request.sender_id)
-              .single();
-
-            if (senderError) {
-              console.error('Error fetching sender profile:', senderError);
-              return {
-                ...request,
-                gift_item: request.product_title || request.product_url,
-                status: (request.status as 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered') || 'pending',
-                sender: { 
-                  id: request.sender_id || '', 
-                  email: 'Unknown email'
-                }
-              };
-            }
-
-            return {
-              ...request,
-              gift_item: request.product_title || request.product_url,
-              status: (request.status as 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered') || 'pending',
-              sender: {
-                id: senderData?.id || request.sender_id || '',
-                email: senderData?.email || 'Unknown email'
-              }
-            };
-          })
-        );
-
-        setRequests(requestsWithSenders as GiftRequest[]);
-      }
-    } catch (error) {
-      console.error('Error fetching gift requests:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load gift requests",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateRequestStatus = async (id: string, status: 'accepted' | 'rejected') => {
-    try {
-      const { error } = await supabase
-        .from('gift_requests')
-        .update({ status })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setRequests(prev => 
-        prev.map(request => 
-          request.id === id ? { ...request, status } : request
-        )
-      );
-
-      if (status === 'accepted') {
-        const request = requests.find(r => r.id === id);
-        
-        if (request) {
-          // Get the influencer's shipping address
-          const { data: addressData, error: addressError } = await supabase
-            .from('influencer_addresses')
-            .select('*')
-            .eq('influencer_id', request.influencer_id)
-            .eq('is_primary', true)
-            .single();
-
-          if (addressError) {
-            console.error('Error getting address:', addressError);
-            throw new Error('Could not find shipping address');
-          }
-
-          const influencerAddress = addressData as InfluencerAddress;
-
-          // Format the shipping address
-          const shippingAddress: Address = {
-            name: influencerAddress.name || "Recipient",
-            address_line1: influencerAddress.street_address,
-            address_line2: influencerAddress.address_line2 || "",
-            city: influencerAddress.city,
-            state: influencerAddress.state,
-            postal_code: influencerAddress.postal_code,
-            country: influencerAddress.country || "India",
-            phone: influencerAddress.phone || "Not provided"
-          };
-
-          // Create an order entry for the admin to process
-          const { data: orderData, error: orderError } = await supabase
-            .from('orders')
-            .insert({
-              influencer_id: request.influencer_id,
-              user_id: request.sender.id,
-              product_url: request.product_url,
-              product_title: request.product_title || "Gift from fan",
-              product_price: request.product_price,
-              status: 'accepted',  // Start with 'accepted' status
-              shipping_address: shippingAddress,
-              message: request.message
-            })
-            .select()
-            .single();
-
-          if (orderError) {
-            console.error('Error creating order:', orderError);
-            throw new Error('Could not create order for admin');
-          }
-
-          console.log('Created order for admin:', orderData);
-
-          // Send notification to admin about the new approved gift
-          await sendAdminNotification(
-            'new_approved_gift',
-            `New gift order approved by influencer and ready for processing`,
-            orderData.id,
-            request.sender.id
-          );
-          
-          // Also notify the fan that their gift request was approved
-          await supabase.from("notifications").insert({
-            recipient_id: request.sender.id,
-            type: "gift_request_approved",
-            message: `Your gift request has been approved by the influencer and is being processed.`,
-            reference_id: orderData.id,
-            sender_id: request.influencer_id
-          });
-        }
-      } else if (status === 'rejected') {
-        // Notify the fan that their gift request was rejected
-        const request = requests.find(r => r.id === id);
-        if (request) {
-          await supabase.from("notifications").insert({
-            recipient_id: request.sender.id,
-            type: "gift_request_rejected",
-            message: `Your gift request has been rejected by the influencer.`,
-            reference_id: id,
-            sender_id: request.influencer_id
-          });
-        }
-      }
-
-      toast({
-        title: "Success",
-        description: `Gift request ${status === 'accepted' ? 'approved' : 'rejected'} successfully!`,
-      });
-    } catch (error) {
-      console.error(`Error ${status === 'accepted' ? 'approving' : 'rejecting'} gift request:`, error);
-      toast({
-        title: "Error",
-        description: `Failed to ${status === 'accepted' ? 'approve' : 'reject'} gift request`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getPendingRequests = () => requests.filter(r => r.status === 'pending');
-  const getAcceptedRequests = () => requests.filter(r => r.status === 'accepted');
-  const getRejectedRequests = () => requests.filter(r => r.status === 'rejected');
+  const { updateRequestStatus } = useGiftRequestActions(requests, setRequests);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -284,7 +42,6 @@ const GiftRequests = () => {
             </CardDescription>
           </CardHeader>
         </Card>
-
         <Tabs defaultValue="pending" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-4">
             <TabsTrigger value="pending" className="relative">
@@ -298,7 +55,6 @@ const GiftRequests = () => {
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
           </TabsList>
-
           <TabsContent value="pending">
             {loading ? (
               <div className="text-center py-8">Loading pending requests...</div>
@@ -311,7 +67,7 @@ const GiftRequests = () => {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {getPendingRequests().map((request) => (
-                  <RequestCard 
+                  <RequestCard
                     key={request.id}
                     request={request}
                     onApprove={() => updateRequestStatus(request.id, 'accepted')}
@@ -321,7 +77,6 @@ const GiftRequests = () => {
               </div>
             )}
           </TabsContent>
-
           <TabsContent value="approved">
             {loading ? (
               <div className="text-center py-8">Loading approved requests...</div>
@@ -334,7 +89,7 @@ const GiftRequests = () => {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {getAcceptedRequests().map((request) => (
-                  <RequestCard 
+                  <RequestCard
                     key={request.id}
                     request={request}
                     showActions={false}
@@ -343,7 +98,6 @@ const GiftRequests = () => {
               </div>
             )}
           </TabsContent>
-
           <TabsContent value="rejected">
             {loading ? (
               <div className="text-center py-8">Loading rejected requests...</div>
@@ -356,7 +110,7 @@ const GiftRequests = () => {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {getRejectedRequests().map((request) => (
-                  <RequestCard 
+                  <RequestCard
                     key={request.id}
                     request={request}
                     showActions={false}
