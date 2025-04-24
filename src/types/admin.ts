@@ -11,7 +11,7 @@ export interface BaseOrder {
   total_amount: number | null;
   message: string | null;
   shipping_address: any;
-  // Adding the enriched fields that are added in useAdminOrders
+  // Additional enriched fields
   fan_email?: string;
   influencer_name?: string;
 }
