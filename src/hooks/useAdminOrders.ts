@@ -36,13 +36,13 @@ export const useAdminOrders = () => {
         throw acceptedError;
       }
 
-      // Combine and transform the data
+      // Combine and transform the data with proper type casting to ensure they're objects
       const combinedOrders = [
-        ...((underProcessOrders || []).map(order => ({
+        ...((underProcessOrders || []).map((order: any) => ({
           ...order,
           status: 'under_process'
         }))),
-        ...((acceptedOrders || []).map(order => ({
+        ...((acceptedOrders || []).map((order: any) => ({
           ...order,
           status: 'accepted'
         })))
