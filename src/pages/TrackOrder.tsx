@@ -75,16 +75,39 @@ const TrackOrder = () => {
       }
       setLoading(true);
       try {
-        let query = supabase.from("orders").select("*, influencer:influencer_id(name), profiles:user_id(email)");
-        // Show different orders based on role
-        if (userRole === "fan") {
-          query = query.eq("user_id", user.id); // user orders
-        } else if (userRole === "influencer") {
-          query = query.eq("influencer_id", user.id); // influencer orders
-        }
-        const { data, error } = await query.order("created_at", { ascending: false });
-        if (error) throw error;
-        setOrders(data || []);
+        let underProcessOrders = [];
+        let acceptedOrders = [];
+        let completedOrders = [];
+        let rejectedOrders = [];
+        
+        // Helper function to make queries based on role
+        const fetchFromTable = async (table, status) => {
+          let query = supabase.from(table).select("*, influencer:influencer_id(name), profiles:user_id(email)");
+          if (userRole === "fan") {
+            query = query.eq("user_id", user.id);
+          } else if (userRole === "influencer") {
+            query = query.eq("influencer_id", user.id);
+          }
+          const { data, error } = await query.order("created_at", { ascending: false });
+          if (error) throw error;
+          return (data || []).map(order => ({ ...order, status }));
+        };
+        
+        // Fetch orders from each status table
+        underProcessOrders = await fetchFromTable("orders_under_process", "under_process");
+        acceptedOrders = await fetchFromTable("orders_accepted", "accepted");
+        completedOrders = await fetchFromTable("orders_completed", "completed");
+        rejectedOrders = await fetchFromTable("orders_rejected", "rejected");
+        
+        // Combine all orders
+        const allOrders = [
+          ...underProcessOrders,
+          ...acceptedOrders,
+          ...completedOrders,
+          ...rejectedOrders
+        ];
+        
+        setOrders(allOrders);
       } catch (err) {
         toast({
           title: "Error loading orders",

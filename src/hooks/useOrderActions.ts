@@ -9,14 +9,16 @@ export const useOrderActions = (
 ) => {
   const { toast } = useToast();
 
-  // ADMIN marks as "Accepted" -- now means: change "under_process" to "accepted"
+  // ADMIN marks as "Accepted" -- now uses database function to move order
   const handleOrderProcessing = async (orderId: string) => {
     try {
-      // Update order status from under_process to accepted (admin's review)
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: "accepted" })
-        .eq('id', orderId);
+      console.log(`Processing order ${orderId} - moving to accepted table`);
+      
+      // Call the database function to move the order
+      const { data, error } = await supabase.rpc(
+        'move_order_to_accepted',
+        { order_id: orderId }
+      );
 
       if (error) throw error;
 
@@ -25,7 +27,7 @@ export const useOrderActions = (
       
       toast({
         title: "Order Status Updated",
-        description: "Order marked as accepted (processing started)",
+        description: "Order moved to processing queue",
       });
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -61,16 +63,19 @@ export const useOrderActions = (
         
         console.log("Payment successfully processed:", paymentResult);
 
-        // Update order status to completed and set delivery estimate
-        const { error } = await supabase
-          .from('orders')
-          .update({ 
-            status: "completed",
-            delivery_estimate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-          })
-          .eq('id', orderId);
+        // Get delivery estimate (7 days from now)
+        const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        // Call the function to move order to completed table
+        const { data: moveResult, error: moveError } = await supabase.rpc(
+          'move_order_to_completed',
+          { 
+            order_id: orderId,
+            p_delivery_estimate: deliveryEstimate
+          }
+        );
 
-        if (error) throw error;
+        if (moveError) throw moveError;
 
         // Send notification to influencer
         if (order.influencer_id) {
