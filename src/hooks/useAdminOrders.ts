@@ -12,6 +12,8 @@ export const useAdminOrders = () => {
   const fetchAllOrders = useCallback(async () => {
     setIsLoading(true);
     try {
+      console.log("Attempting to fetch admin orders...");
+      
       // Modified query to also fetch orders with status 'under_process'
       // This ensures orders show up after influencer approval
       const { data: orderData, error: orderError } = await supabase
@@ -21,15 +23,19 @@ export const useAdminOrders = () => {
         .order('created_at', { ascending: false });
 
       if (orderError) {
+        console.error("Supabase query error:", orderError);
         throw orderError;
       }
 
       // If no orders are found, set empty array and return early
       if (!orderData || orderData.length === 0) {
+        console.log("No orders found with status 'under_process' or 'accepted'");
         setOrders([]);
         setIsLoading(false);
         return;
       }
+
+      console.log(`Found ${orderData.length} orders to process`);
 
       // Enrich orders with additional data
       const enrichedOrders = await Promise.all(
@@ -46,6 +52,7 @@ export const useAdminOrders = () => {
               console.warn(`Error fetching fan data for order ${order.id}:`, fanError);
             }
 
+            // Handle potential null influencer data safely
             const influencerName = order.influencer?.name || "Unknown";
             
             return {
@@ -65,15 +72,30 @@ export const useAdminOrders = () => {
         })
       );
 
-      console.log('Fetched admin orders:', enrichedOrders);
+      console.log('Fetched admin orders successfully:', enrichedOrders);
       setOrders(enrichedOrders);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching orders:", error);
+      
+      // Provide more detailed error information
+      let errorMessage = "Failed to load orders. ";
+      
+      if (error.code === "PGRST301") {
+        errorMessage += "Database connection issue. Please try again later.";
+      } else if (error.message?.includes("Failed to fetch")) {
+        errorMessage += "Network connection issue. Please check your internet connection.";
+      } else {
+        errorMessage += "Please try again later.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to load orders. Please try again later.",
+        description: errorMessage,
         variant: "destructive"
       });
+      
+      // Set empty orders array to avoid undefined errors
+      setOrders([]);
     } finally {
       setIsLoading(false);
     }

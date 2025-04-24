@@ -4,9 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { OrderList } from "@/components/admin/OrderList";
 import { useAdmin } from "@/hooks/use-admin";
-import { useEffect } from "react";
-import { AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 const AdminDashboard = () => {
   const {
@@ -17,15 +18,21 @@ const AdminDashboard = () => {
     handleOrderProcessing,
     handleOrderComplete
   } = useAdmin();
+  
+  const [loadError, setLoadError] = useState<boolean>(false);
 
   // Refresh orders when dashboard loads
   useEffect(() => {
     // Initial fetch
-    fetchAllOrders();
+    fetchAllOrders().catch(() => {
+      setLoadError(true);
+    });
     
     // Set up a polling interval to check for new orders every 30 seconds
     const interval = setInterval(() => {
-      fetchAllOrders();
+      fetchAllOrders().catch(() => {
+        setLoadError(true);
+      });
     }, 30000);
     
     return () => clearInterval(interval);
@@ -35,6 +42,13 @@ const AdminDashboard = () => {
   const getNewOrders = () => orders.filter(o => o.status === 'under_process');
   // Orders with status accepted (admin indicated manual processing started)
   const getProcessingOrders = () => orders.filter(o => o.status === 'accepted');
+
+  const handleRetry = async () => {
+    setLoadError(false);
+    await fetchAllOrders().catch(() => {
+      setLoadError(true);
+    });
+  };
 
   if (isLoading) {
     return (
@@ -56,10 +70,40 @@ const AdminDashboard = () => {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-gray-600">Manage orders and manual fulfillment</p>
+            <div className="flex justify-between items-center">
+              <p className="text-gray-600">Manage orders and manual fulfillment</p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleRetry}
+                className="flex items-center gap-1"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh Orders
+              </Button>
+            </div>
           </div>
 
-          {(orders.length === 0 || (getNewOrders().length === 0 && getProcessingOrders().length === 0)) && (
+          {loadError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Connection Error</AlertTitle>
+              <AlertDescription className="flex flex-col gap-2">
+                <p>Unable to load orders. Please check your connection and try again.</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRetry}
+                  className="w-fit flex items-center gap-1"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {!loadError && (orders.length === 0 || (getNewOrders().length === 0 && getProcessingOrders().length === 0)) && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>No orders to process</AlertTitle>
