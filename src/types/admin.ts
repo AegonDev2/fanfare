@@ -11,6 +11,9 @@ export interface BaseOrder {
   total_amount: number | null;
   message: string | null;
   shipping_address: any;
+  // Adding the enriched fields that are added in useAdminOrders
+  fan_email?: string;
+  influencer_name?: string;
 }
 
 interface UnderProcessOrder extends BaseOrder {
@@ -29,4 +32,3 @@ interface CompletedOrder extends BaseOrder {
 }
 
 export type OrderDetails = UnderProcessOrder | AcceptedOrder | CompletedOrder;
-
