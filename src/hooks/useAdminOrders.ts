@@ -16,7 +16,7 @@ export const useAdminOrders = () => {
       
       // Fetch orders from under_process table
       const { data: underProcessOrders, error: underProcessError } = await supabase
-        .from('orders_under_process' as any)
+        .from('orders_under_process')
         .select('*, influencer:influencer_id(*)')
         .order('created_at', { ascending: false });
 
@@ -27,7 +27,7 @@ export const useAdminOrders = () => {
       
       // Fetch orders from accepted table
       const { data: acceptedOrders, error: acceptedError } = await supabase
-        .from('orders_accepted' as any)
+        .from('orders_accepted')
         .select('*, influencer:influencer_id(*)')
         .order('created_at', { ascending: false });
 
@@ -36,18 +36,18 @@ export const useAdminOrders = () => {
         throw acceptedError;
       }
 
-      // Combine and transform the data with proper type casting to ensure they're objects
+      // Combine and transform the data
       const combinedOrders = [
-        ...((underProcessOrders || []).map((order: any) => ({
+        ...((underProcessOrders || []).map(order => ({
           ...order,
-          status: 'under_process'
+          status: 'under_process' as const
         }))),
-        ...((acceptedOrders || []).map((order: any) => ({
+        ...((acceptedOrders || []).map(order => ({
           ...order,
-          status: 'accepted'
+          status: 'accepted' as const
         })))
       ];
-      
+
       // If no orders are found, set empty array and return early
       if (combinedOrders.length === 0) {
         console.log("No orders found in under_process or accepted tables");
@@ -56,11 +56,9 @@ export const useAdminOrders = () => {
         return;
       }
 
-      console.log(`Found ${combinedOrders.length} orders to process`);
-
       // Enrich orders with additional data
-      const enrichedOrders: OrderDetails[] = await Promise.all(
-        combinedOrders.map(async (order: any) => {
+      const enrichedOrders = await Promise.all(
+        combinedOrders.map(async (order) => {
           try {
             // Get fan's email
             const { data: fanData, error: fanError } = await supabase
@@ -83,7 +81,6 @@ export const useAdminOrders = () => {
             } as OrderDetails;
           } catch (err) {
             console.error(`Error enriching order ${order.id}:`, err);
-            // Return order with default values if enrichment fails
             return {
               ...order,
               fan_email: "Unknown",
@@ -98,24 +95,12 @@ export const useAdminOrders = () => {
     } catch (error: any) {
       console.error("Error fetching orders:", error);
       
-      // Provide more detailed error information
-      let errorMessage = "Failed to load orders. ";
-      
-      if (error.code === "PGRST301") {
-        errorMessage += "Database connection issue. Please try again later.";
-      } else if (error.message?.includes("Failed to fetch")) {
-        errorMessage += "Network connection issue. Please check your internet connection.";
-      } else {
-        errorMessage += error.message || "Please try again later.";
-      }
-      
       toast({
         title: "Error",
-        description: errorMessage,
+        description: error.message || "Failed to load orders",
         variant: "destructive"
       });
       
-      // Set empty orders array to avoid undefined errors
       setOrders([]);
     } finally {
       setIsLoading(false);
@@ -123,4 +108,4 @@ export const useAdminOrders = () => {
   }, [toast]);
 
   return { orders, isLoading, fetchAllOrders, setOrders };
-}
+};

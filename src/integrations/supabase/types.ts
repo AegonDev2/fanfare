@@ -366,6 +366,165 @@ export type Database = {
           },
         ]
       }
+      orders_accepted: {
+        Row: {
+          created_at: string
+          id: string
+          influencer_id: string | null
+          message: string | null
+          platform_fee: number | null
+          processing_started_at: string | null
+          product_price: number | null
+          product_title: string | null
+          product_url: string
+          shipping_address: Json | null
+          total_amount: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          influencer_id?: string | null
+          message?: string | null
+          platform_fee?: number | null
+          processing_started_at?: string | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url: string
+          shipping_address?: Json | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          influencer_id?: string | null
+          message?: string | null
+          platform_fee?: number | null
+          processing_started_at?: string | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url?: string
+          shipping_address?: Json | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_accepted_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders_completed: {
+        Row: {
+          completed_at: string
+          created_at: string
+          delivery_estimate: string | null
+          id: string
+          influencer_id: string | null
+          message: string | null
+          platform_fee: number | null
+          product_price: number | null
+          product_title: string | null
+          product_url: string
+          shipping_address: Json | null
+          total_amount: number | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string
+          created_at: string
+          delivery_estimate?: string | null
+          id: string
+          influencer_id?: string | null
+          message?: string | null
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url: string
+          shipping_address?: Json | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          delivery_estimate?: string | null
+          id?: string
+          influencer_id?: string | null
+          message?: string | null
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url?: string
+          shipping_address?: Json | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_completed_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders_under_process: {
+        Row: {
+          created_at: string
+          id: string
+          influencer_id: string | null
+          message: string | null
+          platform_fee: number | null
+          product_price: number | null
+          product_title: string | null
+          product_url: string
+          shipping_address: Json | null
+          total_amount: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          influencer_id?: string | null
+          message?: string | null
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url: string
+          shipping_address?: Json | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          influencer_id?: string | null
+          message?: string | null
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url?: string
+          shipping_address?: Json | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_under_process_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_preview_data: {
         Row: {
           created_at: string | null
@@ -549,6 +708,14 @@ export type Database = {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
+        Returns: boolean
+      }
+      move_order_to_accepted: {
+        Args: { order_id: string }
+        Returns: boolean
+      }
+      move_order_to_completed: {
+        Args: { order_id: string; p_delivery_estimate: string }
         Returns: boolean
       }
       top_up_wallet: {

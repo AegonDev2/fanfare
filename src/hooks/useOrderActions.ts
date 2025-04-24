@@ -9,37 +9,32 @@ export const useOrderActions = (
 ) => {
   const { toast } = useToast();
 
-  // ADMIN marks as "Accepted" -- now uses database function to move order
   const handleOrderProcessing = async (orderId: string) => {
     try {
       console.log(`Processing order ${orderId} - moving to accepted table`);
       
-      // Call the database function to move the order
-      const { data, error } = await supabase.rpc(
-        'move_order_to_accepted' as any,
-        { order_id: orderId }
-      );
+      const { error } = await supabase.rpc('move_order_to_accepted', { 
+        order_id: orderId
+      });
 
       if (error) throw error;
 
-      // Refresh orders list
       await fetchAllOrders();
       
       toast({
         title: "Order Status Updated",
         description: "Order moved to processing queue",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating order status:", error);
       toast({
         title: "Error",
-        description: "Failed to update order status",
+        description: error.message || "Failed to update order status",
         variant: "destructive"
       });
     }
   };
 
-  // ADMIN marks as "Completed"
   const handleOrderComplete = async (orderId: string) => {
     try {
       const order = orders.find(o => o.id === orderId);
@@ -67,13 +62,10 @@ export const useOrderActions = (
         const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         
         // Call the function to move order to completed table
-        const { data: moveResult, error: moveError } = await supabase.rpc(
-          'move_order_to_completed' as any,
-          { 
-            order_id: orderId,
-            p_delivery_estimate: deliveryEstimate
-          }
-        );
+        const { error: moveError } = await supabase.rpc('move_order_to_completed', { 
+          order_id: orderId,
+          p_delivery_estimate: deliveryEstimate
+        });
 
         if (moveError) throw moveError;
 
@@ -97,22 +89,21 @@ export const useOrderActions = (
           });
         }
 
-        // Refresh orders list
         await fetchAllOrders();
         
         toast({
           title: "Order Completed",
           description: "Order has been processed and payment has been collected",
         });
-      } catch (paymentError) {
+      } catch (paymentError: any) {
         console.error("Payment processing error:", paymentError);
-        throw new Error(paymentError instanceof Error ? paymentError.message : "Payment processing failed");
+        throw new Error(paymentError.message || "Payment processing failed");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error completing order:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to complete the order",
+        description: error.message || "Failed to complete the order",
         variant: "destructive"
       });
     }
