@@ -68,7 +68,7 @@ export const useGiftRequestActions = (
           }
           const influencerAddress = addressData as InfluencerAddress;
 
-          const shippingAddress: Address = {
+          const shippingAddress = {
             name: influencerAddress.name || "Recipient",
             address_line1: influencerAddress.street_address,
             address_line2: influencerAddress.address_line2 || "",
@@ -80,6 +80,7 @@ export const useGiftRequestActions = (
           };
 
           // Create an order entry in orders_under_process table directly
+          // Cast the shippingAddress object to Json type that Supabase expects
           const { data: orderData, error: orderError } = await supabase
             .from('orders_under_process')
             .insert({
@@ -88,7 +89,7 @@ export const useGiftRequestActions = (
               product_url: request.product_url,
               product_title: request.product_title || "Gift from fan",
               product_price: request.product_price,
-              shipping_address: shippingAddress,
+              shipping_address: shippingAddress as any, // Cast to any to satisfy TypeScript
               message: request.message
             })
             .select()

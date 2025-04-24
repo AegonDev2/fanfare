@@ -10,7 +10,7 @@ export interface BaseOrder {
   platform_fee: number | null;
   total_amount: number | null;
   message: string | null;
-  shipping_address: any;
+  shipping_address: any; // Keep as any since the JSON structure can vary
   // Additional enriched fields
   fan_email?: string;
   influencer_name?: string;
