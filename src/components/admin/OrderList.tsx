@@ -24,7 +24,7 @@ interface OrderListProps {
 
 export const OrderList = ({ orders, onProcess, onComplete, type }: OrderListProps) => {
   const navigate = useNavigate();
-  // Now "pending" == under_process, "processing" == accepted
+  // Updated filtering: 'pending' tab shows 'under_process' orders, 'processing' tab shows 'accepted' orders
   const filteredOrders = orders.filter(o => 
     type === 'pending' ? o.status === 'under_process' : o.status === 'accepted'
   );

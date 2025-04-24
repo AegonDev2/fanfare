@@ -12,8 +12,8 @@ export const useAdminOrders = () => {
   const fetchAllOrders = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Query for all orders that need admin attention
-      // Now include under_process and accepted for pending, completed for delivered, etc
+      // Modified query to also fetch orders with status 'under_process'
+      // This ensures orders show up after influencer approval
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select('*, influencer:influencer_id(*)')
