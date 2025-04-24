@@ -35,71 +35,94 @@ serve(async (req) => {
 
     console.log(`Manual order operation: ${operation} for order ID: ${orderId}`);
 
-    // Get current order information
-    const { data: orderData, error: orderError } = await supabase
-      .from("orders")
-      .select("*, influencer:influencer_id(*)")
-      .eq("id", orderId)
-      .single();
-
-    if (orderError) {
-      throw new Error(`Error retrieving order: ${orderError.message}`);
-    }
-
-    // Update order status based on operation
-    let newStatus = "pending";
-    let message = "Order status updated";
+    let order;
+    let message;
 
     switch (operation) {
       case "process":
-        newStatus = "processing";
+        // Move order from under_process to accepted
+        const { data: processResult, error: processError } = await supabase.rpc(
+          'move_order_to_accepted',
+          { order_id: orderId }
+        );
+        
+        if (processError) {
+          throw new Error(`Error processing order: ${processError.message}`);
+        }
+
+        // Get current order information from accepted table
+        const { data: acceptedOrder, error: orderError } = await supabase
+          .from("orders_accepted")
+          .select("*, influencer:influencer_id(*)")
+          .eq("id", orderId)
+          .single();
+
+        if (orderError) {
+          throw new Error(`Error retrieving order: ${orderError.message}`);
+        }
+
+        order = acceptedOrder;
         message = "Your order is being processed by our team.";
         break;
+
       case "complete":
-        newStatus = "completed";
+        // Get delivery estimate (7 days from now)
+        const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        // Move order from accepted to completed
+        const { data: completeResult, error: completeError } = await supabase.rpc(
+          'move_order_to_completed',
+          { 
+            order_id: orderId,
+            p_delivery_estimate: deliveryEstimate 
+          }
+        );
+        
+        if (completeError) {
+          throw new Error(`Error completing order: ${completeError.message}`);
+        }
+
+        // Get current order information from completed table
+        const { data: completedOrder, error: completedOrderError } = await supabase
+          .from("orders_completed")
+          .select("*, influencer:influencer_id(*)")
+          .eq("id", orderId)
+          .single();
+
+        if (completedOrderError) {
+          throw new Error(`Error retrieving completed order: ${completedOrderError.message}`);
+        }
+
+        order = completedOrder;
         message = "Your order has been processed and shipped!";
         break;
-      case "cancel":
-        newStatus = "cancelled";
-        message = "Your order has been cancelled.";
-        break;
+
       default:
         throw new Error(`Unsupported operation: ${operation}`);
     }
 
-    // Update the order status in the database
-    const { error: updateError } = await supabase
-      .from("orders")
-      .update({
-        status: newStatus,
-      })
-      .eq("id", orderId);
+    // Create notification for user if available
+    if (order.user_id) {
+      const { error: notificationError } = await supabase.from("notifications").insert({
+        recipient_id: order.user_id,
+        type: `order_${operation === "process" ? "processing" : "completed"}`,
+        message: message,
+        reference_id: orderId,
+      });
 
-    if (updateError) {
-      console.error("Error updating order status:", updateError);
-      throw new Error(`Failed to update order status: ${updateError.message}`);
-    }
-
-    // Create notification for status update
-    const { error: notificationError } = await supabase.from("notifications").insert({
-      recipient_id: orderData.influencer_id,
-      type: `order_${newStatus}`,
-      message: message,
-      reference_id: orderId,
-    });
-
-    if (notificationError) {
-      console.error("Error creating notification:", notificationError);
-      // Continue even if notification fails
+      if (notificationError) {
+        console.error("Error creating notification:", notificationError);
+        // Continue even if notification fails
+      }
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Order ${newStatus}`,
+        message: `Order ${operation === "process" ? "processing" : "completed"}`,
         data: {
           orderId: orderId,
-          status: newStatus,
+          status: operation === "process" ? "accepted" : "completed",
         },
       }),
       {

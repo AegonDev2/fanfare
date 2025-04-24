@@ -79,16 +79,15 @@ export const useGiftRequestActions = (
             phone: influencerAddress.phone || "Not provided"
           };
 
-          // Create an order entry for admin to process (now status under_process)
+          // Create an order entry in orders_under_process table directly
           const { data: orderData, error: orderError } = await supabase
-            .from('orders')
+            .from('orders_under_process')
             .insert({
               influencer_id: request.influencer_id,
               user_id: request.sender.id,
               product_url: request.product_url,
               product_title: request.product_title || "Gift from fan",
               product_price: request.product_price,
-              status: 'under_process', // NEW: status is under_process after influencer accepts
               shipping_address: shippingAddress,
               message: request.message
             })
@@ -96,7 +95,8 @@ export const useGiftRequestActions = (
             .single();
 
           if (orderError) {
-            throw new Error('Could not create order for admin');
+            console.error("Failed to create order in orders_under_process:", orderError);
+            throw new Error('Could not create order for admin processing');
           }
 
           // Send notification to admin about new approved gift
@@ -134,10 +134,11 @@ export const useGiftRequestActions = (
         title: "Success",
         description: `Gift request ${status === 'accepted' ? 'approved' : 'rejected'} successfully!`,
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error updating gift request status:", error);
       toast({
         title: "Error",
-        description: `Failed to ${status === 'accepted' ? 'approve' : 'reject'} gift request`,
+        description: `Failed to ${status === 'accepted' ? 'approve' : 'reject'} gift request: ${error.message}`,
         variant: "destructive",
       });
     }

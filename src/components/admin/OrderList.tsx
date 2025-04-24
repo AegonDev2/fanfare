@@ -85,15 +85,7 @@ export const OrderList = ({ orders, onProcess, onComplete, type }: OrderListProp
                       <CheckCircle className="h-4 w-4 mr-1" />
                       Mark As Completed
                     </Button>
-                  ) : (
-                    <Button 
-                      size="sm" 
-                      variant="secondary"
-                      onClick={() => navigate(`/admin/order-details/${order.id}`)}
-                    >
-                      Details
-                    </Button>
-                  )}
+                  ) : null}
                   <Button 
                     size="sm" 
                     variant="secondary"
