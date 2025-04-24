@@ -6,6 +6,16 @@ import { useNavigation } from "@/components/navigation/useNavigation";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, MapPin, Package, Truck, Navigation } from "lucide-react";
 
+interface OrderData {
+  id: string;
+  status: string;
+  created_at: string;
+  product_url: string;
+  product_title: string | null;
+  influencer?: { name: string } | null;
+  profiles?: { email: string } | null;
+}
+
 const STATUS_MAP = {
   pending: { label: "Pending", icon: Navigation },
   under_process: { label: "Under Process", icon: Truck },
@@ -62,7 +72,7 @@ const OrderStatusTimeline = ({ status }: { status: string }) => {
 
 const TrackOrder = () => {
   const { toast } = useToast();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, userRole, userEmail } = useNavigation();
 
@@ -75,22 +85,27 @@ const TrackOrder = () => {
       }
       setLoading(true);
       try {
-        let underProcessOrders = [];
-        let acceptedOrders = [];
-        let completedOrders = [];
-        let rejectedOrders = [];
+        let underProcessOrders: OrderData[] = [];
+        let acceptedOrders: OrderData[] = [];
+        let completedOrders: OrderData[] = [];
+        let rejectedOrders: OrderData[] = [];
         
         // Helper function to make queries based on role
         const fetchFromTable = async (table: string, status: string) => {
-          let query = supabase.from(table).select("*, influencer:influencer_id(name), profiles:user_id(email)");
+          let query = supabase
+            .from(table as any)
+            .select("*, influencer:influencer_id(name), profiles:user_id(email)");
+            
           if (userRole === "fan") {
             query = query.eq("user_id", user.id);
           } else if (userRole === "influencer") {
             query = query.eq("influencer_id", user.id);
           }
+          
           const { data, error } = await query.order("created_at", { ascending: false });
           if (error) throw error;
-          return (data || []).map(order => ({ ...order, status }));
+          
+          return (data || []).map((order: any) => ({ ...order, status }));
         };
         
         // Fetch orders from each status table

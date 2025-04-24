@@ -16,7 +16,7 @@ export const useOrderActions = (
       
       // Call the database function to move the order
       const { data, error } = await supabase.rpc(
-        'move_order_to_accepted',
+        'move_order_to_accepted' as any,
         { order_id: orderId }
       );
 
@@ -68,7 +68,7 @@ export const useOrderActions = (
         
         // Call the function to move order to completed table
         const { data: moveResult, error: moveError } = await supabase.rpc(
-          'move_order_to_completed',
+          'move_order_to_completed' as any,
           { 
             order_id: orderId,
             p_delivery_estimate: deliveryEstimate

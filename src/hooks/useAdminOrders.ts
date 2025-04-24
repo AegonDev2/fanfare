@@ -16,7 +16,7 @@ export const useAdminOrders = () => {
       
       // Fetch orders from under_process table
       const { data: underProcessOrders, error: underProcessError } = await supabase
-        .from('orders_under_process')
+        .from('orders_under_process' as any)
         .select('*, influencer:influencer_id(*)')
         .order('created_at', { ascending: false });
 
@@ -27,7 +27,7 @@ export const useAdminOrders = () => {
       
       // Fetch orders from accepted table
       const { data: acceptedOrders, error: acceptedError } = await supabase
-        .from('orders_accepted')
+        .from('orders_accepted' as any)
         .select('*, influencer:influencer_id(*)')
         .order('created_at', { ascending: false });
 
