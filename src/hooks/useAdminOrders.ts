@@ -59,8 +59,8 @@ export const useAdminOrders = () => {
       console.log(`Found ${combinedOrders.length} orders to process`);
 
       // Enrich orders with additional data
-      const enrichedOrders = await Promise.all(
-        combinedOrders.map(async (order) => {
+      const enrichedOrders: OrderDetails[] = await Promise.all(
+        combinedOrders.map(async (order: any) => {
           try {
             // Get fan's email
             const { data: fanData, error: fanError } = await supabase
@@ -80,7 +80,7 @@ export const useAdminOrders = () => {
               ...order,
               fan_email: fanData?.email || "Unknown",
               influencer_name: influencerName,
-            };
+            } as OrderDetails;
           } catch (err) {
             console.error(`Error enriching order ${order.id}:`, err);
             // Return order with default values if enrichment fails
@@ -88,7 +88,7 @@ export const useAdminOrders = () => {
               ...order,
               fan_email: "Unknown",
               influencer_name: "Unknown",
-            };
+            } as OrderDetails;
           }
         })
       );

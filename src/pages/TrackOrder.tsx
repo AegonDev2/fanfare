@@ -81,7 +81,7 @@ const TrackOrder = () => {
         let rejectedOrders = [];
         
         // Helper function to make queries based on role
-        const fetchFromTable = async (table, status) => {
+        const fetchFromTable = async (table: string, status: string) => {
           let query = supabase.from(table).select("*, influencer:influencer_id(name), profiles:user_id(email)");
           if (userRole === "fan") {
             query = query.eq("user_id", user.id);
