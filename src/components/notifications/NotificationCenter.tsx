@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,11 +37,13 @@ const NotificationCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
+  // Fetch notifications on component mount
   useEffect(() => {
     fetchNotifications();
     
+    // Set up realtime subscription for new notifications
     const channel = supabase
-      .channel('public:notifications')
+      .channel('notification-changes')
       .on(
         'postgres_changes',
         {
@@ -51,15 +54,17 @@ const NotificationCenter = () => {
         (payload) => {
           const newNotification = payload.new as Notification;
           
+          // Check if the notification is for the current user
           supabase.auth.getUser().then(({ data }) => {
             if (data.user && newNotification.recipient_id === data.user.id) {
+              // Add the new notification to the state
               setNotifications((prev) => [newNotification, ...prev]);
               setUnreadCount((prev) => prev + 1);
+              
+              // Show a toast notification
               toast({
                 title: "New Notification",
-                description: newNotification.type === "new_gift_request"
-                  ? "You have received a new gift request."
-                  : newNotification.message,
+                description: newNotification.message,
               });
             }
           });
@@ -67,6 +72,7 @@ const NotificationCenter = () => {
       )
       .subscribe();
     
+    // Clean up subscription on unmount
     return () => {
       supabase.removeChannel(channel);
     };
@@ -75,14 +81,14 @@ const NotificationCenter = () => {
   const fetchNotifications = async () => {
     try {
       setIsLoading(true);
-      const { data: user } = await supabase.auth.getUser();
+      const { data: userData } = await supabase.auth.getUser();
       
-      if (!user.user) return;
+      if (!userData.user) return;
 
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_id', user.user.id)
+        .eq('recipient_id', userData.user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -121,14 +127,14 @@ const NotificationCenter = () => {
 
   const markAllAsRead = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser();
+      const { data: userData } = await supabase.auth.getUser();
       
-      if (!user.user) return;
+      if (!userData.user) return;
 
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
-        .eq('recipient_id', user.user.id)
+        .eq('recipient_id', userData.user.id)
         .eq('is_read', false);
 
       if (error) throw error;
@@ -152,12 +158,15 @@ const NotificationCenter = () => {
       case 'new_gift_request':
         return "🎁";
       case 'gift_accepted':
+      case 'gift_request_approved':
         return "✅";
       case 'gift_rejected':
+      case 'gift_request_rejected':
         return "❌";
       case 'gift_shipped':
         return "📦";
       case 'gift_delivered':
+      case 'order_completed':
         return "🚚";
       default:
         return "📣";

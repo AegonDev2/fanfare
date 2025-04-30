@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { sendNotification } from "@/utils/notifications";
 import type { OrderDetails } from "@/types/admin";
 
 export const useOrderActions = (
@@ -35,22 +36,24 @@ export const useOrderActions = (
 
       // Send notification to influencer
       if (order.influencer_id) {
-        await supabase.from("notifications").insert({
-          recipient_id: order.influencer_id,
-          type: "order_completed",
-          message: `Your gift order has been processed and will be delivered soon!`,
-          reference_id: orderId,
-        });
+        console.log(`Sending completion notification to influencer: ${order.influencer_id}`);
+        await sendNotification(
+          order.influencer_id,
+          "order_completed",
+          `Your gift order has been processed and will be delivered soon!`,
+          orderId
+        );
       }
       
       // Send notification to fan
       if (order.user_id) {
-        await supabase.from("notifications").insert({
-          recipient_id: order.user_id,
-          type: "order_completed",
-          message: `Your gift order has been processed and will be delivered soon!`,
-          reference_id: orderId,
-        });
+        console.log(`Sending completion notification to fan: ${order.user_id}`);
+        await sendNotification(
+          order.user_id,
+          "order_completed",
+          `Your gift order has been processed and will be delivered around ${new Date(deliveryEstimate).toLocaleDateString()}!`,
+          orderId
+        );
       }
 
       console.log("Notifications sent, refreshing orders list");
