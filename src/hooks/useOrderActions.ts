@@ -16,58 +16,18 @@ export const useOrderActions = (
       // Get delivery estimate (7 days from now)
       const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // Get the order from orders_under_process
-      const { data: orderData, error: fetchError } = await supabase
-        .from('orders_under_process')
-        .select('*')
-        .eq('id', orderId)
-        .single();
+      // Use the updated database function to move order to completed
+      const { data, error } = await supabase.rpc('move_order_to_completed', {
+        order_id: orderId,
+        p_delivery_estimate: deliveryEstimate
+      });
       
-      if (fetchError || !orderData) {
-        console.error("Failed to fetch order:", fetchError);
-        throw new Error("Order not found");
+      if (error) {
+        console.error("Failed to complete order:", error);
+        throw error;
       }
       
-      console.log("Retrieved order data:", orderData);
-      
-      // Insert order into orders_completed table
-      const { error: insertError } = await supabase
-        .from('orders_completed')
-        .insert({
-          id: orderId,
-          created_at: orderData.created_at,
-          completed_at: new Date().toISOString(),
-          user_id: orderData.user_id,
-          influencer_id: orderData.influencer_id,
-          product_url: orderData.product_url,
-          product_title: orderData.product_title,
-          product_price: orderData.product_price,
-          platform_fee: orderData.platform_fee,
-          total_amount: orderData.total_amount,
-          shipping_address: orderData.shipping_address,
-          message: orderData.message,
-          delivery_estimate: deliveryEstimate
-        });
-      
-      if (insertError) {
-        console.error("Failed to insert into orders_completed:", insertError);
-        throw insertError;
-      }
-      
-      console.log("Successfully inserted into orders_completed");
-      
-      // Delete the order from orders_under_process
-      const { error: deleteError } = await supabase
-        .from('orders_under_process')
-        .delete()
-        .eq('id', orderId);
-      
-      if (deleteError) {
-        console.error("Failed to delete from orders_under_process:", deleteError);
-        throw deleteError;
-      }
-      
-      console.log("Successfully deleted from orders_under_process");
+      console.log("Successfully moved order to completed");
 
       // Get order details for notifications
       const order = orders.find(o => o.id === orderId);
