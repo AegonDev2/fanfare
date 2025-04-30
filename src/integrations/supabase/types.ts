@@ -296,59 +296,6 @@ export type Database = {
         }
         Relationships: []
       }
-      orders_accepted: {
-        Row: {
-          created_at: string
-          id: string
-          influencer_id: string | null
-          message: string | null
-          platform_fee: number | null
-          processing_started_at: string | null
-          product_price: number | null
-          product_title: string | null
-          product_url: string
-          shipping_address: Json | null
-          total_amount: number | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          influencer_id?: string | null
-          message?: string | null
-          platform_fee?: number | null
-          processing_started_at?: string | null
-          product_price?: number | null
-          product_title?: string | null
-          product_url: string
-          shipping_address?: Json | null
-          total_amount?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          influencer_id?: string | null
-          message?: string | null
-          platform_fee?: number | null
-          processing_started_at?: string | null
-          product_price?: number | null
-          product_title?: string | null
-          product_url?: string
-          shipping_address?: Json | null
-          total_amount?: number | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orders_accepted_influencer_id_fkey"
-            columns: ["influencer_id"]
-            isOneToOne: false
-            referencedRelation: "influencer_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       orders_completed: {
         Row: {
           completed_at: string

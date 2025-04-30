@@ -56,6 +56,8 @@ export const useGiftRequestActions = (
         // Influencer accepted: create order with status "under_process"
         const request = requests.find(r => r.id === id);
         if (request) {
+          console.log("Processing accepted gift request:", request);
+          
           const { data: addressData, error: addressError } = await supabase
             .from('influencer_addresses')
             .select('*')
@@ -64,6 +66,7 @@ export const useGiftRequestActions = (
             .single();
 
           if (addressError) {
+            console.error("Address error:", addressError);
             throw new Error('Could not find shipping address');
           }
           const influencerAddress = addressData as InfluencerAddress;
@@ -79,8 +82,9 @@ export const useGiftRequestActions = (
             phone: influencerAddress.phone || "Not provided"
           };
 
+          console.log("Creating order with shipping address:", shippingAddress);
+
           // Create an order entry in orders_under_process table directly
-          // Cast the shippingAddress object to Json type that Supabase expects
           const { data: orderData, error: orderError } = await supabase
             .from('orders_under_process')
             .insert({
@@ -89,7 +93,7 @@ export const useGiftRequestActions = (
               product_url: request.product_url,
               product_title: request.product_title || "Gift from fan",
               product_price: request.product_price,
-              shipping_address: shippingAddress as any, // Cast to any to satisfy TypeScript
+              shipping_address: shippingAddress,
               message: request.message
             })
             .select()
@@ -99,6 +103,8 @@ export const useGiftRequestActions = (
             console.error("Failed to create order in orders_under_process:", orderError);
             throw new Error('Could not create order for admin processing');
           }
+
+          console.log("Order created successfully:", orderData);
 
           // Send notification to admin about new approved gift
           await sendAdminNotification(
@@ -116,6 +122,8 @@ export const useGiftRequestActions = (
             reference_id: orderData.id,
             sender_id: request.influencer_id
           });
+          
+          console.log("Notifications sent successfully");
         }
       } else if (status === 'rejected') {
         // If rejected, also mark order (if any) as rejected, though generally no order is created

@@ -25,6 +25,8 @@ export const useAdminOrders = () => {
         throw underProcessError;
       }
       
+      console.log("Under process orders:", underProcessOrders?.length);
+      
       // Fetch orders from completed table
       const { data: completedOrders, error: completedError } = await supabase
         .from('orders_completed')
@@ -35,6 +37,8 @@ export const useAdminOrders = () => {
         console.error("Error fetching completed orders:", completedError);
         throw completedError;
       }
+      
+      console.log("Completed orders:", completedOrders?.length);
 
       // Combine and transform the data
       const combinedOrders = [
@@ -55,6 +59,8 @@ export const useAdminOrders = () => {
         setIsLoading(false);
         return;
       }
+      
+      console.log(`Total orders found: ${combinedOrders.length}`);
 
       // Enrich orders with additional data
       const enrichedOrders = await Promise.all(
@@ -90,7 +96,7 @@ export const useAdminOrders = () => {
         })
       );
 
-      console.log('Fetched admin orders successfully:', enrichedOrders);
+      console.log('Fetched and enriched admin orders successfully:', enrichedOrders.length);
       setOrders(enrichedOrders);
     } catch (error: any) {
       console.error("Error fetching orders:", error);

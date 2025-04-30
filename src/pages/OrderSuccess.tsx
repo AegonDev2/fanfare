@@ -5,26 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Home, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
-// Define a type for order details which covers both tables
-interface OrderDetails {
-  id: string;
-  created_at: string;
-  user_id?: string;
-  influencer_id?: string;
-  product_url: string;
-  product_title?: string;
-  product_price?: number;
-  platform_fee?: number;
-  total_amount?: number;
-  message?: string;
-  shipping_address?: any;
-  // Fields specific to completed orders
-  completed_at?: string;
-  delivery_estimate?: string;
-  // Status to differentiate between tables
-  status?: 'under_process' | 'completed';
-}
+import type { OrderDetails } from "@/types/admin";
 
 const OrderSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -59,19 +40,19 @@ const OrderSuccess = () => {
           if (!completedError) {
             data = {
               ...completedData,
-              status: 'completed'
+              status: 'completed' as const
             };
           }
         } else {
           // Add status property if from under_process
           data = {
             ...data,
-            status: 'under_process'
+            status: 'under_process' as const
           };
         }
 
         if (data) {
-          setOrderDetails(data);
+          setOrderDetails(data as OrderDetails);
         }
       } catch (error) {
         console.error("Error fetching order:", error);

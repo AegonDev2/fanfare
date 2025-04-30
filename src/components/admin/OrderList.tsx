@@ -27,6 +27,8 @@ export const OrderList = ({ orders, onComplete, type }: OrderListProps) => {
   const filteredOrders = orders.filter(o => 
     type === 'pending' ? o.status === 'under_process' : o.status === 'completed'
   );
+  
+  console.log(`OrderList - Type: ${type}, Filtered orders: ${filteredOrders.length}`);
 
   return (
     <Table>

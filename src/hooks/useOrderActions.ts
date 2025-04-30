@@ -11,6 +11,8 @@ export const useOrderActions = (
 
   const handleOrderComplete = async (orderId: string) => {
     try {
+      console.log("Completing order:", orderId);
+      
       // Get delivery estimate (7 days from now)
       const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
@@ -21,7 +23,12 @@ export const useOrderActions = (
         .eq('id', orderId)
         .single();
       
-      if (fetchError || !orderData) throw new Error("Order not found");
+      if (fetchError || !orderData) {
+        console.error("Failed to fetch order:", fetchError);
+        throw new Error("Order not found");
+      }
+      
+      console.log("Retrieved order data:", orderData);
       
       // Insert order into orders_completed table
       const { error: insertError } = await supabase
@@ -42,7 +49,12 @@ export const useOrderActions = (
           delivery_estimate: deliveryEstimate
         });
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Failed to insert into orders_completed:", insertError);
+        throw insertError;
+      }
+      
+      console.log("Successfully inserted into orders_completed");
       
       // Delete the order from orders_under_process
       const { error: deleteError } = await supabase
@@ -50,7 +62,12 @@ export const useOrderActions = (
         .delete()
         .eq('id', orderId);
       
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error("Failed to delete from orders_under_process:", deleteError);
+        throw deleteError;
+      }
+      
+      console.log("Successfully deleted from orders_under_process");
 
       // Get order details for notifications
       const order = orders.find(o => o.id === orderId);
@@ -76,6 +93,7 @@ export const useOrderActions = (
         });
       }
 
+      console.log("Notifications sent, refreshing orders list");
       await fetchAllOrders();
       
       toast({
