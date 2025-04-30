@@ -18,9 +18,7 @@ interface GiftRequest {
   message: string | null;
   created_at: string;
   status: 'pending' | 'accepted' | 'rejected' | 'under process' | 'completed';
-  influencer: { 
-    name: string 
-  } | null;
+  influencer_name: string | null;
   platform_fee?: number | null;
   total_amount?: number | null;
   completed_at?: string | null;
@@ -68,7 +66,7 @@ const GiftsSent = () => {
           total_amount,
           completed_at,
           delivery_estimate,
-          influencer:influencer_id(name)
+          influencer:influencer_profiles!gift_requests_influencer_id_fkey(name)
         `)
         .eq("sender_id", user.id)
         .order("created_at", { ascending: false });
@@ -82,10 +80,10 @@ const GiftsSent = () => {
       if (data) {
         const formattedRequests = data.map(item => ({
           ...item,
-          influencer: item.influencer || { name: "Unknown Influencer" }
+          influencer_name: item.influencer?.name || "Unknown Influencer"
         }));
         
-        setRequests(formattedRequests);
+        setRequests(formattedRequests as GiftRequest[]);
       }
     } catch (error: any) {
       toast({
@@ -194,7 +192,7 @@ const GiftsSent = () => {
                           </div>
                         </div>
                         <div className="text-sm text-gray-500 mt-1">
-                          To: {request.influencer?.name || "Influencer"}
+                          To: {request.influencer_name || "Influencer"}
                         </div>
                         {request.message && (
                           <p className="mt-2 text-sm text-gray-700 line-clamp-2">
@@ -254,7 +252,7 @@ const GiftsSent = () => {
                         {selectedRequest.product_title || "Gift Request"}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        To: {selectedRequest.influencer?.name || "Influencer"}
+                        To: {selectedRequest.influencer_name || "Influencer"}
                       </p>
                       <div className="mt-2">
                         {renderStatusBadge(selectedRequest.status)}
