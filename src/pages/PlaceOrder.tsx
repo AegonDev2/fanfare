@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -124,15 +125,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       return;
     }
     
-    if (!productPreview || productPreview.name === DEFAULT_PRODUCT.name) {
-      toast({
-        title: "Error",
-        description: "Please select a valid product before proceeding.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+    // No longer require a valid product preview
     await submitOrder(giftItem, message, influencerId, productPreview, influencerAddress);
   };
 
@@ -142,15 +135,6 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       prev.set("gift", newUrl);
       return prev;
     });
-  };
-
-  const DEFAULT_PRODUCT = {
-    name: "Enter a product URL to preview",
-    description: "Product details will appear here once you enter a valid URL.",
-    price: 0,
-    priceInr: 0,
-    platformFee: 5.00,
-    image: "https://storage.googleapis.com/a1aa/image/tSbIqbP_qJMzV8bfuyM7gaSttRX2Pi5K-jl57IlWP44.jpg"
   };
 
   const renderErrorMessage = () => {
@@ -189,6 +173,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
           onSubmit={handleSubmit}
           isLoading={isLoading}
           paymentStep={paymentStep === 'pending' ? 'processing' : paymentStep}
+          giftUrl={giftItem}
         />
       </div>
     </div>

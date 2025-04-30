@@ -11,6 +11,7 @@ export interface BaseOrder {
   total_amount: number | null;
   message: string | null;
   shipping_address: any; // Keep as any since the JSON structure can vary
+  status: 'under_process' | 'completed'; // Add status field to differentiate order types
   // Additional enriched fields
   fan_email?: string;
   influencer_name?: string;

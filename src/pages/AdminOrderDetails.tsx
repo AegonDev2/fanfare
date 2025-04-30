@@ -1,114 +1,62 @@
-import React, { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import Header from "@/components/landing/Header";
-import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, CheckCircle, ClipboardCopy, ShoppingBag } from "lucide-react";
+import { ShoppingBag, Check, ArrowLeft, CalendarIcon, Truck, Package } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { OrderDetails } from "@/types/admin";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 const AdminOrderDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const [order, setOrder] = useState<OrderDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [order, setOrder] = useState<OrderDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deliveryEstimate, setDeliveryEstimate] = useState<Date | null>(null);
 
   useEffect(() => {
-    checkAdminAccess();
     if (id) {
       fetchOrderDetails(id);
     }
   }, [id]);
 
-  const checkAdminAccess = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/auth');
-        return;
-      }
-
-      // Check if user has admin role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (roleError) {
-        console.error("Error checking role:", roleError);
-        navigate('/');
-        return;
-      }
-
-      if (roleData?.role !== 'admin') {
-        toast({
-          title: "Access Denied",
-          description: "You don't have permission to view this page.",
-          variant: "destructive"
-        });
-        navigate('/');
-      }
-    } catch (error) {
-      console.error("Authentication error:", error);
-      navigate('/auth');
-    }
-  };
-
   const fetchOrderDetails = async (orderId: string) => {
     setIsLoading(true);
     try {
-      // First, try to get the order from orders_under_process
-      let { data: orderData, error: orderError } = await supabase
-        .from('orders_under_process')
-        .select('*, influencer:influencer_id(*)')
-        .eq('id', orderId)
+      // Check which table the order is in
+      let { data: underProcessOrder, error: underProcessError } = await supabase
+        .from("orders_under_process")
+        .select("*, influencer:influencer_profiles(*)")
+        .eq("id", orderId)
         .single();
 
-      let status = 'under_process';
-      
-      // If not found in orders_under_process, try orders_completed
-      if (orderError) {
-        const { data: completedData, error: completedError } = await supabase
-          .from('orders_completed')
-          .select('*, influencer:influencer_id(*)')
-          .eq('id', orderId)
+      if (underProcessError) {
+        // Try completed orders if not found in under_process
+        let { data: completedOrder, error: completedError } = await supabase
+          .from("orders_completed")
+          .select("*, influencer:influencer_profiles(*)")
+          .eq("id", orderId)
           .single();
-          
+
         if (completedError) {
-          throw new Error("Order not found in any table");
+          throw new Error("Order not found");
         }
-        
-        orderData = completedData;
-        status = 'completed';
+
+        await enrichOrderData(completedOrder, 'completed');
+      } else {
+        await enrichOrderData(underProcessOrder, 'under_process');
       }
-
-      // Get fan profile information
-      const { data: fanData } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', orderData.user_id)
-        .maybeSingle();
-
-      const enrichedOrder: OrderDetails = {
-        ...orderData,
-        status: status as 'under_process' | 'completed',
-        fan_email: fanData?.email || "Unknown",
-        influencer_name: orderData.influencer?.name || "Unknown",
-        // Only add completed_at if it exists in the data (for completed orders)
-        completed_at: status === 'completed' ? orderData.completed_at : undefined,
-      };
-
-      setOrder(enrichedOrder);
     } catch (error) {
-      console.error("Error fetching order details:", error);
+      console.error("Error fetching order:", error);
       toast({
         title: "Error",
-        description: "Failed to load order details.",
+        description: "Failed to load order details",
         variant: "destructive"
       });
     } finally {
@@ -116,328 +64,272 @@ const AdminOrderDetails = () => {
     }
   };
 
+  const enrichOrderData = async (orderData: any, status: string) => {
+    try {
+      // Get customer email
+      const { data: fanData } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", orderData.user_id)
+        .single();
+
+      const enrichedOrder = {
+        ...orderData,
+        status: status as 'under_process' | 'completed',
+        fan_email: fanData?.email || "Unknown",
+        influencer_name: orderData.influencer?.name || "Unknown",
+      };
+
+      setOrder(enrichedOrder);
+    } catch (error) {
+      console.error("Error enriching order data:", error);
+      toast({
+        title: "Warning",
+        description: "Some order details could not be loaded",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleOrderComplete = async () => {
     if (!order) return;
+    
+    if (!deliveryEstimate) {
+      toast({
+        title: "Error",
+        description: "Please select a delivery estimate date",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
-      // Get delivery estimate (7 days from now)
-      const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      // Call the Supabase function to move order to completed
+      const { data, error } = await supabase.rpc('move_order_to_completed', {
+        order_id: order.id,
+        p_delivery_estimate: deliveryEstimate.toISOString().split('T')[0]
+      });
       
-      // Get the order from orders_under_process
-      const { data: orderData, error: fetchError } = await supabase
-        .from('orders_under_process')
-        .select('*')
-        .eq('id', order.id)
-        .single();
-      
-      if (fetchError || !orderData) throw new Error("Order not found");
-      
-      // Insert order into orders_completed table
-      const { error: insertError } = await supabase
-        .from('orders_completed')
-        .insert({
-          id: order.id,
-          created_at: orderData.created_at,
-          completed_at: new Date().toISOString(),
-          user_id: orderData.user_id,
-          influencer_id: orderData.influencer_id,
-          product_url: orderData.product_url,
-          product_title: orderData.product_title,
-          product_price: orderData.product_price,
-          platform_fee: orderData.platform_fee,
-          total_amount: orderData.total_amount,
-          shipping_address: orderData.shipping_address,
-          message: orderData.message,
-          delivery_estimate: deliveryEstimate
-        });
-      
-      if (insertError) throw insertError;
-      
-      // Delete the order from orders_under_process
-      const { error: deleteError } = await supabase
-        .from('orders_under_process')
-        .delete()
-        .eq('id', order.id);
-      
-      if (deleteError) throw deleteError;
-
-      // Send notification to influencer
-      if (order.influencer_id) {
-        await supabase.from("notifications").insert({
-          recipient_id: order.influencer_id,
-          type: "order_completed",
-          message: `Your gift order has been processed and will be delivered soon!`,
-          reference_id: order.id,
-        });
-      }
-      
-      // Send notification to fan
-      if (order.user_id) {
-        await supabase.from("notifications").insert({
-          recipient_id: order.user_id,
-          type: "order_completed",
-          message: `Your gift order has been processed and will be delivered soon!`,
-          reference_id: order.id,
-        });
-      }
+      if (error) throw error;
       
       toast({
         title: "Order Completed",
         description: "Order has been marked as completed",
       });
       
-      // Refresh order details
-      fetchOrderDetails(order.id);
-    } catch (error: any) {
+      // Notify customer
+      await supabase.from("notifications").insert({
+        recipient_id: order.user_id,
+        type: "order_completed",
+        message: `Your order has been completed! Estimated delivery date: ${format(deliveryEstimate, 'PP')}`,
+        reference_id: order.id,
+      });
+      
+      // Redirect back to admin dashboard
+      navigate("/admin");
+      
+    } catch (error) {
       console.error("Error completing order:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to complete the order",
+        description: "Failed to complete order",
         variant: "destructive"
       });
     }
   };
-
-  const copyToClipboard = (text: string, description: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: description,
-    });
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
-
-  const formatPrice = (price?: number | null) => {
-    if (price == null) return "N/A";
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 2
-    }).format(price);
-  };
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <Header />
-        <main className="container mx-auto p-4 pt-20">
-          <div className="flex items-center justify-center h-64">
-            <p>Loading order details...</p>
-          </div>
-        </main>
+      <div className="container mx-auto p-4">
+        <div className="flex justify-center items-center h-64">
+          <p>Loading order details...</p>
+        </div>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <Header />
-        <main className="container mx-auto p-4 pt-20">
-          <div className="flex flex-col items-center justify-center h-64 gap-4">
-            <p className="text-xl">Order not found</p>
-            <Button onClick={() => navigate('/admin')}>Back to Dashboard</Button>
-          </div>
-        </main>
+      <div className="container mx-auto p-4">
+        <div className="flex justify-center items-center h-64">
+          <p>Order not found</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header />
-      <main className="container mx-auto p-4 pt-20">
-        <div className="mb-6">
-          <Button variant="ghost" onClick={() => navigate('/admin')} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold">Order Details</h1>
-              <p className="text-gray-600">Order ID: {order.id}</p>
-            </div>
-            <Badge 
-              variant={
-                order.status === "under_process" ? "outline" :
-                order.status === "completed" ? "default" : "destructive"
-              }
-              className="text-sm py-1 px-3"
-            >
-              {order.status}
-            </Badge>
-          </div>
-        </div>
+    <div className="container mx-auto p-4">
+      <Button
+        variant="ghost"
+        onClick={() => navigate("/admin")}
+        className="mb-4"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back to All Orders
+      </Button>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Information</CardTitle>
-                <CardDescription>Details about the ordered product</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="font-semibold">Product Name</h3>
-                  <p>{order.product_title || "Not specified"}</p>
+                  <CardTitle className="flex items-center">
+                    <ShoppingBag className="h-5 w-5 mr-2" />
+                    Order Details
+                  </CardTitle>
+                  <CardDescription>
+                    Order ID: {order.id}
+                  </CardDescription>
                 </div>
-                
+                <div className="flex items-center">
+                  <span className={`px-3 py-1 rounded-full text-xs ${
+                    order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {order.status === 'completed' ? 'Completed' : 'In Process'}
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
                 <div>
-                  <h3 className="font-semibold">Product URL</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <a 
-                      href={order.product_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline max-w-[80%] truncate"
-                    >
-                      {order.product_url}
-                    </a>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => copyToClipboard(order.product_url, "URL copied to clipboard")}
-                    >
-                      <ClipboardCopy className="h-4 w-4" />
-                    </Button>
+                  <h3 className="font-medium text-sm text-gray-500">Product Information</h3>
+                  <div className="mt-1 border rounded-md p-3">
+                    <p className="font-semibold">{order.product_title || "Unknown Product"}</p>
+                    <p className="text-sm text-gray-600 break-all mt-1">{order.product_url}</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="font-semibold">Product Price</h3>
-                    <p>{formatPrice(order.product_price)}</p>
+                    <h3 className="font-medium text-sm text-gray-500">Customer</h3>
+                    <div className="mt-1 border rounded-md p-3">
+                      <p className="text-sm">{order.fan_email}</p>
+                    </div>
                   </div>
                   <div>
-                    <h3 className="font-semibold">Platform Fee</h3>
-                    <p>{formatPrice(order.platform_fee)}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Total</h3>
-                    <p className="font-bold">{formatPrice(order.total_amount)}</p>
+                    <h3 className="font-medium text-sm text-gray-500">Influencer</h3>
+                    <div className="mt-1 border rounded-md p-3">
+                      <p className="text-sm">{order.influencer_name}</p>
+                    </div>
                   </div>
                 </div>
 
                 {order.message && (
                   <div>
-                    <h3 className="font-semibold">Gift Message</h3>
-                    <p className="italic text-gray-700">"{order.message}"</p>
+                    <h3 className="font-medium text-sm text-gray-500">Gift Message</h3>
+                    <div className="mt-1 border rounded-md p-3">
+                      <p className="text-sm italic">"{order.message}"</p>
+                    </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Shipping Information</CardTitle>
-                <CardDescription>Where the product should be delivered</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {order.shipping_address ? (
-                  <>
-                    <div>
-                      <h3 className="font-semibold">Recipient Name</h3>
-                      <p>{order.shipping_address.name || order.influencer_name || "Not specified"}</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-semibold">Address</h3>
-                      <p>
-                        {order.shipping_address.address_line1 || order.shipping_address.street_address || ""}
-                        {order.shipping_address.address_line2 ? `, ${order.shipping_address.address_line2}` : ""}
+                {order.shipping_address && (
+                  <div>
+                    <h3 className="font-medium text-sm text-gray-500">Shipping Address</h3>
+                    <div className="mt-1 border rounded-md p-3 space-y-1">
+                      <p className="text-sm">
+                        {order.shipping_address.address_line1 || order.shipping_address.street_address}
                       </p>
-                      <p>
-                        {order.shipping_address.city}, {order.shipping_address.state}, {order.shipping_address.postal_code}
+                      {order.shipping_address.address_line2 && (
+                        <p className="text-sm">{order.shipping_address.address_line2}</p>
+                      )}
+                      <p className="text-sm">
+                        {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}
                       </p>
-                      <p>{order.shipping_address.country || "India"}</p>
+                      <p className="text-sm">{order.shipping_address.country}</p>
                     </div>
-                    
-                    <div>
-                      <h3 className="font-semibold">Contact</h3>
-                      <p>{order.shipping_address.phone || "Not provided"}</p>
-                    </div>
-                    
-                    <div>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => copyToClipboard(
-                          `${order.shipping_address.name || order.influencer_name}\n${order.shipping_address.address_line1 || order.shipping_address.street_address || ""} ${order.shipping_address.address_line2 || ""}\n${order.shipping_address.city}, ${order.shipping_address.state}, ${order.shipping_address.postal_code}\n${order.shipping_address.country || "India"}\nPhone: ${order.shipping_address.phone || "Not provided"}`,
-                          "Address copied to clipboard"
-                        )}
-                      >
-                        <ClipboardCopy className="h-4 w-4 mr-2" /> Copy Full Address
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <p>No shipping address information available</p>
+                  </div>
                 )}
-              </CardContent>
-            </Card>
-          </div>
 
-          <div className="md:col-span-1 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Details</CardTitle>
-                <CardDescription>Basic information about this order</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h3 className="font-semibold">Order Date</h3>
-                  <p>{formatDate(order.created_at)}</p>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h3 className="font-semibold">Fan</h3>
-                  <p>{order.fan_email || "Unknown"}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold">Influencer</h3>
-                  <p>{order.influencer_name || "Unknown"}</p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
-                <CardDescription>Process this order</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-gray-600">
-                  After manually placing the order on the e-commerce website, update the status here.
-                </p>
-              </CardContent>
-              <CardFooter className="flex flex-col gap-2">
-                {order.status === 'under_process' && (
-                  <Button 
-                    className="w-full" 
-                    onClick={handleOrderComplete}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Mark As Completed
-                  </Button>
+                {order.status === 'completed' && order.delivery_estimate && (
+                  <div>
+                    <h3 className="font-medium text-sm text-gray-500">Delivery Information</h3>
+                    <div className="mt-1 border rounded-md p-3 flex items-center">
+                      <Truck className="h-4 w-4 mr-2 text-gray-600" />
+                      <span className="text-sm">
+                        Estimated delivery: {new Date(order.delivery_estimate).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
                 )}
-                
-                {order.status === 'completed' && (
-                  <p className="text-green-600 font-medium text-center">
-                    This order has been completed
-                  </p>
-                )}
-              </CardFooter>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </main>
+
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Order Date</span>
+                  <span>{new Date(order.created_at).toLocaleDateString()}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span>Product Price</span>
+                  <span>₹{order.product_price?.toFixed(2) || "0.00"}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span>Platform Fee</span>
+                  <span>₹{order.platform_fee?.toFixed(2) || "5.00"}</span>
+                </div>
+                
+                <Separator className="my-2" />
+                
+                <div className="flex justify-between font-medium">
+                  <span>Total</span>
+                  <span>₹{order.total_amount?.toFixed(2) || "5.00"}</span>
+                </div>
+              </div>
+            </CardContent>
+            
+            {order.status === 'under_process' && (
+              <CardFooter className="flex flex-col space-y-4">
+                <div className="w-full">
+                  <h3 className="font-medium text-sm text-gray-500 mb-2">Set Delivery Estimate</h3>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {deliveryEstimate ? format(deliveryEstimate, 'PPP') : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={deliveryEstimate}
+                        onSelect={setDeliveryEstimate}
+                        initialFocus
+                        disabled={(date) => date < new Date()}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <Button 
+                  onClick={handleOrderComplete} 
+                  className="w-full"
+                  disabled={!deliveryEstimate}
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  Mark as Completed
+                </Button>
+              </CardFooter>
+            )}
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,19 +1,22 @@
+
 import React, { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ProductDetails, InfluencerAddress } from "@/types/order";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Gift, CheckCircle2, Wallet } from "lucide-react";
+import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ProductPreviewProps {
-  productPreview: ProductDetails;
+  productPreview: ProductDetails | null;
   influencerAddress: InfluencerAddress | null;
   message: string;
   onMessageChange: (message: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
   paymentStep?: 'initial' | 'processing' | 'complete';
+  giftUrl?: string;
 }
 
 const ProductPreview = ({
@@ -24,6 +27,7 @@ const ProductPreview = ({
   onSubmit,
   isLoading,
   paymentStep = 'initial',
+  giftUrl = '',
 }: ProductPreviewProps) => {
   const [activeTab, setActiveTab] = useState<string>("product");
 
@@ -50,6 +54,15 @@ const ProductPreview = ({
     );
   }
 
+  const isPreviewAvailable = productPreview && productPreview.name !== "Enter a product URL to preview";
+  const defaultPrice = 0;
+  const defaultPlatformFee = 5.00;
+  
+  // Calculate total even when no valid preview exists
+  const productPrice = isPreviewAvailable ? productPreview.priceInr : defaultPrice;
+  const platformFee = isPreviewAvailable ? productPreview.platformFee : defaultPlatformFee;
+  const totalAmount = productPrice + platformFee;
+
   return (
     <div className="mt-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -66,32 +79,54 @@ const ProductPreview = ({
 
         <TabsContent value="product" className="mt-4">
           <div className="bg-white p-6 shadow-md rounded-lg">
+            {!isPreviewAvailable && (
+              <Alert className="mb-6 bg-amber-50 border-amber-200">
+                <AlertCircle className="h-4 w-4 text-amber-500" />
+                <AlertDescription className="text-amber-800">
+                  Product preview is not available. You can still proceed with your gift request 
+                  using the URL you provided.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <img
-                  src={productPreview.image}
-                  alt={productPreview.name}
+                  src={isPreviewAvailable ? productPreview.image : "https://placehold.co/600x400?text=No+Preview+Available"}
+                  alt={isPreviewAvailable ? productPreview.name : "Product preview not available"}
                   className="w-full h-auto rounded-md object-contain"
                   style={{ maxHeight: "300px" }}
                 />
               </div>
               <div className="flex flex-col justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold mb-4">{productPreview.name}</h2>
+                  {isPreviewAvailable ? (
+                    <h2 className="text-xl font-semibold mb-4">{productPreview.name}</h2>
+                  ) : (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-2">Product URL</h2>
+                      <p className="text-sm text-gray-600 break-all mb-4">{giftUrl}</p>
+                    </div>
+                  )}
+                  
                   <div className="bg-gray-50 p-4 rounded-md mb-4">
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-600">Price:</span>
-                      <span className="font-semibold">₹{productPreview.priceInr.toFixed(2)}</span>
+                      {isPreviewAvailable ? (
+                        <span className="font-semibold">₹{productPrice.toFixed(2)}</span>
+                      ) : (
+                        <span className="font-semibold text-gray-500">Not available</span>
+                      )}
                     </div>
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-600">Platform Fee:</span>
-                      <span>₹{productPreview.platformFee.toFixed(2)}</span>
+                      <span>₹{platformFee.toFixed(2)}</span>
                     </div>
                     <Separator className="my-2" />
                     <div className="flex justify-between">
                       <span className="text-gray-800 font-semibold">Total:</span>
                       <span className="text-primary font-semibold">
-                        ₹{(productPreview.priceInr + productPreview.platformFee).toFixed(2)}
+                        ₹{totalAmount.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -136,16 +171,20 @@ const ProductPreview = ({
               
               <div className="flex justify-between mb-2 text-sm">
                 <span>Subtotal</span>
-                <span>₹{productPreview.priceInr.toFixed(2)}</span>
+                {isPreviewAvailable ? (
+                  <span>₹{productPrice.toFixed(2)}</span>
+                ) : (
+                  <span>₹{defaultPrice.toFixed(2)}</span>
+                )}
               </div>
               <div className="flex justify-between mb-2 text-sm">
                 <span>Platform Fee</span>
-                <span>₹{productPreview.platformFee.toFixed(2)}</span>
+                <span>₹{platformFee.toFixed(2)}</span>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between font-semibold">
                 <span>Total Amount</span>
-                <span>₹{(productPreview.priceInr + productPreview.platformFee).toFixed(2)}</span>
+                <span>₹{totalAmount.toFixed(2)}</span>
               </div>
             </div>
             

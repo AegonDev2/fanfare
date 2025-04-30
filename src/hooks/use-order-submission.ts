@@ -18,7 +18,7 @@ export const useOrderSubmission = () => {
     giftItem: string,
     message: string,
     influencerId: string,
-    productDetails: ProductDetails,
+    productDetails: ProductDetails | null,
     influencerAddress: InfluencerAddress
   ) => {
     if (!giftItem || !influencerId) {
@@ -45,7 +45,11 @@ export const useOrderSubmission = () => {
         throw new Error("You must be logged in to place an order");
       }
       
-      const totalAmount = productDetails.priceInr + productDetails.platformFee;
+      // Default values in case product details are not available
+      const productTitle = productDetails?.name || "Product from URL";
+      const productPrice = productDetails?.priceInr || 0;
+      const platformFee = productDetails?.platformFee || 5.00;
+      const totalAmount = productPrice + platformFee;
       
       // Instead of charging immediately, just check if user has enough balance
       const hasEnoughBalance = await checkWalletBalance(totalAmount);
@@ -73,8 +77,8 @@ export const useOrderSubmission = () => {
           influencer_id: influencerId,
           sender_id: user.id,
           product_url: giftItem,
-          product_title: productDetails.name,
-          product_price: productDetails.priceInr,
+          product_title: productTitle,
+          product_price: productPrice,
           message: message,
           status: "pending"
         })
