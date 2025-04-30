@@ -1,37 +1,25 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ShoppingBag, CheckCircle, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatDate } from "@/utils/formatters";
 import type { OrderDetails } from "@/types/admin";
-
 interface OrderListProps {
   orders: OrderDetails[];
   onComplete: (id: string) => void;
   type: 'pending' | 'completed';
 }
-
-export const OrderList = ({ orders, onComplete, type }: OrderListProps) => {
+export const OrderList = ({
+  orders,
+  onComplete,
+  type
+}: OrderListProps) => {
   const navigate = useNavigate();
   // Updated filtering: 'pending' tab shows 'under_process' orders, 'completed' tab shows 'completed' orders
-  const filteredOrders = orders.filter(o => 
-    type === 'pending' ? o.status === 'under_process' : o.status === 'completed'
-  );
-  
+  const filteredOrders = orders.filter(o => type === 'pending' ? o.status === 'under_process' : o.status === 'completed');
   console.log(`OrderList - Type: ${type}, Filtered orders: ${filteredOrders.length}`);
-
-  return (
-    <Table>
+  return <Table>
       <TableCaption>List of {type === 'pending' ? 'orders requiring processing' : 'completed orders'}</TableCaption>
       <TableHeader>
         <TableRow>
@@ -44,15 +32,11 @@ export const OrderList = ({ orders, onComplete, type }: OrderListProps) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {filteredOrders.length === 0 ? (
-          <TableRow>
+        {filteredOrders.length === 0 ? <TableRow>
             <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
               No orders found in this category.
             </TableCell>
-          </TableRow>
-        ) : (
-          filteredOrders.map((order) => (
-            <TableRow key={order.id} className="hover:bg-muted/50">
+          </TableRow> : filteredOrders.map(order => <TableRow key={order.id} className="hover:bg-muted/50">
               <TableCell className="font-medium">{formatDate(order.created_at)}</TableCell>
               <TableCell>
                 <div className="max-w-[200px]">
@@ -76,25 +60,14 @@ export const OrderList = ({ orders, onComplete, type }: OrderListProps) => {
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  {order.status === 'under_process' && (
-                    <Button size="sm" onClick={() => onComplete(order.id)}>
+                  {order.status === 'under_process' && <Button size="sm" onClick={() => onComplete(order.id)}>
                       <CheckCircle className="h-4 w-4 mr-1" />
                       Mark As Completed
-                    </Button>
-                  )}
-                  <Button 
-                    size="sm" 
-                    variant="secondary"
-                    onClick={() => navigate(`/admin/order-details/${order.id}`)}
-                  >
-                    Details
-                  </Button>
+                    </Button>}
+                  <Button size="sm" variant="secondary" onClick={() => navigate(`/admin/order-details/${order.id}`)}>Process</Button>
                 </div>
               </TableCell>
-            </TableRow>
-          ))
-        )}
+            </TableRow>)}
       </TableBody>
-    </Table>
-  );
+    </Table>;
 };
