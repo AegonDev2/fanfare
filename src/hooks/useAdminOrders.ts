@@ -12,7 +12,7 @@ export const useAdminOrders = () => {
   const fetchAllOrders = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log("Attempting to fetch admin orders from new tables...");
+      console.log("Fetching admin orders...");
       
       // Fetch orders from under_process table
       const { data: underProcessOrders, error: underProcessError } = await supabase
@@ -25,15 +25,15 @@ export const useAdminOrders = () => {
         throw underProcessError;
       }
       
-      // Fetch orders from accepted table
-      const { data: acceptedOrders, error: acceptedError } = await supabase
-        .from('orders_accepted')
+      // Fetch orders from completed table
+      const { data: completedOrders, error: completedError } = await supabase
+        .from('orders_completed')
         .select('*, influencer:influencer_id(*)')
         .order('created_at', { ascending: false });
 
-      if (acceptedError) {
-        console.error("Error fetching accepted orders:", acceptedError);
-        throw acceptedError;
+      if (completedError) {
+        console.error("Error fetching completed orders:", completedError);
+        throw completedError;
       }
 
       // Combine and transform the data
@@ -42,15 +42,15 @@ export const useAdminOrders = () => {
           ...order,
           status: 'under_process' as const
         }))),
-        ...((acceptedOrders || []).map(order => ({
+        ...((completedOrders || []).map(order => ({
           ...order,
-          status: 'accepted' as const
+          status: 'completed' as const
         })))
       ];
 
       // If no orders are found, set empty array and return early
       if (combinedOrders.length === 0) {
-        console.log("No orders found in under_process or accepted tables");
+        console.log("No orders found");
         setOrders([]);
         setIsLoading(false);
         return;

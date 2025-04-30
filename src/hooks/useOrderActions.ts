@@ -9,48 +9,52 @@ export const useOrderActions = (
 ) => {
   const { toast } = useToast();
 
-  const handleOrderProcessing = async (orderId: string) => {
-    try {
-      console.log(`Processing order ${orderId} - moving to accepted table`);
-      
-      const { error } = await supabase.rpc('move_order_to_accepted', { 
-        order_id: orderId
-      });
-
-      if (error) throw error;
-
-      await fetchAllOrders();
-      
-      toast({
-        title: "Order Status Updated",
-        description: "Order moved to processing queue",
-      });
-    } catch (error: any) {
-      console.error("Error updating order status:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update order status",
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleOrderComplete = async (orderId: string) => {
     try {
       // Get delivery estimate (7 days from now)
       const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // Move order to completed state
-      const { error: moveError } = await supabase.rpc('move_order_to_completed', { 
-        order_id: orderId,
-        p_delivery_estimate: deliveryEstimate
-      });
-
-      if (moveError) throw moveError;
+      // Get the order from orders_under_process
+      const { data: orderData, error: fetchError } = await supabase
+        .from('orders_under_process')
+        .select('*')
+        .eq('id', orderId)
+        .single();
+      
+      if (fetchError || !orderData) throw new Error("Order not found");
+      
+      // Insert order into orders_completed table
+      const { error: insertError } = await supabase
+        .from('orders_completed')
+        .insert({
+          id: orderId,
+          created_at: orderData.created_at,
+          completed_at: new Date().toISOString(),
+          user_id: orderData.user_id,
+          influencer_id: orderData.influencer_id,
+          product_url: orderData.product_url,
+          product_title: orderData.product_title,
+          product_price: orderData.product_price,
+          platform_fee: orderData.platform_fee,
+          total_amount: orderData.total_amount,
+          shipping_address: orderData.shipping_address,
+          message: orderData.message,
+          delivery_estimate: deliveryEstimate
+        });
+      
+      if (insertError) throw insertError;
+      
+      // Delete the order from orders_under_process
+      const { error: deleteError } = await supabase
+        .from('orders_under_process')
+        .delete()
+        .eq('id', orderId);
+      
+      if (deleteError) throw deleteError;
 
       // Get order details for notifications
       const order = orders.find(o => o.id === orderId);
-      if (!order) throw new Error("Order not found");
+      if (!order) throw new Error("Order not found in local state");
 
       // Send notification to influencer
       if (order.influencer_id) {
@@ -88,5 +92,5 @@ export const useOrderActions = (
     }
   };
 
-  return { handleOrderProcessing, handleOrderComplete };
+  return { handleOrderComplete };
 };

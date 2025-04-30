@@ -1,34 +1,25 @@
 
-import { useAdminAuth } from "./useAdminAuth";
-import { useAdminOrders } from "./useAdminOrders";
-import { useOrderActions } from "./useOrderActions";
-import { useEffect } from "react";
+import { useEffect, useState } from 'react';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAdminOrders } from '@/hooks/useAdminOrders';
+import { useOrderActions } from '@/hooks/useOrderActions';
 
 export const useAdmin = () => {
   const { userRole } = useAdminAuth();
   const { orders, isLoading, fetchAllOrders, setOrders } = useAdminOrders();
-
-  const { handleOrderProcessing, handleOrderComplete } = useOrderActions(
-    orders,
-    fetchAllOrders,
-  );
-
-  // Refresh orders on mount/poll
+  const { handleOrderComplete } = useOrderActions(orders, fetchAllOrders);
+  
   useEffect(() => {
-    fetchAllOrders();
-    const interval = setInterval(() => {
+    if (userRole === 'admin') {
       fetchAllOrders();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [fetchAllOrders]);
+    }
+  }, [userRole, fetchAllOrders]);
 
   return {
     orders,
     isLoading,
     userRole,
     fetchAllOrders,
-    handleOrderProcessing,
-    handleOrderComplete,
-    setOrders, // expose for future if needed
+    handleOrderComplete
   };
 };

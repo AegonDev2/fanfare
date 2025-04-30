@@ -15,7 +15,6 @@ const AdminDashboard = () => {
     isLoading,
     userRole,
     fetchAllOrders,
-    handleOrderProcessing,
     handleOrderComplete
   } = useAdmin();
   
@@ -40,8 +39,8 @@ const AdminDashboard = () => {
 
   // Orders with status under_process need admin attention (now mapped to "New Orders" tab)
   const getNewOrders = () => orders.filter(o => o.status === 'under_process');
-  // Orders with status accepted (admin indicated manual processing started)
-  const getProcessingOrders = () => orders.filter(o => o.status === 'accepted');
+  // Orders with status completed
+  const getCompletedOrders = () => orders.filter(o => o.status === 'completed');
 
   const handleRetry = async () => {
     setLoadError(false);
@@ -103,7 +102,7 @@ const AdminDashboard = () => {
             </Alert>
           )}
 
-          {!loadError && (orders.length === 0 || (getNewOrders().length === 0 && getProcessingOrders().length === 0)) && (
+          {!loadError && (orders.length === 0 || (getNewOrders().length === 0 && getCompletedOrders().length === 0)) && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>No orders to process</AlertTitle>
@@ -123,11 +122,11 @@ const AdminDashboard = () => {
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="processing" className="relative">
-                Processing
-                {getProcessingOrders().length > 0 && (
+              <TabsTrigger value="completed" className="relative">
+                Completed
+                {getCompletedOrders().length > 0 && (
                   <Badge variant="secondary" className="ml-2">
-                    {getProcessingOrders().length}
+                    {getCompletedOrders().length}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -136,18 +135,16 @@ const AdminDashboard = () => {
             <TabsContent value="pending">
               <OrderList 
                 orders={orders}
-                onProcess={handleOrderProcessing}
                 onComplete={handleOrderComplete}
                 type="pending"
               />
             </TabsContent>
 
-            <TabsContent value="processing">
+            <TabsContent value="completed">
               <OrderList 
                 orders={orders}
-                onProcess={handleOrderProcessing}
                 onComplete={handleOrderComplete}
-                type="processing"
+                type="completed"
               />
             </TabsContent>
           </Tabs>

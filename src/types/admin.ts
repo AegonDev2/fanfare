@@ -20,15 +20,10 @@ interface UnderProcessOrder extends BaseOrder {
   status: 'under_process';
 }
 
-interface AcceptedOrder extends BaseOrder {
-  status: 'accepted';
-  processing_started_at: string | null;
-}
-
 interface CompletedOrder extends BaseOrder {
   status: 'completed';
   completed_at: string;
   delivery_estimate?: string;
 }
 
-export type OrderDetails = UnderProcessOrder | AcceptedOrder | CompletedOrder;
+export type OrderDetails = UnderProcessOrder | CompletedOrder;

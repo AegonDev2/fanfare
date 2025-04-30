@@ -17,21 +17,20 @@ import type { OrderDetails } from "@/types/admin";
 
 interface OrderListProps {
   orders: OrderDetails[];
-  onProcess: (id: string) => void;
   onComplete: (id: string) => void;
-  type: 'pending' | 'processing';
+  type: 'pending' | 'completed';
 }
 
-export const OrderList = ({ orders, onProcess, onComplete, type }: OrderListProps) => {
+export const OrderList = ({ orders, onComplete, type }: OrderListProps) => {
   const navigate = useNavigate();
-  // Updated filtering: 'pending' tab shows 'under_process' orders, 'processing' tab shows 'accepted' orders
+  // Updated filtering: 'pending' tab shows 'under_process' orders, 'completed' tab shows 'completed' orders
   const filteredOrders = orders.filter(o => 
-    type === 'pending' ? o.status === 'under_process' : o.status === 'accepted'
+    type === 'pending' ? o.status === 'under_process' : o.status === 'completed'
   );
 
   return (
     <Table>
-      <TableCaption>List of orders requiring manual processing</TableCaption>
+      <TableCaption>List of {type === 'pending' ? 'orders requiring processing' : 'completed orders'}</TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead>Date</TableHead>
@@ -70,22 +69,17 @@ export const OrderList = ({ orders, onProcess, onComplete, type }: OrderListProp
               <TableCell>{order.influencer_name || "Unknown"}</TableCell>
               <TableCell>
                 <Badge variant={order.status === 'under_process' ? 'outline' : 'secondary'}>
-                  {order.status}
+                  {order.status === 'under_process' ? 'New Order' : 'Completed'}
                 </Badge>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  {order.status === 'under_process' ? (
-                    <Button size="sm" onClick={() => onProcess(order.id)}>
-                      <ShoppingBag className="h-4 w-4 mr-1" />
-                      Accept & Process
-                    </Button>
-                  ) : order.status === 'accepted' ? (
-                    <Button size="sm" variant="outline" onClick={() => onComplete(order.id)}>
+                  {order.status === 'under_process' && (
+                    <Button size="sm" onClick={() => onComplete(order.id)}>
                       <CheckCircle className="h-4 w-4 mr-1" />
                       Mark As Completed
                     </Button>
-                  ) : null}
+                  )}
                   <Button 
                     size="sm" 
                     variant="secondary"
