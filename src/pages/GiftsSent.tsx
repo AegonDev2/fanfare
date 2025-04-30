@@ -17,7 +17,7 @@ interface GiftRequest {
   product_price: number | null;
   message: string | null;
   created_at: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'under_process' | 'completed';
+  status: 'pending' | 'accepted' | 'rejected' | 'under process' | 'completed';
   influencer: { 
     name: string 
   } | null;
@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<string, { label: string, color: string, icon: any }>
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800", icon: Clock },
   accepted: { label: "Accepted", color: "bg-blue-100 text-blue-800", icon: Package },
   rejected: { label: "Rejected", color: "bg-red-100 text-red-800", icon: X },
-  under_process: { label: "Processing", color: "bg-purple-100 text-purple-800", icon: Package },
+  "under process": { label: "Processing", color: "bg-purple-100 text-purple-800", icon: Package },
   completed: { label: "Completed", color: "bg-green-100 text-green-800", icon: Check },
 };
 
@@ -85,12 +85,12 @@ const GiftsSent = () => {
           influencer: item.influencer || { name: "Unknown Influencer" }
         }));
         
-        setRequests(formattedRequests as GiftRequest[]);
+        setRequests(formattedRequests);
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error loading gifts",
-        description: (error as Error).message,
+        description: error.message,
         variant: "destructive",
       });
       setRequests([]);

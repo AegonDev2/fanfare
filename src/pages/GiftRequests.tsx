@@ -69,7 +69,10 @@ const GiftRequests = () => {
                 {getPendingRequests().map((request) => (
                   <RequestCard
                     key={request.id}
-                    request={request}
+                    request={{
+                      ...request,
+                      status: request.status as "pending" | "accepted" | "rejected"
+                    }}
                     onApprove={() => updateRequestStatus(request.id, 'accepted')}
                     onReject={() => updateRequestStatus(request.id, 'rejected')}
                   />
@@ -91,7 +94,10 @@ const GiftRequests = () => {
                 {getAcceptedRequests().map((request) => (
                   <RequestCard
                     key={request.id}
-                    request={request}
+                    request={{
+                      ...request,
+                      status: request.status as "pending" | "accepted" | "rejected"
+                    }}
                     showActions={false}
                   />
                 ))}
@@ -112,7 +118,10 @@ const GiftRequests = () => {
                 {getRejectedRequests().map((request) => (
                   <RequestCard
                     key={request.id}
-                    request={request}
+                    request={{
+                      ...request,
+                      status: request.status as "pending" | "accepted" | "rejected"
+                    }}
                     showActions={false}
                   />
                 ))}

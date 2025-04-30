@@ -53,7 +53,7 @@ export const useGiftRequestActions = (
       );
 
       if (status === 'accepted') {
-        // Influencer accepted: create order with status "under_process"
+        // Influencer accepted: create order with status "under process"
         const request = requests.find(r => r.id === id);
         if (request) {
           console.log("Processing accepted gift request:", request);
@@ -106,19 +106,26 @@ export const useGiftRequestActions = (
 
           console.log("Order created successfully:", orderData);
 
-          // Update the gift_request status to under_process
+          // Update the gift_request status to under process
           const { error: updateStatusError } = await supabase
             .from('gift_requests')
             .update({ 
-              status: 'under_process',
+              status: 'under process',
               platform_fee: orderData.platform_fee,
               total_amount: orderData.total_amount
             })
             .eq('id', id);
             
           if (updateStatusError) {
-            console.error("Failed to update gift request status to under_process:", updateStatusError);
+            console.error("Failed to update gift request status to under process:", updateStatusError);
           }
+
+          // Update the local state to reflect the status change
+          setRequests(prev =>
+            prev.map(req =>
+              req.id === id ? { ...req, status: 'under process', platform_fee: orderData.platform_fee, total_amount: orderData.total_amount } : req
+            )
+          );
 
           // Send notification to admin about new approved gift
           await sendAdminNotification(

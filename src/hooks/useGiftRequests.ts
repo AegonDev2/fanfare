@@ -11,9 +11,13 @@ export interface GiftRequest {
   product_price: number | null;
   message: string;
   created_at: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'under_process' | 'completed';
+  status: 'pending' | 'accepted' | 'rejected' | 'under process' | 'completed';
   sender: { id: string; email: string };
   influencer_id: string;
+  platform_fee?: number | null;
+  total_amount?: number | null;
+  delivery_estimate?: string | null;
+  completed_at?: string | null;
 }
 
 export const useGiftRequests = () => {
@@ -48,7 +52,11 @@ export const useGiftRequests = () => {
           created_at,
           status,
           influencer_id,
-          sender_id
+          sender_id,
+          platform_fee,
+          total_amount,
+          delivery_estimate,
+          completed_at
         `)
         .eq('influencer_id', userData.user.id)
         .order('created_at', { ascending: false });
