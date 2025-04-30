@@ -37,22 +37,20 @@ const OrderSuccess = () => {
             .eq('id', orderId)
             .single();
             
-          if (!completedError) {
-            data = {
+          if (!completedError && completedData) {
+            const orderWithStatus: OrderDetails = {
               ...completedData,
-              status: 'completed' as const
+              status: 'completed' 
             };
+            setOrderDetails(orderWithStatus);
           }
-        } else {
+        } else if (data) {
           // Add status property if from under_process
-          data = {
+          const orderWithStatus: OrderDetails = {
             ...data,
-            status: 'under_process' as const
+            status: 'under_process'
           };
-        }
-
-        if (data) {
-          setOrderDetails(data as OrderDetails);
+          setOrderDetails(orderWithStatus);
         }
       } catch (error) {
         console.error("Error fetching order:", error);

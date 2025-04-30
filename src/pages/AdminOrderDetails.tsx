@@ -4,13 +4,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingBag, Check, ArrowLeft, CalendarIcon, Truck, Package } from "lucide-react";
+import { ShoppingBag, Check, ArrowLeft, CalendarIcon, Truck, Package, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { OrderDetails } from "@/types/admin";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const AdminOrderDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +21,8 @@ const AdminOrderDetails = () => {
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deliveryEstimate, setDeliveryEstimate] = useState<Date | null>(null);
+  const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
+  const [editedPrice, setEditedPrice] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -81,11 +85,54 @@ const AdminOrderDetails = () => {
       };
 
       setOrder(enrichedOrder);
+      setEditedPrice(enrichedOrder.product_price || 0);
     } catch (error) {
       console.error("Error enriching order data:", error);
       toast({
         title: "Warning",
         description: "Some order details could not be loaded",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdatePrice = async () => {
+    if (!order || editedPrice === null) return;
+    
+    try {
+      // Calculate new total based on edited price
+      const platformFee = order.platform_fee || 5.00;
+      const newTotal = Number(editedPrice) + platformFee;
+      
+      // Update the price in the database
+      const { error } = await supabase
+        .from("orders_under_process")
+        .update({
+          product_price: editedPrice,
+          total_amount: newTotal
+        })
+        .eq("id", order.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setOrder({
+        ...order,
+        product_price: editedPrice,
+        total_amount: newTotal
+      });
+      
+      toast({
+        title: "Price Updated",
+        description: "Product price has been updated successfully",
+      });
+      
+      setIsPriceDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating price:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update product price",
         variant: "destructive"
       });
     }
@@ -272,9 +319,21 @@ const AdminOrderDetails = () => {
                   <span>{new Date(order.created_at).toLocaleDateString()}</span>
                 </div>
                 
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm items-center">
                   <span>Product Price</span>
-                  <span>₹{order.product_price?.toFixed(2) || "0.00"}</span>
+                  <div className="flex items-center">
+                    <span>₹{order.product_price?.toFixed(2) || "0.00"}</span>
+                    {order.status === 'under_process' && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="ml-2 p-1 h-auto"
+                        onClick={() => setIsPriceDialogOpen(true)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex justify-between text-sm">
@@ -330,6 +389,42 @@ const AdminOrderDetails = () => {
           </Card>
         </div>
       </div>
+
+      {/* Price Edit Dialog */}
+      <Dialog open={isPriceDialogOpen} onOpenChange={setIsPriceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Product Price</DialogTitle>
+            <DialogDescription>
+              Update the product price. This will also update the total amount charged to the customer.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <label htmlFor="price" className="block text-sm font-medium mb-1">
+              Product Price (₹)
+            </label>
+            <Input
+              id="price"
+              type="number"
+              min="0"
+              step="0.01"
+              value={editedPrice || 0}
+              onChange={(e) => setEditedPrice(parseFloat(e.target.value))}
+              className="w-full"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPriceDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdatePrice}>
+              Update Price
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

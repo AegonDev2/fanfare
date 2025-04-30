@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -5,11 +6,13 @@ import { ShoppingBag, CheckCircle, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatDate } from "@/utils/formatters";
 import type { OrderDetails } from "@/types/admin";
+
 interface OrderListProps {
   orders: OrderDetails[];
   onComplete: (id: string) => void;
   type: 'pending' | 'completed';
 }
+
 export const OrderList = ({
   orders,
   onComplete,
@@ -19,6 +22,7 @@ export const OrderList = ({
   // Updated filtering: 'pending' tab shows 'under_process' orders, 'completed' tab shows 'completed' orders
   const filteredOrders = orders.filter(o => type === 'pending' ? o.status === 'under_process' : o.status === 'completed');
   console.log(`OrderList - Type: ${type}, Filtered orders: ${filteredOrders.length}`);
+
   return <Table>
       <TableCaption>List of {type === 'pending' ? 'orders requiring processing' : 'completed orders'}</TableCaption>
       <TableHeader>
@@ -60,8 +64,9 @@ export const OrderList = ({
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  {order.status === 'under_process'}
-                  <Button size="sm" variant="secondary" onClick={() => navigate(`/admin/order-details/${order.id}`)}>Process</Button>
+                  <Button size="sm" variant="secondary" onClick={() => navigate(`/admin/order-details/${order.id}`)}>
+                    {order.status === 'under_process' ? 'Process' : 'View'}
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>)}
