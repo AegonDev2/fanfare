@@ -60,10 +60,7 @@ export const OrderList = ({
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  {order.status === 'under_process' && <Button size="sm" onClick={() => onComplete(order.id)}>
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Mark As Completed
-                    </Button>}
+                  {order.status === 'under_process'}
                   <Button size="sm" variant="secondary" onClick={() => navigate(`/admin/order-details/${order.id}`)}>Process</Button>
                 </div>
               </TableCell>
