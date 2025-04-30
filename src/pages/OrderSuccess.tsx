@@ -23,7 +23,7 @@ const OrderSuccess = () => {
         // First try to find the order in the under_process table
         let { data, error } = await supabase
           .from('orders_under_process')
-          .select('*, products(*)')
+          .select('*')
           .eq('id', orderId)
           .single();
 
@@ -31,7 +31,7 @@ const OrderSuccess = () => {
         if (error) {
           const { data: completedData, error: completedError } = await supabase
             .from('orders_completed')
-            .select('*, products(*)')
+            .select('*')
             .eq('id', orderId)
             .single();
             

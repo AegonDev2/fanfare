@@ -99,6 +99,7 @@ const AdminOrderDetails = () => {
         status: status as 'under_process' | 'completed',
         fan_email: fanData?.email || "Unknown",
         influencer_name: orderData.influencer?.name || "Unknown",
+        // Only add completed_at if it exists in the data (for completed orders)
         completed_at: status === 'completed' ? orderData.completed_at : undefined,
       };
 
@@ -112,27 +113,6 @@ const AdminOrderDetails = () => {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleOrderProcessing = async () => {
-    if (!order) return;
-    try {
-      // Mark the order as processing (can be implemented if needed)
-      toast({
-        title: "Order Status Updated",
-        description: "Order marked as processing",
-      });
-      
-      // Refresh order details
-      fetchOrderDetails(order.id);
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update order status",
-        variant: "destructive"
-      });
     }
   };
 
