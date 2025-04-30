@@ -1,14 +1,24 @@
 
-export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+/**
+ * Format a date string into a localized date format
+ */
+export const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric'
+  });
 };
 
-export const formatPrice = (price?: number | null) => {
-  if (price == null) return "N/A";
+/**
+ * Format a number into a currency string (INR)
+ */
+export const formatCurrency = (amount: number | null | undefined) => {
+  if (amount == null) return "N/A";
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
-    maximumFractionDigits: 2
-  }).format(price);
+    maximumFractionDigits: 0,
+  }).format(amount);
 };
