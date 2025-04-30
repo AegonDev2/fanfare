@@ -84,7 +84,7 @@ export const useGiftRequestActions = (
 
           console.log("Creating order with shipping address:", shippingAddress);
 
-          // Create an order entry in orders_under_process table directly
+          // Create an order entry in orders_under_process table
           const { data: orderData, error: orderError } = await supabase
             .from('orders_under_process')
             .insert({
@@ -106,6 +106,20 @@ export const useGiftRequestActions = (
 
           console.log("Order created successfully:", orderData);
 
+          // Update the gift_request status to under_process
+          const { error: updateStatusError } = await supabase
+            .from('gift_requests')
+            .update({ 
+              status: 'under_process',
+              platform_fee: orderData.platform_fee,
+              total_amount: orderData.total_amount
+            })
+            .eq('id', id);
+            
+          if (updateStatusError) {
+            console.error("Failed to update gift request status to under_process:", updateStatusError);
+          }
+
           // Send notification to admin about new approved gift
           await sendAdminNotification(
             'new_approved_gift',
@@ -126,7 +140,7 @@ export const useGiftRequestActions = (
           console.log("Notifications sent successfully");
         }
       } else if (status === 'rejected') {
-        // If rejected, also mark order (if any) as rejected, though generally no order is created
+        // If rejected, notify the fan
         const request = requests.find(r => r.id === id);
         if (request) {
           await supabase.from("notifications").insert({

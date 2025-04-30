@@ -15,11 +15,11 @@ interface GiftRequest {
   product_url: string;
   product_title: string | null;
   product_price: number | null;
-  message: string;
+  message: string | null;
   created_at: string;
   status: string;
   influencer: { name: string } | null;
-  // Additional fields from orders tables
+  // Additional fields
   platform_fee?: number | null;
   total_amount?: number | null;
   completed_at?: string | null;
@@ -54,7 +54,7 @@ const GiftsSent = () => {
         return;
       }
       
-      // Fetch gift requests
+      // Fetch gift requests with all status information from a single table
       const { data: giftRequestsData, error: giftRequestsError } = await supabase
         .from("gift_requests")
         .select(`
@@ -65,88 +65,26 @@ const GiftsSent = () => {
           message,
           created_at,
           status,
-          influencer:influencer_id(name)
+          influencer:influencer_id(name),
+          platform_fee,
+          total_amount,
+          completed_at,
+          delivery_estimate
         `)
         .eq("sender_id", user.id)
         .order("created_at", { ascending: false });
 
       if (giftRequestsError) throw giftRequestsError;
-      
-      // Fetch orders in process
-      const { data: ordersInProcessData, error: ordersInProcessError } = await supabase
-        .from("orders_under_process")
-        .select(`
-          id,
-          product_url,
-          product_title,
-          product_price,
-          message,
-          created_at,
-          platform_fee,
-          total_amount,
-          influencer:influencer_id(name)
-        `)
-        .eq("user_id", user.id);
-      
-      if (ordersInProcessError) throw ordersInProcessError;
-      
-      // Fetch completed orders
-      const { data: completedOrdersData, error: completedOrdersError } = await supabase
-        .from("orders_completed")
-        .select(`
-          id,
-          product_url,
-          product_title,
-          product_price,
-          message,
-          created_at,
-          completed_at,
-          platform_fee,
-          total_amount,
-          delivery_estimate,
-          influencer:influencer_id(name)
-        `)
-        .eq("user_id", user.id);
-      
-      if (completedOrdersError) throw completedOrdersError;
-      
-      // Format data from all sources
-      const formattedGiftRequests = giftRequestsData.map(item => ({
+
+      // Format data
+      const formattedRequests = giftRequestsData.map(item => ({
         ...item,
         influencer: typeof item.influencer === 'object' && item.influencer !== null
           ? item.influencer
           : { name: "Unknown Influencer" },
       }));
       
-      const formattedOrdersInProcess = ordersInProcessData.map(item => ({
-        ...item,
-        status: "under_process",
-        influencer: typeof item.influencer === 'object' && item.influencer !== null
-          ? item.influencer
-          : { name: "Unknown Influencer" },
-      }));
-      
-      const formattedCompletedOrders = completedOrdersData.map(item => ({
-        ...item,
-        status: "completed",
-        influencer: typeof item.influencer === 'object' && item.influencer !== null
-          ? item.influencer
-          : { name: "Unknown Influencer" },
-      }));
-      
-      // Combine all data
-      const allRequests = [
-        ...formattedGiftRequests,
-        ...formattedOrdersInProcess,
-        ...formattedCompletedOrders
-      ];
-      
-      // Sort by created date, newest first
-      const sortedRequests = allRequests.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      
-      setRequests(sortedRequests as GiftRequest[]);
+      setRequests(formattedRequests as GiftRequest[]);
     } catch (error) {
       toast({
         title: "Error loading gifts",
