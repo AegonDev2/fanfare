@@ -17,9 +17,10 @@ interface GiftRequest {
   product_price: number | null;
   message: string | null;
   created_at: string;
-  status: string;
-  influencer: { name: string } | null;
-  // Additional fields
+  status: 'pending' | 'accepted' | 'rejected' | 'under_process' | 'completed';
+  influencer: { 
+    name: string 
+  } | null;
   platform_fee?: number | null;
   total_amount?: number | null;
   completed_at?: string | null;
@@ -31,8 +32,6 @@ const STATUS_LABELS: Record<string, { label: string, color: string, icon: any }>
   accepted: { label: "Accepted", color: "bg-blue-100 text-blue-800", icon: Package },
   rejected: { label: "Rejected", color: "bg-red-100 text-red-800", icon: X },
   under_process: { label: "Processing", color: "bg-purple-100 text-purple-800", icon: Package },
-  ordered: { label: "Ordered", color: "bg-indigo-100 text-indigo-800", icon: Package },
-  delivered: { label: "Delivered", color: "bg-green-100 text-green-800", icon: Check },
   completed: { label: "Completed", color: "bg-green-100 text-green-800", icon: Check },
 };
 
@@ -54,8 +53,8 @@ const GiftsSent = () => {
         return;
       }
       
-      // Fetch gift requests with all status information from a single table
-      const { data: giftRequestsData, error: giftRequestsError } = await supabase
+      // Fetch gift requests with all status information
+      const { data, error } = await supabase
         .from("gift_requests")
         .select(`
           id,
@@ -65,26 +64,29 @@ const GiftsSent = () => {
           message,
           created_at,
           status,
-          influencer:influencer_id(name),
           platform_fee,
           total_amount,
           completed_at,
-          delivery_estimate
+          delivery_estimate,
+          influencer:influencer_id(name)
         `)
         .eq("sender_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (giftRequestsError) throw giftRequestsError;
+      if (error) {
+        console.error("Error fetching gift requests:", error);
+        throw error;
+      }
 
       // Format data
-      const formattedRequests = giftRequestsData.map(item => ({
-        ...item,
-        influencer: typeof item.influencer === 'object' && item.influencer !== null
-          ? item.influencer
-          : { name: "Unknown Influencer" },
-      }));
-      
-      setRequests(formattedRequests as GiftRequest[]);
+      if (data) {
+        const formattedRequests = data.map(item => ({
+          ...item,
+          influencer: item.influencer || { name: "Unknown Influencer" }
+        }));
+        
+        setRequests(formattedRequests as GiftRequest[]);
+      }
     } catch (error) {
       toast({
         title: "Error loading gifts",
@@ -106,7 +108,8 @@ const GiftsSent = () => {
     setDialogOpen(true);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'short', 
@@ -114,7 +117,8 @@ const GiftsSent = () => {
     });
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount == null) return "N/A";
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -266,9 +270,7 @@ const GiftsSent = () => {
                         <TableRow>
                           <TableCell className="font-medium">Price</TableCell>
                           <TableCell>
-                            {selectedRequest.product_price
-                              ? formatCurrency(selectedRequest.product_price)
-                              : "N/A"}
+                            {formatCurrency(selectedRequest.product_price)}
                           </TableCell>
                         </TableRow>
                         {selectedRequest.platform_fee && (

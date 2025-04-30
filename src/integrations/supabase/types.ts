@@ -607,8 +607,8 @@ export type Database = {
         | "pending"
         | "accepted"
         | "rejected"
-        | "ordered"
-        | "delivered"
+        | "under process"
+        | "completed"
       nav_role: "admin" | "user" | "influencer"
     }
     CompositeTypes: {
@@ -731,8 +731,8 @@ export const Constants = {
         "pending",
         "accepted",
         "rejected",
-        "ordered",
-        "delivered",
+        "under process",
+        "completed",
       ],
       nav_role: ["admin", "user", "influencer"],
     },

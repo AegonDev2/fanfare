@@ -11,7 +11,7 @@ export interface GiftRequest {
   product_price: number | null;
   message: string;
   created_at: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'ordered' | 'delivered';
+  status: 'pending' | 'accepted' | 'rejected' | 'under_process' | 'completed';
   sender: { id: string; email: string };
   influencer_id: string;
 }

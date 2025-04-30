@@ -34,6 +34,26 @@ export const useOrderActions = (
       const order = orders.find(o => o.id === orderId);
       if (!order) throw new Error("Order not found in local state");
 
+      // Also update the gift_request status to completed if it exists
+      const { data: giftRequests, error: giftReqError } = await supabase
+        .from('gift_requests')
+        .select('id')
+        .eq('product_url', order.product_url)
+        .eq('sender_id', order.user_id)
+        .eq('influencer_id', order.influencer_id);
+
+      if (!giftReqError && giftRequests && giftRequests.length > 0) {
+        console.log("Updating gift request status to completed:", giftRequests[0].id);
+        await supabase
+          .from('gift_requests')
+          .update({ 
+            status: 'completed',
+            delivery_estimate: deliveryEstimate,
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', giftRequests[0].id);
+      }
+
       // Send notification to influencer
       if (order.influencer_id) {
         console.log(`Sending completion notification to influencer: ${order.influencer_id}`);
