@@ -20,17 +20,29 @@ const OrderSuccess = () => {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('orders')
+        // First try to find the order in the under_process table
+        let { data, error } = await supabase
+          .from('orders_under_process')
           .select('*, products(*)')
           .eq('id', orderId)
           .single();
 
+        // If not found there, try the completed table
         if (error) {
-          throw error;
+          const { data: completedData, error: completedError } = await supabase
+            .from('orders_completed')
+            .select('*, products(*)')
+            .eq('id', orderId)
+            .single();
+            
+          if (!completedError) {
+            data = completedData;
+          }
         }
 
-        setOrderDetails(data);
+        if (data) {
+          setOrderDetails(data);
+        }
       } catch (error) {
         console.error("Error fetching order:", error);
       } finally {

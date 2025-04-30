@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,23 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, CheckCircle, ClipboardCopy, ShoppingBag } from "lucide-react";
-
-interface OrderDetails {
-  id: string;
-  status: string;
-  created_at: string;
-  product_url: string;
-  product_title: string | null;
-  product_price: number | null;
-  platform_fee: number | null;
-  total_amount: number | null;
-  message?: string | null;
-  fan_id?: string;
-  fan_email?: string;
-  influencer_id: string | null;
-  influencer_name?: string;
-  shipping_address?: any;
-}
+import { OrderDetails } from "@/types/admin";
 
 const AdminOrderDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -79,15 +62,29 @@ const AdminOrderDetails = () => {
   const fetchOrderDetails = async (orderId: string) => {
     setIsLoading(true);
     try {
-      // Fetch order details
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
+      // First, try to get the order from orders_under_process
+      let { data: orderData, error: orderError } = await supabase
+        .from('orders_under_process')
         .select('*, influencer:influencer_id(*)')
         .eq('id', orderId)
         .single();
 
+      let status = 'under_process';
+      
+      // If not found in orders_under_process, try orders_completed
       if (orderError) {
-        throw orderError;
+        const { data: completedData, error: completedError } = await supabase
+          .from('orders_completed')
+          .select('*, influencer:influencer_id(*)')
+          .eq('id', orderId)
+          .single();
+          
+        if (completedError) {
+          throw new Error("Order not found in any table");
+        }
+        
+        orderData = completedData;
+        status = 'completed';
       }
 
       // Get fan profile information
@@ -97,10 +94,12 @@ const AdminOrderDetails = () => {
         .eq('id', orderData.user_id)
         .maybeSingle();
 
-      const enrichedOrder = {
+      const enrichedOrder: OrderDetails = {
         ...orderData,
-        fan_email: fanData?.email,
+        status: status as 'under_process' | 'completed',
+        fan_email: fanData?.email || "Unknown",
         influencer_name: orderData.influencer?.name || "Unknown",
+        completed_at: status === 'completed' ? orderData.completed_at : undefined,
       };
 
       setOrder(enrichedOrder);
@@ -119,21 +118,14 @@ const AdminOrderDetails = () => {
   const handleOrderProcessing = async () => {
     if (!order) return;
     try {
-      // Update the order status to "processing" to indicate admin is working on it
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: "processing" })
-        .eq('id', order.id);
-
-      if (error) throw error;
-
-      // Refresh order details
-      fetchOrderDetails(order.id);
-      
+      // Mark the order as processing (can be implemented if needed)
       toast({
         title: "Order Status Updated",
         description: "Order marked as processing",
       });
+      
+      // Refresh order details
+      fetchOrderDetails(order.id);
     } catch (error) {
       console.error("Error updating order status:", error);
       toast({
@@ -147,18 +139,48 @@ const AdminOrderDetails = () => {
   const handleOrderComplete = async () => {
     if (!order) return;
     try {
-      // Update order status to "completed" once the admin has manually placed the order
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
-          status: "completed",
-          delivery_estimate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Estimated delivery in 7 days
-        })
+      // Get delivery estimate (7 days from now)
+      const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      // Get the order from orders_under_process
+      const { data: orderData, error: fetchError } = await supabase
+        .from('orders_under_process')
+        .select('*')
+        .eq('id', order.id)
+        .single();
+      
+      if (fetchError || !orderData) throw new Error("Order not found");
+      
+      // Insert order into orders_completed table
+      const { error: insertError } = await supabase
+        .from('orders_completed')
+        .insert({
+          id: order.id,
+          created_at: orderData.created_at,
+          completed_at: new Date().toISOString(),
+          user_id: orderData.user_id,
+          influencer_id: orderData.influencer_id,
+          product_url: orderData.product_url,
+          product_title: orderData.product_title,
+          product_price: orderData.product_price,
+          platform_fee: orderData.platform_fee,
+          total_amount: orderData.total_amount,
+          shipping_address: orderData.shipping_address,
+          message: orderData.message,
+          delivery_estimate: deliveryEstimate
+        });
+      
+      if (insertError) throw insertError;
+      
+      // Delete the order from orders_under_process
+      const { error: deleteError } = await supabase
+        .from('orders_under_process')
+        .delete()
         .eq('id', order.id);
+      
+      if (deleteError) throw deleteError;
 
-      if (error) throw error;
-
-      // Create notification for the influencer
+      // Send notification to influencer
       if (order.influencer_id) {
         await supabase.from("notifications").insert({
           recipient_id: order.influencer_id,
@@ -167,19 +189,29 @@ const AdminOrderDetails = () => {
           reference_id: order.id,
         });
       }
-
-      // Refresh order details
-      fetchOrderDetails(order.id);
+      
+      // Send notification to fan
+      if (order.user_id) {
+        await supabase.from("notifications").insert({
+          recipient_id: order.user_id,
+          type: "order_completed",
+          message: `Your gift order has been processed and will be delivered soon!`,
+          reference_id: order.id,
+        });
+      }
       
       toast({
         title: "Order Completed",
         description: "Order has been marked as completed",
       });
-    } catch (error) {
+      
+      // Refresh order details
+      fetchOrderDetails(order.id);
+    } catch (error: any) {
       console.error("Error completing order:", error);
       toast({
         title: "Error",
-        description: "Failed to complete the order",
+        description: error.message || "Failed to complete the order",
         variant: "destructive"
       });
     }
@@ -251,8 +283,7 @@ const AdminOrderDetails = () => {
             </div>
             <Badge 
               variant={
-                order.status === "accepted" ? "outline" :
-                order.status === "processing" ? "secondary" :
+                order.status === "under_process" ? "outline" :
                 order.status === "completed" ? "default" : "destructive"
               }
               className="text-sm py-1 px-3"
@@ -407,17 +438,7 @@ const AdminOrderDetails = () => {
                 </p>
               </CardContent>
               <CardFooter className="flex flex-col gap-2">
-                {order.status === 'accepted' && (
-                  <Button 
-                    className="w-full" 
-                    onClick={handleOrderProcessing}
-                  >
-                    <ShoppingBag className="h-4 w-4 mr-2" />
-                    Mark As Processing
-                  </Button>
-                )}
-                
-                {order.status === 'processing' && (
+                {order.status === 'under_process' && (
                   <Button 
                     className="w-full" 
                     onClick={handleOrderComplete}
