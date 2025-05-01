@@ -36,7 +36,7 @@ export const useGiftsSent = () => {
         return;
       }
       
-      // Fetch gift requests with all status information
+      // Fetch gift requests along with influencer name from profiles
       const { data, error } = await supabase
         .from("gift_requests")
         .select(`
@@ -51,7 +51,8 @@ export const useGiftsSent = () => {
           total_amount,
           completed_at,
           delivery_estimate,
-          influencer:profiles(name)
+          influencer_id,
+          profiles:influencer_id (name)
         `)
         .eq("sender_id", user.id)
         .order("created_at", { ascending: false });
@@ -63,12 +64,27 @@ export const useGiftsSent = () => {
 
       // Format data
       if (data) {
-        const formattedRequests = data.map(item => ({
-          ...item,
-          influencer_name: item.influencer?.name || "Unknown Influencer"
-        }));
+        const formattedRequests = data.map(item => {
+          // Type-safe approach to handle the influencer name
+          const influencerName = item.profiles?.name || "Unknown Influencer";
+          
+          return {
+            id: item.id,
+            product_url: item.product_url,
+            product_title: item.product_title,
+            product_price: item.product_price,
+            message: item.message,
+            created_at: item.created_at,
+            status: item.status,
+            platform_fee: item.platform_fee,
+            total_amount: item.total_amount,
+            completed_at: item.completed_at,
+            delivery_estimate: item.delivery_estimate,
+            influencer_name: influencerName
+          };
+        });
         
-        setRequests(formattedRequests as GiftRequest[]);
+        setRequests(formattedRequests);
       }
     } catch (error: any) {
       toast({
