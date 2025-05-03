@@ -19,7 +19,7 @@ const HeroCarousel = ({
       return () => clearInterval(interval);
     }
   }, [isPaused]);
-  return <div className="relative pb-4 pt-8 my-0 py-[14px] bg-rose-100">
+  return <div className="relative pb-4 pt-8 my-0 py-[14px] bg-slate-100">
       <Carousel opts={{
       loop: true,
       align: "center"

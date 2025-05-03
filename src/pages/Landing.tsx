@@ -83,9 +83,9 @@ const Landing = ({
   return <div className="min-h-screen w-full bg-gray-100 font-roboto">
       <Header setNavOpen={setNavOpen} />
       
-      <div className="pt-16 bg-rose-100">
+      <div className="pt-16 bg-slate-50">
         <HeroCarousel slides={slides} />
-        <main className="container mx-auto sm:px-6 lg:px-8 max-w-7xl py-0 px-[3px] bg-rose-100">
+        <main className="container mx-auto sm:px-6 lg:px-8 max-w-7xl py-0 px-[3px] bg-slate-50">
           {loading ? <div className="text-center py-8">Loading influencers...</div> : influencers.length > 0 ? <InfluencerSection influencers={influencers} /> : <div className="text-center py-8">
               No influencers found. Check back later!
             </div>}
@@ -93,7 +93,7 @@ const Landing = ({
           <OrderTrackingSection />
         </main>
         <footer className="bg-white shadow-md mt-8">
-          <div className="container mx-auto px-4 py-4 text-center text-gray-600">© 2025 FanFare. All rights reserved.</div>
+          <div className="container mx-auto px-4 py-4 text-center text-gray-600 bg-stone-300">© 2025 FanFare. All rights reserved.</div>
         </footer>
       </div>
     </div>;
