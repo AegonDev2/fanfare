@@ -26,7 +26,7 @@ const InfluencerCard = memo(({
     e.stopPropagation();
     navigate(`/place-order?influencer=${influencer.id}`);
   };
-  return <div className="p-3 rounded-lg shadow-md h-full relative group bg-gray-400 px-[17px]">
+  return <div className="p-3 shadow-md h-full relative group px-[17px] bg-white rounded-2xl">
       <div className="absolute right-3 top-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleGiftClick}>
         <Button size="icon" className="rounded-full h-8 w-8 bg-white/90 hover:bg-white shadow-md">
           <Gift className="h-4 w-4 text-primary" />
@@ -151,10 +151,10 @@ const InfluencerSection = ({
   };
   return <section className="mb-8 relative px-[24px] py-[5px]">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        <h2 className="px-0 mx-0 text-lg text-left font-bold text-gray-950 py-0 my-[3px]">Discover Influencers</h2>
+        <h2 className="px-0 mx-0 text-lg text-left font-bold py-0 my-[3px] text-gray-800">Discover Influencers</h2>
         <div className="relative w-full md:w-auto" ref={searchInputRef}>
-          <Input className="w-full md:w-64" placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} />
-          <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500 px-px" />
+          <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} className="w-full md:w-64 px-[240px] bg-slate-50 mx-[9px] my-[17px] rounded-full" />
+          <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500 px-px my-[17px]" />
           
           {showSuggestions && searchSuggestions.length > 0 && <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200">
               <ul className="max-h-60 overflow-auto py-1">
