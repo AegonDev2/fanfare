@@ -150,7 +150,7 @@ const InfluencerSection = ({
     }
   };
   return <section className="mb-8 relative py-0 my-[13px] px-0">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 py-0 my-0 px-[18px]">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 py-0 my-0 px-0">
         <h2 className="px-0 mx-0 text-left font-bold py-0 my-[3px] text-gray-800 text-xl">Discover Influencers</h2>
         <div ref={searchInputRef} className="relative w-full md:w-auto px-[7px]">
           <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} className="w-full md:w-64 py-0 rounded-full bg-stone-200 my-[17px] px-[50px]" />
