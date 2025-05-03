@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ShoppingCart, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-
 interface ProductUrlInputProps {
   giftItem: string;
   onUrlChange: (url: string) => void;
@@ -11,7 +10,6 @@ interface ProductUrlInputProps {
   isFetchingProduct: boolean;
   fetchProgress: number;
 }
-
 const ProductUrlInput = ({
   giftItem,
   onUrlChange,
@@ -21,14 +19,12 @@ const ProductUrlInput = ({
 }: ProductUrlInputProps) => {
   const [isValid, setIsValid] = useState(true);
   const [validationMessage, setValidationMessage] = useState("");
-  
   const validateUrl = (url: string) => {
     if (!url) {
       setIsValid(true);
       setValidationMessage("");
       return;
     }
-    
     try {
       new URL(url);
       setIsValid(true);
@@ -38,52 +34,38 @@ const ProductUrlInput = ({
       setValidationMessage("Please enter a valid URL");
     }
   };
-  
   const handleUrlChange = (url: string) => {
     onUrlChange(url);
     validateUrl(url);
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!giftItem) {
       setIsValid(false);
       setValidationMessage("Please enter a product URL");
       return;
     }
-    
     if (!isValid) {
       return;
     }
-    
     onPreviewClick();
   };
-
   const getButtonPrompt = () => {
     if (isFetchingProduct) {
-      return (
-        <>
+      return <>
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           Fetching Product...
-        </>
-      );
+        </>;
     }
-    
-    return (
-      <>
+    return <>
         <ShoppingCart className="h-4 w-4 mr-2" />
         Preview Product
-      </>
-    );
+      </>;
   };
-
   const renderFetchProgressStatus = () => {
     if (!isFetchingProduct) return null;
-    
     let statusMessage = "Initializing...";
     let statusIcon = <Loader2 className="h-4 w-4 animate-spin" />;
-    
     if (fetchProgress < 20) {
       statusMessage = "Connecting to product page...";
     } else if (fetchProgress < 40) {
@@ -98,23 +80,13 @@ const ProductUrlInput = ({
       statusMessage = "Finalizing...";
       statusIcon = <CheckCircle2 className="h-4 w-4 text-green-500" />;
     }
-    
-    return (
-      <div className="flex items-center mt-2">
+    return <div className="flex items-center mt-2">
         {statusIcon}
         <span className="ml-2 text-sm text-gray-600">{statusMessage}</span>
-      </div>
-    );
+      </div>;
   };
-
-  const recommendations = [
-    "https://www.flipkart.com/fastrack-optimus-pro-1-43-amoled-display-aod-466x466-functional-crown-bt-calling-smartwatch/p/itma4744c9053b72?pid=SMWGV3ZY9YJYEYEC",
-    "https://amzn.in/d/2pPwjuQ",
-    "https://www.myntra.com/watches/fastrack/fastrack-unisex-black-digital-watch-38045pp02/14599416/buy"
-  ];
-
-  return (
-    <section className="mb-8">
+  const recommendations = ["https://www.flipkart.com/fastrack-optimus-pro-1-43-amoled-display-aod-466x466-functional-crown-bt-calling-smartwatch/p/itma4744c9053b72?pid=SMWGV3ZY9YJYEYEC", "https://amzn.in/d/2pPwjuQ", "https://www.myntra.com/watches/fastrack/fastrack-unisex-black-digital-watch-38045pp02/14599416/buy"];
+  return <section className="mb-8 py-0 my-[20px]">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">
         Place Order
       </h2>
@@ -125,47 +97,28 @@ const ProductUrlInput = ({
               Product URL
             </label>
             <div className="relative">
-              <Input 
-                id="productUrl"
-                value={giftItem}
-                onChange={(e) => handleUrlChange(e.target.value)}
-                className={`w-full p-2 border ${!isValid ? 'border-red-500' : 'border-gray-300'} rounded-lg pr-10`}
-                placeholder="Paste any product URL here..."
-                disabled={isFetchingProduct}
-              />
-              {!isValid && (
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <Input id="productUrl" value={giftItem} onChange={e => handleUrlChange(e.target.value)} className={`w-full p-2 border ${!isValid ? 'border-red-500' : 'border-gray-300'} rounded-lg pr-10`} placeholder="Paste any product URL here..." disabled={isFetchingProduct} />
+              {!isValid && <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <AlertCircle className="h-5 w-5 text-red-500" />
-                </div>
-              )}
+                </div>}
             </div>
-            {!isValid && validationMessage && (
-              <p className="text-red-500 text-sm mt-1">{validationMessage}</p>
-            )}
+            {!isValid && validationMessage && <p className="text-red-500 text-sm mt-1">{validationMessage}</p>}
           </div>
           
-          <Button
-            type="submit"
-            disabled={isFetchingProduct || !giftItem || !isValid}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 w-full sm:w-auto"
-          >
+          <Button type="submit" disabled={isFetchingProduct || !giftItem || !isValid} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 w-full sm:w-auto">
             {getButtonPrompt()}
           </Button>
           
-          {isFetchingProduct && (
-            <div className="mt-4">
+          {isFetchingProduct && <div className="mt-4">
               <Progress value={fetchProgress} className="w-full h-2" />
               <div className="flex justify-between mt-1">
                 <p className="text-sm text-gray-500">Fetching product details...</p>
                 <p className="text-sm font-medium">{fetchProgress}%</p>
               </div>
               {renderFetchProgressStatus()}
-            </div>
-          )}
+            </div>}
         </form>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default ProductUrlInput;
