@@ -21,7 +21,7 @@ const GiftCard = memo(({
   const handleGiftClick = () => {
     navigate(`/place-order?gift=${encodeURIComponent(gift.name)}`);
   };
-  return <div className="p-3 shadow-md h-full mx-0 bg-transparent rounded-none my-0 py-[8px] px-[43px]">
+  return <div className="p-3 shadow-md h-full mx-0 bg-transparent rounded-none my-0 py-[8px] px-[16px]">
       <div className="w-full aspect-square mb-2 overflow-hidden rounded-lg">
         <img src={gift.image} alt={gift.name} loading="lazy" className="w-full h-full object-cover" />
       </div>
@@ -58,8 +58,8 @@ const GiftSection = ({
                 <GiftCard gift={gift} />
               </CarouselItem>)}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex -left-11 font-normal" />
-          <CarouselNext className="hidden md:flex -right-12\n" />
+          <CarouselPrevious className="hidden md:flex -left-11 font-normal px-[240px] mx-[240px] my-[240px] py-[240px]" />
+          <CarouselNext className="hidden md:flex -right-12\\n px-0" />
         </Carousel>
       </div>
     </section>;
