@@ -76,7 +76,7 @@ const Header = ({
             {user ? <>
                 <WalletWidget />
                 
-                <Button variant="outline" onClick={handleSignOut} disabled={isLoading} className="px-[29px] bg-slate-800 hover:bg-slate-700 text-slate-300">
+                <Button variant="outline" onClick={handleSignOut} disabled={isLoading} className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-[31px] mx-[10px]">
                   {isLoading ? "Signing out..." : "Sign Out"}
                 </Button>
               </> : <>
