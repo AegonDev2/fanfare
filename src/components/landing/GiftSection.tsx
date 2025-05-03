@@ -28,7 +28,7 @@ const GiftCard = memo(({
       <div className="mt-2">
         <h3 className="text-sm font-semibold text-gray-800 truncate">{gift.name}</h3>
         <p className="text-xs text-gray-600">{gift.price}</p>
-        <Button size="sm" variant="secondary" className="mt-2 w-full text-xs" onClick={handleGiftClick}>
+        <Button size="sm" variant="secondary" onClick={handleGiftClick} className="mt-2 w-full text-xs bg-slate-800 hover:bg-slate-700 text-neutral-50">
           Gift This
         </Button>
       </div>

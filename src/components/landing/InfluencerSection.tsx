@@ -38,7 +38,7 @@ const InfluencerCard = memo(({
       <div className="mt-2">
         <h3 className="text-sm font-semibold truncate text-gray-950">{influencer.name}</h3>
         <p className="text-xs text-gray-600 truncate">{influencer.platform} • {influencer.followers.toLocaleString()} followers</p>
-        <Button size="sm" variant="secondary" onClick={() => onProfileClick(influencer.id)} className="mt-2 w-full text-xs text-gray-100 bg-slate-800 hover:bg-slate-700">
+        <Button size="sm" variant="secondary" onClick={() => onProfileClick(influencer.id)} className="mt-2 w-full text-xs text-neutral-50">
           View Profile
         </Button>
       </div>
