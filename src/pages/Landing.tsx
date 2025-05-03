@@ -83,9 +83,9 @@ const Landing = ({
   return <div className="min-h-screen w-full bg-gray-100 font-roboto">
       <Header setNavOpen={setNavOpen} />
       
-      <div className="pt-16">
+      <div className="pt-16 bg-rose-100">
         <HeroCarousel slides={slides} />
-        <main className="container mx-auto sm:px-6 lg:px-8 max-w-7xl py-0 px-[3px] bg-zinc-300">
+        <main className="container mx-auto sm:px-6 lg:px-8 max-w-7xl py-0 px-[3px] bg-rose-100">
           {loading ? <div className="text-center py-8">Loading influencers...</div> : influencers.length > 0 ? <InfluencerSection influencers={influencers} /> : <div className="text-center py-8">
               No influencers found. Check back later!
             </div>}
