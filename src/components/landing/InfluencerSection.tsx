@@ -149,11 +149,11 @@ const InfluencerSection = ({
       handleProfileClick(id);
     }
   };
-  return <section className="mb-8 relative px-[24px] py-[5px]">
+  return <section className="mb-8 relative py-0 my-[13px] px-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        <h2 className="px-0 mx-0 text-lg text-left font-bold py-0 my-[3px] text-gray-800">Discover Influencers</h2>
+        <h2 className="px-0 mx-0 text-left font-bold py-0 my-[3px] text-gray-800 text-xl">Discover Influencers</h2>
         <div className="relative w-full md:w-auto" ref={searchInputRef}>
-          <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} className="w-full md:w-64 bg-slate-50 mx-[9px] my-[17px] rounded-full px-[90px]" />
+          <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} className="w-full md:w-64 mx-[9px] my-[17px] rounded-full px-[90px] bg-stone-200" />
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500 px-px my-[17px]" />
           
           {showSuggestions && searchSuggestions.length > 0 && <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200">

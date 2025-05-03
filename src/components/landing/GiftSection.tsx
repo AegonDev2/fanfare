@@ -21,7 +21,7 @@ const GiftCard = memo(({
   const handleGiftClick = () => {
     navigate(`/place-order?gift=${encodeURIComponent(gift.name)}`);
   };
-  return <div className="p-3 shadow-md h-full mx-0 py-[6px] px-[53px] bg-transparent rounded-none">
+  return <div className="p-3 shadow-md h-full mx-0 bg-transparent rounded-none my-0 py-[8px] px-[40px]">
       <div className="w-full aspect-square mb-2 overflow-hidden rounded-lg">
         <img src={gift.image} alt={gift.name} loading="lazy" className="w-full h-full object-cover" />
       </div>
@@ -40,9 +40,9 @@ const GiftSection = ({
 }: GiftSectionProps) => {
   return <section className="mb-8 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 px-[21px]">
-        <h2 className="text-xl text-gray-800 px-[6px] font-bold">Gift Selection</h2>
+        <h2 className="text-xl text-gray-800 font-bold px-0">Gift Selection</h2>
         <div className="relative w-full md:w-auto">
-          <Input placeholder="Search Gifts" type="text" className="w-full md:w-64 bg-slate-50 py-0 my-[17px] rounded-full px-[90px]" />
+          <Input placeholder="Search Gifts" type="text" className="w-full md:w-64 py-0 my-[17px] rounded-full px-[90px] bg-stone-200" />
           <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500 py-0 my-[17px] mx-[9px]" />
         </div>
       </div>
