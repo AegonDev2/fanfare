@@ -28,7 +28,7 @@ const InfluencerCard = memo(({
   };
   return <div className="p-3 shadow-md h-full relative group bg-transparent rounded-none py-[5px] px-[50px]">
       <div className="absolute right-3 top-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleGiftClick}>
-        <Button size="icon" className="rounded-full h-8 w-8 bg-white/90 hover:bg-white shadow-md">
+        <Button size="icon" className="rounded-full h-8 w-8 shadow-md py-0 px-0 bg-slate-50 text-amber-500 mx-[48px] my-[10px]">
           <Gift className="h-4 w-4 text-primary" />
         </Button>
       </div>
