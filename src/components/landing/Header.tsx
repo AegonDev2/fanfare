@@ -54,7 +54,7 @@ const Header = ({
     }
   };
   return <header className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm shadow-sm">
-      <div className="container mx-auto md:px-6 lg:px-8 px-0 bg-slate-50">
+      <div className="container mx-auto md:px-6 lg:px-8 px-0 bg-transparent">
         <div className="flex items-center justify-between h-16 rounded-full px-[11px] py-0 mx-[7px] my-[7px] bg-slate-800">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={handleNavToggle} className="mr-2 bg-transparent text-slate-50 px-0 mx-[2px] my-[6px]">
