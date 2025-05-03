@@ -152,9 +152,9 @@ const InfluencerSection = ({
   return <section className="mb-8 relative py-0 my-[13px] px-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <h2 className="px-0 mx-0 text-left font-bold py-0 my-[3px] text-gray-800 text-xl">Discover Influencers</h2>
-        <div className="relative w-full md:w-auto" ref={searchInputRef}>
-          <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} className="w-full md:w-64 mx-[9px] my-[17px] rounded-full px-[90px] bg-stone-200" />
-          <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500 px-px my-[17px]" />
+        <div ref={searchInputRef} className="relative w-full md:w-auto px-[19px]">
+          <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} className="w-full md:w-64 py-0 rounded-full bg-stone-200 my-[17px] px-[50px]" />
+          <Search className="absolute right-2 top-2.5 h-5 w-5 text-gray-500 mx-[17px] my-[17px] px-0" />
           
           {showSuggestions && searchSuggestions.length > 0 && <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200">
               <ul className="max-h-60 overflow-auto py-1">
