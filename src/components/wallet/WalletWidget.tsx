@@ -15,7 +15,7 @@ const WalletWidget = () => {
   useEffect(() => {
     fetchWallet();
   }, []);
-  return <Card className="p-4 my-2 px-[11px] py-px">
+  return <Card className="p-4 my-2 py-0 px-[9px]">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <Wallet className="h-5 w-5 text-primary" />

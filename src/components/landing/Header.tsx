@@ -66,26 +66,16 @@ const Header = ({
           </div>
 
           <nav className="hidden md:flex space-x-8 items-center">
-            <a href="/" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-              Home
-            </a>
-            <a href="/how-it-works" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-              How It Works
-            </a>
-            <a href="/creators" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-              Creators
-            </a>
-            <a href="/about" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-              About Us
-            </a>
+            
+            
+            
+            
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
             {user ? <>
                 <WalletWidget />
-                <Button variant="ghost" className="text-gray-700" onClick={() => navigate("/profile")}>
-                  My Profile
-                </Button>
+                
                 <Button variant="outline" onClick={handleSignOut} disabled={isLoading} className="px-[29px] bg-slate-800 hover:bg-slate-700 text-slate-300">
                   {isLoading ? "Signing out..." : "Sign Out"}
                 </Button>
