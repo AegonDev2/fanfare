@@ -36,7 +36,7 @@ export const useGiftsSent = () => {
         return;
       }
       
-      // Fetch gift requests without assuming platform_fee exists in gift_requests table
+      // Use explicit column selection with alias for the joined influencer name
       const { data, error } = await supabase
         .from("gift_requests")
         .select(`
@@ -48,7 +48,7 @@ export const useGiftsSent = () => {
           created_at,
           status,
           influencer_id,
-          profiles:influencer_id (name)
+          profiles!gift_requests_influencer_id_fkey (name)
         `)
         .eq("sender_id", user.id)
         .order("created_at", { ascending: false });
@@ -61,8 +61,9 @@ export const useGiftsSent = () => {
       // Format data
       if (data) {
         const formattedRequests: GiftRequest[] = data.map(item => {
-          // Type-safe approach to handle the influencer name
-          const influencerName = item.profiles?.name || "Unknown Influencer";
+          // Safely access the name using proper typescript handling
+          const influencerProfile = item.profiles as { name: string | null } | null;
+          const influencerName = influencerProfile?.name || "Unknown Influencer";
           
           return {
             id: item.id,

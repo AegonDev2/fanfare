@@ -5,11 +5,13 @@ interface NavUserProps {
   user?: any;
   userEmail?: string | null;
   userRole?: string | null;
+  userName?: string | null;
 }
 
-const NavUser = ({ user, userEmail, userRole }: NavUserProps) => {
-  // Use user object if provided, otherwise fall back to userEmail and userRole
+const NavUser = ({ user, userEmail, userRole, userName }: NavUserProps) => {
+  // Use user object if provided, otherwise fall back to userEmail, userName, and userRole
   const email = user?.email || userEmail || "Guest";
+  const name = userName || user?.name || "User";
   const role = userRole || (user ? "User" : "Not logged in");
   
   // Format role with uppercase first letter for display
@@ -31,7 +33,8 @@ const NavUser = ({ user, userEmail, userRole }: NavUserProps) => {
           <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/30 to-transparent"></div>
         </div>
         <div className="ml-4 flex flex-col">
-          <span className="text-sm truncate font-medium">{email}</span>
+          <span className="text-sm truncate font-medium">{name}</span>
+          <span className="text-xs text-gray-400 truncate">{email}</span>
           <span className="text-xs text-funky-pink capitalize font-medium">
             {formattedRole}
           </span>

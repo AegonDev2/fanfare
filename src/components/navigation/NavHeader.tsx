@@ -15,15 +15,33 @@ const NavHeader = ({
 }: NavHeaderProps) => {
   const isMobile = useIsMobile();
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   
   useEffect(() => {
-    // Check user authentication status and role
+    // Check user authentication status, role, and name
     const checkUserRole = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setUserRole(null);
+          setUserName(null);
           return;
+        }
+        
+        // Get user profile to fetch name
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('name, user_type')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+          return;
+        }
+        
+        if (profile) {
+          setUserName(profile.name || null);
         }
         
         // Check if user has admin role
@@ -34,13 +52,14 @@ const NavHeader = ({
         
         if (!error && roles && roles.length > 0) {
           const isAdmin = roles.some(r => r.role === 'admin');
-          setUserRole(isAdmin ? 'admin' : 'user');
+          setUserRole(isAdmin ? 'admin' : profile?.user_type || 'user');
         } else {
-          setUserRole('user');
+          setUserRole(profile?.user_type || 'user');
         }
       } catch (error) {
         console.error("Error checking user role:", error);
         setUserRole(null);
+        setUserName(null);
       }
     };
     

@@ -18,6 +18,7 @@ type UserType = 'fan' | 'influencer';
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState<UserType | "">("");
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +46,15 @@ const SignUpForm = () => {
       return;
     }
 
+    if (!name.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter your name",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -55,7 +65,8 @@ const SignUpForm = () => {
         password,
         options: {
           data: {
-            user_type: userType
+            user_type: userType,
+            name: name // Add name to user metadata
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
@@ -108,6 +119,17 @@ const SignUpForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="signup-name">Name</Label>
+        <Input
+          id="signup-name"
+          type="text"
+          placeholder="Enter your full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="signup-email">Email</Label>
         <Input
