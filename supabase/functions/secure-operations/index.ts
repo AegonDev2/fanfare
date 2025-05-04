@@ -22,8 +22,13 @@ serve(async (req) => {
 
   try {
     // Create Supabase client with service role key for admin operations
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") as string;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Missing environment variables for Supabase client");
+    }
+    
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Create client with auth token for user verification
@@ -40,28 +45,55 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { operation, tableId, recordId, data } = await req.json() as RequestParams;
+    const contentType = req.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      throw new Error("Request must be JSON");
+    }
+    
+    let params: RequestParams;
+    try {
+      params = await req.json() as RequestParams;
+    } catch (e) {
+      throw new Error("Invalid JSON in request body");
+    }
+    
+    const { operation, tableId, recordId, data } = params;
     
     if (!operation || !tableId) {
       throw new Error("Missing required parameters");
+    }
+    
+    // Validate table name to prevent SQL injection
+    const validTableIds = ["gift_requests", "orders_under_process", "orders_completed"];
+    if (!validTableIds.includes(tableId)) {
+      throw new Error("Invalid table ID");
     }
 
     // Process the secure operation
     let result;
     switch (operation) {
       case "get":
+        if (!recordId) {
+          throw new Error("Record ID is required for get operation");
+        }
         // Get a specific record with permission check
-        result = await getSecureRecord(supabaseAdmin, tableId, recordId!, user.id);
+        result = await getSecureRecord(supabaseAdmin, tableId, recordId, user.id);
         break;
       
       case "update":
+        if (!recordId) {
+          throw new Error("Record ID is required for update operation");
+        }
         // Update a record with permission check
-        result = await updateSecureRecord(supabaseAdmin, tableId, recordId!, data, user.id);
+        result = await updateSecureRecord(supabaseAdmin, tableId, recordId, data, user.id);
         break;
         
       case "delete":
+        if (!recordId) {
+          throw new Error("Record ID is required for delete operation");
+        }
         // Delete a record with permission check
-        result = await deleteSecureRecord(supabaseAdmin, tableId, recordId!, user.id);
+        result = await deleteSecureRecord(supabaseAdmin, tableId, recordId, user.id);
         break;
         
       default:
@@ -77,41 +109,50 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message || "An unknown error occurred" 
+      error: error instanceof Error ? error.message : "An unknown error occurred" 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: error.message === "Unauthorized: Invalid token" ? 401 : 400,
+      status: error instanceof Error && error.message === "Unauthorized: Invalid token" ? 401 : 400,
     });
   }
 });
 
 // Function to check if user has access to a record
 async function checkRecordAccess(supabase, tableId, recordId, userId) {
-  // Different permission checks for different tables
-  switch (tableId) {
-    case "gift_requests":
-      const { data: giftRequest } = await supabase
-        .from(tableId)
-        .select("sender_id, influencer_id")
-        .eq("id", recordId)
-        .single();
+  if (!recordId || !userId) {
+    return false;
+  }
+  
+  try {
+    // Different permission checks for different tables
+    switch (tableId) {
+      case "gift_requests":
+        const { data: giftRequest, error: giftError } = await supabase
+          .from(tableId)
+          .select("sender_id, influencer_id")
+          .eq("id", recordId)
+          .single();
+          
+        if (giftError || !giftRequest) return false;
+        return giftRequest.sender_id === userId || giftRequest.influencer_id === userId;
         
-      return giftRequest && (giftRequest.sender_id === userId || giftRequest.influencer_id === userId);
-      
-    case "orders_under_process":
-    case "orders_completed":
-      const { data: order } = await supabase
-        .from(tableId)
-        .select("user_id")
-        .eq("id", recordId)
-        .single();
+      case "orders_under_process":
+      case "orders_completed":
+        const { data: order, error: orderError } = await supabase
+          .from(tableId)
+          .select("user_id")
+          .eq("id", recordId)
+          .single();
+          
+        if (orderError || !order) return false;
+        return order.user_id === userId;
         
-      return order && order.user_id === userId;
-      
-    // Add cases for other tables as needed
-    
-    default:
-      return false;
+      default:
+        return false;
+    }
+  } catch (error) {
+    console.error("Error checking record access:", error);
+    return false;
   }
 }
 
@@ -139,6 +180,10 @@ async function updateSecureRecord(supabase, tableId, recordId, updateData, userI
   
   if (!hasAccess) {
     throw new Error("Unauthorized access to record");
+  }
+  
+  if (!updateData || typeof updateData !== 'object') {
+    throw new Error("Invalid update data");
   }
   
   // Prevent updating critical fields

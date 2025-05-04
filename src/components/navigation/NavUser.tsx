@@ -11,7 +11,7 @@ interface NavUserProps {
 const NavUser = ({ user, userEmail, userRole, userName }: NavUserProps) => {
   // Use user object if provided, otherwise fall back to userEmail, userName, and userRole
   const email = user?.email || userEmail || "Guest";
-  const name = userName || user?.name || "User";
+  const name = userName || user?.name || user?.email?.split('@')[0] || "User";
   const role = userRole || (user ? "User" : "Not logged in");
   
   // Format role with uppercase first letter for display

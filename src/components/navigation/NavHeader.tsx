@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface NavHeaderProps {
   setIsOpen?: (isOpen: boolean) => void;
@@ -16,12 +17,20 @@ const NavHeader = ({
   const isMobile = useIsMobile();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     // Check user authentication status, role, and name
     const checkUserRole = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        setIsLoading(true);
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          console.error("Error fetching user:", userError);
+          return;
+        }
+        
         if (!user) {
           setUserRole(null);
           setUserName(null);
@@ -33,7 +42,7 @@ const NavHeader = ({
           .from('profiles')
           .select('name, user_type')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
         
         if (profileError) {
           console.error("Error fetching user profile:", profileError);
@@ -45,21 +54,31 @@ const NavHeader = ({
         }
         
         // Check if user has admin role
-        const { data: roles, error } = await supabase
+        const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id);
         
-        if (!error && roles && roles.length > 0) {
+        if (rolesError) {
+          console.error("Error fetching user roles:", rolesError);
+          return;
+        }
+        
+        if (roles && roles.length > 0) {
           const isAdmin = roles.some(r => r.role === 'admin');
           setUserRole(isAdmin ? 'admin' : profile?.user_type || 'user');
         } else {
           setUserRole(profile?.user_type || 'user');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error checking user role:", error);
-        setUserRole(null);
-        setUserName(null);
+        toast({
+          title: "Error",
+          description: "Failed to verify user permissions",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -91,7 +110,7 @@ const NavHeader = ({
         </Button>
       )}
       
-      {userRole === 'admin' && (
+      {!isLoading && userRole === 'admin' && (
         <div className="hidden md:block">
           <span className="px-2 py-1 bg-funky-purple/20 text-funky-purple text-xs rounded-md">Admin</span>
         </div>

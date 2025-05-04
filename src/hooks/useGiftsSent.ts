@@ -24,9 +24,11 @@ export const useGiftsSent = () => {
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<GiftRequest | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchSentGiftRequests = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
@@ -85,9 +87,10 @@ export const useGiftsSent = () => {
         setRequests(formattedRequests);
       }
     } catch (error: any) {
+      setError(error.message || "Failed to load gifts");
       toast({
         title: "Error loading gifts",
-        description: error.message,
+        description: error.message || "An error occurred while loading your gifts",
         variant: "destructive",
       });
       setRequests([]);
@@ -104,6 +107,7 @@ export const useGiftsSent = () => {
   return {
     requests,
     loading,
+    error,
     fetchSentGiftRequests,
     selectedRequest,
     setSelectedRequest,

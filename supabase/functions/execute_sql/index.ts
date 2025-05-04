@@ -19,10 +19,14 @@ serve(async (req) => {
 
   try {
     // Create Supabase client with service role key for full access
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Missing environment variables for Supabase client");
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify the user has admin privileges
     const authHeader = req.headers.get("Authorization");
@@ -51,24 +55,37 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { sql_query } = await req.json() as RequestParams;
+    const contentType = req.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      throw new Error("Request must be JSON");
+    }
+    
+    let params: RequestParams;
+    try {
+      params = await req.json() as RequestParams;
+    } catch (e) {
+      throw new Error("Invalid JSON in request body");
+    }
+    
+    const { sql_query } = params;
 
     // More rigorous security checks
-    if (!sql_query) {
-      throw new Error("SQL query is required");
+    if (!sql_query || typeof sql_query !== 'string') {
+      throw new Error("SQL query is required and must be a string");
     }
 
-    // Security check - prevent multiple statements and dangerous SQL
+    // Enhanced security check to prevent dangerous SQL
     if (
       sql_query.includes(";") || 
-      /drop|truncate|delete\s+from|update|alter|create|insert/i.test(sql_query)
+      /\b(drop|truncate|delete\s+from|update|alter|create|insert|grant|revoke)\b/i.test(sql_query) ||
+      !sql_query.trim().toLowerCase().startsWith("select ")
     ) {
       throw new Error("Invalid SQL query detected: Only SELECT statements are allowed");
     }
 
     // Add forced LIMIT to prevent excessive data return
-    let safeQuery = sql_query;
-    if (!safeQuery.toLowerCase().includes("limit ")) {
+    let safeQuery = sql_query.trim();
+    if (!safeQuery.toLowerCase().includes(" limit ")) {
       safeQuery += " LIMIT 1000";
     }
 
@@ -87,9 +104,11 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error executing SQL:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error instanceof Error ? error.message : "An unknown error occurred" 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: error.message.includes("Unauthorized") ? 401 : 400,
+      status: error instanceof Error && error.message.includes("Unauthorized") ? 401 : 400,
     });
   }
 });
