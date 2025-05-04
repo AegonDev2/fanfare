@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
+import { Bell, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -179,13 +179,12 @@ const NotificationCenter = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
+          className="relative text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)] group"
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5 group-hover:animate-bounce-subtle" />
           {unreadCount > 0 && (
             <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-funky-pink text-white animate-pulse-glow"
             >
               {unreadCount}
             </Badge>
@@ -193,10 +192,10 @@ const NotificationCenter = () => {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
-        <Card className="border-0">
-          <CardHeader className="py-3 px-4 flex flex-row justify-between items-center">
+        <Card className="border-0 bg-white/90 backdrop-blur-md">
+          <CardHeader className="py-3 px-4 flex flex-row justify-between items-center bg-gradient-to-r from-funky-purple/20 to-funky-pink/20">
             <div>
-              <CardTitle className="text-lg">Notifications</CardTitle>
+              <CardTitle className="text-lg font-display">Notifications</CardTitle>
               <CardDescription>Your recent notifications</CardDescription>
             </div>
             {unreadCount > 0 && (
@@ -204,7 +203,7 @@ const NotificationCenter = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={markAllAsRead}
-                className="text-xs"
+                className="text-xs hover:bg-funky-purple/20"
               >
                 Mark all as read
               </Button>
@@ -214,27 +213,37 @@ const NotificationCenter = () => {
             {isLoading ? (
               <div className="py-8 text-center text-gray-500">Loading notifications...</div>
             ) : notifications.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">No notifications yet</div>
+              <div className="py-12 text-center text-gray-500 flex flex-col items-center">
+                <Bell className="h-8 w-8 text-gray-400 mb-2" />
+                <p>No notifications yet</p>
+              </div>
             ) : (
               <div className="divide-y divide-gray-100">
                 {notifications.map((notification) => (
                   <div 
                     key={notification.id} 
-                    className={`p-4 flex items-start hover:bg-gray-50 cursor-pointer ${!notification.is_read ? 'bg-blue-50' : ''}`}
+                    className={`p-4 flex items-start hover:bg-gray-50 cursor-pointer transition-colors ${!notification.is_read ? 'bg-funky-purple/5' : ''}`}
                     onClick={() => markAsRead(notification.id)}
                   >
-                    <div className="mr-3 text-xl">{getNotificationIcon(notification.type)}</div>
+                    <div className={`mr-3 text-xl ${!notification.is_read ? 'animate-pulse-glow' : ''}`}>
+                      {getNotificationIcon(notification.type)}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 mb-1">{notification.message}</p>
                       <p className="text-xs text-gray-500">{formatDate(notification.created_at)}</p>
                     </div>
+                    {!notification.is_read && (
+                      <div className="ml-2 mt-1">
+                        <Badge className="h-2 w-2 rounded-full bg-funky-pink p-0" />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
           </CardContent>
           <CardFooter className="py-2 px-4 bg-gray-50">
-            <Button variant="link" size="sm" className="mx-auto text-xs">
+            <Button variant="link" size="sm" className="mx-auto text-xs text-funky-purple">
               View all notifications
             </Button>
           </CardFooter>

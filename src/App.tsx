@@ -1,3 +1,4 @@
+
 import { StrictMode, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,11 +19,14 @@ import AdminOrderDetails from "./pages/AdminOrderDetails";
 import Wallet from "./pages/Wallet";
 import OrderSuccess from "./pages/OrderSuccess";
 import Navbar from "./components/navigation/Navbar";
+import MobileDock from "./components/navigation/MobileDock";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { hasRole } from "@/utils/roleManager";
-import GiftsSent from "./pages/GiftsSent"; // <-- Rename import to GiftsSent
+import GiftsSent from "./pages/GiftsSent";
+import FunkyContainer from "./components/ui/funky-container";
+import FloatingHeader from "./components/ui/floating-header";
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -63,15 +67,18 @@ const AppContent = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className="min-h-screen w-full bg-[var(--background)] relative overflow-x-hidden">
+    <FunkyContainer withFloatingElements={true}>
       {!isAuthPage && (
-        <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
+        <>
+          <Navbar isOpen={isNavOpen} setIsOpen={setIsNavOpen} />
+          <MobileDock setNavOpen={setIsNavOpen} />
+        </>
       )}
 
       {!isAuthPage && (
         <div 
           className={cn(
-            "fixed inset-0 bg-black/50 z-40 transition-all duration-300 ease-in-out",
+            "fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-all duration-300 ease-in-out",
             isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
           onClick={() => setIsNavOpen(false)}
@@ -81,16 +88,18 @@ const AppContent = () => {
 
       <main 
         className={cn(
-          "transition-all duration-300 ease-in-out min-h-screen",
+          "transition-all duration-500 ease-in-out min-h-screen",
           isNavOpen && !isAuthPage ? 
             isMobile ? 
-              "opacity-50 transform scale-[0.85] origin-center" : 
-              "transform translate-x-[260px] opacity-[0.6] origin-center" 
+              "opacity-50 transform scale-[0.95] origin-center" : 
+              "transform translate-x-[280px] opacity-[0.7] origin-center" 
             : "scale-100 transform-none"
         )}
-        style={{ transition: "all 0.3s ease-in" }}
+        style={{ transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
       >
-        <div className="min-h-screen">
+        {!isAuthPage && <FloatingHeader setNavOpen={setIsNavOpen} />}
+        
+        <div className="min-h-screen pt-20">
           <Routes>
             <Route path="/" element={<Landing setNavOpen={setIsNavOpen} />} />
             <Route path="/auth" element={<Auth />} />
@@ -105,13 +114,13 @@ const AppContent = () => {
             
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/order-details/:id" element={<AdminOrderDetails />} />
-            <Route path="/gifts-sent" element={<GiftsSent />} /> {/* Update route path and component name */}
+            <Route path="/gifts-sent" element={<GiftsSent />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </main>
-    </div>
+    </FunkyContainer>
   );
 };
 

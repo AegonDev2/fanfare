@@ -1,4 +1,6 @@
 
+import { cn } from "@/lib/utils";
+
 interface NavUserProps {
   user?: any;
   userEmail?: string | null;
@@ -16,16 +18,21 @@ const NavUser = ({ user, userEmail, userRole }: NavUserProps) => {
   return (
     <div className="p-6 bg-[var(--navbar-dark-secondary)] text-[var(--navbar-light-primary)]">
       <div className="flex items-center">
-        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[var(--navbar-dark-primary)]">
+        <div className={cn(
+          "relative w-10 h-10 rounded-full overflow-hidden bg-[var(--navbar-dark-primary)]",
+          "border-2 border-funky-purple",
+          "shadow-[0_0_10px_0_rgba(139,92,246,0.5)]"
+        )}>
           <img
             src="https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg"
             alt="Avatar"
             className="h-full w-full object-cover"
           />
+          <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/30 to-transparent"></div>
         </div>
         <div className="ml-4 flex flex-col">
-          <span className="text-sm truncate">{email}</span>
-          <span className="text-xs text-[var(--navbar-light-secondary)] capitalize">
+          <span className="text-sm truncate font-medium">{email}</span>
+          <span className="text-xs text-funky-pink capitalize font-medium">
             {formattedRole}
           </span>
         </div>

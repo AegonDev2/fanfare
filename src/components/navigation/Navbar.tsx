@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import { useNavigation } from "./useNavigation";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Music } from "lucide-react";
 
 interface NavbarProps {
   isOpen: boolean;
@@ -80,7 +81,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     return (
       <nav
         className={cn(
-          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
+          "fixed z-50 flex flex-col bg-gradient-to-b from-[var(--navbar-dark-primary)] to-[var(--navbar-dark-secondary)] shadow-xl transition-all duration-300 ease-in-out",
           navPosition,
           navOpenStyle
         )}
@@ -89,7 +90,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         }}
       >
         <div className="flex justify-center items-center h-full">
-          <div className="text-[var(--navbar-light-primary)]">Loading navigation...</div>
+          <div className="text-[var(--navbar-light-primary)] animate-pulse">Loading navigation...</div>
         </div>
       </nav>
     );
@@ -100,7 +101,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     return (
       <nav
         className={cn(
-          "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl transition-all duration-300 ease-in-out",
+          "fixed z-50 flex flex-col bg-gradient-to-b from-[var(--navbar-dark-primary)] to-[var(--navbar-dark-secondary)] shadow-xl transition-all duration-300 ease-in-out",
           navPosition,
           navOpenStyle
         )}
@@ -120,7 +121,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   return (
     <nav
       className={cn(
-        "fixed z-50 flex flex-col bg-[var(--navbar-dark-primary)] shadow-xl",
+        "fixed z-50 flex flex-col bg-gradient-to-b from-[var(--navbar-dark-primary)] to-[var(--navbar-dark-secondary)] shadow-xl",
         navPosition,
         navOpenStyle
       )}
@@ -190,7 +191,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
               Sign In
             </Button>
             <Button
-              className="w-full bg-[var(--navbar-light-primary)] text-[var(--navbar-dark-primary)]"
+              className="w-full bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple text-white"
               onClick={() => handleNavigation("/auth?tab=signup")}
             >
               Join Now
@@ -234,7 +235,10 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 100 : 0}ms` 
         }}
       >
-        <div className="text-xs">FanFare v1.0.0</div>
+        <div className="flex items-center gap-2">
+          <Music className="h-4 w-4 text-funky-pink animate-pulse" />
+          <span className="text-xs font-medium">FanFare v1.0</span>
+        </div>
         {user && <NotificationCenter />}
       </div>
 

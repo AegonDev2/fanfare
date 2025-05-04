@@ -1,5 +1,6 @@
 
 import { Home, User, UserPlus, Settings, Gift, Info, Book, Users, Wallet, LayoutDashboard } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface NavItemProps {
   id: string;
@@ -28,13 +29,25 @@ const NavItem = ({ title, icon, isActive, onClick }: NavItemProps) => {
 
   return (
     <div
-      className={`flex items-center px-4 py-4 cursor-pointer rounded-lg transition-all duration-300 ease-in-out my-2
-        ${isActive 
-          ? "text-[var(--navbar-dark-primary)] bg-[var(--navbar-light-primary)]" 
-          : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)] hover:text-[var(--navbar-light-primary)]"}`}
+      className={cn(
+        "flex items-center px-4 py-4 cursor-pointer rounded-lg transition-all duration-300 ease-in-out my-2 group",
+        isActive 
+          ? "bg-gradient-to-r from-funky-purple/90 to-funky-pink/90 text-white shadow-md" 
+          : "text-[var(--navbar-light-secondary)] hover:bg-[var(--navbar-dark-secondary)] hover:text-[var(--navbar-light-primary)]"
+      )}
       onClick={onClick}
     >
-      {Icon && <Icon className="h-5 w-5 min-w-5" />}
+      {Icon && (
+        <div className={cn(
+          "relative",
+          isActive ? "animate-bounce-subtle" : ""
+        )}>
+          <Icon className="h-5 w-5 min-w-5" />
+          {!isActive && (
+            <span className="absolute -inset-1 bg-transparent rounded-full group-hover:bg-funky-purple/20 group-hover:animate-pulse-glow"></span>
+          )}
+        </div>
+      )}
       <span className="ml-4 truncate">{title}</span>
     </div>
   );

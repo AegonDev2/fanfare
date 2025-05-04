@@ -595,6 +595,10 @@ export type Database = {
         Args: { order_id: string; p_delivery_estimate: string }
         Returns: boolean
       }
+      query_raw: {
+        Args: { query: string }
+        Returns: Json
+      }
       top_up_wallet: {
         Args: { p_user_id: string; p_amount: number; p_description: string }
         Returns: boolean
