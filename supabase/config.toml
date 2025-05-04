@@ -10,6 +10,11 @@ project_id = "lovable"
 [functions]
   serve_port = 54323
   
+[functions.secure-operations]
+  verify_jwt = true
+  timeoutMs = 60000
+  cors = true
+  
 [functions.jigsawstack-extraction]
   verify_jwt = false
   timeoutMs = 120000
@@ -20,4 +25,24 @@ project_id = "lovable"
   verify_jwt = false
   timeoutMs = 120000
   importmap = "./functions/buildship-extraction/importmap.json"
+  cors = true
+
+[functions.execute_sql]
+  verify_jwt = true
+  timeoutMs = 30000
+  cors = true
+  
+[functions.razorpay-payment]
+  verify_jwt = true
+  timeoutMs = 60000
+  cors = true
+  
+[functions.admin-actions]
+  verify_jwt = true
+  timeoutMs = 60000
+  cors = true
+  
+[functions.send-notification]
+  verify_jwt = true
+  timeoutMs = 30000
   cors = true

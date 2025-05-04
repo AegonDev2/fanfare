@@ -36,7 +36,7 @@ export const useGiftsSent = () => {
         return;
       }
       
-      // Fetch gift requests along with influencer name from profiles
+      // Fetch gift requests without assuming platform_fee exists in gift_requests table
       const { data, error } = await supabase
         .from("gift_requests")
         .select(`
@@ -47,10 +47,6 @@ export const useGiftsSent = () => {
           message,
           created_at,
           status,
-          platform_fee,
-          total_amount,
-          completed_at,
-          delivery_estimate,
           influencer_id,
           profiles:influencer_id (name)
         `)
@@ -64,7 +60,7 @@ export const useGiftsSent = () => {
 
       // Format data
       if (data) {
-        const formattedRequests = data.map(item => {
+        const formattedRequests: GiftRequest[] = data.map(item => {
           // Type-safe approach to handle the influencer name
           const influencerName = item.profiles?.name || "Unknown Influencer";
           
@@ -76,11 +72,12 @@ export const useGiftsSent = () => {
             message: item.message,
             created_at: item.created_at,
             status: item.status,
-            platform_fee: item.platform_fee,
-            total_amount: item.total_amount,
-            completed_at: item.completed_at,
-            delivery_estimate: item.delivery_estimate,
-            influencer_name: influencerName
+            influencer_name: influencerName,
+            // Set optional fields to null as they may not be in the gift_requests table
+            platform_fee: null,
+            total_amount: null,
+            completed_at: null,
+            delivery_estimate: null
           };
         });
         
