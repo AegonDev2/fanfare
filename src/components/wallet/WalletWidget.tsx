@@ -15,7 +15,7 @@ const WalletWidget = () => {
   useEffect(() => {
     fetchWallet();
   }, []);
-  return <Card className="p-4 my-2 py-0 px-[9px]">
+  return <Card className="p-4 my-2 px-[6px] py-[4px]">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <Wallet className="h-5 w-5 text-primary" />
@@ -24,7 +24,7 @@ const WalletWidget = () => {
             {loading ? <Skeleton className="h-5 w-20" /> : <p className="font-medium">₹{wallet?.balance.toFixed(2) || "0.00"}</p>}
           </div>
         </div>
-        <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate("/wallet")}>
+        <Button variant="outline" size="sm" onClick={() => navigate("/wallet")} className="text-xs mx-[10px] px-[5px]">
           <PlusCircle className="h-3 w-3 mr-1" />
           Top Up
         </Button>
