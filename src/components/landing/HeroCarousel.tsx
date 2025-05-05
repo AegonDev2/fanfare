@@ -36,7 +36,7 @@ const HeroCarousel = ({
       return () => clearInterval(interval);
     }
   }, [isPaused, currentIndex, slides.length]);
-  return <div className="relative pb-4 pt-8 mx-1 overflow-hidden my-0 py-[2px]">
+  return <div className="relative pb-4 pt-8 mx-1 overflow-hidden my-0 py-[33px]">
       <Carousel opts={{
       loop: true,
       align: "center"
