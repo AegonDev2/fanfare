@@ -9,7 +9,7 @@ export type NavRole = 'fan' | 'influencer' | 'admin';
 export const useNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [userRole, setUserRole] = useState<NavRole>('fan');
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -166,6 +166,7 @@ export const useNavigation = () => {
     },
   ];
 
+  // Always return mainNavItems for guest users, but for logged-in users, filter based on role
   const allNavItems = user
     ? [...mainNavItems, ...roleNavItems].filter(item => {
         // Special admin access for specific UID

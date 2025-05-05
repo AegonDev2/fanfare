@@ -20,7 +20,7 @@ interface NavbarProps {
 
 const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const navigate = useNavigate();
-  const { navItems, activeUrl, isLoading, error, user } = useNavigation();
+  const { navItems, activeUrl, isLoading, error, user, userEmail, userName } = useNavigation();
   const { toast } = useToast();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const isMobile = useIsMobile();
@@ -87,6 +87,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         )}
         style={{ 
           transition: "all 0.3s ease-in",
+          backgroundColor: "rgba(15, 23, 42, 0.95)", // More opaque background
         }}
       >
         <div className="flex justify-center items-center h-full">
@@ -107,6 +108,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         )}
         style={{ 
           transition: "all 0.3s ease-in",
+          backgroundColor: "rgba(15, 23, 42, 0.95)", // More opaque background
         }}
       >
         <div className="flex justify-center items-center h-full">
@@ -121,12 +123,13 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   return (
     <nav
       className={cn(
-        "fixed z-50 flex flex-col bg-gradient-to-b from-[var(--navbar-dark-primary)] to-[var(--navbar-dark-secondary)] shadow-xl",
+        "fixed z-50 flex flex-col shadow-xl",
         navPosition,
         navOpenStyle
       )}
       style={{ 
         transition: "all 0.3s ease-in",
+        backgroundColor: "rgba(15, 23, 42, 0.95)", // More opaque background instead of gradient
       }}
     >
       <NavHeader setIsOpen={setIsOpen} />
@@ -253,7 +256,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 150 : 0}ms` 
         }}
       >
-        <NavUser user={user} />
+        <NavUser user={user} userEmail={userEmail} userName={userName} />
       </div>
     </nav>
   );

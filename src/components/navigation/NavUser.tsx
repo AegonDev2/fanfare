@@ -14,6 +14,9 @@ const NavUser = ({ user, userEmail, userRole, userName }: NavUserProps) => {
   const name = userName || user?.name || user?.email?.split('@')[0] || "User";
   const role = userRole || (user ? "User" : "Not logged in");
   
+  // Don't display for non-logged in users
+  if (!user) return null;
+  
   // Format role with uppercase first letter for display
   const formattedRole = role.charAt(0).toUpperCase() + role.slice(1);
 
