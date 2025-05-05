@@ -42,7 +42,7 @@ const MobileDock = ({
   };
   
   return (
-    <div className="mobile-dock md:hidden z-50 bg-slate-900/95">
+    <div className="mobile-dock md:hidden z-50 bg-slate-900/85 backdrop-blur-md border-t border-slate-700/30">
       {dockItems.map((item, index) => (
         <div 
           key={index} 
@@ -52,13 +52,13 @@ const MobileDock = ({
           <item.icon 
             className={cn(
               "h-6 w-6 mb-1", 
-              isActive(item.path) ? "text-funky-purple" : "text-gray-400 dark:text-gray-300"
+              isActive(item.path) ? "text-funky-purple" : "text-gray-300"
             )} 
           />
           <span 
             className={cn(
               "text-xs font-medium", 
-              isActive(item.path) ? "text-funky-purple" : "text-gray-400 dark:text-gray-300"
+              isActive(item.path) ? "text-funky-purple" : "text-gray-300"
             )}
           >
             {item.label}

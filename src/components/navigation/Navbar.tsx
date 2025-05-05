@@ -11,7 +11,7 @@ import { useNavigation } from "./useNavigation";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Music } from "lucide-react";
+import { Music, RefreshCcw } from "lucide-react";
 
 interface NavbarProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const { toast } = useToast();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const isMobile = useIsMobile();
+  const [retryCount, setRetryCount] = useState(0);
 
   const handleCloseNav = () => {
     setIsOpen(false);
@@ -59,6 +60,10 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     }
   };
 
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
+
   const navPosition = isMobile 
     ? "top-0 left-0 right-0 h-screen max-h-screen w-full overflow-hidden" 
     : "top-0 left-0 h-screen w-[280px] overflow-hidden";
@@ -87,7 +92,8 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         )}
         style={{ 
           transition: "all 0.3s ease-in",
-          backgroundColor: "rgba(15, 23, 42, 0.95)", // More opaque background
+          backgroundColor: "rgba(15, 23, 42, 0.85)", // 85% opacity
+          backdropFilter: "blur(8px)"
         }}
       >
         <div className="flex justify-center items-center h-full">
@@ -98,7 +104,6 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   }
 
   if (error) {
-    console.error("Navigation error:", error);
     return (
       <nav
         className={cn(
@@ -108,13 +113,23 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         )}
         style={{ 
           transition: "all 0.3s ease-in",
-          backgroundColor: "rgba(15, 23, 42, 0.95)", // More opaque background
+          backgroundColor: "rgba(15, 23, 42, 0.85)", // 85% opacity
+          backdropFilter: "blur(8px)"
         }}
       >
-        <div className="flex justify-center items-center h-full">
-          <div className="text-red-500">
+        <NavHeader setIsOpen={setIsOpen} />
+        <div className="flex flex-col justify-center items-center h-full gap-4 px-4 text-center">
+          <div className="text-red-400">
             Error loading navigation. Please try again.
           </div>
+          <Button 
+            variant="outline" 
+            className="bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)]"
+            onClick={handleRetry}
+          >
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
         </div>
       </nav>
     );
@@ -129,7 +144,8 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       )}
       style={{ 
         transition: "all 0.3s ease-in",
-        backgroundColor: "rgba(15, 23, 42, 0.95)", // More opaque background instead of gradient
+        backgroundColor: "rgba(15, 23, 42, 0.85)", // 85% opacity
+        backdropFilter: "blur(8px)"
       }}
     >
       <NavHeader setIsOpen={setIsOpen} />
@@ -245,6 +261,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
         {user && <NotificationCenter />}
       </div>
 
+      {/* Always show NavUser component but it will handle the case when no user is logged in */}
       <div 
         className={cn(
           "transition-all duration-300",

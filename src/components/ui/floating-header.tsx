@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, User, Bell, X } from "lucide-react";
@@ -22,10 +23,12 @@ const FloatingHeader = ({
   } = useToast();
   useEffect(() => {
     const checkUser = async () => {
-      const {
-        data
-      } = await supabase.auth.getUser();
-      setUser(data?.user || null);
+      try {
+        const { data } = await supabase.auth.getUser();
+        setUser(data?.user || null);
+      } catch (error) {
+        console.error("Error checking user:", error);
+      }
     };
     checkUser();
     const handleScroll = () => {
@@ -63,7 +66,7 @@ const FloatingHeader = ({
   };
   return <header className={cn("fixed top-0 left-0 right-0 z-40 transition-all duration-300", isScrolled ? "py-2" : "py-4")}>
       <div className="bg-transparent">
-        <div className="flex items-center justify-between h-16 bg-cyan-950 px-0 mx-[7px] rounded-full">
+        <div className="flex items-center justify-between h-16 bg-cyan-950/85 backdrop-blur-md px-0 mx-[7px] rounded-full">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => setNavOpen(true)} className="mr-2 hover:bg-funky-purple/10 text-slate-100 px-0 mx-[17px]">
               <Menu className="h-6 w-6" />

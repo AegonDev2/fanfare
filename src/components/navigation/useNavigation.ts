@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,52 +20,64 @@ export const useNavigation = () => {
       try {
         setIsLoading(true);
         setError(null);
-        const { data, error: userError } = await supabase.auth.getUser();
+        // Get session first to check if user is authenticated
+        const { data: sessionData } = await supabase.auth.getSession();
         
-        if (userError) {
-          throw userError;
-        }
-        
-        if (data.user) {
-          // Get user profile to get email and name
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('email, name')
-            .eq('id', data.user.id)
-            .maybeSingle();
+        if (sessionData && sessionData.session) {
+          // User is authenticated, get user data
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) {
+            throw userError;
+          }
+          
+          if (userData.user) {
+            // Get user profile to get email and name
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('email, name')
+              .eq('id', userData.user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error("Error fetching profile:", profileError);
+            }
             
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
+            // Get user roles directly from user_roles table
+            const rolesResponse = await getUserRoles(userData.user.id);
+            
+            setUser(userData.user);
+            setUserEmail(profileData?.email || userData.user.email);
+            setUserName(profileData?.name || null);
+            
+            // Special case for admin UID
+            if (userData.user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237") {
+              setUserRole('admin');
+            }
+            // Set role priority: admin > influencer > fan
+            // If user has admin role, set it regardless of other roles
+            else if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
+              setUserRole('admin');
+            } 
+            // Otherwise if user has influencer role, set it
+            else if (rolesResponse.success && rolesResponse.roles.includes('influencer')) {
+              setUserRole('influencer');
+            } 
+            // Otherwise set fan role as default
+            else if (rolesResponse.success && rolesResponse.roles.includes('fan')) {
+              setUserRole('fan');
+            }
+            // If no roles found, default to fan
+            else {
+              setUserRole('fan');
+            }
           }
-          
-          // Get user roles directly from user_roles table
-          const rolesResponse = await getUserRoles(data.user.id);
-          
-          setUser(data.user);
-          setUserEmail(profileData?.email || data.user.email);
-          setUserName(profileData?.name || null);
-          
-          // Special case for admin UID
-          if (data.user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237") {
-            setUserRole('admin');
-          }
-          // Set role priority: admin > influencer > fan
-          // If user has admin role, set it regardless of other roles
-          else if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
-            setUserRole('admin');
-          } 
-          // Otherwise if user has influencer role, set it
-          else if (rolesResponse.success && rolesResponse.roles.includes('influencer')) {
-            setUserRole('influencer');
-          } 
-          // Otherwise set fan role as default
-          else if (rolesResponse.success && rolesResponse.roles.includes('fan')) {
-            setUserRole('fan');
-          }
-          // If no roles found, default to fan
-          else {
-            setUserRole('fan');
-          }
+        } else {
+          // User is not authenticated, reset states
+          setUser(null);
+          setUserEmail(null);
+          setUserName(null);
+          setUserRole('fan');
         }
       } catch (err) {
         console.error("Navigation error:", err);
