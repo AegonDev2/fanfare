@@ -84,7 +84,7 @@ const FloatingHeader = ({
                 <WalletWidget />
                 <NotificationCenter />
                 <div className="relative group">
-                  <Button variant="ghost" size="icon" className="rounded-full bg-funky-purple/10 hover:bg-funky-purple/20 text-funky-purple" onClick={() => navigate(`/profile/${user.id}`)}>
+                  <Button variant="ghost" size="icon" onClick={() => navigate(`/profile/${user.id}`)} className="rounded-full bg-funky-purple/10 hover:bg-funky-purple/20 text-funky-purple mx-[20px]">
                     <User className="h-5 w-5" />
                   </Button>
                   <div className="absolute right-0 mt-2 w-48 rounded-lg overflow-hidden shadow-lg scale-0 group-hover:scale-100 origin-top-right transition-all duration-200 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
