@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -12,40 +11,48 @@ import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Music, RefreshCcw } from "lucide-react";
-
 interface NavbarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
-
-const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
+const Navbar = ({
+  isOpen,
+  setIsOpen
+}: NavbarProps) => {
   const navigate = useNavigate();
-  const { navItems, activeUrl, isLoading, error, user, userEmail, userName } = useNavigation();
-  const { toast } = useToast();
+  const {
+    navItems,
+    activeUrl,
+    isLoading,
+    error,
+    user,
+    userEmail,
+    userName
+  } = useNavigation();
+  const {
+    toast
+  } = useToast();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const isMobile = useIsMobile();
   const [retryCount, setRetryCount] = useState(0);
-
   const handleCloseNav = () => {
     setIsOpen(false);
   };
-
   const handleNavigation = (path: string) => {
     navigate(path);
     handleCloseNav();
   };
-
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
-      const { error } = await supabase.auth.signOut();
+      const {
+        error
+      } = await supabase.auth.signOut();
       if (error) throw error;
-      
       toast({
         title: "Signed out successfully",
-        description: "You have been logged out of your account",
+        description: "You have been logged out of your account"
       });
-      
       navigate("/");
       handleCloseNav();
     } catch (error) {
@@ -53,21 +60,16 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       toast({
         title: "Sign out failed",
         description: "There was a problem signing you out. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSigningOut(false);
     }
   };
-
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
   };
-
-  const navPosition = isMobile 
-    ? "top-0 left-0 right-0 h-screen max-h-screen w-full overflow-hidden" 
-    : "top-0 left-0 h-screen w-[280px] overflow-hidden";
-
+  const navPosition = isMobile ? "top-0 left-0 right-0 h-screen max-h-screen w-full overflow-hidden" : "top-0 left-0 h-screen w-[280px] overflow-hidden";
   const navOpenStyle = isOpen ? `
     transform-none opacity-100 visible
   ` : isMobile ? `
@@ -75,208 +77,97 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   ` : `
     opacity-0 invisible transform -translate-x-full
   `;
-
   const contentStyle = isOpen ? `
     transform-origin-center scale-100 opacity-100
   ` : `
     transform-origin-center scale-[0.85] opacity-0
   `;
-
   if (isLoading) {
-    return (
-      <nav
-        className={cn(
-          "fixed z-50 flex flex-col bg-gradient-to-b from-[var(--navbar-dark-primary)] to-[var(--navbar-dark-secondary)] shadow-xl transition-all duration-300 ease-in-out",
-          navPosition,
-          navOpenStyle
-        )}
-        style={{ 
-          transition: "all 0.3s ease-in",
-          backgroundColor: "rgba(15, 23, 42, 0.85)", // 85% opacity
-          backdropFilter: "blur(8px)"
-        }}
-      >
+    return <nav className={cn("fixed z-50 flex flex-col bg-gradient-to-b from-[var(--navbar-dark-primary)] to-[var(--navbar-dark-secondary)] shadow-xl transition-all duration-300 ease-in-out", navPosition, navOpenStyle)} style={{
+      transition: "all 0.3s ease-in",
+      backgroundColor: "rgba(15, 23, 42, 0.85)",
+      // 85% opacity
+      backdropFilter: "blur(8px)"
+    }}>
         <div className="flex justify-center items-center h-full">
           <div className="text-[var(--navbar-light-primary)] animate-pulse">Loading navigation...</div>
         </div>
-      </nav>
-    );
+      </nav>;
   }
-
   if (error) {
-    return (
-      <nav
-        className={cn(
-          "fixed z-50 flex flex-col bg-gradient-to-b from-[var(--navbar-dark-primary)] to-[var(--navbar-dark-secondary)] shadow-xl transition-all duration-300 ease-in-out",
-          navPosition,
-          navOpenStyle
-        )}
-        style={{ 
-          transition: "all 0.3s ease-in",
-          backgroundColor: "rgba(15, 23, 42, 0.85)", // 85% opacity
-          backdropFilter: "blur(8px)"
-        }}
-      >
+    return <nav className={cn("fixed z-50 flex flex-col bg-gradient-to-b from-[var(--navbar-dark-primary)] to-[var(--navbar-dark-secondary)] shadow-xl transition-all duration-300 ease-in-out", navPosition, navOpenStyle)} style={{
+      transition: "all 0.3s ease-in",
+      backgroundColor: "rgba(15, 23, 42, 0.85)",
+      // 85% opacity
+      backdropFilter: "blur(8px)"
+    }}>
         <NavHeader setIsOpen={setIsOpen} />
         <div className="flex flex-col justify-center items-center h-full gap-4 px-4 text-center">
           <div className="text-red-400">
             Error loading navigation. Please try again.
           </div>
-          <Button 
-            variant="outline" 
-            className="bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)]"
-            onClick={handleRetry}
-          >
+          <Button variant="outline" className="bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)]" onClick={handleRetry}>
             <RefreshCcw className="h-4 w-4 mr-2" />
             Retry
           </Button>
         </div>
-      </nav>
-    );
+      </nav>;
   }
-
-  return (
-    <nav
-      className={cn(
-        "fixed z-50 flex flex-col shadow-xl",
-        navPosition,
-        navOpenStyle
-      )}
-      style={{ 
-        transition: "all 0.3s ease-in",
-        backgroundColor: "rgba(15, 23, 42, 0.85)", // 85% opacity
-        backdropFilter: "blur(8px)"
-      }}
-    >
+  return <nav className={cn("fixed z-50 flex flex-col shadow-xl", navPosition, navOpenStyle)} style={{
+    transition: "all 0.3s ease-in",
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    // 85% opacity
+    backdropFilter: "blur(8px)"
+  }}>
       <NavHeader setIsOpen={setIsOpen} />
 
-      <div 
-        className={cn(
-          "mt-4 flex-1 flex flex-col space-y-1 px-3 overflow-y-auto transition-all duration-300",
-          contentStyle
-        )}
-        style={{ 
-          transition: "all 0.3s ease-in",
-        }}
-      >
-        {navItems && navItems.map((item, index) => (
-          <div 
-            key={item.id}
-            className={cn(
-              "transition-all duration-300",
-              isOpen 
-                ? `opacity-100 translate-x-0 translate-y-0` 
-                : isMobile 
-                  ? `opacity-0 translate-y-8` 
-                  : `opacity-0 translate-x-8`
-            )}
-            style={{ 
-              transitionDelay: `${isOpen ? index * 50 : 0}ms`,
-              width: isOpen ? "100%" : "0",
-              marginLeft: isOpen ? "0" : (index * -40) + "px"
-            }}
-          >
-            <NavItem
-              id={item.id}
-              icon={item.icon}
-              title={item.title}
-              path={item.path}
-              isActive={activeUrl === item.path}
-              onClick={() => handleNavigation(item.path)}
-            />
-          </div>
-        ))}
+      <div className={cn("mt-4 flex-1 flex flex-col space-y-1 px-3 overflow-y-auto transition-all duration-300", contentStyle)} style={{
+      transition: "all 0.3s ease-in"
+    }}>
+        {navItems && navItems.map((item, index) => <div key={item.id} className={cn("transition-all duration-300", isOpen ? `opacity-100 translate-x-0 translate-y-0` : isMobile ? `opacity-0 translate-y-8` : `opacity-0 translate-x-8`)} style={{
+        transitionDelay: `${isOpen ? index * 50 : 0}ms`,
+        width: isOpen ? "100%" : "0",
+        marginLeft: isOpen ? "0" : index * -40 + "px"
+      }}>
+            <NavItem id={item.id} icon={item.icon} title={item.title} path={item.path} isActive={activeUrl === item.path} onClick={() => handleNavigation(item.path)} />
+          </div>)}
 
-        {!user ? (
-          <div 
-            className={cn(
-              "mt-4 px-4 space-y-2 transition-all duration-300",
-              isOpen 
-                ? `opacity-100 translate-x-0 translate-y-0`  
-                : isMobile 
-                  ? `opacity-0 translate-y-8` 
-                  : `opacity-0 translate-x-8`
-            )}
-            style={{ 
-              transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms`,
-              width: isOpen ? "100%" : "0"
-            }}
-          >
-            <Button
-              variant="outline"
-              className="w-full bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)] hover:text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
-              onClick={() => handleNavigation("/auth")}
-            >
+        {!user ? <div className={cn("mt-4 px-4 space-y-2 transition-all duration-300", isOpen ? `opacity-100 translate-x-0 translate-y-0` : isMobile ? `opacity-0 translate-y-8` : `opacity-0 translate-x-8`)} style={{
+        transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms`,
+        width: isOpen ? "100%" : "0"
+      }}>
+            <Button variant="outline" onClick={() => handleNavigation("/auth")} className="w-full bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)] hover:text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)] text-slate-50">
               Sign In
             </Button>
-            <Button
-              className="w-full bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple text-white"
-              onClick={() => handleNavigation("/auth?tab=signup")}
-            >
+            <Button className="w-full bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple text-white" onClick={() => handleNavigation("/auth?tab=signup")}>
               Join Now
             </Button>
-          </div>
-        ) : (
-          <div
-            className={cn(
-              "transition-all duration-300",
-              isOpen 
-                ? `opacity-100 translate-x-0 translate-y-0` 
-                : isMobile 
-                  ? `opacity-0 translate-y-8` 
-                  : `opacity-0 translate-x-8`
-            )}
-            style={{ 
-              transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms`,
-              width: isOpen ? "100%" : "0"
-            }}
-          >
-            <Button
-              variant="outline"
-              className="mt-4 mx-4 w-[calc(100%-2rem)] bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)] hover:text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]"
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-            >
+          </div> : <div className={cn("transition-all duration-300", isOpen ? `opacity-100 translate-x-0 translate-y-0` : isMobile ? `opacity-0 translate-y-8` : `opacity-0 translate-x-8`)} style={{
+        transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 50 : 0}ms`,
+        width: isOpen ? "100%" : "0"
+      }}>
+            <Button variant="outline" className="mt-4 mx-4 w-[calc(100%-2rem)] bg-transparent border-[var(--navbar-light-secondary)] text-[var(--navbar-light-secondary)] hover:text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]" onClick={handleSignOut} disabled={isSigningOut}>
               {isSigningOut ? "Signing out..." : "Sign Out"}
             </Button>
-          </div>
-        )}
+          </div>}
       </div>
 
-      <div 
-        className={cn(
-          "mt-auto px-3 py-4 flex items-center justify-between text-[var(--navbar-light-secondary)] transition-all duration-300",
-          isOpen 
-            ? `opacity-100 translate-y-0` 
-            : `opacity-0 translate-y-4`
-        )}
-        style={{ 
-          transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 100 : 0}ms` 
-        }}
-      >
+      <div className={cn("mt-auto px-3 py-4 flex items-center justify-between text-[var(--navbar-light-secondary)] transition-all duration-300", isOpen ? `opacity-100 translate-y-0` : `opacity-0 translate-y-4`)} style={{
+      transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 100 : 0}ms`
+    }}>
         <div className="flex items-center gap-2">
           <Music className="h-4 w-4 text-funky-pink animate-pulse" />
-          <span className="text-xs font-medium">FanFare v1.0</span>
+          <span className="text-xs font-medium text-slate-50">FanFare v1.0</span>
         </div>
         {user && <NotificationCenter />}
       </div>
 
       {/* Always show NavUser component but it will handle the case when no user is logged in */}
-      <div 
-        className={cn(
-          "transition-all duration-300",
-          isOpen 
-            ? `opacity-100 translate-y-0` 
-            : `opacity-0 translate-y-4`
-        )}
-        style={{ 
-          transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 150 : 0}ms` 
-        }}
-      >
+      <div className={cn("transition-all duration-300", isOpen ? `opacity-100 translate-y-0` : `opacity-0 translate-y-4`)} style={{
+      transitionDelay: `${isOpen ? (navItems?.length || 0) * 50 + 150 : 0}ms`
+    }}>
         <NavUser user={user} userEmail={userEmail} userName={userName} />
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
