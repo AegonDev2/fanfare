@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import HeroCarousel from "@/components/landing/HeroCarousel";
 import InfluencerSection from "@/components/landing/InfluencerSection";
@@ -108,17 +107,14 @@ const Landing = ({
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl pt-4 pb-24">
         <HeroCarousel slides={slides} />
         
-        <div className={cn(
-          "mt-12 space-y-12 transition-all duration-500",
-          scrollPosition > 100 ? "opacity-100" : "opacity-0 transform translate-y-6"
-        )}>
+        <div className="mt-12 space-y-12">
           {loading ? (
             <div className="text-center py-12 animate-pulse">
               <div className="w-20 h-20 bg-funky-purple/20 rounded-full mx-auto mb-4 animate-bounce-subtle"></div>
               <p className="text-gray-600 dark:text-gray-300">Loading amazing creators...</p>
             </div>
           ) : influencers.length > 0 ? (
-            <div className="transition-all duration-500 transform animate-slide-in-bottom">
+            <div className="transition-all duration-500 transform">
               <InfluencerSection influencers={influencers} />
             </div>
           ) : (
@@ -138,11 +134,11 @@ const Landing = ({
             </div>
           )}
           
-          <div className="transition-all duration-500 transform animate-slide-in-bottom" style={{ animationDelay: "200ms" }}>
+          <div className="transition-all duration-500 transform" style={{ animationDelay: "200ms" }}>
             <GiftSection gifts={gifts} />
           </div>
           
-          <div className="transition-all duration-500 transform animate-slide-in-bottom" style={{ animationDelay: "400ms" }}>
+          <div className="transition-all duration-500 transform" style={{ animationDelay: "400ms" }}>
             <OrderTrackingSection />
           </div>
         </div>
