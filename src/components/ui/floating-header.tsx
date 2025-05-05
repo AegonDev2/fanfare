@@ -62,14 +62,14 @@ const FloatingHeader = ({
     }
   };
   return <header className={cn("fixed top-0 left-0 right-0 z-40 transition-all duration-300", isScrolled ? "py-2" : "py-4")}>
-      <div className={cn("container mx-auto px-4 rounded-full transition-all duration-300 backdrop-blur-md", isScrolled ? "bg-white/70 dark:bg-gray-900/70 shadow-lg" : "bg-transparent")}>
-        <div className="flex items-center justify-between h-16">
+      <div className="bg-transparent">
+        <div className="flex items-center justify-between h-16 rounded-2xl bg-cyan-950">
           <div className="flex items-center">
-            <Button variant="ghost" size="icon" onClick={() => setNavOpen(true)} className="mr-2 hover:bg-funky-purple/10 text-zinc-900">
+            <Button variant="ghost" size="icon" onClick={() => setNavOpen(true)} className="mr-2 hover:bg-funky-purple/10 text-slate-100 mx-[9px]">
               <Menu className="h-6 w-6" />
             </Button>
             <a href="/" className="flex items-center">
-              <span className="text-2xl font-graffiti bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-slate-800">
+              <span className="text-2xl font-graffiti bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-slate-50">
                 FanFare
               </span>
             </a>
@@ -101,7 +101,7 @@ const FloatingHeader = ({
                 <Button variant="ghost" className="font-medium text-funky-purple hover:text-funky-pink hover:bg-funky-purple/10" onClick={() => navigate("/auth")}>
                   Sign In
                 </Button>
-                <Button onClick={() => navigate("/auth?tab=signup")} className="funky-button">
+                <Button onClick={() => navigate("/auth?tab=signup")} className="funky-button mx-[14px]">
                   Join Now
                 </Button>
               </>}
