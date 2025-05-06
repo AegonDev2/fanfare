@@ -17,14 +17,14 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import AdminOrderDetails from '@/pages/AdminOrderDetails';
 import NotFound from '@/pages/NotFound';
 import { useUser } from '@/hooks/useUser';
-import { useToast } from "@/hooks/use-toast"
-import { Toast } from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 import Leaderboard from "@/pages/Leaderboard";
 import Wishlist from "@/pages/Wishlist";
 
 function App() {
   const { user, isLoading } = useUser();
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isLoading) {
@@ -38,7 +38,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Toast />
+      <Toaster />
       <Routes>
         <Route path="/" element={<Landing setNavOpen={() => {}} />} />
         <Route path="/auth" element={<Auth />} />
