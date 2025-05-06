@@ -1,48 +1,16 @@
 
-project_id = "lovable"
+project_id = "utuguowpwezberrmqabw"
+[functions_permissions."execute_sql"]
+verify_jwt = true
 
-[api]
-  port = 54321
+[functions_permissions."razorpay-payment"]
+verify_jwt = true
 
-[db]
-  port = 54322
+[functions_permissions."secure-operations"]
+verify_jwt = true
 
-[functions]
-  serve_port = 54323
-  
-[functions.secure-operations]
-  verify_jwt = true
-  timeoutMs = 60000
-  cors = true
-  
-[functions.jigsawstack-extraction]
-  verify_jwt = false
-  timeoutMs = 120000
-  importmap = "./functions/importmap.json"
-  cors = true
+[functions_permissions."send-notification"]
+verify_jwt = false
 
-[functions.buildship-extraction]
-  verify_jwt = false
-  timeoutMs = 120000
-  importmap = "./functions/buildship-extraction/importmap.json"
-  cors = true
-
-[functions.execute_sql]
-  verify_jwt = true
-  timeoutMs = 30000
-  cors = true
-  
-[functions.razorpay-payment]
-  verify_jwt = true
-  timeoutMs = 60000
-  cors = true
-  
-[functions.admin-actions]
-  verify_jwt = true
-  timeoutMs = 60000
-  cors = true
-  
-[functions.send-notification]
-  verify_jwt = true
-  timeoutMs = 30000
-  cors = true
+[functions_permissions."get_monthly_leaderboard"]
+verify_jwt = true
