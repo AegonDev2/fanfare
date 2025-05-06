@@ -64,6 +64,15 @@ const Wishlist = () => {
     window.location.href = giftRequestUrl;
   };
 
+  // Helper function wrapper for addWishlistItem that returns void
+  const handleAddWishlistItem = async (item: any): Promise<void> => {
+    try {
+      await addWishlistItem(item);
+    } catch (error) {
+      console.error("Error adding wishlist item:", error);
+    }
+  };
+
   if (!userId) {
     return (
       <div className="min-h-screen w-full bg-background">
@@ -100,7 +109,7 @@ const Wishlist = () => {
           wishlist={wishlist}
           isLoading={isLoading || isLoadingWishlist}
           isOwner={isOwner}
-          onAddItem={isOwner ? addWishlistItem : undefined}
+          onAddItem={isOwner ? handleAddWishlistItem : undefined}
           onRemoveItem={isOwner ? removeWishlistItem : undefined}
           onRequestGift={!isOwner ? handleRequestGift : undefined}
         />

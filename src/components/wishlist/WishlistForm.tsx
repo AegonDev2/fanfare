@@ -28,7 +28,7 @@ interface WishlistFormProps {
 const WishlistForm = ({ onAddItem }: WishlistFormProps) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { fetchProductData, productData, isLoading: isLoadingProduct } = useProductPreview();
+  const { handlePreviewProduct, productPreview, isFetchingProduct } = useProductPreview();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -43,7 +43,7 @@ const WishlistForm = ({ onAddItem }: WishlistFormProps) => {
 
   const handleUrlChange = async (url: string) => {
     if (url && url.startsWith("http")) {
-      await fetchProductData(url);
+      await handlePreviewProduct(url);
     }
   };
 
@@ -73,14 +73,17 @@ const WishlistForm = ({ onAddItem }: WishlistFormProps) => {
 
   // Set product data when available
   const setProductDataInForm = () => {
-    if (productData) {
-      setValue("product_title", productData.title || "");
+    if (productPreview && productPreview.name !== "Enter a product URL to preview") {
+      setValue("product_title", productPreview.name || "");
       
-      if (productData.price) {
-        setValue("product_price", productData.price.toString());
+      if (productPreview.price) {
+        setValue("product_price", productPreview.price.toString());
       }
       
-      // Extract image URL from product data if available
+      // Use the product image if available
+      if (productPreview.image && productPreview.image !== "https://placehold.co/600x400?text=No+Image") {
+        setValue("product_image_url", productPreview.image);
+      }
     }
   };
 
@@ -122,14 +125,14 @@ const WishlistForm = ({ onAddItem }: WishlistFormProps) => {
               )}
             />
 
-            {isLoadingProduct && (
+            {isFetchingProduct && (
               <div className="flex items-center justify-center py-2">
                 <Loader2 className="h-5 w-5 animate-spin text-funky-purple" />
                 <span className="ml-2 text-sm text-muted-foreground">Fetching product details...</span>
               </div>
             )}
 
-            {productData && (
+            {productPreview && productPreview.name !== "Enter a product URL to preview" && (
               <Button 
                 type="button" 
                 variant="outline" 
