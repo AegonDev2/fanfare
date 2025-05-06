@@ -34,6 +34,7 @@ export const useLeaderboard = () => {
       // Get the month number from the month name
       const monthNumber = new Date(`${targetMonth} 1, ${targetYear}`).getMonth() + 1;
       
+      // Call the RPC function directly
       const { data, error } = await supabase.rpc('get_monthly_leaderboard', {
         target_month: monthNumber,
         target_year: targetYear
@@ -43,7 +44,19 @@ export const useLeaderboard = () => {
         throw error;
       }
 
-      setLeaderboard(data || []);
+      // Transform the data to ensure all types are correct
+      const transformedData = data.map((entry: any) => ({
+        fan_id: entry.fan_id,
+        fan_name: entry.fan_name,
+        fan_email: entry.fan_email,
+        total_gifts: Number(entry.total_gifts), // Ensure total_gifts is a number
+        favorite_influencer_id: entry.favorite_influencer_id,
+        favorite_influencer_name: entry.favorite_influencer_name,
+        month: entry.month,
+        year: Number(entry.year) // Ensure year is a number
+      }));
+
+      setLeaderboard(transformedData || []);
     } catch (error: any) {
       console.error("Error fetching leaderboard:", error);
       toast({
