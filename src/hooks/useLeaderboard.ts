@@ -34,10 +34,6 @@ export const useLeaderboard = () => {
       // Get the month number from the month name
       const monthNumber = new Date(`${targetMonth} 1, ${targetYear}`).getMonth() + 1;
       
-      // This query gets:
-      // 1. Fan who completed the most gifts in the specified month
-      // 2. The influencer they gifted to the most
-      // 3. Total number of gifts completed
       const { data, error } = await supabase.rpc('get_monthly_leaderboard', {
         target_month: monthNumber,
         target_year: targetYear

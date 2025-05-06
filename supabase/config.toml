@@ -14,3 +14,4 @@ verify_jwt = false
 
 [functions_permissions."get_monthly_leaderboard"]
 verify_jwt = true
+

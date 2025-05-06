@@ -41,6 +41,7 @@ export type Database = {
       }
       gift_requests: {
         Row: {
+          completed_at: string | null
           created_at: string | null
           id: string
           influencer_id: string
@@ -53,6 +54,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string | null
           id?: string
           influencer_id: string
@@ -65,6 +67,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          completed_at?: string | null
           created_at?: string | null
           id?: string
           influencer_id?: string
@@ -232,6 +235,50 @@ export type Database = {
           youtube_url?: string | null
         }
         Relationships: []
+      }
+      influencer_wishlist: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          influencer_id: string
+          product_image_url: string | null
+          product_price: number | null
+          product_title: string
+          product_url: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          influencer_id: string
+          product_image_url?: string | null
+          product_price?: number | null
+          product_title: string
+          product_url: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          influencer_id?: string
+          product_image_url?: string | null
+          product_price?: number | null
+          product_title?: string
+          product_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "influencer_wishlist_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       navigation_items: {
         Row: {
@@ -583,6 +630,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_monthly_leaderboard: {
+        Args: { target_month: number; target_year: number }
+        Returns: {
+          fan_id: string
+          fan_name: string
+          fan_email: string
+          total_gifts: number
+          favorite_influencer_id: string
+          favorite_influencer_name: string
+          month: string
+          year: number
+        }[]
+      }
       has_role: {
         Args: {
           _user_id: string

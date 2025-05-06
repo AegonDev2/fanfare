@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from '@/pages/Landing';
@@ -19,6 +20,7 @@ import { useUser } from '@/hooks/useUser';
 import { useToast } from "@/hooks/use-toast"
 import { Toast } from "@/components/ui/toast"
 import Leaderboard from "@/pages/Leaderboard";
+import Wishlist from "@/pages/Wishlist";
 
 function App() {
   const { user, isLoading } = useUser();
@@ -38,7 +40,7 @@ function App() {
     <BrowserRouter>
       <Toast />
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Landing setNavOpen={() => {}} />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/profile/:id?" element={<Profile />} />
         <Route path="/edit-profile" element={<EditProfile />} />
@@ -51,6 +53,7 @@ function App() {
         <Route path="/gift-requests" element={<GiftRequests />} />
         <Route path="/gifts-sent" element={<GiftsSent />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/wishlist/:id?" element={<Wishlist />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/orders/:id" element={<AdminOrderDetails />} />
         <Route path="*" element={<NotFound />} />
