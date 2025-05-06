@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from '@/pages/Landing';
 import Auth from '@/pages/Auth';
@@ -21,10 +21,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import Leaderboard from "@/pages/Leaderboard";
 import Wishlist from "@/pages/Wishlist";
+import Navbar from '@/components/navigation/Navbar';
+import Header from '@/components/landing/Header';
 
 function App() {
   const { user, isLoading } = useUser();
   const { toast } = useToast();
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     if (isLoading) {
@@ -39,25 +42,33 @@ function App() {
   return (
     <BrowserRouter>
       <Toaster />
-      <Routes>
-        <Route path="/" element={<Landing setNavOpen={() => {}} />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/profile/:id?" element={<Profile />} />
-        <Route path="/edit-profile" element={<EditProfile />} />
-        <Route path="/create-influencer-profile" element={<CreateInfluencerProfile />} />
-        <Route path="/place-order/:influencerId?" element={<PlaceOrder />} />
-        <Route path="/order-success" element={<OrderSuccess />} />
-        <Route path="/track-order/:orderId?" element={<TrackOrder />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/wallet" element={<Wallet />} />
-        <Route path="/gift-requests" element={<GiftRequests />} />
-        <Route path="/gifts-sent" element={<GiftsSent />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/wishlist/:id?" element={<Wishlist />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/orders/:id" element={<AdminOrderDetails />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <div className="flex min-h-screen w-full">
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        <div className="flex-1 flex flex-col min-h-screen">
+          <Header setNavOpen={setNavOpen} />
+          <div className="flex-1 pt-16">
+            <Routes>
+              <Route path="/" element={<Landing setNavOpen={setNavOpen} />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/profile/:id?" element={<Profile />} />
+              <Route path="/edit-profile" element={<EditProfile />} />
+              <Route path="/create-influencer-profile" element={<CreateInfluencerProfile />} />
+              <Route path="/place-order/:influencerId?" element={<PlaceOrder />} />
+              <Route path="/order-success" element={<OrderSuccess />} />
+              <Route path="/track-order/:orderId?" element={<TrackOrder />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/gift-requests" element={<GiftRequests />} />
+              <Route path="/gifts-sent" element={<GiftsSent />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/wishlist/:id?" element={<Wishlist />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/orders/:id" element={<AdminOrderDetails />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </div>
+      </div>
     </BrowserRouter>
   );
 }
