@@ -60,12 +60,15 @@ const Header = ({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm shadow-sm">
-      <div className="container mx-auto md:px-6 lg:px-8 px-0 bg-transparent">
-        <FloatingHeader setNavOpen={setNavOpen} />
-        {isMobile && <MobileDock setNavOpen={setNavOpen} />}
-      </div>
-    </header>
+    <>
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm shadow-sm">
+        <div className="container mx-auto md:px-6 lg:px-8 px-0 bg-transparent">
+          <FloatingHeader setNavOpen={setNavOpen} />
+        </div>
+      </header>
+      
+      {isMobile && <MobileDock setNavOpen={setNavOpen} />}
+    </>
   );
 };
 

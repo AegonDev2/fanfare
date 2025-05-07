@@ -46,7 +46,7 @@ function App() {
         <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
         <div className="flex-1 flex flex-col min-h-screen">
           <Header setNavOpen={setNavOpen} />
-          <div className="flex-1 pt-16">
+          <div className="flex-1 pt-16 pb-16 md:pb-0">
             <Routes>
               <Route path="/" element={<Landing setNavOpen={setNavOpen} />} />
               <Route path="/auth" element={<Auth />} />

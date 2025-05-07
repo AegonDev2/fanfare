@@ -38,15 +38,31 @@ serve(async (req) => {
       })
     }
 
-    // Execute the SQL function to get the leaderboard
+    // Execute the SQL function to get the leaderboard - expecting number values to be returned as bigint
     const { data, error } = await supabaseClient.rpc('get_monthly_leaderboard', {
       target_month: targetMonth,
       target_year: targetYear
     })
 
-    if (error) throw error
+    if (error) {
+      console.error('Leaderboard function error:', error)
+      throw error
+    }
 
-    return new Response(JSON.stringify(data), {
+    // Convert any bigint values to numbers for JSON serialization
+    const processedData = data.map((item: any) => {
+      const processedItem: any = {}
+      for (const key in item) {
+        if (typeof item[key] === 'bigint') {
+          processedItem[key] = Number(item[key])
+        } else {
+          processedItem[key] = item[key]
+        }
+      }
+      return processedItem
+    })
+
+    return new Response(JSON.stringify(processedData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   } catch (error) {
