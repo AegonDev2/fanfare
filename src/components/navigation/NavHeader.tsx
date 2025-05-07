@@ -88,7 +88,7 @@ const NavHeader = ({
   return <header className="relative flex items-center justify-between min-h-[80px] px-6 text-[var(--navbar-light-primary)]">
       <h1 className="text-2xl font-graffiti bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-funky-green">FanFare</h1>
       
-      {setIsOpen && <Button variant="ghost" size="icon" className="text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)]" onClick={handleClose} aria-label="Close navigation">
+      {setIsOpen && <Button variant="ghost" size="icon" onClick={handleClose} aria-label="Close navigation" className="text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)] bg-zinc-200 hover:bg-zinc-100">
           <X className="h-5 w-5" />
         </Button>}
       
