@@ -66,43 +66,41 @@ const Landing = ({
       )}>
         <HeroCarousel />
         
-        <div className="mt-8 sm:mt-12 space-y-8 sm:space-y-12">
+        <div className="mt-6 sm:mt-12 space-y-6 sm:space-y-12">
+          {/* TopFansWidget moved above InfluencerSection for mobile */}
+          <div className="mb-2 sm:mb-4">
+            <TopFansWidget 
+              topFans={leaderboard} 
+              isLoading={isLeaderboardLoading} 
+              month={currentMonth} 
+              year={currentYear}
+            />
+          </div>
+          
           {loading ? (
-            <div className="text-center py-8 sm:py-12 animate-pulse">
-              <div className="w-16 sm:w-20 h-16 sm:h-20 bg-funky-purple/20 rounded-full mx-auto mb-4 animate-bounce-subtle"></div>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Loading amazing creators...</p>
+            <div className="text-center py-6 sm:py-12 animate-pulse">
+              <div className="w-12 sm:w-20 h-12 sm:h-20 bg-funky-purple/20 rounded-full mx-auto mb-3 animate-bounce-subtle"></div>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Loading amazing creators...</p>
             </div>
           ) : influencers.length > 0 ? (
             <div className="transition-all duration-500 transform">
               <InfluencerSection influencers={influencers} />
             </div>
           ) : (
-            <div className="text-center py-8 sm:py-12 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-funky-purple/10 shadow-lg mx-2">
-              <div className="w-16 sm:w-20 h-16 sm:h-20 flex items-center justify-center bg-funky-purple/10 rounded-full mx-auto mb-3 sm:mb-4">
-                <Music className="h-6 sm:h-8 w-6 sm:w-8 text-funky-purple" />
+            <div className="text-center py-6 sm:py-12 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-funky-purple/10 shadow-lg mx-2">
+              <div className="w-12 sm:w-20 h-12 sm:h-20 flex items-center justify-center bg-funky-purple/10 rounded-full mx-auto mb-3">
+                <Music className="h-5 sm:h-8 w-5 sm:w-8 text-funky-purple" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2 font-display">No creators found</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 sm:mb-4 px-4">Check back later for amazing influencers!</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 px-4">Check back later for amazing influencers!</p>
               <Button variant="outline" className="border-funky-purple text-funky-purple hover:bg-funky-purple/10" onClick={() => window.location.reload()}>
                 Refresh
               </Button>
             </div>
           )}
           
-          {/* Add Top Fans section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 px-1 sm:px-0">
-            <div className="md:col-span-2 transition-all duration-500 transform" style={{ animationDelay: "200ms" }}>
-              <GiftSection />
-            </div>
-            
-            <div className="transition-all duration-500 transform" style={{ animationDelay: "300ms" }}>
-              <TopFansWidget 
-                topFans={leaderboard} 
-                isLoading={isLeaderboardLoading} 
-                month={currentMonth} 
-                year={currentYear}
-              />
-            </div>
+          <div className="transition-all duration-500 transform" style={{ animationDelay: "200ms" }}>
+            <GiftSection />
           </div>
           
           <div className="transition-all duration-500 transform" style={{ animationDelay: "400ms" }}>
@@ -110,7 +108,7 @@ const Landing = ({
           </div>
         </div>
         
-        <footer className="mt-12 sm:mt-20 text-center pb-4">
+        <footer className="mt-10 sm:mt-20 text-center pb-4">
           <div className="mb-3 sm:mb-4 flex items-center justify-center">
             <div className="relative">
               <div className="w-10 sm:w-12 h-10 sm:h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg border border-funky-purple/20 z-10 relative">

@@ -42,9 +42,9 @@ const HeroCarousel = () => {
 
   if (isLoading) {
     return (
-      <div className="relative pb-4 pt-8 mx-1 overflow-hidden my-0 py-[33px]">
+      <div className="relative pb-4 pt-6 sm:pt-8 mx-1 overflow-hidden">
         <div className="w-full max-w-5xl mx-auto px-2">
-          <Skeleton className="w-full h-64 md:h-80 rounded-2xl" />
+          <Skeleton className="w-full h-36 sm:h-64 md:h-80 rounded-2xl" />
         </div>
       </div>
     );
@@ -55,7 +55,7 @@ const HeroCarousel = () => {
   }
 
   return (
-    <div className="relative pb-4 pt-8 mx-1 overflow-hidden my-0 py-[33px]">
+    <div className="relative pb-4 pt-6 sm:pt-8 mx-1 overflow-hidden">
       <Carousel 
         opts={{
           loop: true,
@@ -73,19 +73,19 @@ const HeroCarousel = () => {
                 "w-full max-w-5xl mx-auto px-2 transition-transform duration-500 transform", 
                 isTransitioning ? "scale-95 opacity-80" : "scale-100 opacity-100"
               )}>
-                <div className="relative aspect-[21/9] overflow-hidden rounded-2xl shadow-2xl">
+                <div className="relative aspect-[16/9] sm:aspect-[21/9] overflow-hidden rounded-2xl shadow-2xl">
                   <div className="absolute inset-0 bg-gradient-to-r from-funky-purple/30 to-funky-pink/30 z-10 opacity-60"></div>
                   <img 
                     src={slide.image_url} 
                     alt={slide.title} 
                     className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-1000" 
                   />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 flex flex-col items-start justify-end z-20">
-                    <h3 className="text-white text-xl md:text-2xl font-bold mb-2 font-display">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 sm:p-6 flex flex-col items-start justify-end z-20">
+                    <h3 className="text-white text-sm sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2 font-display">
                       {slide.title}
                     </h3>
                     {slide.subtitle && (
-                      <p className="text-white/80 text-sm md:text-base max-w-lg">
+                      <p className="text-white/80 text-xs sm:text-sm md:text-base max-w-lg">
                         {slide.subtitle}
                       </p>
                     )}
@@ -96,19 +96,19 @@ const HeroCarousel = () => {
           ))}
         </CarouselContent>
 
-        <div className="absolute z-20 bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+        <div className="absolute z-20 bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-1 sm:space-x-2">
           {slides.map((_, i) => (
             <button 
               key={i} 
-              className={`w-3 h-3 rounded-full transition-all ${i === currentIndex ? "bg-white w-6" : "bg-white/50 hover:bg-white/80"}`} 
+              className={`h-1 sm:h-2 rounded-full transition-all ${i === currentIndex ? "bg-white w-3 sm:w-6" : "bg-white/50 w-1 sm:w-2 hover:bg-white/80"}`} 
               onClick={() => gotoSlide(i)} 
               aria-label={`Go to slide ${i + 1}`} 
             />
           ))}
         </div>
         
-        <CarouselPrevious onClick={previousSlide} className="left-2 md:left-8 bg-white/20 backdrop-blur-md border-white/10 hover:bg-white/40 text-white" />
-        <CarouselNext onClick={nextSlide} className="right-2 md:right-8 bg-white/20 backdrop-blur-md border-white/10 hover:bg-white/40 text-white" />
+        <CarouselPrevious onClick={previousSlide} className="left-1 sm:left-8 h-6 w-6 sm:h-8 sm:w-8 bg-white/20 backdrop-blur-md border-white/10 hover:bg-white/40 text-white" />
+        <CarouselNext onClick={nextSlide} className="right-1 sm:right-8 h-6 w-6 sm:h-8 sm:w-8 bg-white/20 backdrop-blur-md border-white/10 hover:bg-white/40 text-white" />
       </Carousel>
     </div>
   );
