@@ -58,61 +58,13 @@ const Landing = ({
     }
   };
 
-  const slides = [
-    {
-      src: "https://storage.googleapis.com/a1aa/image/nEyyMJHY73DoGPRrtOSXC1KvCAwbILiKV78pvYqeexs.jpg",
-      alt: "Connect with Your Favorite Creators"
-    },
-    {
-      src: "https://storage.googleapis.com/a1aa/image/M5nq5Hez3ef78AaLPSm-YJrIxUoHWGsaayDw16JqaCE.jpg",
-      alt: "Send Meaningful Gifts That Make an Impact"
-    },
-    {
-      src: "https://storage.googleapis.com/a1aa/image/Z2Kqw4XzbQzPaXB2LzQB4Rce-FMmCB0pAxCN5JOjxo0.jpg",
-      alt: "Join the FanFare Community Today"
-    }
-  ];
-
-  const gifts = [
-    {
-      name: "Stylish Handbag",
-      price: "₹1,499",
-      image: "https://storage.googleapis.com/a1aa/image/ti84hphytV7QmWZbpAiDQTtHxz4Qsw7-Wf99DSn3DH8.jpg"
-    },
-    {
-      name: "Gaming Headset",
-      price: "₹2,999",
-      image: "https://storage.googleapis.com/a1aa/image/pLNeJ8LcljztHIanr9TuTSpnh7ilkb3zKl3EmL_sAH8.jpg"
-    },
-    {
-      name: "Travel Backpack",
-      price: "₹1,799",
-      image: "https://storage.googleapis.com/a1aa/image/3w2Nb6lAZ73GNHF_EsRxGE_8ei1THVU1GsAxp-BQ494.jpg"
-    },
-    {
-      name: "Smart Watch",
-      price: "₹3,999",
-      image: "https://images.unsplash.com/photo-1501286353178-1ec881214838"
-    },
-    {
-      name: "Wireless Earbuds",
-      price: "₹1,999",
-      image: "https://images.unsplash.com/photo-1469041797191-50ace28483c3"
-    },
-    {
-      name: "Digital Camera",
-      price: "₹11,999",
-      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901"
-    }
-  ];
-
   return (
     <div className="min-h-screen w-full">
       <main className={cn(
         "mx-auto px-3 sm:px-6 lg:px-8 max-w-7xl pt-2 sm:pt-4 pb-20 sm:pb-24",
         isMobile ? "container-fluid" : "container"
       )}>
-        <HeroCarousel slides={slides} />
+        <HeroCarousel />
         
         <div className="mt-8 sm:mt-12 space-y-8 sm:space-y-12">
           {loading ? (
@@ -140,7 +92,7 @@ const Landing = ({
           {/* Add Top Fans section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 px-1 sm:px-0">
             <div className="md:col-span-2 transition-all duration-500 transform" style={{ animationDelay: "200ms" }}>
-              <GiftSection gifts={gifts} />
+              <GiftSection />
             </div>
             
             <div className="transition-all duration-500 transform" style={{ animationDelay: "300ms" }}>
