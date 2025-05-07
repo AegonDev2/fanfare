@@ -68,29 +68,29 @@ const FloatingHeader = ({
   };
 
   return (
-    <header className={cn("fixed top-0 left-0 right-0 z-40 transition-all duration-300", isScrolled ? "py-1 sm:py-2" : "py-2 sm:py-4")}>
-      <div className="bg-transparent px-1 sm:px-0">
-        <div className="flex items-center justify-between h-12 sm:h-16 bg-cyan-950/85 backdrop-blur-md px-0 mx-1 sm:mx-[7px] rounded-full my-0">
+    <header className={cn("fixed top-0 left-0 right-0 z-40 transition-all duration-300", isScrolled ? "py-1" : "py-2")}>
+      <div className="bg-transparent px-0">
+        <div className="flex items-center justify-between h-10 sm:h-16 bg-cyan-950/85 backdrop-blur-md px-0 mx-1 sm:mx-[7px] rounded-full my-0">
           <div className="flex items-center">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => setNavOpen(true)} 
-              className="mr-1 sm:mr-2 hover:bg-funky-purple/10 text-slate-100 px-0 mx-2 sm:mx-[17px]"
+              className="hover:bg-funky-purple/10 text-slate-100 px-0 mx-2"
             >
-              <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Menu className="h-4 w-4 sm:h-6 sm:w-6" />
             </Button>
             <a href="/" className="flex items-center">
               <span className={cn(
                 "font-graffiti bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-slate-50",
-                isMobile ? "text-xl" : "text-2xl" 
+                isMobile ? "text-lg" : "text-2xl" 
               )}>
                 FanFare
               </span>
             </a>
           </div>
 
-          <div className="flex space-x-1 sm:space-x-2 items-center">
+          <div className="flex space-x-1 items-center">
             {user ? (
               <>
                 <div className="hidden md:block">
@@ -104,25 +104,25 @@ const FloatingHeader = ({
                     onClick={() => navigate(`/profile/${user.id}`)} 
                     className={cn(
                       "rounded-full text-funky-purple bg-stone-400 hover:bg-stone-300",
-                      isMobile ? "mx-2 h-8 w-8" : "mx-[20px]"
+                      isMobile ? "h-7 w-7 mr-2" : "mx-[20px]"
                     )}
                   >
-                    <User className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
+                    <User className={isMobile ? "h-3.5 w-3.5" : "h-5 w-5"} />
                   </Button>
-                  <div className="absolute right-0 mt-2 w-48 rounded-lg overflow-hidden shadow-lg scale-0 group-hover:scale-100 origin-top-right transition-all duration-200 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-                    <div className="p-2">
-                      <Button variant="ghost" className="w-full justify-start text-left text-xs sm:text-sm" onClick={() => navigate(`/profile/${user.id}`)}>
+                  <div className="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg overflow-hidden shadow-lg scale-0 group-hover:scale-100 origin-top-right transition-all duration-200 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                    <div className="p-1 sm:p-2">
+                      <Button variant="ghost" className="w-full justify-start text-left text-xs h-7 sm:h-8" onClick={() => navigate(`/profile/${user.id}`)}>
                         My Profile
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start text-left text-xs sm:text-sm" onClick={() => navigate('/settings')}>
+                      <Button variant="ghost" className="w-full justify-start text-left text-xs h-7 sm:h-8" onClick={() => navigate('/settings')}>
                         Settings
                       </Button>
                       {isMobile && (
-                        <Button variant="ghost" className="w-full justify-start text-left text-xs sm:text-sm" onClick={() => navigate('/wallet')}>
+                        <Button variant="ghost" className="w-full justify-start text-left text-xs h-7 sm:h-8" onClick={() => navigate('/wallet')}>
                           My Wallet
                         </Button>
                       )}
-                      <Button variant="ghost" className="w-full justify-start text-left text-xs sm:text-sm text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={handleSignOut} disabled={isLoading}>
+                      <Button variant="ghost" className="w-full justify-start text-left text-xs h-7 sm:h-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={handleSignOut} disabled={isLoading}>
                         {isLoading ? "Signing out..." : "Sign Out"}
                       </Button>
                     </div>
@@ -135,7 +135,7 @@ const FloatingHeader = ({
                   variant="ghost" 
                   className={cn(
                     "font-medium text-funky-purple hover:text-funky-pink hover:bg-funky-purple/10",
-                    isMobile ? "text-xs px-2 py-1" : ""
+                    isMobile ? "text-xs px-2 py-0.5 h-6" : ""
                   )}
                   onClick={() => navigate("/auth")}
                 >
@@ -145,7 +145,7 @@ const FloatingHeader = ({
                   onClick={() => navigate("/auth?tab=signup")} 
                   className={cn(
                     "funky-button",
-                    isMobile ? "text-xs mx-2 px-2 py-1" : "mx-[22px] px-[11px]"
+                    isMobile ? "text-[10px] mx-2 px-2 py-0.5 h-6" : "mx-[22px] px-[11px]"
                   )}
                 >
                   Join Now

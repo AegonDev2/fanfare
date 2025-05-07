@@ -47,22 +47,22 @@ const MobileDock = ({
   };
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 md:hidden z-50 backdrop-blur-md border-t border-slate-700/30 bg-slate-950/80 flex justify-around items-center py-2">
+    <div className="fixed bottom-0 left-0 right-0 md:hidden z-50 backdrop-blur-md border-t border-slate-700/30 bg-slate-950/80 flex justify-around items-center py-1.5">
       {dockItems.map((item, index) => (
         <div 
           key={index} 
           className={cn(
-            "flex flex-col items-center justify-center pt-1 pb-1 px-3 rounded-full transition-all duration-300",
+            "flex flex-col items-center justify-center pt-0.5 pb-0.5 px-2 rounded-full transition-all duration-300",
             isActive(item.path) && "bg-funky-purple/20"
           )}
           onClick={item.action ? item.action : () => navigate(item.path)}
         >
           <item.icon className={cn(
-            "h-5 w-5 mb-1",
+            "h-4 w-4 mb-0.5",
             isActive(item.path) ? "text-funky-purple" : "text-gray-300"
           )} />
           <span className={cn(
-            "text-xs font-medium", 
+            "text-[10px] font-medium", 
             isActive(item.path) ? "text-funky-purple" : "text-gray-300"
           )}>
             {item.label}

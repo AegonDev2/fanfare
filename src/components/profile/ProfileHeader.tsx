@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface ProfileHeaderProps {
   name: string;
@@ -20,6 +22,7 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
   const [canEdit, setCanEdit] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Redirects to place order page with influencer ID
   const handleSendGift = () => {
@@ -63,35 +66,53 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
   }, [profileId]);
 
   return (
-    <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+    <div className="flex flex-col md:flex-row items-center md:items-start gap-3 sm:gap-6 px-1">
       <img
         src={profileImage}
         alt={`${name}'s profile picture`}
-        className="w-32 h-32 rounded-full object-cover"
+        className={cn(
+          "rounded-full object-cover border-2 border-funky-purple/20",
+          isMobile ? "w-20 h-20" : "w-32 h-32"
+        )}
       />
       <div className="flex-1">
-        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-4">
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-800">{name}</h2>
-            <p className="text-gray-600">Platform: {platform}</p>
-            <p className="text-gray-600">Followers: {followers.toLocaleString()}</p>
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-2 sm:gap-4">
+          <div className="text-center md:text-left">
+            <h2 className={cn(
+              "font-semibold text-gray-800",
+              isMobile ? "text-xl" : "text-2xl"
+            )}>{name}</h2>
+            <p className={cn(
+              "text-gray-600",
+              isMobile ? "text-sm" : ""
+            )}>Platform: {platform}</p>
+            <p className={cn(
+              "text-gray-600",
+              isMobile ? "text-sm" : ""
+            )}>Followers: {followers.toLocaleString()}</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <div className="flex flex-row gap-2 w-full md:w-auto mt-2 md:mt-0 justify-center md:justify-start">
             {canEdit && (
               <Button 
                 variant="outline"
-                className="flex items-center gap-2 w-full sm:w-auto"
+                className={cn(
+                  "flex items-center gap-1.5",
+                  isMobile ? "text-xs h-8 px-2.5" : ""
+                )}
                 onClick={() => navigate('/edit-profile')}
               >
-                <Edit className="h-4 w-4" />
+                <Edit className={isMobile ? "h-3 w-3" : "h-4 w-4"} />
                 Edit Profile
               </Button>
             )}
             <Button 
-              className="flex items-center gap-2 w-full sm:w-auto"
+              className={cn(
+                "flex items-center gap-1.5",
+                isMobile ? "text-xs h-8 px-2.5" : ""
+              )}
               onClick={handleSendGift}
             >
-              <Gift className="h-4 w-4" />
+              <Gift className={isMobile ? "h-3 w-3" : "h-4 w-4"} />
               Send Gift
             </Button>
           </div>
