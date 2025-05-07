@@ -105,7 +105,7 @@ const FloatingHeader = ({
                 <Button variant="ghost" className="font-medium text-funky-purple hover:text-funky-pink hover:bg-funky-purple/10" onClick={() => navigate("/auth")}>
                   Sign In
                 </Button>
-                <Button onClick={() => navigate("/auth?tab=signup")} className="funky-button mx-[14px]">
+                <Button onClick={() => navigate("/auth?tab=signup")} className="funky-button mx-[22px] px-[11px]">
                   Join Now
                 </Button>
               </>}
