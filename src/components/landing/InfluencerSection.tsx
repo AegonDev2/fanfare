@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,40 +45,66 @@ const InfluencerCard = memo(({
     return count.toString();
   };
   
-  return <div className={cn("p-2 sm:p-3 h-full relative group cursor-pointer transition-all duration-300 transform hover:translate-y-[-5px]")} onClick={() => onProfileClick(influencer.id)} onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
+  return (
+    <div 
+      className={cn("p-2 h-full relative group cursor-pointer transition-all duration-300 transform hover:translate-y-[-5px]")} 
+      onClick={() => onProfileClick(influencer.id)} 
+      onMouseEnter={() => setIsHovering(true)} 
+      onMouseLeave={() => setIsHovering(false)}
+    >
       <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/5 to-funky-pink/5 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg transition-all duration-500 z-0 group-hover:bg-gradient-to-tr group-hover:from-funky-purple/10 group-hover:to-funky-pink/10"></div>
       
-      <div className="absolute right-2 sm:right-3 top-2 sm:top-3 z-20 transform transition-all duration-300 scale-0 group-hover:scale-100 origin-top-right" onClick={handleGiftClick}>
-        <Button size="icon" className="rounded-full h-7 w-7 sm:h-8 sm:w-8 bg-white dark:bg-gray-900 backdrop-blur-md shadow-lg border border-funky-purple/20 text-funky-pink hover:bg-funky-purple/10">
-          <Gift className="h-3 sm:h-4 w-3 sm:w-4" />
+      <div className="absolute right-2 top-2 z-20 transform transition-all duration-300 scale-0 group-hover:scale-100 origin-top-right" onClick={handleGiftClick}>
+        <Button size="icon" className="rounded-full h-7 w-7 bg-white dark:bg-gray-900 backdrop-blur-md shadow-lg border border-funky-purple/20 text-funky-pink hover:bg-funky-purple/10">
+          <Gift className="h-3 w-3" />
         </Button>
       </div>
       
       <div className="relative z-10">
-        <div className={cn("w-full aspect-square mb-2 overflow-hidden rounded-xl transition-all duration-500", isHovering ? "shadow-lg shadow-funky-purple/20" : "")}>
+        <div className={cn(
+          "w-full aspect-square mb-2 overflow-hidden rounded-xl transition-all duration-500", 
+          isHovering ? "shadow-lg shadow-funky-purple/20" : ""
+        )}>
           <div className="w-full h-full relative">
-            <img src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'} alt={`${influencer.name}'s profile`} className={cn("w-full h-full object-cover transition-all duration-500", isHovering ? "scale-110" : "scale-100")} loading="lazy" />
-            <div className={cn("absolute inset-0 bg-gradient-to-t from-funky-purple/40 to-transparent opacity-0 transition-opacity duration-300", isHovering ? "opacity-100" : "opacity-0")}></div>
+            <img 
+              src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'} 
+              alt={`${influencer.name}'s profile`} 
+              className={cn(
+                "w-full h-full object-cover transition-all duration-500", 
+                isHovering ? "scale-110" : "scale-100"
+              )} 
+              loading="lazy" 
+            />
+            <div className={cn(
+              "absolute inset-0 bg-gradient-to-t from-funky-purple/40 to-transparent opacity-0 transition-opacity duration-300",
+              isHovering ? "opacity-100" : "opacity-0"
+            )}></div>
           </div>
         </div>
         
-        <div className="mt-1 sm:mt-2 relative">
+        <div className="mt-1 relative">
           <h3 className="text-xs font-semibold truncate text-gray-900 dark:text-gray-100 font-display">{influencer.name}</h3>
           <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mt-0.5 space-x-1">
-            <span className="font-medium text-funky-purple text-[10px] sm:text-xs">{influencer.platform}</span>
+            <span className="font-medium text-funky-purple text-[10px]">{influencer.platform}</span>
             <span>•</span>
             <div className="flex items-center">
               <Users className="h-2.5 w-2.5 mr-0.5 text-funky-pink" />
               <span className="text-[10px]">{formatFollowers(influencer.followers)}</span>
             </div>
           </div>
-          <Button size="sm" variant="secondary" onClick={() => onProfileClick(influencer.id)} className="mt-1 sm:mt-2 w-full text-[10px] py-1 px-2 bg-white dark:bg-gray-800 hover:bg-funky-purple hover:text-white transition-all duration-300 border border-funky-purple/20">
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            onClick={() => onProfileClick(influencer.id)} 
+            className="mt-1 w-full text-[10px] py-1 px-2 bg-white dark:bg-gray-800 hover:bg-funky-purple hover:text-white transition-all duration-300 border border-funky-purple/20"
+          >
             <User className="h-3 w-3 mr-1" />
             View Profile
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 });
 
 InfluencerCard.displayName = "InfluencerCard";
@@ -199,12 +224,24 @@ const InfluencerSection = ({
     }
   };
   
-  return <section className="mb-6 sm:mb-12 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 sm:mb-6 gap-2 sm:gap-4 mx-1 sm:mx-[18px]">
-        <h2 className="text-lg sm:text-xl font-bold font-display bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">Discover Influencers</h2>
+  return (
+    <section className="mb-4 relative">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2 mx-1">
+        <h2 className="text-lg font-bold font-display bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">Discover Influencers</h2>
         
         <div ref={searchInputRef} className="relative w-full md:w-auto">
-          <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} className="w-full md:w-64 rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs shadow-sm" />
+          <Input 
+            placeholder="Search Influencers" 
+            type="text" 
+            value={searchQuery} 
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => {
+              if (searchQuery.trim().length > 0) {
+                setShowSuggestions(true);
+              }
+            }}
+            className="w-full md:w-64 rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs shadow-sm" 
+          />
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-funky-purple/60" />
           
           {showSuggestions && searchSuggestions.length > 0 && <div className="absolute z-40 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-xl border border-funky-purple/10 backdrop-blur-md animate-expand">
@@ -227,31 +264,45 @@ const InfluencerSection = ({
         </div>
       </div>
       
-      <div className="relative px-1 sm:px-0" ref={carouselRef} onMouseEnter={() => handleCarouselHover(true)} onMouseLeave={() => handleCarouselHover(false)}>
+      <div 
+        className="relative px-1" 
+        ref={carouselRef} 
+        onMouseEnter={() => handleCarouselHover(true)} 
+        onMouseLeave={() => handleCarouselHover(false)}
+      >
         <Carousel opts={{
-        align: "start",
-        loop: true,
-        skipSnaps: false,
-        dragFree: true
-      }} className="w-full">
-          <CarouselContent className="-ml-1 sm:-ml-4">
-            {filteredInfluencers.length > 0 ? filteredInfluencers.map((influencer, index) => <CarouselItem key={index} className="pl-1 sm:pl-4 basis-1/2 sm:basis-1/2 lg:basis-1/4">
-                  <InfluencerCard influencer={influencer} onProfileClick={handleProfileClick} isMobile={isMobile} />
-                </CarouselItem>) : <CarouselItem className="pl-1 sm:pl-4 w-full">
-                <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-3 sm:p-6 rounded-lg shadow-md text-center border border-funky-purple/10">
-                  <Users className="h-6 w-6 sm:h-12 sm:w-12 text-funky-purple/50 mb-2 mx-auto" />
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">No influencers found matching your search.</p>
+          align: "start",
+          loop: true,
+          skipSnaps: false,
+          dragFree: true
+        }} className="w-full">
+          <CarouselContent className="-ml-1">
+            {filteredInfluencers && filteredInfluencers.length > 0 ? (
+              filteredInfluencers.map((influencer, index) => (
+                <CarouselItem key={index} className="pl-1 basis-1/2 transition-all duration-300">
+                  <InfluencerCard 
+                    influencer={influencer} 
+                    onProfileClick={handleProfileClick}
+                    isMobile={isMobile} 
+                  />
+                </CarouselItem>
+              ))
+            ) : (
+              <CarouselItem className="pl-1 basis-full">
+                <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg shadow-md text-center border border-funky-purple/10">
+                  <Users className="h-6 w-6 text-funky-purple/50 mb-2 mx-auto" />
+                  <p className="text-xs text-gray-600 dark:text-gray-300">No influencers found matching your search.</p>
                 </div>
-              </CarouselItem>}
+              </CarouselItem>
+            )}
           </CarouselContent>
           
-          <CarouselPrevious className="left-0 h-6 w-6 sm:h-8 sm:w-8 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-funky-purple/20 hover:bg-funky-purple/10 text-funky-purple" />
-          <CarouselNext className="right-0 h-6 w-6 sm:h-8 sm:w-8 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-funky-purple/20 hover:bg-funky-purple/10 text-funky-purple" />
+          <CarouselPrevious className="left-0 h-6 w-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-funky-purple/20 hover:bg-funky-purple/10 text-funky-purple" />
+          <CarouselNext className="right-0 h-6 w-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-funky-purple/20 hover:bg-funky-purple/10 text-funky-purple" />
         </Carousel>
-        
-        {filteredInfluencers.length > 0}
       </div>
-    </section>;
+    </section>
+  );
 };
 
 export default memo(InfluencerSection);

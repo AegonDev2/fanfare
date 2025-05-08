@@ -20,7 +20,7 @@ const TopFansWidget = ({ topFans, isLoading, month, year }: TopFansWidgetProps) 
   
   if (isLoading) {
     return (
-      <Card className="shadow-sm mb-2 sm:mb-0">
+      <Card className="shadow-sm mb-2 sm:mb-0 w-full">
         <CardHeader className="p-3 sm:p-6">
           <CardTitle className="text-sm sm:text-base flex items-center">
             <Trophy className="mr-2 h-4 w-4 text-yellow-500" />
@@ -44,7 +44,7 @@ const TopFansWidget = ({ topFans, isLoading, month, year }: TopFansWidgetProps) 
 
   if (topFans.length === 0) {
     return (
-      <Card className="shadow-sm mb-2 sm:mb-0">
+      <Card className="shadow-sm mb-2 sm:mb-0 w-full">
         <CardHeader className="p-3 sm:p-6">
           <CardTitle className="text-sm sm:text-base flex items-center">
             <Trophy className="mr-2 h-4 w-4 text-yellow-500" />
@@ -64,12 +64,12 @@ const TopFansWidget = ({ topFans, isLoading, month, year }: TopFansWidgetProps) 
   const displayFans = topFans.slice(0, 3);
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow mb-2 sm:mb-0">
+    <Card className="shadow-sm hover:shadow-md transition-shadow mb-2 sm:mb-0 w-full">
       <CardHeader className="p-3 sm:p-6 pb-0 sm:pb-0">
         <CardTitle className="flex items-center justify-between text-sm sm:text-base">
           <div className="flex items-center">
             <Trophy className="mr-1 sm:mr-2 h-4 w-4 text-yellow-500" />
-            <span>Top Fans ({month})</span>
+            <span>Top Fans</span>
           </div>
           <Badge variant="outline" className="text-[10px] sm:text-xs">
             {month} {year}

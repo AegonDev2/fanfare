@@ -60,13 +60,10 @@ const Landing = ({
 
   return (
     <div className="min-h-screen w-full">
-      <main className={cn(
-        "mx-auto px-2 sm:px-6 lg:px-8 max-w-7xl pt-2 sm:pt-4 pb-16 sm:pb-24",
-        isMobile ? "" : "container"
-      )}>
+      <main className="w-full px-2 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-16 sm:pb-24">
         <HeroCarousel />
         
-        <div className="mt-6 sm:mt-12 space-y-6 sm:space-y-12">
+        <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-8">
           {/* Top Fans Widget - Positioned above influencers */}
           <div className="w-full px-1 sm:px-0">
             <TopFansWidget 
@@ -78,7 +75,7 @@ const Landing = ({
           </div>
 
           {loading ? (
-            <div className="text-center py-6 sm:py-12 animate-pulse">
+            <div className="text-center py-4 sm:py-8 animate-pulse">
               <div className="w-12 sm:w-20 h-12 sm:h-20 bg-funky-purple/20 rounded-full mx-auto mb-3 animate-bounce-subtle"></div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Loading amazing creators...</p>
             </div>
@@ -87,7 +84,7 @@ const Landing = ({
               <InfluencerSection influencers={influencers} />
             </div>
           ) : (
-            <div className="text-center py-6 sm:py-12 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-funky-purple/10 shadow-lg mx-1 sm:mx-2">
+            <div className="text-center py-4 sm:py-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-funky-purple/10 shadow-lg mx-1 sm:mx-2">
               <div className="w-12 sm:w-20 h-12 sm:h-20 flex items-center justify-center bg-funky-purple/10 rounded-full mx-auto mb-3">
                 <Music className="h-5 sm:h-8 w-5 sm:w-8 text-funky-purple" />
               </div>
@@ -108,8 +105,8 @@ const Landing = ({
           </div>
         </div>
         
-        <footer className="mt-10 sm:mt-20 text-center pb-4">
-          <div className="mb-3 sm:mb-4 flex items-center justify-center">
+        <footer className="mt-8 sm:mt-16 text-center pb-16">
+          <div className="mb-3 flex items-center justify-center">
             <div className="relative">
               <div className="w-8 sm:w-12 h-8 sm:h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg border border-funky-purple/20 z-10 relative">
                 <div className="text-lg sm:text-2xl">🎁</div>

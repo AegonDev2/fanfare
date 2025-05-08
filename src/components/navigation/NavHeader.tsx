@@ -98,19 +98,35 @@ const NavHeader = ({
     }
   };
   
-  return <header className="relative flex items-center justify-between min-h-[60px] sm:min-h-[80px] px-3 sm:px-6 text-[var(--navbar-light-primary)]">
-      <h1 className="font-graffiti bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-slate-300 font-medium text-xl sm:text-2xl">FanFare</h1>
+  return (
+    <header className="relative flex items-center justify-between h-16 px-4 text-[var(--navbar-light-primary)]">
+      <h1 className="font-graffiti bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-slate-300 font-medium text-xl">FanFare</h1>
       
-      {setIsOpen && <Button variant="ghost" size="icon" onClick={handleClose} aria-label="Close navigation" className="text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)] bg-zinc-200 hover:bg-zinc-100">
-          <X className="h-4 sm:h-5 w-4 sm:w-5" />
-        </Button>}
+      {setIsOpen && (
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleClose} 
+          aria-label="Close navigation" 
+          className="text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)] bg-zinc-200 hover:bg-zinc-100"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
       
-      {!isLoading && userRole === 'admin' && <div className="hidden md:block">
+      {!isLoading && userRole === 'admin' && (
+        <div className="hidden md:block">
           <span className="px-2 py-1 bg-funky-purple/20 text-funky-purple text-xs rounded-md">Admin</span>
-        </div>}
+        </div>
+      )}
       
-      <hr className={cn("absolute bottom-0 left-3 sm:left-6", "w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)]", "border-t border-[var(--navbar-dark-secondary)]")} />
-    </header>;
+      <hr className={cn(
+        "absolute bottom-0 left-3 sm:left-6", 
+        "w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)]", 
+        "border-t border-[var(--navbar-dark-secondary)]"
+      )} />
+    </header>
+  );
 };
 
 export default NavHeader;

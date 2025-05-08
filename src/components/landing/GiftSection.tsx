@@ -25,7 +25,7 @@ const GiftCard = memo(({
   
   return (
     <div 
-      className="relative p-2 sm:p-3 h-full rounded-xl overflow-hidden transition-all duration-300 transform group" 
+      className="relative p-2 h-full rounded-xl overflow-hidden transition-all duration-300 transform group" 
       onMouseEnter={() => setIsHovering(true)} 
       onMouseLeave={() => setIsHovering(false)}
     >
@@ -47,14 +47,14 @@ const GiftCard = memo(({
           />
         </div>
         
-        <div className="mt-1 sm:mt-2 relative">
+        <div className="mt-1 relative">
           <h3 className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate font-display">{gift.name}</h3>
           <p className="text-xs text-funky-purple font-medium">₹{gift.price}</p>
           <Button 
             size="sm" 
             onClick={handleGiftClick} 
             className={cn(
-              "mt-1 sm:mt-2 w-full text-[10px] py-1 px-2 transition-all duration-300", 
+              "mt-1 w-full text-[10px] py-1 px-2 transition-all duration-300", 
               "bg-gradient-to-r from-funky-purple to-funky-pink text-white hover:shadow-lg hover:shadow-funky-purple/20"
             )}
           >
@@ -89,9 +89,9 @@ const GiftSection = () => {
   }, [searchValue, gifts]);
 
   return (
-    <section className="mb-6 sm:mb-12 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 sm:mb-6 gap-2 sm:gap-4 mx-1 sm:mx-[18px]">
-        <h2 className="text-lg sm:text-xl font-bold font-display bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">Gift Selection</h2>
+    <section className="mb-4 relative">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 sm:mb-4 gap-2 mx-1">
+        <h2 className="text-lg font-bold font-display bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">Gift Selection</h2>
         
         <div className="relative w-full md:w-auto">
           <Input 
@@ -107,13 +107,13 @@ const GiftSection = () => {
       
       <div className="relative" ref={carouselRef}>
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 px-1 sm:px-4">
+          <div className="grid grid-cols-2 gap-2 px-1">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="p-2 sm:p-3">
+              <div key={i} className="p-2">
                 <Skeleton className="w-full aspect-square rounded-lg mb-2" />
                 <Skeleton className="w-3/4 h-3 mb-1" />
                 <Skeleton className="w-1/2 h-3 mb-1" />
-                <Skeleton className="w-full h-6 sm:h-8" />
+                <Skeleton className="w-full h-6" />
               </div>
             ))}
           </div>
@@ -124,24 +124,24 @@ const GiftSection = () => {
             skipSnaps: false,
             dragFree: true
           }} className="w-full">
-            <CarouselContent className="-ml-1 sm:-ml-4">
+            <CarouselContent className="-ml-1">
               {filteredGifts.length > 0 ? (
                 filteredGifts.map((gift) => (
-                  <CarouselItem key={gift.id} className="pl-1 sm:pl-4 basis-1/2 sm:basis-1/2 lg:basis-1/4 transition-all duration-300">
+                  <CarouselItem key={gift.id} className="pl-1 basis-1/2 transition-all duration-300">
                     <GiftCard gift={gift} />
                   </CarouselItem>
                 ))
               ) : (
-                <CarouselItem className="pl-1 sm:pl-4 basis-full">
-                  <div className="p-3 sm:p-8 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-funky-purple/10 text-center">
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">No gifts found matching your search.</p>
+                <CarouselItem className="pl-1 basis-full">
+                  <div className="p-3 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-funky-purple/10 text-center">
+                    <p className="text-xs text-gray-600 dark:text-gray-300">No gifts found matching your search.</p>
                   </div>
                 </CarouselItem>
               )}
             </CarouselContent>
             
-            <CarouselPrevious className="left-0 h-6 w-6 sm:h-8 sm:w-8 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-funky-purple/20 hover:bg-funky-purple/10 text-funky-purple" />
-            <CarouselNext className="right-0 h-6 w-6 sm:h-8 sm:w-8 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-funky-purple/20 hover:bg-funky-purple/10 text-funky-purple" />
+            <CarouselPrevious className="left-0 h-6 w-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-funky-purple/20 hover:bg-funky-purple/10 text-funky-purple" />
+            <CarouselNext className="right-0 h-6 w-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-funky-purple/20 hover:bg-funky-purple/10 text-funky-purple" />
           </Carousel>
         )}
       </div>
