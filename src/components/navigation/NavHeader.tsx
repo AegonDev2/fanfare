@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Trophy, User } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -104,8 +104,10 @@ const NavHeader = ({
   };
   
   return (
-    <header className="relative flex items-center justify-between h-16 px-4 text-[var(--navbar-light-primary)]">
-      <h1 className="font-graffiti bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-slate-300 font-medium text-xl">FanFare</h1>
+    <header className="relative flex items-center justify-between h-16 px-4 sm:px-6 bg-gradient-to-r from-funky-purple/10 to-funky-pink/10 backdrop-blur-sm">
+      <h1 className="font-graffiti bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink text-xl sm:text-2xl font-medium drop-shadow-sm">
+        FanFare
+      </h1>
       
       {setIsOpen && (
         <Button 
@@ -113,7 +115,7 @@ const NavHeader = ({
           size="icon" 
           onClick={handleClose} 
           aria-label="Close navigation" 
-          className="text-[var(--navbar-light-primary)] hover:bg-[var(--navbar-dark-secondary)] bg-zinc-200 hover:bg-zinc-100"
+          className="text-funky-purple hover:bg-funky-purple/10 hover:text-funky-pink transition-colors"
         >
           <X className="h-4 w-4" />
         </Button>
@@ -121,14 +123,18 @@ const NavHeader = ({
       
       <div className="hidden md:flex gap-3 items-center">
         {!isLoading && userRole === 'admin' && (
-          <span className="px-2 py-1 bg-funky-purple/20 text-funky-purple text-xs rounded-md">Admin</span>
+          <span className="px-2 py-1 bg-funky-purple/20 text-funky-purple text-xs rounded-md flex items-center gap-1">
+            <Trophy className="h-3 w-3" />
+            Admin
+          </span>
         )}
         
         {!isLoading && userRole === 'influencer' && userId && (
           <Link 
             to={`/wishlist/${userId}`}
-            className="px-2 py-1 bg-funky-purple/20 text-funky-purple text-xs rounded-md hover:bg-funky-purple/30"
+            className="px-2 py-1 bg-funky-purple/20 text-funky-purple text-xs rounded-md hover:bg-funky-purple/30 flex items-center gap-1 transition-colors"
           >
+            <User className="h-3 w-3" />
             My Wishlist
           </Link>
         )}
@@ -137,7 +143,7 @@ const NavHeader = ({
       <hr className={cn(
         "absolute bottom-0 left-3 sm:left-6", 
         "w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)]", 
-        "border-t border-[var(--navbar-dark-secondary)]"
+        "border-t border-funky-purple/10"
       )} />
     </header>
   );

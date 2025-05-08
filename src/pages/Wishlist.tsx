@@ -9,7 +9,7 @@ import WishlistGrid from "@/components/wishlist/WishlistGrid";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
+import { Gift, User } from "lucide-react";
 
 const Wishlist = () => {
   const { id: influencerId } = useParams<{ id: string }>();
@@ -77,12 +77,12 @@ const Wishlist = () => {
 
   if (!userId) {
     return (
-      <div className="min-h-screen w-full bg-background">
+      <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-100">
         <Header />
         <div className="container mx-auto pt-28 pb-10 px-4">
-          <Card>
+          <Card className="border-funky-purple/10 shadow-lg backdrop-blur-md bg-white/90">
             <CardContent className="pt-6 text-center">
-              <p>No influencer selected. Please go to an influencer's profile to view their wishlist.</p>
+              <p className="text-gray-600">No influencer selected. Please go to an influencer's profile to view their wishlist.</p>
             </CardContent>
           </Card>
         </div>
@@ -91,13 +91,13 @@ const Wishlist = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-background">
+    <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-100">
       <Header />
       <div className="container mx-auto pt-28 pb-10 px-4">
-        <Card className="mb-6">
+        <Card className="mb-8 border-funky-purple/10 shadow-lg backdrop-blur-md bg-white/90">
           <CardHeader className="flex flex-row justify-between items-center">
             <div>
-              <CardTitle className="text-2xl">
+              <CardTitle className="text-2xl bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">
                 {isOwner ? "Your Wishlist" : `${influencerName || "Influencer"}'s Wishlist`}
               </CardTitle>
               <CardDescription>
@@ -110,7 +110,7 @@ const Wishlist = () => {
             {!isOwner && userId && (
               <Button 
                 variant="outline" 
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 border-funky-purple/20 hover:bg-funky-purple/10"
                 onClick={() => window.location.href = `/profile/${userId}`}
               >
                 <User size={16} />
