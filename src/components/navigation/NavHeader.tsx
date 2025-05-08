@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface NavHeaderProps {
   setIsOpen?: (isOpen: boolean) => void;
@@ -17,6 +18,7 @@ const NavHeader = ({
   const isMobile = useIsMobile();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -39,8 +41,11 @@ const NavHeader = ({
         if (!user) {
           setUserRole(null);
           setUserName(null);
+          setUserId(null);
           return;
         }
+
+        setUserId(user.id);
 
         // Get user profile to fetch name
         const {
@@ -114,11 +119,20 @@ const NavHeader = ({
         </Button>
       )}
       
-      {!isLoading && userRole === 'admin' && (
-        <div className="hidden md:block">
+      <div className="hidden md:flex gap-3 items-center">
+        {!isLoading && userRole === 'admin' && (
           <span className="px-2 py-1 bg-funky-purple/20 text-funky-purple text-xs rounded-md">Admin</span>
-        </div>
-      )}
+        )}
+        
+        {!isLoading && userRole === 'influencer' && userId && (
+          <Link 
+            to={`/wishlist/${userId}`}
+            className="px-2 py-1 bg-funky-purple/20 text-funky-purple text-xs rounded-md hover:bg-funky-purple/30"
+          >
+            My Wishlist
+          </Link>
+        )}
+      </div>
       
       <hr className={cn(
         "absolute bottom-0 left-3 sm:left-6", 

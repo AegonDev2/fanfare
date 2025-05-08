@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,33 +7,52 @@ import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileBio from "@/components/profile/ProfileBio";
 import SocialLinks from "@/components/profile/SocialLinks";
 import Header from "@/components/landing/Header";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useUser } from "@/hooks/useUser";
+import { Gift, Edit } from "lucide-react";
+
 const isValidUUID = (uuid: string) => {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
 };
+
+interface SizePreferences {
+  tshirt_size?: string;
+  pants_waist?: string;
+  pants_length?: string;
+  shoe_size?: string;
+  food_preferences?: string[];
+}
+
 const Profile = () => {
-  const {
-    id
-  } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const { user } = useUser();
+  
+  const isCurrentUserProfile = id ? user?.id === id : false;
+  const profileId = id || user?.id;
+  
   const {
     data: influencer,
     isLoading,
     error
   } = useQuery({
-    queryKey: ['influencer', id],
+    queryKey: ['influencer', profileId],
     queryFn: async () => {
-      console.log("Fetching profile for ID:", id);
-      if (!id || !isValidUUID(id)) {
+      console.log("Fetching profile for ID:", profileId);
+      if (!profileId || !isValidUUID(profileId)) {
         throw new Error("Invalid profile ID");
       }
       const {
         data,
         error
-      } = await supabase.from('influencer_profiles').select('*').eq('id', id).maybeSingle();
+      } = await supabase.from('influencer_profiles')
+                        .select('*, size_preferences:size_preferences(*)')
+                        .eq('id', profileId)
+                        .maybeSingle();
+      
       if (error) {
         console.error("Supabase error:", error);
         throw error;
@@ -44,7 +64,8 @@ const Profile = () => {
       console.log("Fetched influencer:", data);
       return data;
     },
-    retry: false
+    retry: false,
+    enabled: !!profileId
   });
 
   // This function is no longer used directly, but kept for backward compatibility
@@ -84,6 +105,7 @@ const Profile = () => {
       description: "Gift sent successfully!"
     });
   };
+  
   if (isLoading) {
     return <div className="min-h-screen bg-gray-100">
         <Header />
@@ -101,6 +123,7 @@ const Profile = () => {
         </div>
       </div>;
   }
+  
   if (error) {
     return <div className="min-h-screen bg-gray-100">
         <Header />
@@ -111,6 +134,7 @@ const Profile = () => {
         </div>
       </div>;
   }
+  
   if (!influencer) {
     return <div className="min-h-screen bg-gray-100">
         <Header />
@@ -121,17 +145,116 @@ const Profile = () => {
         </div>
       </div>;
   }
-  return <div className="min-h-screen bg-gray-100">
+  
+  return (
+    <div className="min-h-screen bg-gray-100">
       <Header />
       <main className="container mx-auto px-4 py-8 pt-20">
-        <section className="shadow-md p-6 my-[40px] rounded-3xl bg-neutral-300">
-          <ProfileHeader name={influencer.name} platform={influencer.platform} followers={influencer.followers} profileImage={influencer.profile_image} onSendGift={handleSendGift} profileId={influencer.id} />
+        <section className="shadow-md p-6 mb-6 rounded-3xl bg-neutral-300">
+          <ProfileHeader 
+            name={influencer.name} 
+            platform={influencer.platform} 
+            followers={influencer.followers} 
+            profileImage={influencer.profile_image} 
+            onSendGift={handleSendGift}
+            profileId={influencer.id} 
+          />
+          
+          <div className="flex flex-wrap gap-4 mt-4 mb-6">
+            {isCurrentUserProfile && (
+              <Button onClick={() => navigate('/edit-profile')} variant="outline" size="sm" className="flex items-center gap-2">
+                <Edit size={16} /> Edit Profile
+              </Button>
+            )}
+            
+            {influencer.id && (
+              <Button 
+                onClick={() => navigate(`/wishlist/${influencer.id}`)}
+                variant="secondary" 
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Gift size={16} />
+                {isCurrentUserProfile ? "Manage Wishlist" : "View Wishlist"}
+              </Button>
+            )}
+          </div>
           
           <ProfileBio about={influencer.about || "No bio available."} hobbies={influencer.hobbies || []} />
           
-          <SocialLinks youtubeUrl={influencer.youtube_url} instagramUrl={influencer.instagram_url} twitterUrl={influencer.twitter_url} facebookUrl={influencer.facebook_url} />
+          {/* Size & Preferences Section */}
+          {(influencer.size_preferences || isCurrentUserProfile) && (
+            <Card className="p-4 mt-6 bg-white">
+              <h3 className="text-lg font-medium mb-2">Size & Preferences</h3>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {influencer.size_preferences?.tshirt_size && (
+                  <div>
+                    <p className="text-xs text-gray-500">T-shirt Size</p>
+                    <p className="font-medium">{influencer.size_preferences.tshirt_size}</p>
+                  </div>
+                )}
+                
+                {influencer.size_preferences?.pants_waist && (
+                  <div>
+                    <p className="text-xs text-gray-500">Pants Waist</p>
+                    <p className="font-medium">{influencer.size_preferences.pants_waist}</p>
+                  </div>
+                )}
+                
+                {influencer.size_preferences?.pants_length && (
+                  <div>
+                    <p className="text-xs text-gray-500">Pants Length</p>
+                    <p className="font-medium">{influencer.size_preferences.pants_length}</p>
+                  </div>
+                )}
+                
+                {influencer.size_preferences?.shoe_size && (
+                  <div>
+                    <p className="text-xs text-gray-500">Shoe Size</p>
+                    <p className="font-medium">{influencer.size_preferences.shoe_size}</p>
+                  </div>
+                )}
+              </div>
+              
+              {influencer.size_preferences?.food_preferences && influencer.size_preferences.food_preferences.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-xs text-gray-500 mb-1">Food Preferences</p>
+                  <div className="flex flex-wrap gap-2">
+                    {influencer.size_preferences.food_preferences.map((pref, index) => (
+                      <span key={index} className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                        {pref}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {isCurrentUserProfile && !influencer.size_preferences && (
+                <div className="text-center py-2">
+                  <p className="text-sm text-gray-500 mb-2">You haven't added size & preference information yet</p>
+                  <Button 
+                    onClick={() => navigate('/edit-profile')} 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    Add Sizes & Preferences
+                  </Button>
+                </div>
+              )}
+            </Card>
+          )}
+          
+          <SocialLinks 
+            youtubeUrl={influencer.youtube_url} 
+            instagramUrl={influencer.instagram_url} 
+            twitterUrl={influencer.twitter_url} 
+            facebookUrl={influencer.facebook_url} 
+          />
         </section>
       </main>
-    </div>;
+    </div>
+  );
 };
+
 export default Profile;

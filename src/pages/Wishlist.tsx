@@ -8,6 +8,8 @@ import { useInfluencerWishlist, WishlistItem } from "@/hooks/useInfluencerWishli
 import WishlistGrid from "@/components/wishlist/WishlistGrid";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { User } from "lucide-react";
 
 const Wishlist = () => {
   const { id: influencerId } = useParams<{ id: string }>();
@@ -93,15 +95,28 @@ const Wishlist = () => {
       <Header />
       <div className="container mx-auto pt-28 pb-10 px-4">
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-2xl">
-              {isOwner ? "Your Wishlist" : `${influencerName || "Influencer"}'s Wishlist`}
-            </CardTitle>
-            <CardDescription>
-              {isOwner 
-                ? "Manage items you'd like your fans to gift you"
-                : `Browse items that ${influencerName || "this influencer"} would like to receive`}
-            </CardDescription>
+          <CardHeader className="flex flex-row justify-between items-center">
+            <div>
+              <CardTitle className="text-2xl">
+                {isOwner ? "Your Wishlist" : `${influencerName || "Influencer"}'s Wishlist`}
+              </CardTitle>
+              <CardDescription>
+                {isOwner 
+                  ? "Manage items you'd like your fans to gift you"
+                  : `Browse items that ${influencerName || "this influencer"} would like to receive`}
+              </CardDescription>
+            </div>
+            
+            {!isOwner && userId && (
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => window.location.href = `/profile/${userId}`}
+              >
+                <User size={16} />
+                View Profile
+              </Button>
+            )}
           </CardHeader>
         </Card>
 

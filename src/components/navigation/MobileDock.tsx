@@ -2,6 +2,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Gift, User, Search, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/hooks/useUser";
 
 interface MobileDockProps {
   setNavOpen: (isOpen: boolean) => void;
@@ -12,6 +13,7 @@ const MobileDock = ({
 }: MobileDockProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useUser();
   
   const dockItems = [
     {
@@ -27,7 +29,7 @@ const MobileDock = ({
     {
       icon: Gift,
       label: "Gifts",
-      path: "/gifts-sent"
+      path: user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent"
     }, 
     {
       icon: User,
