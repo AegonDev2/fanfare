@@ -5,7 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
 interface NavHeaderProps {
@@ -81,7 +81,7 @@ const NavHeader = ({
         }
       } catch (error: any) {
         console.error("Error checking user role:", error);
-        toast({
+        useToast().toast({
           title: "Error",
           description: "Failed to verify user permissions",
           variant: "destructive"

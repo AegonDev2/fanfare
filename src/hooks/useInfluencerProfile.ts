@@ -28,14 +28,28 @@ export const useInfluencerProfile = (profileId: string | null) => {
     queryFn: async () => {
       if (!profileId) return null;
       
-      const { data, error } = await supabase
+      // Fetch influencer profile
+      const { data: profileData, error: profileError } = await supabase
         .from('influencer_profiles')
-        .select('*, size_preferences:size_preferences(*)')
+        .select('*')
         .eq('id', profileId)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (profileError) throw profileError;
+      
+      // Fetch size preferences separately
+      const { data: sizeData, error: sizeError } = await supabase
+        .from('size_preferences')
+        .select('*')
+        .eq('influencer_id', profileId)
+        .maybeSingle();
+      
+      // Don't throw error for size preferences if not found
+      // Just combine the data
+      return {
+        ...profileData,
+        size_preferences: sizeError ? null : sizeData
+      };
     },
     enabled: !!profileId
   });

@@ -608,6 +608,50 @@ export type Database = {
         }
         Relationships: []
       }
+      size_preferences: {
+        Row: {
+          created_at: string
+          food_preferences: string[] | null
+          id: string
+          influencer_id: string
+          pants_length: string | null
+          pants_waist: string | null
+          shoe_size: string | null
+          tshirt_size: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          food_preferences?: string[] | null
+          id?: string
+          influencer_id: string
+          pants_length?: string | null
+          pants_waist?: string | null
+          shoe_size?: string | null
+          tshirt_size?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          food_preferences?: string[] | null
+          id?: string
+          influencer_id?: string
+          pants_length?: string | null
+          pants_waist?: string | null
+          shoe_size?: string | null
+          tshirt_size?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "size_preferences_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: true
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number

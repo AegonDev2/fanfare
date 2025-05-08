@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,19 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useUser } from "@/hooks/useUser";
 import { Gift, Edit } from "lucide-react";
+import { useInfluencerProfile } from "@/hooks/useInfluencerProfile";
 
 const isValidUUID = (uuid: string) => {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
 };
-
-interface SizePreferences {
-  tshirt_size?: string;
-  pants_waist?: string;
-  pants_length?: string;
-  shoe_size?: string;
-  food_preferences?: string[];
-}
 
 const Profile = () => {
   const { id } = useParams();
@@ -35,38 +27,10 @@ const Profile = () => {
   const profileId = id || user?.id;
   
   const {
-    data: influencer,
+    influencer,
     isLoading,
     error
-  } = useQuery({
-    queryKey: ['influencer', profileId],
-    queryFn: async () => {
-      console.log("Fetching profile for ID:", profileId);
-      if (!profileId || !isValidUUID(profileId)) {
-        throw new Error("Invalid profile ID");
-      }
-      const {
-        data,
-        error
-      } = await supabase.from('influencer_profiles')
-                        .select('*, size_preferences:size_preferences(*)')
-                        .eq('id', profileId)
-                        .maybeSingle();
-      
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
-      }
-      if (!data) {
-        console.log("Influencer not found");
-        throw new Error("Influencer not found");
-      }
-      console.log("Fetched influencer:", data);
-      return data;
-    },
-    retry: false,
-    enabled: !!profileId
-  });
+  } = useInfluencerProfile(profileId);
 
   // This function is no longer used directly, but kept for backward compatibility
   const handleSendGift = async (giftItem: string, giftMessage: string) => {
