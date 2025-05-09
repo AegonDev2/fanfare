@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ export default function GiftCart() {
   const [influencerDetails, setInfluencerDetails] = useState<Record<string, any>>({});
   
   // Load influencer details for each item in the cart
-  useState(() => {
+  useEffect(() => {
     async function loadInfluencerDetails() {
       const influencerIds = [...new Set(cartItems.map(item => item.influencerId))];
       

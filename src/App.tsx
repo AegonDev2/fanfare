@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
@@ -16,7 +17,7 @@ import GiftRequests from "./pages/GiftRequests";
 import GiftsSent from "./pages/GiftsSent";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
-import MobileDock from "./components/landing/MobileDock";
+import MobileDock from "@/components/navigation/MobileDock";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrderDetails from "./pages/AdminOrderDetails";
 import { Toaster } from "@/components/ui/toaster";
