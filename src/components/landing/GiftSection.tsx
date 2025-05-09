@@ -20,7 +20,7 @@ const GiftCard = memo(({
   const [isHovering, setIsHovering] = useState(false);
   
   const handleGiftClick = () => {
-    navigate(`/place-order?gift=${encodeURIComponent(gift.name)}`);
+    navigate(`/gift-selection?gift=${encodeURIComponent(gift.id)}`);
   };
   
   return (
