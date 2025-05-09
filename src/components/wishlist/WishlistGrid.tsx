@@ -89,9 +89,8 @@ const WishlistGrid = ({
                 item={item}
                 showActions={isOwner}
                 onRemove={isOwner && onRemoveItem ? 
-                  (id) => (
-                    document.querySelector<HTMLButtonElement>(`[data-item-id="${id}"]`)?.click()
-                  ) : undefined
+                  () => document.querySelector<HTMLButtonElement>(`[data-item-id="${item.id}"]`)?.click() 
+                  : undefined
                 }
                 onRequestGift={!isOwner && onRequestGift ? onRequestGift : undefined}
               />

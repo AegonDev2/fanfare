@@ -18,8 +18,6 @@ import GiftsSent from "./pages/GiftsSent";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import MobileDock from "@/components/navigation/MobileDock";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminOrderDetails from "./pages/AdminOrderDetails";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -39,7 +37,7 @@ function App() {
             <Toaster />
             <Router>
               <Routes>
-                <Route path="/" element={<Landing />} />
+                <Route path="/" element={<Landing setNavOpen={setNavOpen} />} />
                 <Route path="/index" element={<Index />} />
                 <Route
                   path="/profile/:id"
@@ -55,7 +53,7 @@ function App() {
                 />
                 <Route path="/create-profile" element={<CreateInfluencerProfile />} />
                 <Route path="/auth/*" element={<Auth />} />
-                <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/wishlist/:id?" element={<Wishlist />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
                 <Route path="/track-order" element={<TrackOrder />} />
@@ -70,7 +68,7 @@ function App() {
                 <Route path="/admin/order/:id" element={<AdminOrderDetails />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              <MobileDock isNavOpen={isNavOpen} setNavOpen={setNavOpen} />
+              <MobileDock setNavOpen={setNavOpen} />
             </Router>
           </div>
         </ThemeProvider>

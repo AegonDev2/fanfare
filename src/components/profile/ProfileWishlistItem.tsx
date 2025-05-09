@@ -23,7 +23,7 @@ const ProfileWishlistItem = ({
 
   const handleGiftClick = () => {
     if (productUrl) {
-      // Update: Now redirecting to gift selection page with the gift URL as a parameter
+      // Now redirecting to gift selection page with the gift URL as a parameter
       navigate(`/gift-selection?gift=${encodeURIComponent(productUrl)}`);
     }
   };

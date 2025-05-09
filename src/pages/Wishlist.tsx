@@ -62,8 +62,8 @@ const Wishlist = () => {
       return;
     }
 
-    const giftRequestUrl = `/place-order/${userId}?productUrl=${encodeURIComponent(item.product_url)}&productTitle=${encodeURIComponent(item.product_title)}`;
-    window.location.href = giftRequestUrl;
+    // Update: Now redirecting to gift selection page with the gift URL as a parameter
+    window.location.href = `/gift-selection?gift=${encodeURIComponent(item.product_url)}`;
   };
 
   // Helper function wrapper for addWishlistItem that returns void
