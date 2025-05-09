@@ -46,8 +46,7 @@ const WishlistGrid = ({
                 onAddItem={async (item) => {
                   await onAddItem(item);
                   setIsFormVisible(false);
-                }} 
-                onCancel={() => setIsFormVisible(false)}
+                }}
               />
             </div>
           ) : (

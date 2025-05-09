@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ProductDetails, InfluencerAddress } from "@/types/order";
@@ -30,9 +30,20 @@ const ProductPreview = ({
   giftUrl = '',
 }: ProductPreviewProps) => {
   const isPreviewAvailable = productPreview && productPreview.name !== "Enter a product URL to preview";
+  const hasProcessedUrl = isPreviewAvailable || giftUrl.trim() !== '';
   
-  // Only show tabs if product preview is available
+  // Only show tabs if product preview is available AND user has processed product
   const [activeTab, setActiveTab] = useState<string>(isPreviewAvailable ? "product" : "message");
+
+  // Track if product has been processed
+  const [productProcessed, setProductProcessed] = useState<boolean>(isPreviewAvailable);
+  
+  // Update when product preview changes
+  useEffect(() => {
+    if (isPreviewAvailable) {
+      setProductProcessed(true);
+    }
+  }, [isPreviewAvailable]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +66,11 @@ const ProductPreview = ({
         </div>
       </div>
     );
+  }
+
+  // Don't show anything until product has been processed
+  if (!hasProcessedUrl) {
+    return null;
   }
 
   // Calculate total even when no valid preview exists

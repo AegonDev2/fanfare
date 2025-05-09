@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ShoppingCart, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+
 interface ProductUrlInputProps {
   giftItem: string;
   onUrlChange: (url: string) => void;
@@ -10,6 +11,7 @@ interface ProductUrlInputProps {
   isFetchingProduct: boolean;
   fetchProgress: number;
 }
+
 const ProductUrlInput = ({
   giftItem,
   onUrlChange,
@@ -19,6 +21,7 @@ const ProductUrlInput = ({
 }: ProductUrlInputProps) => {
   const [isValid, setIsValid] = useState(true);
   const [validationMessage, setValidationMessage] = useState("");
+
   const validateUrl = (url: string) => {
     if (!url) {
       setIsValid(true);
@@ -34,10 +37,12 @@ const ProductUrlInput = ({
       setValidationMessage("Please enter a valid URL");
     }
   };
+
   const handleUrlChange = (url: string) => {
     onUrlChange(url);
     validateUrl(url);
   };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!giftItem) {
@@ -50,6 +55,7 @@ const ProductUrlInput = ({
     }
     onPreviewClick();
   };
+
   const getButtonPrompt = () => {
     if (isFetchingProduct) {
       return <>
@@ -59,9 +65,10 @@ const ProductUrlInput = ({
     }
     return <>
         <ShoppingCart className="h-4 w-4 mr-2" />
-        Preview Product
+        Process Product
       </>;
   };
+
   const renderFetchProgressStatus = () => {
     if (!isFetchingProduct) return null;
     let statusMessage = "Initializing...";
@@ -85,7 +92,9 @@ const ProductUrlInput = ({
         <span className="ml-2 text-sm text-gray-600">{statusMessage}</span>
       </div>;
   };
+
   const recommendations = ["https://www.flipkart.com/fastrack-optimus-pro-1-43-amoled-display-aod-466x466-functional-crown-bt-calling-smartwatch/p/itma4744c9053b72?pid=SMWGV3ZY9YJYEYEC", "https://amzn.in/d/2pPwjuQ", "https://www.myntra.com/watches/fastrack/fastrack-unisex-black-digital-watch-38045pp02/14599416/buy"];
+
   return <section className="mb-8 py-0 my-[20px]">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">
         Place Order
@@ -121,4 +130,5 @@ const ProductUrlInput = ({
       </div>
     </section>;
 };
+
 export default ProductUrlInput;
