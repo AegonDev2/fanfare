@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ProductDetails, InfluencerAddress } from "@/types/order";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle } from "lucide-react";
+import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ProductPreviewProps {
@@ -29,11 +29,14 @@ const ProductPreview = ({
   paymentStep = 'initial',
   giftUrl = '',
 }: ProductPreviewProps) => {
-  const [activeTab, setActiveTab] = useState<string>("product");
+  const isPreviewAvailable = productPreview && productPreview.name !== "Enter a product URL to preview";
+  
+  // Only show tabs if product preview is available
+  const [activeTab, setActiveTab] = useState<string>(isPreviewAvailable ? "product" : "message");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (activeTab === "message") {
+    if (activeTab === "message" || !isPreviewAvailable) {
       onSubmit(e);
     } else {
       setActiveTab("message");
@@ -54,15 +57,80 @@ const ProductPreview = ({
     );
   }
 
-  const isPreviewAvailable = productPreview && productPreview.name !== "Enter a product URL to preview";
+  // Calculate total even when no valid preview exists
   const defaultPrice = 0;
   const defaultPlatformFee = 5.00;
-  
-  // Calculate total even when no valid preview exists
   const productPrice = isPreviewAvailable ? productPreview.priceInr : defaultPrice;
   const platformFee = isPreviewAvailable ? productPreview.platformFee : defaultPlatformFee;
   const totalAmount = productPrice + platformFee;
 
+  // Simplified view when no product preview is available
+  if (!isPreviewAvailable) {
+    return (
+      <div className="mt-8">
+        <div className="bg-white p-6 shadow-md rounded-lg">
+          <h3 className="text-lg font-medium mb-4">Gift Request</h3>
+          
+          <Alert className="mb-6 bg-amber-50 border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertDescription className="text-amber-800">
+              You're sending a gift using only the provided URL. The influencer will review this request before accepting.
+            </AlertDescription>
+          </Alert>
+          
+          <div className="bg-gray-50 p-4 rounded-md mb-4">
+            <h4 className="font-medium mb-2 flex items-center">
+              <LinkIcon className="h-4 w-4 mr-2 text-funky-purple" />
+              Product URL
+            </h4>
+            <p className="text-sm text-gray-600 break-all">{giftUrl}</p>
+          </div>
+          
+          <div className="mb-6">
+            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+              Add a Personal Message
+            </label>
+            <Textarea
+              id="message"
+              placeholder="Write a personal message to the influencer..."
+              value={message}
+              onChange={(e) => onMessageChange(e.target.value)}
+              rows={6}
+              className="mb-4"
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-md mb-6">
+            <div className="flex items-center mb-4">
+              <Wallet className="h-5 w-5 mr-2 text-primary" />
+              <span className="font-semibold">Payment Summary</span>
+            </div>
+            
+            <div className="flex justify-between mb-2 text-sm">
+              <span>Platform Fee</span>
+              <span>₹{platformFee.toFixed(2)}</span>
+            </div>
+            <Separator className="my-2" />
+            <div className="flex justify-between font-semibold">
+              <span>Total Amount</span>
+              <span>₹{platformFee.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <Button
+            onClick={handleSubmit}
+            className="w-full bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple transition-all"
+            disabled={isLoading}
+          >
+            {isLoading ? "Processing..." : "Submit Gift Request"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Original tabbed view for when product preview is available
   return (
     <div className="mt-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -79,44 +147,23 @@ const ProductPreview = ({
 
         <TabsContent value="product" className="mt-4">
           <div className="bg-white p-6 shadow-md rounded-lg">
-            {!isPreviewAvailable && (
-              <Alert className="mb-6 bg-amber-50 border-amber-200">
-                <AlertCircle className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="text-amber-800">
-                  Product preview is not available. You can still proceed with your gift request 
-                  using the URL you provided.
-                </AlertDescription>
-              </Alert>
-            )}
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <img
-                  src={isPreviewAvailable ? productPreview.image : "https://placehold.co/600x400?text=No+Preview+Available"}
-                  alt={isPreviewAvailable ? productPreview.name : "Product preview not available"}
+                  src={productPreview.image}
+                  alt={productPreview.name}
                   className="w-full h-auto rounded-md object-contain"
                   style={{ maxHeight: "300px" }}
                 />
               </div>
               <div className="flex flex-col justify-between">
                 <div>
-                  {isPreviewAvailable ? (
-                    <h2 className="text-xl font-semibold mb-4">{productPreview.name}</h2>
-                  ) : (
-                    <div>
-                      <h2 className="text-xl font-semibold mb-2">Product URL</h2>
-                      <p className="text-sm text-gray-600 break-all mb-4">{giftUrl}</p>
-                    </div>
-                  )}
+                  <h2 className="text-xl font-semibold mb-4">{productPreview.name}</h2>
                   
                   <div className="bg-gray-50 p-4 rounded-md mb-4">
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-600">Price:</span>
-                      {isPreviewAvailable ? (
-                        <span className="font-semibold">₹{productPrice.toFixed(2)}</span>
-                      ) : (
-                        <span className="font-semibold text-gray-500">Not available</span>
-                      )}
+                      <span className="font-semibold">₹{productPrice.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-600">Platform Fee:</span>
@@ -171,11 +218,7 @@ const ProductPreview = ({
               
               <div className="flex justify-between mb-2 text-sm">
                 <span>Subtotal</span>
-                {isPreviewAvailable ? (
-                  <span>₹{productPrice.toFixed(2)}</span>
-                ) : (
-                  <span>₹{defaultPrice.toFixed(2)}</span>
-                )}
+                <span>₹{productPrice.toFixed(2)}</span>
               </div>
               <div className="flex justify-between mb-2 text-sm">
                 <span>Platform Fee</span>

@@ -43,8 +43,8 @@ const WishlistGrid = ({
           {isFormVisible ? (
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md border border-funky-purple/10">
               <WishlistForm 
-                onAddItem={(item) => {
-                  onAddItem(item);
+                onAddItem={async (item) => {
+                  await onAddItem(item);
                   setIsFormVisible(false);
                 }} 
                 onCancel={() => setIsFormVisible(false)}
