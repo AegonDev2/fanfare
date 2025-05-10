@@ -52,7 +52,7 @@ const WalletPage = () => {
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="flex items-center mb-6">
           <WalletIcon className="w-8 h-8 mr-2 text-primary" />
-          <h1 className="text-3xl font-bold">My Wallet</h1>
+          <h1 className="text-3xl font-bold text-gray-950">My Wallet</h1>
         </div>
         
         <WalletHeader wallet={wallet} loading={loading} />
@@ -100,7 +100,7 @@ const WalletPage = () => {
                         <span>Add Money</span>
                       </button>
                       
-                      <button onClick={() => setActiveTab("transactions")} className="flex items-center justify-center gap-2 p-3 rounded-md border border-gray-300">
+                      <button onClick={() => setActiveTab("transactions")} className="flex items-center justify-center gap-2 p-3 rounded-md border border-gray-300 bg-zinc-950 hover:bg-zinc-800">
                         <Receipt className="w-5 h-5" />
                         <span>View Transactions</span>
                       </button>
