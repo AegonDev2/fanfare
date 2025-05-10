@@ -2,7 +2,7 @@
 import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import type { OrderDetails } from "@/types/admin";
+import type { OrderDetails, UnderProcessOrder, CompletedOrder } from "@/types/admin";
 
 export const useAdminOrders = () => {
   const [orders, setOrders] = useState<OrderDetails[]>([]);
@@ -40,36 +40,23 @@ export const useAdminOrders = () => {
       
       console.log("Completed orders:", completedOrders?.length);
 
-      // Combine and transform the data
-      const combinedOrders = [
-        ...((underProcessOrders || []).map(order => ({
-          ...order,
-          status: 'under_process' as const
-        }))),
-        ...((completedOrders || []).map(order => ({
-          ...order,
-          status: 'completed' as const
-        })))
-      ];
-
       // If no orders are found, set empty array and return early
-      if (combinedOrders.length === 0) {
+      if ((!underProcessOrders || underProcessOrders.length === 0) && 
+          (!completedOrders || completedOrders.length === 0)) {
         console.log("No orders found");
         setOrders([]);
         setIsLoading(false);
         return;
       }
       
-      console.log(`Total orders found: ${combinedOrders.length}`);
-
       // Enrich orders with additional data
-      const enrichedOrders = await Promise.all(
-        combinedOrders.map(async (order) => {
+      const enrichedOrders: OrderDetails[] = await Promise.all([
+        ...((underProcessOrders || []).map(async (order) => {
           try {
-            // Get fan's email
+            // Get fan's email and name
             const { data: fanData, error: fanError } = await supabase
               .from('profiles')
-              .select('email')
+              .select('email, name')
               .eq('id', order.user_id)
               .maybeSingle();
 
@@ -82,19 +69,57 @@ export const useAdminOrders = () => {
             
             return {
               ...order,
+              status: 'under_process' as const,
               fan_email: fanData?.email || "Unknown",
+              fan_name: fanData?.name || "Unknown",
               influencer_name: influencerName,
             } as OrderDetails;
           } catch (err) {
             console.error(`Error enriching order ${order.id}:`, err);
             return {
               ...order,
+              status: 'under_process' as const,
               fan_email: "Unknown",
+              fan_name: "Unknown",
               influencer_name: "Unknown",
             } as OrderDetails;
           }
-        })
-      );
+        })),
+        ...((completedOrders || []).map(async (order) => {
+          try {
+            // Get fan's email and name
+            const { data: fanData, error: fanError } = await supabase
+              .from('profiles')
+              .select('email, name')
+              .eq('id', order.user_id)
+              .maybeSingle();
+
+            if (fanError) {
+              console.warn(`Error fetching fan data for order ${order.id}:`, fanError);
+            }
+
+            // Handle potential null influencer data safely
+            const influencerName = order.influencer?.name || "Unknown";
+            
+            return {
+              ...order,
+              status: 'completed' as const,
+              fan_email: fanData?.email || "Unknown",
+              fan_name: fanData?.name || "Unknown",
+              influencer_name: influencerName,
+            } as OrderDetails;
+          } catch (err) {
+            console.error(`Error enriching order ${order.id}:`, err);
+            return {
+              ...order,
+              status: 'completed' as const,
+              fan_email: "Unknown",
+              fan_name: "Unknown",
+              influencer_name: "Unknown",
+            } as OrderDetails;
+          }
+        }))
+      ]);
 
       console.log('Fetched and enriched admin orders successfully:', enrichedOrders.length);
       setOrders(enrichedOrders);

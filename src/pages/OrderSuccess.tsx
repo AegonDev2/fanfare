@@ -25,7 +25,7 @@ const OrderSuccess = () => {
         // First try to find the order in the under_process table
         let { data, error } = await supabase
           .from('orders_under_process')
-          .select('*')
+          .select('*, influencer:influencer_id(*)')
           .eq('id', orderId)
           .single();
 
@@ -33,22 +33,28 @@ const OrderSuccess = () => {
         if (error) {
           const { data: completedData, error: completedError } = await supabase
             .from('orders_completed')
-            .select('*')
+            .select('*, influencer:influencer_id(*)')
             .eq('id', orderId)
             .single();
             
           if (!completedError && completedData) {
-            const orderWithStatus: OrderDetails = {
+            const orderWithStatus = {
               ...completedData,
-              status: 'completed' 
+              status: 'completed' as const,
+              fan_email: "N/A",
+              fan_name: "N/A",
+              influencer_name: completedData.influencer?.name || "N/A"
             };
             setOrderDetails(orderWithStatus);
           }
         } else if (data) {
           // Add status property if from under_process
-          const orderWithStatus: OrderDetails = {
+          const orderWithStatus = {
             ...data,
-            status: 'under_process'
+            status: 'under_process' as const,
+            fan_email: "N/A",
+            fan_name: "N/A",
+            influencer_name: data.influencer?.name || "N/A"
           };
           setOrderDetails(orderWithStatus);
         }

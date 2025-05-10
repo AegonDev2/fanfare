@@ -14,7 +14,7 @@ export interface BaseOrder {
   total_amount: number | null;
   message: string | null;
   shipping_address: Json;
-  influencer: {
+  influencer?: {
     id: string;
     name: string;
     avatar_url?: string;
@@ -41,4 +41,4 @@ export interface EnrichedOrderFields {
 }
 
 // Combined type for orders in the admin panel
-export type OrderDetails = (UnderProcessOrder | CompletedOrder) & EnrichedOrderFields;
+export type OrderDetails = (UnderProcessOrder | CompletedOrder) & Partial<EnrichedOrderFields>;

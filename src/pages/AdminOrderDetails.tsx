@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { OrderDetails } from "@/types/admin";
+import { OrderDetails, UnderProcessOrder, CompletedOrder } from "@/types/admin";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Package, ArrowLeft, CheckCircle, Clock, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +39,7 @@ const AdminOrderDetails = () => {
         setLoading(true);
         
         // First try under_process table
-        let { data: underProcessOrder, error: underProcessError } = await supabase
+        let { data: underProcessData, error: underProcessError } = await supabase
           .from('orders_under_process')
           .select('*, influencer:influencer_id(*)')
           .eq('id', id)
@@ -47,9 +47,11 @@ const AdminOrderDetails = () => {
           
         if (underProcessError) throw underProcessError;
         
+        let orderData = null;
+        
         // Then try completed table if not found
-        if (!underProcessOrder) {
-          const { data: completedOrder, error: completedError } = await supabase
+        if (!underProcessData) {
+          const { data: completedData, error: completedError } = await supabase
             .from('orders_completed')
             .select('*, influencer:influencer_id(*)')
             .eq('id', id)
@@ -57,22 +59,20 @@ const AdminOrderDetails = () => {
             
           if (completedError) throw completedError;
           
-          if (completedOrder) {
-            // Explicitly type it as an object with added status property
-            underProcessOrder = {
-              ...completedOrder,
-              status: 'completed'
+          if (completedData) {
+            orderData = {
+              ...completedData,
+              status: 'completed' as const
             };
           }
         } else {
-          // Explicitly add the status property
-          underProcessOrder = {
-            ...underProcessOrder,
-            status: 'under_process'
+          orderData = {
+            ...underProcessData,
+            status: 'under_process' as const
           };
         }
         
-        if (!underProcessOrder) {
+        if (!orderData) {
           toast({
             title: "Order not found",
             description: `No order with ID ${id} was found`,
@@ -86,16 +86,16 @@ const AdminOrderDetails = () => {
         const { data: fanData } = await supabase
           .from('profiles')
           .select('email, name')
-          .eq('id', underProcessOrder.user_id)
+          .eq('id', orderData.user_id)
           .maybeSingle();
           
-        // Cast the enriched order to OrderDetails type using 'as'
-        const enrichedOrder = {
-          ...underProcessOrder,
+        // Create enriched order with all required fields
+        const enrichedOrder: OrderDetails = {
+          ...orderData,
           fan_email: fanData?.email || "Unknown",
-          fan_name: fanData?.name || "Unknown Fan",
-          influencer_name: underProcessOrder.influencer?.name || "Unknown",
-        } as OrderDetails;
+          fan_name: fanData?.name || "Unknown",
+          influencer_name: orderData.influencer?.name || "Unknown",
+        };
         
         setOrder(enrichedOrder);
       } catch (error) {
