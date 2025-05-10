@@ -19,7 +19,7 @@ const GiftRequests = () => {
   } = useGiftRequestActions(requests, setRequests);
   return <div className="min-h-screen bg-gray-100">
       <Header />
-      <main className="container mx-auto p-4 pt-20 px-[15px] py-[109px]">
+      <main className="container mx-auto p-4 pt-20 px-[15px] py-[110px]">
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-2xl">Gift Requests</CardTitle>
