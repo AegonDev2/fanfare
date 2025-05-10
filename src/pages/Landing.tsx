@@ -70,7 +70,7 @@ const Landing = ({
         
         <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-8">
           {/* Top Fans Widget - Positioned above influencers */}
-          <div className="w-full px-1 sm:px-0">
+          <div className="w-full px-1 sm:px-0 my-0">
             <TopFansWidget topFans={leaderboard} isLoading={isLeaderboardLoading} month={currentMonth} year={currentYear} />
           </div>
 
@@ -99,7 +99,7 @@ const Landing = ({
           </div>
         </div>
         
-        <footer className="mt-8 sm:mt-16 text-center pb-16">
+        <footer className="mt-8 sm:mt-16 text-center pb-16 my-[18px] py-0">
           <div className="mb-3 flex items-center justify-center">
             <div className="relative">
               <div className="w-8 sm:w-12 h-8 sm:h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg border border-funky-purple/20 z-10 relative">
