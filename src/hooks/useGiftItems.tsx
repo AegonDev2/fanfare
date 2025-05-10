@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
@@ -19,7 +19,7 @@ export interface GiftItem {
 export function useGiftItems() {
   const { toast } = useToast();
   
-  const fetchGiftItems = async (): Promise<GiftItem[]> => {
+  const fetchGiftItems = useCallback(async (): Promise<GiftItem[]> => {
     try {
       const { data, error } = await supabase
         .from('gift_selection_items')
@@ -38,10 +38,9 @@ export function useGiftItems() {
       });
       return [];
     }
-  };
+  }, [toast]);
 
-  // Optimized to prevent infinite retries and better handle errors
-  const getGiftById = async (id: string): Promise<GiftItem | null> => {
+  const getGiftById = useCallback(async (id: string): Promise<GiftItem | null> => {
     if (!id) return null;
     
     try {
@@ -52,7 +51,6 @@ export function useGiftItems() {
         .single();
         
       if (error) {
-        // Log but don't throw to avoid triggering unnecessary retries
         console.error('Error fetching gift item:', error);
         return null;
       }
@@ -60,18 +58,16 @@ export function useGiftItems() {
       return data;
     } catch (error: any) {
       console.error('Error fetching gift item:', error);
-      // Return null instead of throwing to prevent infinite retries
       return null;
     }
-  };
+  }, []);
 
-  // Configure React Query with proper retry settings
   const queryResult = useQuery({
     queryKey: ['giftItems'],
     queryFn: fetchGiftItems,
-    retry: 1,
-    retryDelay: 1000,
+    retry: false, // Prevent retries to avoid infinite loops
     staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
   });
 
   return {

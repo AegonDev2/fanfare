@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Gift, ShoppingCart, ChevronRight, Loader2 } from 'lucide-react';
+import { Gift, ShoppingCart, ChevronRight, Loader2, X } from 'lucide-react';
 import Header from '@/components/landing/Header';
 import GiftSection from '@/components/landing/GiftSection';
 import InfluencerSelector from '@/components/gift-selection/InfluencerSelector';
@@ -21,6 +22,8 @@ export default function GiftSelection() {
   const [giftMessage, setGiftMessage] = useState('');
   const [activeTab, setActiveTab] = useState('gift');
   const [error, setError] = useState<boolean>(false);
+  const [fetchAttempted, setFetchAttempted] = useState(false);
+  const isMounted = useRef(true);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -29,16 +32,25 @@ export default function GiftSelection() {
   
   const giftId = searchParams.get('gift');
   
+  // Use useCallback to memoize the loadGift function
   const loadGift = useCallback(async () => {
-    if (!giftId) {
-      setLoading(false);
+    if (!giftId || !isMounted.current) {
+      if (isMounted.current) {
+        setLoading(false);
+        setFetchAttempted(true);
+      }
       return;
     }
     
     try {
-      setLoading(true);
-      setError(false);
+      if (isMounted.current) {
+        setLoading(true);
+        setError(false);
+      }
+      
       const giftData = await getGiftById(giftId);
+      
+      if (!isMounted.current) return;
       
       if (giftData) {
         setGift(giftData);
@@ -50,64 +62,35 @@ export default function GiftSelection() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
-      console.error('Error loading gift:', error);
-      setError(true);
+    } catch (err) {
+      if (isMounted.current) {
+        console.error('Error loading gift:', err);
+        setError(true);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+        setFetchAttempted(true);
+      }
     }
   }, [giftId, getGiftById, toast]);
   
+  // Effect to load gift data on mount and giftId changes
   useEffect(() => {
-    // Flag to track if component is still mounted
-    let isMounted = true;
+    isMounted.current = true;
     
-    const fetchData = async () => {
-      if (!giftId) {
-        if (isMounted) setLoading(false);
-        return;
-      }
-      
-      try {
-        if (isMounted) {
-          setLoading(true);
-          setError(false);
-        }
-        
-        const giftData = await getGiftById(giftId);
-        
-        if (!isMounted) return;
-        
-        if (giftData) {
-          setGift(giftData);
-        } else {
-          setError(true);
-          toast({
-            title: 'Gift Not Found',
-            description: 'The requested gift could not be found',
-            variant: 'destructive',
-          });
-        }
-      } catch (error) {
-        if (!isMounted) return;
-        console.error('Error loading gift:', error);
-        setError(true);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
+    // Only load if we haven't fetched or if giftId changes
+    if (!fetchAttempted || giftId) {
+      loadGift();
+    }
     
-    fetchData();
-    
-    // Clean up function to prevent state updates after unmount
+    // Cleanup function
     return () => {
-      isMounted = false;
+      isMounted.current = false;
     };
-  }, [giftId, getGiftById, toast]);
-
-  const handleAddToCart = () => {
+  }, [loadGift, fetchAttempted, giftId]);
+  
+  const handleAddToCart = useCallback(() => {
     if (!gift) {
       toast({
         title: 'Error',
@@ -133,39 +116,49 @@ export default function GiftSelection() {
     setSelectedInfluencerId(null);
     setGiftMessage('');
     
-    // Redirect to cart if user wants to proceed
+    // Redirect to cart
     navigate('/gift-cart');
-  };
+  }, [gift, selectedInfluencerId, giftMessage, addToCart, navigate, toast]);
   
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <Header />
-        <div className="container mx-auto px-4 pt-20 flex flex-col items-center justify-center py-16">
-          <Loader2 className="h-12 w-12 text-funky-purple animate-spin" />
-          <p className="mt-4 text-lg text-gray-500">Loading gift details...</p>
-        </div>
+  // Create loading and error UI components using memoization
+  const loadingContent = useMemo(() => (
+    <div className="min-h-screen bg-gray-100">
+      <Header />
+      <div className="container mx-auto px-4 pt-20 flex flex-col items-center justify-center py-16">
+        <Loader2 className="h-12 w-12 text-funky-purple animate-spin" />
+        <p className="mt-4 text-lg text-gray-500">Loading gift details...</p>
       </div>
-    );
+    </div>
+  ), []);
+  
+  const errorContent = useMemo(() => (
+    <div className="min-h-screen bg-gray-100">
+      <Header />
+      <div className="container mx-auto px-4 pt-20 py-8">
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-red-500">Gift Not Found</CardTitle>
+              <X className="h-5 w-5 text-red-500" />
+            </div>
+            <CardDescription>The requested gift could not be found or there was an error loading it.</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button onClick={() => navigate('/')}>Back to Home</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  ), [navigate]);
+
+  // Early return for loading state
+  if (loading) {
+    return loadingContent;
   }
   
-  if (error || (!gift && giftId)) {
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <Header />
-        <div className="container mx-auto px-4 pt-20 py-8">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle className="text-red-500">Gift Not Found</CardTitle>
-              <CardDescription>The requested gift could not be found.</CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button onClick={() => navigate('/')}>Back to Home</Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
-    );
+  // Early return for error state
+  if (error || (!gift && giftId && fetchAttempted)) {
+    return errorContent;
   }
 
   return (

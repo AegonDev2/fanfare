@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Gift } from "lucide-react";
@@ -19,9 +19,9 @@ const GiftCard = memo(({
   const navigate = useNavigate();
   const [isHovering, setIsHovering] = useState(false);
   
-  const handleGiftClick = () => {
+  const handleGiftClick = useCallback(() => {
     navigate(`/gift-selection?gift=${encodeURIComponent(gift.id)}`);
-  };
+  }, [navigate, gift.id]);
   
   return (
     <div 
@@ -72,24 +72,26 @@ GiftCard.displayName = "GiftCard";
 const GiftSection = () => {
   const { data: gifts = [], isLoading } = useGiftItems();
   const [searchValue, setSearchValue] = useState("");
-  const [filteredGifts, setFilteredGifts] = useState<GiftItem[]>([]);
   const carouselRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   
-  // Fix: Moved useEffect out of component render method and properly set dependencies
-  useEffect(() => {
-    if (gifts && Array.isArray(gifts)) {
-      if (searchValue.trim() === "") {
-        setFilteredGifts(gifts);
-      } else {
-        const filtered = gifts.filter(gift => 
-          gift.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-          (gift.description && gift.description.toLowerCase().includes(searchValue.toLowerCase()))
-        );
-        setFilteredGifts(filtered);
-      }
+  // Using useMemo to filter gifts to prevent unnecessary re-renders
+  const filteredGifts = useMemo(() => {
+    if (!gifts || !Array.isArray(gifts)) return [];
+    
+    if (searchValue.trim() === "") {
+      return gifts;
     }
-  }, [searchValue, gifts]); // Only depend on searchValue and gifts
+    
+    return gifts.filter(gift => 
+      gift.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+      (gift.description && gift.description.toLowerCase().includes(searchValue.toLowerCase()))
+    );
+  }, [gifts, searchValue]);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  }, []);
 
   return (
     <section className="mb-4 relative">
@@ -101,7 +103,7 @@ const GiftSection = () => {
             placeholder="Search Gifts" 
             type="text" 
             value={searchValue} 
-            onChange={e => setSearchValue(e.target.value)} 
+            onChange={handleSearchChange} 
             className="w-full md:w-64 rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs shadow-sm" 
           />
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-funky-purple/60" />
