@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import WalletWidget from "@/components/wallet/WalletWidget";
 import MobileDock from "@/components/navigation/MobileDock";
+import Navbar from "@/components/navigation/Navbar";
 import FloatingHeader from "@/components/ui/floating-header";
 
 interface HeaderProps {
@@ -20,6 +21,7 @@ const Header = ({
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
   
@@ -32,8 +34,9 @@ const Header = ({
   }, []);
 
   const handleNavToggle = () => {
+    setIsOpen(!isOpen);
     if (setNavOpen) {
-      setNavOpen(true);
+      setNavOpen(!isOpen);
     }
   };
 
@@ -66,6 +69,9 @@ const Header = ({
           <FloatingHeader setNavOpen={setNavOpen} />
         </div>
       </header>
+      
+      {/* Navbar that slides in from the side */}
+      <Navbar isOpen={isOpen} setIsOpen={setIsOpen} />
       
       {isMobile && <MobileDock setNavOpen={setNavOpen} />}
     </>

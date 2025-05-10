@@ -25,6 +25,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import GiftSelection from "./pages/GiftSelection";
 import GiftCart from "./pages/GiftCart";
+import Navbar from "@/components/navigation/Navbar";
 
 const queryClient = new QueryClient();
 
@@ -32,50 +33,44 @@ function App() {
   const [isNavOpen, setNavOpen] = useState(false);
   const isDarkMode = false;
 
-    return (
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <div className={isDarkMode ? "dark" : ""}>
-            <Toaster />
-            <Router>
-              <Routes>
-                <Route path="/" element={<Landing setNavOpen={setNavOpen} />} />
-                <Route path="/index" element={<Index />} />
-                <Route
-                  path="/profile/:id"
-                  element={
-                    <Profile />
-                  }
-                />
-                <Route
-                  path="/edit-profile"
-                  element={
-                    <EditProfile />
-                  }
-                />
-                <Route path="/create-profile" element={<CreateInfluencerProfile />} />
-                <Route path="/auth/*" element={<Auth />} />
-                <Route path="/wishlist/:id?" element={<Wishlist />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/order-success" element={<OrderSuccess />} />
-                <Route path="/track-order" element={<TrackOrder />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/place-order" element={<PlaceOrder setNavOpen={setNavOpen} />} />
-                <Route path="/gift-requests" element={<GiftRequests />} />
-                <Route path="/gifts-sent" element={<GiftsSent />} />
-                <Route path="/gift-selection" element={<GiftSelection />} />
-                <Route path="/gift-cart" element={<GiftCart />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/order/:id" element={<AdminOrderDetails />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <MobileDock setNavOpen={setNavOpen} />
-            </Router>
-          </div>
-        </ThemeProvider>
-      </QueryClientProvider>
-    );
-  }
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <div className={isDarkMode ? "dark" : ""}>
+          <Toaster />
+          <Router>
+            {/* Global navigation that can be opened from any page */}
+            <Navbar isOpen={isNavOpen} setIsOpen={setNavOpen} />
+            
+            <Routes>
+              <Route path="/" element={<Landing setNavOpen={setNavOpen} />} />
+              <Route path="/index" element={<Index />} />
+              <Route path="/profile/:id" element={<Profile />} />
+              <Route path="/edit-profile" element={<EditProfile />} />
+              <Route path="/create-profile" element={<CreateInfluencerProfile />} />
+              <Route path="/auth/*" element={<Auth />} />
+              <Route path="/wishlist/:id?" element={<Wishlist />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/order-success" element={<OrderSuccess />} />
+              <Route path="/track-order" element={<TrackOrder />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/place-order" element={<PlaceOrder setNavOpen={setNavOpen} />} />
+              <Route path="/gift-requests" element={<GiftRequests />} />
+              <Route path="/gifts-sent" element={<GiftsSent />} />
+              <Route path="/gift-selection" element={<GiftSelection />} />
+              <Route path="/gift-cart" element={<GiftCart />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/order/:id" element={<AdminOrderDetails />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            
+            <MobileDock setNavOpen={setNavOpen} />
+          </Router>
+        </div>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
