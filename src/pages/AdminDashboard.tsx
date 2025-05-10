@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const {
@@ -18,7 +20,21 @@ const AdminDashboard = () => {
     handleOrderComplete
   } = useAdmin();
   
+  const { userRole: authRole } = useAdminAuth();
+  const navigate = useNavigate();
   const [loadError, setLoadError] = useState<boolean>(false);
+
+  // Redirect if not admin
+  useEffect(() => {
+    if (authRole === null) {
+      // Still loading auth status, wait
+      return;
+    }
+    
+    if (authRole !== 'admin') {
+      navigate('/');
+    }
+  }, [authRole, navigate]);
 
   // Refresh orders when dashboard loads
   useEffect(() => {
@@ -49,7 +65,7 @@ const AdminDashboard = () => {
     });
   };
 
-  if (isLoading) {
+  if (isLoading || authRole === null) {
     return (
       <div className="min-h-screen bg-gray-100">
         <Header />

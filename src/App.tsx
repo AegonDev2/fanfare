@@ -18,6 +18,8 @@ import GiftsSent from "./pages/GiftsSent";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import MobileDock from "@/components/navigation/MobileDock";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminOrderDetails from "./pages/AdminOrderDetails";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
