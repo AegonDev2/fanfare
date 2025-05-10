@@ -19,7 +19,7 @@ const GiftsSent = () => {
   useEffect(() => {
     fetchSentGiftRequests();
   }, [fetchSentGiftRequests]);
-  return <div className="min-h-screen w-full bg-[var(--background)]">
+  return <div className="min-h-screen w-full bg-[var(--background)] bg-slate-50">
       <Header />
       <div className="container mx-auto pt-28 pb-10 px-4 py-[25px]">
         <div className="max-w-5xl mx-auto">
