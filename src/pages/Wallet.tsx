@@ -59,8 +59,8 @@ const WalletPage = () => {
         
         <div className="mt-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-3 mb-8">
-              <TabsTrigger value="balance">
+            <TabsList className="grid grid-cols-3 mb-8 py-0 my-0">
+              <TabsTrigger value="balance" className="my-0">
                 <WalletIcon className="w-4 h-4 mr-2" />
                 <span>Balance</span>
               </TabsTrigger>
