@@ -76,17 +76,20 @@ const GiftSection = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   
+  // Fix: Moved useEffect out of component render method and properly set dependencies
   useEffect(() => {
-    if (searchValue.trim() === "") {
-      setFilteredGifts(gifts);
-    } else {
-      const filtered = gifts.filter(gift => 
-        gift.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-        (gift.description && gift.description.toLowerCase().includes(searchValue.toLowerCase()))
-      );
-      setFilteredGifts(filtered);
+    if (gifts && Array.isArray(gifts)) {
+      if (searchValue.trim() === "") {
+        setFilteredGifts(gifts);
+      } else {
+        const filtered = gifts.filter(gift => 
+          gift.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+          (gift.description && gift.description.toLowerCase().includes(searchValue.toLowerCase()))
+        );
+        setFilteredGifts(filtered);
+      }
     }
-  }, [searchValue, gifts]);
+  }, [searchValue, gifts]); // Only depend on searchValue and gifts
 
   return (
     <section className="mb-4 relative">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ export default function GiftSelection() {
   const [selectedInfluencerId, setSelectedInfluencerId] = useState<string | null>(null);
   const [giftMessage, setGiftMessage] = useState('');
   const [activeTab, setActiveTab] = useState('gift');
+  const [error, setError] = useState<boolean>(false);
+  
   const { toast } = useToast();
   const navigate = useNavigate();
   const { getGiftById } = useGiftItems();
@@ -27,23 +29,51 @@ export default function GiftSelection() {
   
   const giftId = searchParams.get('gift');
   
-  // Added error state to prevent infinite loading
-  const [error, setError] = useState<boolean>(false);
+  const loadGift = useCallback(async () => {
+    if (!giftId) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(false);
+      const giftData = await getGiftById(giftId);
+      
+      if (giftData) {
+        setGift(giftData);
+      } else {
+        setError(true);
+        toast({
+          title: 'Gift Not Found',
+          description: 'The requested gift could not be found',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading gift:', error);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [giftId, getGiftById, toast]);
   
   useEffect(() => {
-    // Flag to track if the component is still mounted
+    // Flag to track if component is still mounted
     let isMounted = true;
     
-    async function loadGift() {
+    const fetchData = async () => {
       if (!giftId) {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
         return;
       }
       
       try {
-        setLoading(true);
+        if (isMounted) {
+          setLoading(true);
+          setError(false);
+        }
+        
         const giftData = await getGiftById(giftId);
         
         if (!isMounted) return;
@@ -60,7 +90,6 @@ export default function GiftSelection() {
         }
       } catch (error) {
         if (!isMounted) return;
-        
         console.error('Error loading gift:', error);
         setError(true);
       } finally {
@@ -68,11 +97,11 @@ export default function GiftSelection() {
           setLoading(false);
         }
       }
-    }
+    };
     
-    loadGift();
+    fetchData();
     
-    // Cleanup function to prevent state updates after unmount
+    // Clean up function to prevent state updates after unmount
     return () => {
       isMounted = false;
     };
