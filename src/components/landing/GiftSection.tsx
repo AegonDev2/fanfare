@@ -64,7 +64,7 @@ const GiftSection = () => {
         <h2 className="text-lg font-bold font-display bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">Gift Selection</h2>
         
         <div className="relative w-full md:w-auto">
-          <Input placeholder="Search Gifts" type="text" value={searchValue} onChange={handleSearchChange} className="w-full md:w-64 rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs shadow-sm" />
+          <Input placeholder="Search Gifts" type="text" value={searchValue} onChange={handleSearchChange} className="w-full md:w-64 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs shadow-sm bg-zinc-100" />
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-funky-purple/60" />
         </div>
       </div>

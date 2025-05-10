@@ -178,12 +178,12 @@ const InfluencerSection = ({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2 mx-1">
         <h2 className="text-lg font-bold font-display bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">Discover Influencers</h2>
         
-        <div ref={searchInputRef} className="relative w-full md:w-auto">
+        <div ref={searchInputRef} className="relative w-full md:w-auto bg-slate-50">
           <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => {
           if (searchQuery.trim().length > 0) {
             setShowSuggestions(true);
           }
-        }} className="w-full md:w-64 rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs shadow-sm" />
+        }} className="w-full md:w-64 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs shadow-sm bg-zinc-100" />
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-funky-purple/60" />
           
           {showSuggestions && searchSuggestions.length > 0 && <div className="absolute z-40 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-xl border border-funky-purple/10 backdrop-blur-md animate-expand">
