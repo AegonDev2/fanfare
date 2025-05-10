@@ -40,7 +40,7 @@ const InfluencerCard = memo(({
     return count.toString();
   };
   return <div className={cn("p-2 h-full relative group cursor-pointer transition-all duration-300 transform hover:translate-y-[-5px]")} onClick={() => onProfileClick(influencer.id)} onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
-      <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/5 to-funky-pink/5 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg transition-all duration-500 z-0 group-hover:bg-gradient-to-tr group-hover:from-funky-purple/10 group-hover:to-funky-pink/10 bg-emerald-950"></div>
+      <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/5 to-funky-pink/5 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg transition-all duration-500 z-0 group-hover:bg-gradient-to-tr group-hover:from-funky-purple/10 group-hover:to-funky-pink/10 bg-emerald-950 my-[2px] py-0 px-0 mx-0"></div>
       
       <div className="absolute right-2 top-2 z-20 transform transition-all duration-300 scale-0 group-hover:scale-100 origin-top-right" onClick={handleGiftClick}>
         <Button size="icon" className="rounded-full h-7 w-7 bg-white dark:bg-gray-900 backdrop-blur-md shadow-lg border border-funky-purple/20 text-funky-pink hover:bg-funky-purple/10">
