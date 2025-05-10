@@ -1,4 +1,3 @@
-
 import Header from "@/components/landing/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,12 +9,19 @@ import { OrderDetails, UnderProcessOrder, CompletedOrder } from "@/types/admin";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Package, ArrowLeft, CheckCircle, Clock, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
 const AdminOrderDetails = () => {
-  const { id } = useParams<{ id: string }>();
+  const {
+    id
+  } = useParams<{
+    id: string;
+  }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { userRole } = useAdminAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    userRole
+  } = useAdminAuth();
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,40 +31,31 @@ const AdminOrderDetails = () => {
       // Still loading auth status, wait
       return;
     }
-    
     if (userRole !== 'admin') {
       navigate('/');
     }
   }, [userRole, navigate]);
-
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!id) return;
-      
       try {
         setLoading(true);
-        
+
         // First try under_process table
-        let { data: underProcessData, error: underProcessError } = await supabase
-          .from('orders_under_process')
-          .select('*, influencer:influencer_id(*)')
-          .eq('id', id)
-          .maybeSingle();
-          
+        let {
+          data: underProcessData,
+          error: underProcessError
+        } = await supabase.from('orders_under_process').select('*, influencer:influencer_id(*)').eq('id', id).maybeSingle();
         if (underProcessError) throw underProcessError;
-        
         let orderData = null;
-        
+
         // Then try completed table if not found
         if (!underProcessData) {
-          const { data: completedData, error: completedError } = await supabase
-            .from('orders_completed')
-            .select('*, influencer:influencer_id(*)')
-            .eq('id', id)
-            .maybeSingle();
-            
+          const {
+            data: completedData,
+            error: completedError
+          } = await supabase.from('orders_completed').select('*, influencer:influencer_id(*)').eq('id', id).maybeSingle();
           if (completedError) throw completedError;
-          
           if (completedData) {
             orderData = {
               ...completedData,
@@ -71,7 +68,6 @@ const AdminOrderDetails = () => {
             status: 'under_process' as const
           };
         }
-        
         if (!orderData) {
           toast({
             title: "Order not found",
@@ -81,22 +77,19 @@ const AdminOrderDetails = () => {
           navigate('/admin-dashboard');
           return;
         }
-        
+
         // Get fan's email
-        const { data: fanData } = await supabase
-          .from('profiles')
-          .select('email, name')
-          .eq('id', orderData.user_id)
-          .maybeSingle();
-          
+        const {
+          data: fanData
+        } = await supabase.from('profiles').select('email, name').eq('id', orderData.user_id).maybeSingle();
+
         // Create enriched order with all required fields
         const enrichedOrder: OrderDetails = {
           ...orderData,
           fan_email: fanData?.email || "Unknown",
           fan_name: fanData?.name || "Unknown",
-          influencer_name: orderData.influencer?.name || "Unknown",
+          influencer_name: orderData.influencer?.name || "Unknown"
         };
-        
         setOrder(enrichedOrder);
       } catch (error) {
         console.error("Error fetching order details:", error);
@@ -109,28 +102,24 @@ const AdminOrderDetails = () => {
         setLoading(false);
       }
     };
-    
     fetchOrderDetails();
   }, [id, navigate, toast]);
-  
   const handleCompleteOrder = async () => {
     if (!order || !id) return;
-    
     try {
       const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
-      const { data, error } = await supabase.rpc('move_order_to_completed', {
+      const {
+        data,
+        error
+      } = await supabase.rpc('move_order_to_completed', {
         order_id: id,
         p_delivery_estimate: deliveryEstimate
       });
-      
       if (error) throw error;
-      
       toast({
         title: "Order Processed",
         description: "Order has been marked as completed"
       });
-      
       navigate('/admin-dashboard');
     } catch (error) {
       console.error("Error completing order:", error);
@@ -141,25 +130,20 @@ const AdminOrderDetails = () => {
       });
     }
   };
-  
   if (loading || userRole === null) {
-    return (
-      <div className="min-h-screen bg-gray-100">
+    return <div className="min-h-screen bg-gray-100">
         <Header />
         <main className="container mx-auto p-4 pt-20">
           <div className="flex items-center justify-center h-64">
             <p>Loading order details...</p>
           </div>
         </main>
-      </div>
-    );
+      </div>;
   }
-  
   if (!order) {
-    return (
-      <div className="min-h-screen bg-gray-100">
+    return <div className="min-h-screen bg-gray-100">
         <Header />
-        <main className="container mx-auto p-4 pt-20">
+        <main className="container mx-auto p-4 pt-20 py-[100px]">
           <Button variant="outline" onClick={() => navigate('/admin-dashboard')}>
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
           </Button>
@@ -169,14 +153,10 @@ const AdminOrderDetails = () => {
             </CardContent>
           </Card>
         </main>
-      </div>
-    );
+      </div>;
   }
-  
   const shippingAddress = order.shipping_address as Record<string, string> | null;
-
-  return (
-    <div className="min-h-screen bg-gray-100">
+  return <div className="min-h-screen bg-gray-100">
       <Header />
       <main className="container mx-auto p-4 pt-20 pb-20">
         <div className="flex items-center mb-6">
@@ -216,8 +196,7 @@ const AdminOrderDetails = () => {
                   </div>
                 </div>
                 
-                {shippingAddress && (
-                  <div>
+                {shippingAddress && <div>
                     <h3 className="font-semibold mb-2">Shipping Address</h3>
                     <div className="border rounded-lg p-4">
                       <p>{shippingAddress.name || ""}</p>
@@ -226,8 +205,7 @@ const AdminOrderDetails = () => {
                       <p>{shippingAddress.country || ""}</p>
                       <p>{shippingAddress.phone || ""}</p>
                     </div>
-                  </div>
-                )}
+                  </div>}
                 
                 <div>
                   <h3 className="font-semibold mb-2">Payment Summary</h3>
@@ -249,16 +227,11 @@ const AdminOrderDetails = () => {
                 </div>
               </CardContent>
               
-              {order.status === 'under_process' && (
-                <CardFooter>
-                  <Button 
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    onClick={handleCompleteOrder}
-                  >
+              {order.status === 'under_process' && <CardFooter>
+                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleCompleteOrder}>
                     <CheckCircle className="h-4 w-4 mr-2" /> Mark as Processed
                   </Button>
-                </CardFooter>
-              )}
+                </CardFooter>}
             </Card>
           </div>
           
@@ -270,37 +243,25 @@ const AdminOrderDetails = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-start">
-                    {order.status === 'completed' ? (
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-amber-500 mt-0.5 mr-3" />
-                    )}
+                    {order.status === 'completed' ? <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3" /> : <Clock className="h-5 w-5 text-amber-500 mt-0.5 mr-3" />}
                     <div>
                       <p className="font-medium">
                         {order.status === 'completed' ? 'Processed' : 'Awaiting Processing'}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {order.status === 'completed' 
-                          ? `Completed on ${new Date(order.completed_at || '').toLocaleDateString()}`
-                          : 'Order is waiting for admin approval'}
+                        {order.status === 'completed' ? `Completed on ${new Date(order.completed_at || '').toLocaleDateString()}` : 'Order is waiting for admin approval'}
                       </p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    {order.status === 'completed' ? (
-                      <Truck className="h-5 w-5 text-blue-500 mt-0.5 mr-3" />
-                    ) : (
-                      <Truck className="h-5 w-5 text-gray-300 mt-0.5 mr-3" />
-                    )}
+                    {order.status === 'completed' ? <Truck className="h-5 w-5 text-blue-500 mt-0.5 mr-3" /> : <Truck className="h-5 w-5 text-gray-300 mt-0.5 mr-3" />}
                     <div>
                       <p className="font-medium">
                         {order.status === 'completed' ? 'Shipping' : 'Shipping Pending'}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {order.status === 'completed' && order.delivery_estimate
-                          ? `Estimated delivery: ${new Date(order.delivery_estimate).toLocaleDateString()}`
-                          : 'Will be available after processing'}
+                        {order.status === 'completed' && order.delivery_estimate ? `Estimated delivery: ${new Date(order.delivery_estimate).toLocaleDateString()}` : 'Will be available after processing'}
                       </p>
                     </div>
                   </div>
@@ -328,8 +289,6 @@ const AdminOrderDetails = () => {
           </div>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default AdminOrderDetails;
