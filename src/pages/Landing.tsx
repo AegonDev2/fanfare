@@ -65,7 +65,7 @@ const Landing = ({
       {/* Include the Header component at the top */}
       <Header setNavOpen={setNavOpen} />
       
-      <main className="w-full px-2 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-16 sm:pb-24 bg-zinc-300">
+      <main className="w-full px-2 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-16 sm:pb-24 bg-gray-50">
         <HeroCarousel />
         
         <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-8">
