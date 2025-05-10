@@ -84,7 +84,7 @@ const Index = () => {
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4 rounded-sm px-[11px] mx-0 py-0 my-0">
                 <TabsTrigger value="login" className="bg-funky-purple mx-[5px] px-0 text-gray-50">Login</TabsTrigger>
-                <TabsTrigger value="signup" className="text-funky-purple bg-slate-50 mx-[5px]">Sign Up</TabsTrigger>
+                <TabsTrigger value="signup" className="mx-[5px] bg-funky-purple text-slate-50">Sign Up</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
                 <LoginForm />
