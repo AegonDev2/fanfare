@@ -61,7 +61,7 @@ const GiftSection = () => {
   }, []);
   return <section className="mb-4 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 sm:mb-4 gap-2 mx-1">
-        <h2 className="text-lg font-bold font-display bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">Gift Selection</h2>
+        <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-gray-900 text-xl font-semibold mx-0">Gift Selection</h2>
         
         <div className="relative w-full md:w-auto py-[6px]">
           <Input placeholder="Search Gifts" type="text" value={searchValue} onChange={handleSearchChange} className="w-full md:w-64 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs shadow-sm bg-zinc-100" />
