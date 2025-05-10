@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -11,42 +10,44 @@ import WalletHeader from "@/components/wallet/WalletHeader";
 import TransactionHistory from "@/components/wallet/TransactionHistory";
 import TopUpWallet from "@/components/wallet/TopUpWallet";
 import { supabase } from "@/integrations/supabase/client";
-
 const WalletPage = () => {
-  const { wallet, transactions, loading, fetchWallet, fetchTransactions } = useWallet();
+  const {
+    wallet,
+    transactions,
+    loading,
+    fetchWallet,
+    fetchTransactions
+  } = useWallet();
   const [activeTab, setActiveTab] = useState<string>("balance");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      
+      const {
+        data
+      } = await supabase.auth.getSession();
       if (!data.session) {
         toast({
           title: "Authentication required",
           description: "Please login to access your wallet",
-          variant: "destructive",
+          variant: "destructive"
         });
         navigate("/auth?tab=login");
         return;
       }
-      
       setIsLoggedIn(true);
       fetchWallet();
       fetchTransactions();
     };
-    
     checkSession();
   }, []);
-  
   if (!isLoggedIn) {
     return null;
   }
-  
-  return (
-    <div className="min-h-screen bg-gray-100">
+  return <div className="min-h-screen bg-gray-100">
       <Header />
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="flex items-center mb-6">
@@ -74,9 +75,9 @@ const WalletPage = () => {
             </TabsList>
             
             <TabsContent value="balance">
-              <Card>
+              <Card className="bg-transparent">
                 <CardHeader>
-                  <CardTitle>Wallet Information</CardTitle>
+                  <CardTitle className="text-gray-950">Wallet Information</CardTitle>
                   <CardDescription>View and manage your wallet balance</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -94,18 +95,12 @@ const WalletPage = () => {
                         You can top up your wallet using various payment methods.
                       </p>
                       
-                      <button 
-                        onClick={() => setActiveTab("topup")}
-                        className="flex items-center justify-center gap-2 p-3 rounded-md bg-primary text-white"
-                      >
+                      <button onClick={() => setActiveTab("topup")} className="flex items-center justify-center gap-2 p-3 rounded-md bg-primary text-white">
                         <PlusCircle className="w-5 h-5" />
                         <span>Add Money</span>
                       </button>
                       
-                      <button 
-                        onClick={() => setActiveTab("transactions")}
-                        className="flex items-center justify-center gap-2 p-3 rounded-md border border-gray-300"
-                      >
+                      <button onClick={() => setActiveTab("transactions")} className="flex items-center justify-center gap-2 p-3 rounded-md border border-gray-300">
                         <Receipt className="w-5 h-5" />
                         <span>View Transactions</span>
                       </button>
@@ -120,17 +115,11 @@ const WalletPage = () => {
             </TabsContent>
             
             <TabsContent value="transactions">
-              <TransactionHistory 
-                transactions={transactions} 
-                loading={loading} 
-                onRefresh={fetchTransactions}
-              />
+              <TransactionHistory transactions={transactions} loading={loading} onRefresh={fetchTransactions} />
             </TabsContent>
           </Tabs>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default WalletPage;
