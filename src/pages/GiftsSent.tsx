@@ -25,7 +25,7 @@ const GiftsSent = () => {
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold">Gifts Sent</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Gifts Sent</h1>
               <p className="text-gray-600 mt-1">
                 Track and manage all your gift requests
               </p>
