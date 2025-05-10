@@ -66,7 +66,7 @@ const InfluencerCard = memo(({
               <span className="text-[10px]">{formatFollowers(influencer.followers)}</span>
             </div>
           </div>
-          <Button size="sm" variant="secondary" onClick={() => onProfileClick(influencer.id)} className="mt-1 w-full text-[10px] py-1 px-2 bg-white dark:bg-gray-800 hover:bg-funky-purple hover:text-white transition-all duration-300 border border-funky-purple/20">
+          <Button size="sm" variant="secondary" onClick={() => onProfileClick(influencer.id)} className="mt-1 w-full text-[10px] py-1 px-2 transition-all duration-300 border border-funky-purple/20 text-stone-50 bg-funky-purple">
             <User className="h-3 w-3 mr-1" />
             View Profile
           </Button>
