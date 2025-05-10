@@ -58,13 +58,18 @@ const AdminOrderDetails = () => {
           if (completedError) throw completedError;
           
           if (completedOrder) {
+            // Explicitly type it as an object with added status property
             underProcessOrder = {
               ...completedOrder,
-              status: 'completed' as const
+              status: 'completed'
             };
           }
         } else {
-          underProcessOrder.status = 'under_process' as const;
+          // Explicitly add the status property
+          underProcessOrder = {
+            ...underProcessOrder,
+            status: 'under_process'
+          };
         }
         
         if (!underProcessOrder) {
@@ -84,6 +89,7 @@ const AdminOrderDetails = () => {
           .eq('id', underProcessOrder.user_id)
           .maybeSingle();
           
+        // Cast the enriched order to OrderDetails type using 'as'
         const enrichedOrder = {
           ...underProcessOrder,
           fan_email: fanData?.email || "Unknown",

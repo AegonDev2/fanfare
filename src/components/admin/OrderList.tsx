@@ -64,7 +64,7 @@ export const OrderList = ({
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="secondary" onClick={() => navigate(`/admin/order-details/${order.id}`)}>
+                  <Button size="sm" variant="secondary" onClick={() => navigate(`/admin/order/${order.id}`)}>
                     {order.status === 'under_process' ? 'Process' : 'View'}
                   </Button>
                 </div>
