@@ -80,9 +80,9 @@ const Auth = () => {
                 Back to Login
               </Button>
             </div> : <Tabs defaultValue={activeTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-50">
-                <TabsTrigger value="login" className="bg-funky-purple text-slate-50">Login</TabsTrigger>
-                <TabsTrigger value="signup" className="bg-funky-purple text-slate-50">Sign Up</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-50 rounded-sm py-0 my-[3px] mx-[3px] px-px">
+                <TabsTrigger value="login" className="bg-funky-purple text-slate-50 my-0 py-0 px-0 mx-[4px]">Login</TabsTrigger>
+                <TabsTrigger value="signup" className="bg-funky-purple text-slate-50 mx-[4px] py-0 my-0">Sign Up</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
                 <LoginForm onForgotPassword={togglePasswordReset} />
