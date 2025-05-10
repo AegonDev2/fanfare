@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -28,10 +27,18 @@ export default function GiftSelection() {
   
   const giftId = searchParams.get('gift');
   
+  // Added error state to prevent infinite loading
+  const [error, setError] = useState<boolean>(false);
+  
   useEffect(() => {
+    // Flag to track if the component is still mounted
+    let isMounted = true;
+    
     async function loadGift() {
       if (!giftId) {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
         return;
       }
       
@@ -39,9 +46,12 @@ export default function GiftSelection() {
         setLoading(true);
         const giftData = await getGiftById(giftId);
         
+        if (!isMounted) return;
+        
         if (giftData) {
           setGift(giftData);
         } else {
+          setError(true);
           toast({
             title: 'Gift Not Found',
             description: 'The requested gift could not be found',
@@ -49,13 +59,23 @@ export default function GiftSelection() {
           });
         }
       } catch (error) {
+        if (!isMounted) return;
+        
         console.error('Error loading gift:', error);
+        setError(true);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
     
     loadGift();
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, [giftId, getGiftById, toast]);
 
   const handleAddToCart = () => {
@@ -100,7 +120,7 @@ export default function GiftSelection() {
     );
   }
   
-  if (!gift && giftId) {
+  if (error || (!gift && giftId)) {
     return (
       <div className="min-h-screen bg-gray-100">
         <Header />

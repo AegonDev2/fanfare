@@ -40,7 +40,10 @@ export function useGiftItems() {
     }
   };
 
+  // Modified to prevent infinite retries
   const getGiftById = async (id: string): Promise<GiftItem | null> => {
+    if (!id) return null;
+    
     try {
       const { data, error } = await supabase
         .from('gift_selection_items')
@@ -48,16 +51,16 @@ export function useGiftItems() {
         .eq('id', id)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        // Log but don't throw to avoid triggering unnecessary retries
+        console.error('Error fetching gift item:', error);
+        return null;
+      }
       
       return data;
     } catch (error: any) {
       console.error('Error fetching gift item:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load gift item details',
-        variant: 'destructive',
-      });
+      // Return null instead of throwing
       return null;
     }
   };
@@ -66,6 +69,9 @@ export function useGiftItems() {
     ...useQuery({
       queryKey: ['giftItems'],
       queryFn: fetchGiftItems,
+      // Add retry configuration to prevent infinite retries
+      retry: 1,
+      retryDelay: 1000,
     }),
     getGiftById,
   };
