@@ -46,7 +46,7 @@ const TopFansWidget = ({
             <span>Top Fans</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-3 sm:p-6 pt-0 bg-green-50">
+        <CardContent className="p-3 sm:p-6 pt-0 bg-green-50 rounded-xl px-0 mx-[6px] my-[5px]">
           <div className="text-center py-2 sm:py-4">
             <Users className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 text-gray-300" />
             <p className="text-xs sm:text-sm text-gray-500">No fans have completed gifts yet this month.</p>
