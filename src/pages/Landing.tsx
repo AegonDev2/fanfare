@@ -12,15 +12,15 @@ import { Button } from "@/components/ui/button";
 import TopFansWidget from "@/components/leaderboard/TopFansWidget";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 interface LandingProps {
   setNavOpen: (isOpen: boolean) => void;
 }
-
 const Landing = ({
   setNavOpen
 }: LandingProps) => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [influencers, setInfluencers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -31,7 +31,6 @@ const Landing = ({
     currentMonth,
     currentYear
   } = useLeaderboard();
-  
   useEffect(() => {
     fetchInfluencers();
     const handleScroll = () => {
@@ -40,11 +39,13 @@ const Landing = ({
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
   const fetchInfluencers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('influencer_profiles').select('*');
+      const {
+        data,
+        error
+      } = await supabase.from('influencer_profiles').select('*');
       if (error) {
         throw error;
       }
@@ -60,13 +61,11 @@ const Landing = ({
       setLoading(false);
     }
   };
-  
-  return (
-    <div className="min-h-screen w-full">
+  return <div className="min-h-screen w-full">
       {/* Include the Header component at the top */}
       <Header setNavOpen={setNavOpen} />
       
-      <main className="w-full px-2 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-16 sm:pb-24 bg-zinc-500">
+      <main className="w-full px-2 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-16 sm:pb-24 bg-zinc-300">
         <HeroCarousel />
         
         <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-8">
@@ -75,17 +74,12 @@ const Landing = ({
             <TopFansWidget topFans={leaderboard} isLoading={isLeaderboardLoading} month={currentMonth} year={currentYear} />
           </div>
 
-          {loading ? (
-            <div className="text-center py-4 sm:py-8 animate-pulse">
+          {loading ? <div className="text-center py-4 sm:py-8 animate-pulse">
               <div className="w-12 sm:w-20 h-12 sm:h-20 bg-funky-purple/20 rounded-full mx-auto mb-3 animate-bounce-subtle"></div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Loading amazing creators...</p>
-            </div>
-          ) : influencers.length > 0 ? (
-            <div className="transition-all duration-500 transform">
+            </div> : influencers.length > 0 ? <div className="transition-all duration-500 transform">
               <InfluencerSection influencers={influencers} />
-            </div>
-          ) : (
-            <div className="text-center py-4 sm:py-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-funky-purple/10 shadow-lg mx-1 sm:mx-2">
+            </div> : <div className="text-center py-4 sm:py-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-funky-purple/10 shadow-lg mx-1 sm:mx-2">
               <div className="w-12 sm:w-20 h-12 sm:h-20 flex items-center justify-center bg-funky-purple/10 rounded-full mx-auto mb-3">
                 <Music className="h-5 sm:h-8 w-5 sm:w-8 text-funky-purple" />
               </div>
@@ -94,8 +88,7 @@ const Landing = ({
               <Button variant="outline" size={isMobile ? "sm" : "default"} className="border-funky-purple text-funky-purple hover:bg-funky-purple/10" onClick={() => window.location.reload()}>
                 Refresh
               </Button>
-            </div>
-          )}
+            </div>}
           
           <div className="transition-all duration-500 transform">
             <GiftSection />
@@ -123,8 +116,6 @@ const Landing = ({
           </div>
         </footer>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
