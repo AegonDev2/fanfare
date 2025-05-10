@@ -21,8 +21,15 @@ export const useInfluencerWishlist = (influencerId: string) => {
   const { toast } = useToast();
 
   const fetchWishlist = async () => {
+    if (!influencerId) {
+      setWishlist([]);
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
     try {
+      console.log("Fetching wishlist for influencer:", influencerId);
       const { data, error } = await supabase
         .from("influencer_wishlist")
         .select("*")
@@ -33,6 +40,7 @@ export const useInfluencerWishlist = (influencerId: string) => {
         throw error;
       }
 
+      console.log("Wishlist data received:", data);
       setWishlist(data || []);
     } catch (error: any) {
       console.error("Error fetching wishlist:", error);
@@ -107,9 +115,7 @@ export const useInfluencerWishlist = (influencerId: string) => {
   };
 
   useEffect(() => {
-    if (influencerId) {
-      fetchWishlist();
-    }
+    fetchWishlist();
   }, [influencerId]);
 
   return {

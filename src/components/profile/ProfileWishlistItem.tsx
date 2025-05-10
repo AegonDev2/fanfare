@@ -23,8 +23,8 @@ const ProfileWishlistItem = ({
 
   const handleGiftClick = () => {
     if (productUrl) {
-      // Now redirecting to gift selection page with the gift URL as a parameter
-      navigate(`/gift-selection?gift=${encodeURIComponent(productUrl)}`);
+      // Use the wishlistUrl format instead of gift parameter
+      navigate(`/gift-selection?wishlistUrl=${encodeURIComponent(productUrl)}&title=${encodeURIComponent(name)}&price=${price}&imageUrl=${encodeURIComponent(imageUrl || '')}`);
     }
   };
 

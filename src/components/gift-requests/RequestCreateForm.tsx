@@ -20,6 +20,14 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("You must be logged in.");
+      
+      console.log("Creating gift request with:", {
+        product_url: productUrl,
+        message,
+        influencer_id: influencerId,
+        sender_id: user.id
+      });
+      
       // Insert into gift_requests
       const { data, error } = await supabase.from("gift_requests").insert({
         product_url: productUrl,
@@ -30,6 +38,8 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
       }).select().maybeSingle();
 
       if (error) throw error;
+
+      console.log("Gift request created successfully:", data);
 
       // Notify influencer of new gift request
       await sendNotification(
@@ -45,6 +55,7 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
       toast({ title: "Gift request sent!" });
       onSubmit?.();
     } catch (err) {
+      console.error("Error creating gift request:", err);
       toast({ title: "Error", description: (err as Error).message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);

@@ -62,8 +62,8 @@ const Wishlist = () => {
       return;
     }
 
-    // Update: Now redirecting to gift selection page with the gift URL as a parameter
-    window.location.href = `/gift-selection?gift=${encodeURIComponent(item.product_url)}`;
+    // Use the direct product URL for custom wishlist items
+    window.location.href = `/gift-selection?wishlistUrl=${encodeURIComponent(item.product_url)}&influencerId=${encodeURIComponent(userId || '')}&title=${encodeURIComponent(item.product_title)}&price=${item.product_price || 0}&imageUrl=${encodeURIComponent(item.product_image_url || '')}`;
   };
 
   // Helper function wrapper for addWishlistItem that returns void

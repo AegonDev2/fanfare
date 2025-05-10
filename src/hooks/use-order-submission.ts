@@ -37,6 +37,7 @@ export const useOrderSubmission = () => {
 
     try {
       console.log("Submitting order with product details:", productDetails);
+      console.log("Gift URL being submitted:", giftItem);
       
       // Get the current authenticated user
       const { data: { user } } = await supabase.auth.getUser();

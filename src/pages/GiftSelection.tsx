@@ -14,6 +14,14 @@ import GiftMessage from '@/components/gift-selection/GiftMessage';
 import { useGiftItems, GiftItem } from '@/hooks/useGiftItems';
 import { useGiftCart } from '@/hooks/useGiftCart';
 
+interface WishlistItemData {
+  url: string;
+  title: string;
+  price: number;
+  imageUrl: string;
+  influencerId: string;
+}
+
 export default function GiftSelection() {
   const [searchParams] = useSearchParams();
   const [gift, setGift] = useState<GiftItem | null>(null);
@@ -31,11 +39,48 @@ export default function GiftSelection() {
   const { addToCart, cartCount } = useGiftCart();
   
   const giftId = searchParams.get('gift');
+  // Check for wishlist params
+  const wishlistUrl = searchParams.get('wishlistUrl');
+  const wishlistTitle = searchParams.get('title');
+  const wishlistPrice = searchParams.get('price');
+  const wishlistImageUrl = searchParams.get('imageUrl');
+  const wishlistInfluencerId = searchParams.get('influencerId');
+  
+  // Handle wishlist item data
+  useEffect(() => {
+    if (wishlistUrl && wishlistTitle && isMounted.current) {
+      const price = parseFloat(wishlistPrice || '0');
+      
+      // Create a GiftItem from wishlist data
+      const wishlistGiftItem: GiftItem = {
+        id: 'custom-wishlist-item',
+        name: decodeURIComponent(wishlistTitle),
+        price: isNaN(price) ? 0 : price,
+        image_url: decodeURIComponent(wishlistImageUrl || ''),
+        description: 'Item from influencer wishlist',
+        is_featured: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        gift_url: decodeURIComponent(wishlistUrl),
+      };
+      
+      setGift(wishlistGiftItem);
+      setLoading(false);
+      setFetchAttempted(true);
+      
+      // If influencer ID is provided, select it automatically
+      if (wishlistInfluencerId) {
+        setSelectedInfluencerId(decodeURIComponent(wishlistInfluencerId));
+        setActiveTab('influencer');
+      }
+    }
+  }, [wishlistUrl, wishlistTitle, wishlistPrice, wishlistImageUrl, wishlistInfluencerId]);
   
   // Use useCallback to memoize the loadGift function
   const loadGift = useCallback(async () => {
-    if (!giftId || !isMounted.current) {
-      if (isMounted.current) {
+    // Skip if we already have wishlist data or no gift ID
+    if ((wishlistUrl && wishlistTitle) || !giftId || !isMounted.current) {
+      if (isMounted.current && !wishlistUrl) {
         setLoading(false);
         setFetchAttempted(true);
       }
@@ -48,7 +93,9 @@ export default function GiftSelection() {
         setError(false);
       }
       
+      console.log("Fetching gift by ID:", giftId);
       const giftData = await getGiftById(giftId);
+      console.log("Gift data received:", giftData);
       
       if (!isMounted.current) return;
       
@@ -73,7 +120,7 @@ export default function GiftSelection() {
         setFetchAttempted(true);
       }
     }
-  }, [giftId, getGiftById, toast]);
+  }, [giftId, getGiftById, toast, wishlistUrl, wishlistTitle]);
   
   // Effect to load gift data on mount and giftId changes
   useEffect(() => {
@@ -110,7 +157,13 @@ export default function GiftSelection() {
       return;
     }
     
-    addToCart(gift, selectedInfluencerId, giftMessage);
+    // For wishlist items, we need to use gift_url instead of id for the product URL
+    const productUrl = wishlistUrl ? gift.gift_url || '' : (gift.gift_url || '');
+    
+    addToCart({
+      ...gift,
+      gift_url: productUrl
+    }, selectedInfluencerId, giftMessage);
     
     // Clear selection state
     setSelectedInfluencerId(null);
@@ -118,7 +171,7 @@ export default function GiftSelection() {
     
     // Redirect to cart
     navigate('/gift-cart');
-  }, [gift, selectedInfluencerId, giftMessage, addToCart, navigate, toast]);
+  }, [gift, selectedInfluencerId, giftMessage, addToCart, navigate, toast, wishlistUrl]);
   
   // Create loading and error UI components using memoization
   const loadingContent = useMemo(() => (
@@ -156,8 +209,8 @@ export default function GiftSelection() {
     return loadingContent;
   }
   
-  // Early return for error state
-  if (error || (!gift && giftId && fetchAttempted)) {
+  // Early return for error state - only for regular gifts, not wishlist items
+  if (error && !wishlistUrl && (!gift && giftId && fetchAttempted)) {
     return errorContent;
   }
 
@@ -231,9 +284,12 @@ export default function GiftSelection() {
               </CardContent>
             </Card>
             
-            <div className="mb-8">
-              <GiftSection />
-            </div>
+            {/* Only show gift section if not coming from wishlist */}
+            {!wishlistUrl && (
+              <div className="mb-8">
+                <GiftSection />
+              </div>
+            )}
           </div>
           
           <div className="md:col-span-1">
@@ -290,10 +346,10 @@ export default function GiftSelection() {
                     <div className="space-y-6">
                       <InfluencerSelector
                         onSelect={setSelectedInfluencerId}
-                        selectedInfluencerId={selectedInfluencerId}
+                        selectedInfluencerId={selectedInfluencerId || wishlistInfluencerId || null}
                       />
                       
-                      {selectedInfluencerId && (
+                      {(selectedInfluencerId || wishlistInfluencerId) && (
                         <div className="pt-4">
                           <GiftMessage onChange={setGiftMessage} defaultValue={giftMessage} />
                         </div>
