@@ -77,7 +77,7 @@ const Index = () => {
             </Button>
           </Card> : <Card className="p-6 bg-slate-50">
             <h1 className="text-3xl font-bold mb-4 text-center">GiftLoop Connect</h1>
-            <p className="mb-6 text-center text-funky-purple">
+            <p className="mb-6 text-center text-fuchsia-200">
               Connect with your favorite influencers and share meaningful gifts.
             </p>
             
