@@ -23,7 +23,7 @@ const Leaderboard = () => {
   };
   
   return (
-    <div className="min-h-screen w-full bg-[var(--background)]">
+    <div className="min-h-screen w-full bg-[var(--background)] pt-2">
       <div className="container mx-auto py-6 px-4 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <LeaderboardHeader month={currentMonth} year={currentYear} />
