@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Home, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { OrderDetails } from "@/types/admin";
+
 const OrderSuccess = () => {
   const [searchParams] = useSearchParams();
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const orderId = searchParams.get('id');
   const navigate = useNavigate();
+  
   useEffect(() => {
     const fetchOrder = async () => {
       if (!orderId) {
@@ -59,8 +62,9 @@ const OrderSuccess = () => {
     };
     fetchOrder();
   }, [orderId]);
-  return <div className="min-h-screen bg-gray-100 pt-20">
-      <div className="container mx-auto px-4 py-12">
+  
+  return <div className="min-h-screen bg-gray-100 pt-6">
+      <div className="container mx-auto px-4 py-6">
         <Card className="max-w-md mx-auto">
           <CardContent className="pt-6 flex flex-col items-center text-center bg-slate-50 py-[22px] mx-[5px] my-[5px] rounded-xl">
             <div className="bg-green-100 p-6 rounded-full mb-6">
@@ -89,4 +93,5 @@ const OrderSuccess = () => {
       </div>
     </div>;
 };
+
 export default OrderSuccess;

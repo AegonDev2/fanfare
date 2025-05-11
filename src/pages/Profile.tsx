@@ -6,7 +6,6 @@ import { useToast } from "@/components/ui/use-toast";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileBio from "@/components/profile/ProfileBio";
 import SocialLinks from "@/components/profile/SocialLinks";
-import Header from "@/components/landing/Header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useUser } from "@/hooks/useUser";
@@ -85,8 +84,7 @@ const Profile = () => {
   
   if (isLoading) {
     return <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-        <Header />
-        <div className="container mx-auto px-4 py-8 pt-20">
+        <div className="container mx-auto px-4 py-6">
           <div className="bg-white/90 backdrop-blur-sm shadow-md rounded-lg p-6 animate-pulse border border-funky-purple/10">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="w-32 h-32 rounded-full bg-funky-purple/20"></div>
@@ -103,8 +101,7 @@ const Profile = () => {
   
   if (error) {
     return <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-        <Header />
-        <div className="container mx-auto px-4 py-8 pt-20">
+        <div className="container mx-auto px-4 py-6">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
             {error instanceof Error ? error.message : "Failed to load influencer profile"}
           </div>
@@ -114,8 +111,7 @@ const Profile = () => {
   
   if (!influencer) {
     return <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-        <Header />
-        <div className="container mx-auto px-4 py-8 pt-20">
+        <div className="container mx-auto px-4 py-6">
           <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
             Influencer not found
           </div>
@@ -124,9 +120,8 @@ const Profile = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-      <Header />
-      <main className="container mx-auto px-4 py-8 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pb-24">
+      <main className="container mx-auto px-4 py-6">
         <motion.section 
           className="shadow-md p-6 mb-8 rounded-3xl bg-white/80 backdrop-blur-sm border border-funky-purple/10"
           initial={{ opacity: 0, y: 20 }}

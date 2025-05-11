@@ -1,7 +1,6 @@
 
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import Header from "@/components/landing/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/hooks/useUser";
 import { useInfluencerWishlist, WishlistItem } from "@/hooks/useInfluencerWishlist";
@@ -78,8 +77,7 @@ const Wishlist = () => {
   if (!userId) {
     return (
       <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-100">
-        <Header />
-        <div className="container mx-auto pt-28 pb-10 px-4">
+        <div className="container mx-auto py-6 px-4">
           <Card className="border-funky-purple/10 shadow-lg backdrop-blur-md bg-white/90">
             <CardContent className="pt-6 text-center">
               <p className="text-gray-600">No influencer selected. Please go to an influencer's profile to view their wishlist.</p>
@@ -92,8 +90,7 @@ const Wishlist = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-100">
-      <Header />
-      <div className="container mx-auto pt-28 pb-10 px-4">
+      <div className="container mx-auto py-6 px-4 pb-24">
         <Card className="mb-8 border-funky-purple/10 shadow-lg backdrop-blur-md bg-white/90">
           <CardHeader className="flex flex-row justify-between items-center">
             <div>

@@ -43,6 +43,7 @@ function App() {
             <Navbar isOpen={isNavOpen} setIsOpen={setNavOpen} />
             
             <Routes>
+              {/* Only Landing page has the Header component */}
               <Route path="/" element={<Landing setNavOpen={setNavOpen} />} />
               <Route path="/index" element={<Index />} />
               <Route path="/profile/:id" element={<Profile />} />
@@ -54,7 +55,7 @@ function App() {
               <Route path="/order-success" element={<OrderSuccess />} />
               <Route path="/track-order" element={<TrackOrder />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/place-order" element={<PlaceOrder setNavOpen={setNavOpen} />} />
+              <Route path="/place-order" element={<PlaceOrder />} />
               <Route path="/gift-requests" element={<GiftRequests />} />
               <Route path="/gifts-sent" element={<GiftsSent />} />
               <Route path="/gift-selection" element={<GiftSelection />} />

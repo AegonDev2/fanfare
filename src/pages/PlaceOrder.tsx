@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import Header from "@/components/landing/Header";
 import ProductUrlInput from "@/components/order/ProductUrlInput";
 import ProductPreview from "@/components/order/ProductPreview";
 import { useProductPreview } from "@/hooks/use-product-preview";
@@ -153,8 +152,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
 
   return (
     <div className="min-h-screen bg-gray-100 font-roboto">
-      <Header setNavOpen={setNavOpen} />
-      <div className="container mx-auto px-4 py-8 pt-20">
+      <div className="container mx-auto px-4 py-6 pb-24">
         {renderErrorMessage()}
         
         <ProductUrlInput

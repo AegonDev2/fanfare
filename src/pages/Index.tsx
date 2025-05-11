@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,14 +7,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { supabase } from "@/integrations/supabase/client";
+
 const Index = () => {
   const navigate = useNavigate();
   const [isInfluencer, setIsInfluencer] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
   useEffect(() => {
     checkUser();
   }, []);
+  
   const checkUser = async () => {
     try {
       const {
@@ -60,11 +64,13 @@ const Index = () => {
       setIsLoading(false);
     }
   };
+  
   if (isLoading) {
     return <div className="min-h-screen p-4 bg-background flex items-center justify-center">
         <p>Loading...</p>
       </div>;
   }
+  
   return <div className="min-h-screen p-4 bg-background">
       <div className="max-w-md mx-auto pt-8">
         {isInfluencer && !hasProfile ? <Card className="p-6">
@@ -97,4 +103,5 @@ const Index = () => {
       </div>
     </div>;
 };
+
 export default Index;
