@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,7 +108,6 @@ const InfluencerSection = ({
   const carouselRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchInputRef = useRef<HTMLDivElement>(null);
-  const carouselInitialized = useRef(false);
   
   const handleProfileClick = (id: string) => {
     navigate(`/profile/${id}`);
@@ -140,65 +140,53 @@ const InfluencerSection = ({
     };
   }, []);
   
-  // Improved carousel initialization
+  // Initialize owl carousel when component mounts
   useEffect(() => {
-    // Only try to initialize if we have influencers and jQuery is available
-    if (filteredInfluencers.length > 0 && !carouselInitialized.current) {
-      const timer = setTimeout(() => {
-        try {
-          // Double check that both jQuery and the carousel element exist
-          if (window.$ && window.jQuery && $('#owl-demo1').length) {
-            const owlCarousel = $('#owl-demo1');
-            
-            // Check if carousel is already initialized
-            if (!(owlCarousel as any).data('owlCarousel')) {
-              owlCarousel.owlCarousel({
-                loop: false,
-                margin: 10,
-                nav: true,
-                autoplay: false,
-                dots: false,
-                items: 3,
-                responsiveClass: true,
-                responsive: {
-                  0: { items: 1, nav: false },
-                  600: { items: 2, nav: false },
-                  1000: { items: 4, nav: false, loop: false }
-                }
-              });
-              carouselInitialized.current = true;
-              console.log("Owl carousel initialized successfully");
-            }
-          } else {
-            console.error("jQuery or carousel element not available");
-          }
-        } catch (error) {
-          console.error("Failed to initialize owl carousel:", error);
-        }
-      }, 800); // Increased timeout to ensure DOM and jQuery are fully ready
-      
-      return () => {
-        clearTimeout(timer);
-      };
-    }
-  }, [filteredInfluencers]);
-  
-  // Cleanup function on component unmount
-  useEffect(() => {
-    return () => {
+    // Function to initialize owl carousel
+    const initOwlCarousel = () => {
       try {
-        if (window.$ && window.jQuery && $('#owl-demo1').length) {
-          const owlCarousel = $('#owl-demo1');
-          if ((owlCarousel as any).data('owlCarousel')) {
-            (owlCarousel as any).data('owlCarousel').destroy();
-            carouselInitialized.current = false;
-          }
+        if ($('#owl-demo1').length) {
+          $('#owl-demo1').owlCarousel({
+            loop: false,
+            margin: 10,
+            nav: true,
+            autoplay: false,
+            dots: false,
+            items: 3,
+            responsiveClass: true,
+            responsive: {
+              0: { items: 1, nav: false },
+              600: { items: 2, nav: false },
+              1000: { items: 4, nav: false, loop: false }
+            }
+          });
+          console.log("Owl carousel initialized successfully");
+        } else {
+          console.error("Owl carousel element not found");
+        }
+      } catch (error) {
+        console.error("Failed to initialize owl carousel:", error);
+      }
+    };
+
+    // Initialize after a delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      if (filteredInfluencers.length > 0) {
+        initOwlCarousel();
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+      try {
+        if ($('#owl-demo1').length && ($('#owl-demo1') as any).data('owlCarousel')) {
+          ($('#owl-demo1') as any).data('owlCarousel').destroy();
         }
       } catch (error) {
         console.error("Error destroying owl carousel:", error);
       }
     };
-  }, []);
+  }, [filteredInfluencers]);
   
   return (
     <section className="mb-4 relative py-3 my-0 user-blog">
