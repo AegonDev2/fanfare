@@ -1,20 +1,21 @@
 
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
-import './styles/owl-carousel.css'
 
-// Import jQuery properly
-import $ from 'jquery';
-// Import owl carousel after jQuery is loaded
-import 'owl.carousel';
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
-// Make jQuery available globally for owl carousel
-window.$ = window.jQuery = $;
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+createRoot(document.getElementById("root")!).render(
+  <QueryClientProvider client={queryClient}>
     <App />
-  </React.StrictMode>,
-)
+  </QueryClientProvider>
+);

@@ -22,31 +22,23 @@ const Leaderboard = () => {
     fetchLeaderboard(month, year);
   };
   
-  return (
-    <div className="min-h-screen w-full bg-[var(--background)] pt-2">
+  return <div className="min-h-screen w-full bg-[var(--background)]">
       <div className="container mx-auto py-6 px-4 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <LeaderboardHeader month={currentMonth} year={currentYear} />
           
-          <div className="grid grid-cols-1 gap-8 pb-20">
+          <div className="grid grid-cols-1 gap-8">
             <div>
               <h2 className="text-2xl mb-3 text-center sm:text-left font-bold text-gray-900">
                 Top Fans Leaderboard
               </h2>
               <Separator className="mb-6" />
-              <LeaderboardList 
-                leaderboard={leaderboard} 
-                isLoading={isLoading} 
-                currentMonth={currentMonth} 
-                currentYear={currentYear} 
-                onMonthYearChange={handleMonthYearChange} 
-              />
+              <LeaderboardList leaderboard={leaderboard} isLoading={isLoading} currentMonth={currentMonth} currentYear={currentYear} onMonthYearChange={handleMonthYearChange} />
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
 
 export default Leaderboard;
