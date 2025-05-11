@@ -7,6 +7,8 @@ import { memo, useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import $ from 'jquery';
+
+// Make sure we're importing the CSS
 import 'owl.carousel/dist/assets/owl.carousel.css';
 import 'owl.carousel/dist/assets/owl.theme.default.css';
 
@@ -106,6 +108,7 @@ const InfluencerSection = ({
   const carouselRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchInputRef = useRef<HTMLDivElement>(null);
+  const carouselInitialized = useRef(false);
   
   const handleProfileClick = (id: string) => {
     navigate(`/profile/${id}`);
@@ -138,51 +141,55 @@ const InfluencerSection = ({
     };
   }, []);
   
-  // Initialize the owl carousel when component mounts
+  // Better initialization for Owl Carousel
   useEffect(() => {
-    if (filteredInfluencers.length > 0 && carouselRef.current) {
-      // Wait for next tick to ensure DOM is ready
-      setTimeout(() => {
+    if (filteredInfluencers.length > 0 && carouselRef.current && !carouselInitialized.current) {
+      // Wait for DOM to be fully rendered
+      const initCarousel = () => {
         try {
-          // @ts-ignore - jQuery with owl carousel
-          $("#owl-demo1").owlCarousel({
-            loop: false,
-            margin: 10,
-            nav: true,
-            autoplay: false,
-            dots: false,
-            items: 3,
-            responsiveClass: true,
-            responsive: {
-              0: {
-                items: 1,
-                nav: false,
-              },
-              600: {
-                items: 2,
-                nav: false,
-              },
-              1000: {
-                items: 4,
-                nav: false,
+          if (window.$ && window.jQuery) {
+            const owlElement = $("#owl-demo1");
+            if (owlElement.length > 0) {
+              owlElement.owlCarousel({
                 loop: false,
-              }
+                margin: 10,
+                nav: true,
+                autoplay: false,
+                dots: false,
+                items: 3,
+                responsiveClass: true,
+                responsive: {
+                  0: { items: 1, nav: false },
+                  600: { items: 2, nav: false },
+                  1000: { items: 4, nav: false, loop: false }
+                }
+              });
+              carouselInitialized.current = true;
+              console.log("Owl carousel initialized successfully");
+            } else {
+              console.error("Owl carousel element not found in DOM");
             }
-          });
+          } else {
+            console.error("jQuery not available for Owl Carousel initialization");
+          }
         } catch (error) {
           console.error("Error initializing owl carousel:", error);
         }
-      }, 0);
+      };
+      
+      // Give time for the DOM to render
+      setTimeout(initCarousel, 300);
     }
     
     // Cleanup function
     return () => {
       try {
-        // @ts-ignore - jQuery with owl carousel
-        const owl = $("#owl-demo1");
-        if (owl && owl.data('owlCarousel')) {
-          // @ts-ignore
-          owl.data('owlCarousel').destroy();
+        if (window.$ && window.jQuery) {
+          const owl = $("#owl-demo1");
+          if (owl.length > 0 && owl.data('owlCarousel')) {
+            owl.data('owlCarousel').destroy();
+            carouselInitialized.current = false;
+          }
         }
       } catch (error) {
         console.error("Error destroying owl carousel:", error);
