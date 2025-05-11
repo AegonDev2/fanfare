@@ -7,11 +7,11 @@ import './styles/owl-carousel.css'
 
 // Import jQuery properly
 import $ from 'jquery';
-// Import owl carousel after jQuery is loaded
-import 'owl.carousel';
-
 // Make jQuery available globally for owl carousel
 window.$ = window.jQuery = $;
+
+// Import owl carousel after jQuery is loaded and configured
+import 'owl.carousel';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
