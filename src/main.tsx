@@ -11,14 +11,6 @@ import $ from 'jquery';
 import 'owl.carousel';
 
 // Make jQuery available globally for owl carousel
-// Use proper TypeScript syntax to avoid errors
-declare global {
-  interface Window {
-    $: typeof $;
-    jQuery: typeof $;
-  }
-}
-
 window.$ = window.jQuery = $;
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

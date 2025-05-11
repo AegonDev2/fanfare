@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Gift, User, Users } from "lucide-react";
-import { memo, useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { memo, useState, useMemo, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import $ from 'jquery';
@@ -108,7 +108,6 @@ const InfluencerSection = ({
   const carouselRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchInputRef = useRef<HTMLDivElement>(null);
-  const carouselInitialized = useRef(false);
   
   const handleProfileClick = (id: string) => {
     navigate(`/profile/${id}`);
@@ -141,55 +140,47 @@ const InfluencerSection = ({
     };
   }, []);
   
-  // Better initialization for Owl Carousel
+  // Initialize owl carousel when component mounts
   useEffect(() => {
-    if (filteredInfluencers.length > 0 && carouselRef.current && !carouselInitialized.current) {
-      // Wait for DOM to be fully rendered
-      const initCarousel = () => {
-        try {
-          if (window.$ && window.jQuery) {
-            const owlElement = $("#owl-demo1");
-            if (owlElement.length > 0) {
-              owlElement.owlCarousel({
-                loop: false,
-                margin: 10,
-                nav: true,
-                autoplay: false,
-                dots: false,
-                items: 3,
-                responsiveClass: true,
-                responsive: {
-                  0: { items: 1, nav: false },
-                  600: { items: 2, nav: false },
-                  1000: { items: 4, nav: false, loop: false }
-                }
-              });
-              carouselInitialized.current = true;
-              console.log("Owl carousel initialized successfully");
-            } else {
-              console.error("Owl carousel element not found in DOM");
-            }
-          } else {
-            console.error("jQuery not available for Owl Carousel initialization");
-          }
-        } catch (error) {
-          console.error("Error initializing owl carousel:", error);
-        }
-      };
-      
-      // Give time for the DOM to render
-      setTimeout(initCarousel, 300);
-    }
-    
-    // Cleanup function
-    return () => {
+    // Function to initialize owl carousel
+    const initOwlCarousel = () => {
       try {
-        if (window.$ && window.jQuery) {
-          const owl = $("#owl-demo1");
-          if (owl.length > 0 && owl.data('owlCarousel')) {
-            owl.data('owlCarousel').destroy();
-            carouselInitialized.current = false;
-          }
+        if ($('#owl-demo1').length) {
+          $('#owl-demo1').owlCarousel({
+            loop: false,
+            margin: 10,
+            nav: true,
+            autoplay: false,
+            dots: false,
+            items: 3,
+            responsiveClass: true,
+            responsive: {
+              0: { items: 1, nav: false },
+              600: { items: 2, nav: false },
+              1000: { items: 4, nav: false, loop: false }
+            }
+          });
+          console.log("Owl carousel initialized successfully");
+        } else {
+          console.error("Owl carousel element not found");
+        }
+      } catch (error) {
+        console.error("Failed to initialize owl carousel:", error);
+      }
+    };
+
+    // Initialize after a delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      if (filteredInfluencers.length > 0) {
+        initOwlCarousel();
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+      try {
+        if ($('#owl-demo1').length && ($('#owl-demo1') as any).data('owlCarousel')) {
+          ($('#owl-demo1') as any).data('owlCarousel').destroy();
         }
       } catch (error) {
         console.error("Error destroying owl carousel:", error);
