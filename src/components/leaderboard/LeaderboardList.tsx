@@ -28,8 +28,8 @@ const LeaderboardList = ({
     onMonthYearChange(selectedMonth, parseInt(selectedYear));
   };
   return <div className="space-y-6">
-      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-lg p-4 border shadow-sm">
-        <h3 className="text-lg font-medium mb-3">Filter Leaderboard</h3>
+      <div className="backdrop-blur-md rounded-lg p-4 border shadow-sm bg-slate-50">
+        <h3 className="text-lg font-medium mb-3 text-gray-950">Filter Leaderboard</h3>
         <div className="flex flex-col sm:flex-row gap-3">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-full sm:w-[180px]">
