@@ -115,7 +115,7 @@ const Profile = () => {
         </div>
       </div>;
   }
-  return <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pb-24">
+  return <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pb-24 bg-rose-100">
       <main className="container mx-auto px-4 py-6 bg-rose-100">
         <motion.section className="shadow-md p-6 mb-8 rounded-3xl bg-white/80 backdrop-blur-sm border border-funky-purple/10" initial={{
         opacity: 0,
