@@ -178,7 +178,7 @@ const InfluencerSection = ({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2 mx-1">
         <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-gray-900 text-xl font-semibold">Discover Influencers</h2>
         
-        <div ref={searchInputRef} className="relative w-full md:w-auto bg-slate-50 py-[6px]">
+        <div ref={searchInputRef} className="relative w-full md:w-auto py-[6px] bg-rose-100">
           <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => {
           if (searchQuery.trim().length > 0) {
             setShowSuggestions(true);
@@ -206,7 +206,7 @@ const InfluencerSection = ({
         </div>
       </div>
       
-      <div ref={carouselRef} onMouseEnter={() => handleCarouselHover(true)} onMouseLeave={() => handleCarouselHover(false)} className="relative px-1 bg-slate-50">
+      <div ref={carouselRef} onMouseEnter={() => handleCarouselHover(true)} onMouseLeave={() => handleCarouselHover(false)} className="relative px-1 bg-rose-100">
         <Carousel opts={{
         align: "start",
         loop: true,
