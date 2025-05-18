@@ -232,10 +232,10 @@ const ProductPreview = ({
 
         <TabsContent value="message" className="mt-4">
           <div className="bg-white p-6 shadow-md rounded-lg">
-            <h3 className="text-lg font-medium mb-4">Add a Personal Message</h3>
-            <Textarea placeholder="Write a personal message to the influencer..." value={message} onChange={e => onMessageChange(e.target.value)} rows={6} className="mb-6" disabled={isLoading} />
+            <h3 className="text-lg font-medium mb-4 text-slate-950">Add a Personal Message</h3>
+            <Textarea placeholder="Write a personal message to the influencer..." value={message} onChange={e => onMessageChange(e.target.value)} rows={6} disabled={isLoading} className="mb-6 bg-slate-50" />
             
-            <div className="bg-gray-50 p-4 rounded-md mb-6">
+            <div className="p-4 rounded-md mb-6 bg-stone-900">
               <div className="flex items-center mb-4">
                 <Wallet className="h-5 w-5 mr-2 text-primary" />
                 <span className="font-semibold">Payment via Wallet</span>
