@@ -35,11 +35,26 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
     
     setIsLoadingPreview(true);
     try {
+      console.log("Generating preview for URL:", productUrl);
       const imageUrl = await generateWebsitePreview(productUrl);
+      console.log("Preview generated successfully:", imageUrl);
       setWebsitePreview(imageUrl);
+      
+      // Show toast to confirm API is working
+      toast({ 
+        title: "Preview Generated",
+        description: "Website preview successfully generated using Pikwy API"
+      });
     } catch (error) {
       console.error("Failed to generate preview:", error);
       setWebsitePreview(null);
+      
+      // Show error toast if API fails
+      toast({ 
+        title: "Preview Failed",
+        description: "Could not generate website preview",
+        variant: "destructive"
+      });
     } finally {
       setIsLoadingPreview(false);
     }

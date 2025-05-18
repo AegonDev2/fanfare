@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductDetails } from "@/types/order";
@@ -65,11 +66,10 @@ export const useProductPreview = () => {
         setProductPreview({
           name: "Product information couldn't be extracted",
           price: "N/A",
-          priceInr: 0,
+          priceInr: 0, // Fixed type: using number instead of string
           image: "https://placehold.co/600x400?text=No+Image",
           description: "Please try a different URL or enter product details manually.",
-          platformFee: 5.00,
-          currency: "INR"
+          platformFee: 5.00
         });
         setError("Couldn't extract product details from this URL");
         return;
@@ -79,11 +79,10 @@ export const useProductPreview = () => {
       setProductPreview({
         name: productData.title,
         price: productData.price?.toString() || "Price not available",
-        priceInr: parseFloat(productData.price) || 0,
+        priceInr: parseFloat(productData.price) || 0, // Fixed type: ensuring number type
         image: productData.image || "https://placehold.co/600x400?text=No+Image",
         description: productData.description || "No description available",
-        platformFee: 5.00,
-        currency: "INR"
+        platformFee: 5.00
       });
 
       setFetchProgress(100);
@@ -94,11 +93,10 @@ export const useProductPreview = () => {
       setProductPreview({
         name: "Enter a product URL to preview",
         price: "N/A",
-        priceInr: 0,
+        priceInr: 0, // Fixed type: using number instead of string
         image: "https://placehold.co/600x400?text=No+Image",
         description: "Please try a different URL or enter product details manually.",
-        platformFee: 5.00,
-        currency: "INR"
+        platformFee: 5.00
       });
     } finally {
       setIsFetchingProduct(false);

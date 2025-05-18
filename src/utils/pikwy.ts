@@ -3,8 +3,8 @@
  * Utility for generating website screenshots using the Pikwy API
  */
 
-// The API token should be stored in Supabase secrets in production
-const PIKWY_API_TOKEN = "demo_token"; // Replace with your actual token
+// Use the provided API token for Pikwy
+const PIKWY_API_TOKEN = "c39990741cf427d7baa5750d20bfaefc66c45915a84af5d8";
 
 /**
  * Generates a screenshot of a website URL using Pikwy API
