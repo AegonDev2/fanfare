@@ -1,7 +1,7 @@
 
 export interface ProductDetails {
   name: string;
-  price: number;
+  price: string;
   priceInr: number;
   platformFee: number;
   image: string;
