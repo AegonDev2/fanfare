@@ -196,19 +196,19 @@ const ProductPreview = ({
                 <div>
                   <h2 className="text-xl font-semibold mb-4">{productPreview.name}</h2>
                   
-                  <div className="bg-gray-50 p-4 rounded-md mb-4">
+                  <div className="p-4 rounded-md mb-4 bg-slate-50">
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-600">Price:</span>
-                      <span className="font-semibold">₹{productPrice.toFixed(2)}</span>
+                      <span className="font-semibold text-neutral-950">₹{productPrice.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-600">Platform Fee:</span>
-                      <span>₹{platformFee.toFixed(2)}</span>
+                      <span className="text-zinc-950">₹{platformFee.toFixed(2)}</span>
                     </div>
                     <Separator className="my-2" />
                     <div className="flex justify-between">
                       <span className="text-gray-800 font-semibold">Total:</span>
-                      <span className="text-primary font-semibold">
+                      <span className="font-semibold text-zinc-950">
                         ₹{totalAmount.toFixed(2)}
                       </span>
                     </div>
