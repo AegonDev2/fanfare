@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useGiftsSent } from "@/hooks/useGiftsSent";
@@ -6,7 +5,6 @@ import { GiftRequestCard } from "@/components/gifts/GiftRequestCard";
 import { GiftDetailsDialog } from "@/components/gifts/GiftDetailsDialog";
 import { EmptyGiftsState } from "@/components/gifts/EmptyGiftsState";
 import { LoadingGiftsState } from "@/components/gifts/LoadingGiftsState";
-
 const GiftsSent = () => {
   const {
     requests,
@@ -17,12 +15,10 @@ const GiftsSent = () => {
     setDialogOpen,
     handleDetailsClick
   } = useGiftsSent();
-  
   useEffect(() => {
     fetchSentGiftRequests();
   }, [fetchSentGiftRequests]);
-  
-  return <div className="min-h-screen w-full bg-[var(--background)] bg-slate-50">
+  return <div className="min-h-screen w-full bg-[var(--background)] bg-rose-100">
       <div className="container mx-auto py-6 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -48,5 +44,4 @@ const GiftsSent = () => {
       </div>
     </div>;
 };
-
 export default GiftsSent;
