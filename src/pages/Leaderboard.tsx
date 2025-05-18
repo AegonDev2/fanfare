@@ -1,10 +1,8 @@
-
 import { useEffect } from "react";
 import LeaderboardHeader from "@/components/leaderboard/LeaderboardHeader";
 import LeaderboardList from "@/components/leaderboard/LeaderboardList";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { Separator } from "@/components/ui/separator";
-
 const Leaderboard = () => {
   const {
     leaderboard,
@@ -13,17 +11,14 @@ const Leaderboard = () => {
     currentMonth,
     currentYear
   } = useLeaderboard();
-  
   useEffect(() => {
     document.title = `Fan of the Month | FanFare`;
   }, []);
-  
   const handleMonthYearChange = (month: string, year: number) => {
     fetchLeaderboard(month, year);
   };
-  
   return <div className="min-h-screen w-full bg-[var(--background)]">
-      <div className="container mx-auto py-6 px-4 bg-slate-50">
+      <div className="container mx-auto py-6 px-4 bg-rose-100">
         <div className="max-w-7xl mx-auto">
           <LeaderboardHeader month={currentMonth} year={currentYear} />
           
@@ -40,5 +35,4 @@ const Leaderboard = () => {
       </div>
     </div>;
 };
-
 export default Leaderboard;
