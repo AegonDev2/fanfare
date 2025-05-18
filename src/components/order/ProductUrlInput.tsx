@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ShoppingCart, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, Loader2, AlertCircle, CheckCircle2, Image } from "lucide-react";
 
 interface ProductUrlInputProps {
   giftItem: string;
@@ -22,6 +22,7 @@ const ProductUrlInput = ({
 }: ProductUrlInputProps) => {
   const [isValid, setIsValid] = useState(true);
   const [validationMessage, setValidationMessage] = useState("");
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
   const validateUrl = (url: string) => {
     if (!url) {
@@ -54,7 +55,17 @@ const ProductUrlInput = ({
     if (!isValid) {
       return;
     }
+    
+    // Indicate that we're generating a preview
+    setIsGeneratingPreview(true);
+    
+    // Call the onPreviewClick function
     onPreviewClick();
+    
+    // Reset the state after a delay
+    setTimeout(() => {
+      setIsGeneratingPreview(false);
+    }, 2000);
   };
 
   const getButtonPrompt = () => {
@@ -62,6 +73,12 @@ const ProductUrlInput = ({
       return <>
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           Fetching Product...
+        </>;
+    }
+    if (isGeneratingPreview) {
+      return <>
+          <Image className="h-4 w-4 mr-2 animate-pulse" />
+          Generating Preview...
         </>;
     }
     return <>
@@ -80,6 +97,8 @@ const ProductUrlInput = ({
       statusMessage = "Loading product data...";
     } else if (fetchProgress < 60) {
       statusMessage = "Extracting product details...";
+    } else if (fetchProgress < 70) {
+      statusMessage = "Generating website preview...";
     } else if (fetchProgress < 80) {
       statusMessage = "Processing information...";
     } else if (fetchProgress < 95) {

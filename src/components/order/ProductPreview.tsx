@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { ProductDetails, InfluencerAddress } from "@/types/order";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon } from "lucide-react";
+import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon, Image } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { generateWebsitePreview } from "@/utils/pikwy";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProductPreviewProps {
   productPreview: ProductDetails | null;
@@ -37,6 +39,31 @@ const ProductPreview = ({
 
   // Track if product has been processed
   const [productProcessed, setProductProcessed] = useState<boolean>(isPreviewAvailable);
+  
+  // Website screenshot preview
+  const [websitePreview, setWebsitePreview] = useState<string | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
+  
+  // Generate website preview when URL is available
+  useEffect(() => {
+    const fetchWebsitePreview = async () => {
+      if (!giftUrl) return;
+      
+      setIsLoadingPreview(true);
+      try {
+        const imageUrl = await generateWebsitePreview(giftUrl);
+        setWebsitePreview(imageUrl);
+      } catch (error) {
+        console.error("Failed to load website preview:", error);
+      } finally {
+        setIsLoadingPreview(false);
+      }
+    };
+    
+    if (hasProcessedUrl && giftUrl && !websitePreview) {
+      fetchWebsitePreview();
+    }
+  }, [giftUrl, hasProcessedUrl]);
   
   // Update when product preview changes
   useEffect(() => {
@@ -80,6 +107,38 @@ const ProductPreview = ({
   const platformFee = isPreviewAvailable ? productPreview.platformFee : defaultPlatformFee;
   const totalAmount = productPrice + platformFee;
 
+  // Website preview component
+  const WebsitePreviewComponent = () => (
+    <div className="mb-4 border rounded-md overflow-hidden">
+      <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
+        <div className="flex items-center">
+          <Image className="h-4 w-4 mr-2 text-gray-500" />
+          <span className="text-sm font-medium text-gray-600">Website Preview</span>
+        </div>
+        
+        {isLoadingPreview && (
+          <span className="text-xs text-gray-500">Loading...</span>
+        )}
+      </div>
+      
+      <div className="aspect-video relative bg-gray-50">
+        {isLoadingPreview ? (
+          <Skeleton className="h-full w-full" />
+        ) : websitePreview ? (
+          <img 
+            src={websitePreview} 
+            alt="Website preview" 
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-gray-400">Preview not available</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   // Simplified view when no product preview is available
   if (!isPreviewAvailable) {
     return (
@@ -93,6 +152,8 @@ const ProductPreview = ({
               You're sending a gift using only the provided URL. The influencer will review this request before accepting.
             </AlertDescription>
           </Alert>
+          
+          <WebsitePreviewComponent />
           
           <div className="bg-gray-50 p-4 rounded-md mb-4">
             <h4 className="font-medium mb-2 flex items-center">
@@ -165,12 +226,16 @@ const ProductPreview = ({
           <div className="bg-white p-6 shadow-md rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <img
-                  src={productPreview.image}
-                  alt={productPreview.name}
-                  className="w-full h-auto rounded-md object-contain"
-                  style={{ maxHeight: "300px" }}
-                />
+                {isPreviewAvailable && productPreview?.image ? (
+                  <img
+                    src={productPreview.image}
+                    alt={productPreview.name}
+                    className="w-full h-auto rounded-md object-contain"
+                    style={{ maxHeight: "300px" }}
+                  />
+                ) : (
+                  <WebsitePreviewComponent />
+                )}
               </div>
               <div className="flex flex-col justify-between">
                 <div>
