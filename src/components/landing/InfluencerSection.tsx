@@ -40,7 +40,7 @@ const InfluencerCard = memo(({
     return count.toString();
   };
   return <div className={cn("p-2 h-full relative group cursor-pointer transition-all duration-300 transform hover:translate-y-[-5px]")} onClick={() => onProfileClick(influencer.id)} onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
-      <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/5 to-funky-pink/5 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg transition-all duration-500 z-0 group-hover:bg-gradient-to-tr group-hover:from-funky-purple/10 group-hover:to-funky-pink/10 my-[2px] py-0 px-0 mx-0 bg-teal-700"></div>
+      <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/5 to-funky-pink/5 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg transition-all duration-500 z-0 group-hover:bg-gradient-to-tr group-hover:from-funky-purple/10 group-hover:to-funky-pink/10 my-[2px] py-0 px-0 mx-0 bg-slate-50"></div>
       
       <div className="absolute right-2 top-2 z-20 transform transition-all duration-300 scale-0 group-hover:scale-100 origin-top-right" onClick={handleGiftClick}>
         <Button size="icon" className="rounded-full h-7 w-7 bg-white dark:bg-gray-900 backdrop-blur-md shadow-lg border border-funky-purple/20 text-funky-pink hover:bg-funky-purple/10">
@@ -57,7 +57,7 @@ const InfluencerCard = memo(({
         </div>
         
         <div className="mt-1 relative">
-          <h3 className="text-xs font-semibold truncate text-gray-900 dark:text-gray-100 font-display">{influencer.name}</h3>
+          <h3 className="text-xs font-semibold truncate font-display text-zinc-950">{influencer.name}</h3>
           <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mt-0.5 space-x-1">
             <span className="font-medium text-funky-purple text-[10px]">{influencer.platform}</span>
             <span>•</span>
@@ -206,7 +206,7 @@ const InfluencerSection = ({
         </div>
       </div>
       
-      <div className="relative px-1" ref={carouselRef} onMouseEnter={() => handleCarouselHover(true)} onMouseLeave={() => handleCarouselHover(false)}>
+      <div ref={carouselRef} onMouseEnter={() => handleCarouselHover(true)} onMouseLeave={() => handleCarouselHover(false)} className="relative px-1 bg-slate-50">
         <Carousel opts={{
         align: "start",
         loop: true,
