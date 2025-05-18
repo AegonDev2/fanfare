@@ -1,15 +1,17 @@
 
 /**
- * Utility for generating website screenshots using the Pikwy API
+ * Utility for generating website screenshots using the Pikwy API via Supabase Edge Function
  */
 
-// Use the provided API token for Pikwy
+import { supabase } from "@/integrations/supabase/client";
+
+// API token is now stored securely in the edge function
 const PIKWY_API_TOKEN = "c39990741cf427d7baa5750d20bfaefc66c45915a84af5d8";
 
 /**
- * Generates a screenshot of a website URL using Pikwy API
+ * Generates a screenshot of a website URL using Pikwy API via Supabase Edge Function
  * @param url The URL to capture
- * @param fullScreen Whether to capture the full page (1) or viewport (0)
+ * @param fullScreen Whether to capture the full page (true) or viewport (false)
  * @returns Promise with the image URL
  */
 export const generateWebsitePreview = async (url: string, fullScreen: boolean = false): Promise<string> => {
@@ -18,22 +20,25 @@ export const generateWebsitePreview = async (url: string, fullScreen: boolean = 
   }
   
   try {
-    // Encode the URL
-    const encodedUrl = encodeURIComponent(url);
-    const fullScreenParam = fullScreen ? "1" : "0";
+    console.log(`Generating preview for URL: ${url}`);
     
-    const response = await fetch(
-      `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}`, 
-      { method: "GET" }
-    );
+    // Call our Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke("pikwy-screenshot", {
+      body: { url, fullScreen }
+    });
     
-    if (!response.ok) {
-      throw new Error(`Failed to generate preview: ${response.status}`);
+    if (error) {
+      console.error("Edge function error:", error);
+      throw new Error(`Failed to generate preview: ${error.message}`);
     }
     
-    // The API returns the image URL directly
-    const imageUrl = await response.text();
-    return imageUrl;
+    if (!data || !data.imageUrl) {
+      console.error("Invalid response from edge function:", data);
+      throw new Error("Failed to generate preview: Invalid response");
+    }
+    
+    console.log("Preview generated successfully:", data.imageUrl);
+    return data.imageUrl;
   } catch (error) {
     console.error("Error generating website preview:", error);
     throw error;

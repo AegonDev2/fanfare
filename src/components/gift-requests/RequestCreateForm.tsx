@@ -8,7 +8,8 @@ import { sendNotification } from "@/utils/notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { generateWebsitePreview } from "@/utils/pikwy";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Image, Loader2 } from "lucide-react";
+import { Image, Loader2, AlertCircle, ExternalLink } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, onSubmit?: () => void }) => {
   const [productUrl, setProductUrl] = useState("");
@@ -16,10 +17,15 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [websitePreview, setWebsitePreview] = useState<string | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Generate website preview when URL changes
   useEffect(() => {
+    // Clear previous preview and errors
+    setWebsitePreview(null);
+    setPreviewError(null);
+    
     // Debounce the preview generation to prevent too many API calls
     const debounceTimer = setTimeout(() => {
       if (productUrl && productUrl.startsWith('http')) {
@@ -34,6 +40,8 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
     if (!productUrl) return;
     
     setIsLoadingPreview(true);
+    setPreviewError(null);
+    
     try {
       console.log("Generating preview for URL:", productUrl);
       const imageUrl = await generateWebsitePreview(productUrl);
@@ -43,10 +51,11 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
       // Show toast to confirm API is working
       toast({ 
         title: "Preview Generated",
-        description: "Website preview successfully generated using Pikwy API"
+        description: "Website preview successfully generated"
       });
     } catch (error) {
       console.error("Failed to generate preview:", error);
+      setPreviewError(error instanceof Error ? error.message : "Failed to generate preview");
       setWebsitePreview(null);
       
       // Show error toast if API fails
@@ -117,11 +126,30 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {previewError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{previewError}</AlertDescription>
+            </Alert>
+          )}
+          
           {websitePreview && (
             <div className="border rounded-md overflow-hidden">
-              <div className="bg-gray-100 p-2 border-b flex items-center">
-                <Image className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-sm font-medium text-gray-600">Website Preview</span>
+              <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
+                <div className="flex items-center">
+                  <Image className="h-4 w-4 mr-2 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-600">Website Preview</span>
+                </div>
+                {productUrl && (
+                  <a
+                    href={productUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
+                  >
+                    View Site <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                )}
               </div>
               <div className="aspect-video bg-white">
                 <img src={websitePreview} alt="Product preview" className="w-full h-full object-contain" />
