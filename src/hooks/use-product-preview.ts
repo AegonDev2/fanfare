@@ -2,18 +2,23 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductDetails } from "@/types/order";
+import { generateWebsitePreview } from "@/utils/pikwy";
+import { useToast } from "@/hooks/use-toast";
 
 export const useProductPreview = () => {
+  const { toast } = useToast();
   const [productPreview, setProductPreview] = useState<ProductDetails | null>(null);
   const [isFetchingProduct, setIsFetchingProduct] = useState(false);
   const [fetchProgress, setFetchProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [websitePreview, setWebsitePreview] = useState<string | null>(null);
 
   const resetExtractionState = () => {
     setProductPreview(null);
     setIsFetchingProduct(false);
     setFetchProgress(0);
     setError(null);
+    setWebsitePreview(null);
   };
 
   const incrementProgress = (interval: number) => {
@@ -27,6 +32,21 @@ export const useProductPreview = () => {
     }, interval);
   };
 
+  const fetchWebsitePreview = async (url: string) => {
+    if (!url) return null;
+    
+    try {
+      console.log("Generating website preview for URL:", url);
+      const imageUrl = await generateWebsitePreview(url);
+      console.log("Website preview generated:", imageUrl);
+      setWebsitePreview(imageUrl);
+      return imageUrl;
+    } catch (err) {
+      console.error("Failed to generate website preview:", err);
+      return null;
+    }
+  };
+
   const handlePreviewProduct = async (url: string) => {
     if (!url) {
       setError("Please enter a product URL");
@@ -37,9 +57,13 @@ export const useProductPreview = () => {
       setIsFetchingProduct(true);
       setFetchProgress(0);
       setError(null);
+      setWebsitePreview(null);
 
       // Simulate progress while fetching
       const progressInterval = incrementProgress(40);
+
+      // Start generating website preview in parallel
+      const previewPromise = fetchWebsitePreview(url);
 
       // Extract product information from supplied URL
       const { data: productData, error: extractError } = await supabase.functions.invoke(
@@ -49,16 +73,40 @@ export const useProductPreview = () => {
         }
       );
 
-      if (extractError) {
-        throw new Error(extractError.message);
-      }
-
       // Stop the progress interval
       clearInterval(progressInterval);
       setFetchProgress(90);
 
+      if (extractError) {
+        console.error("Extraction error:", extractError);
+        throw new Error(extractError.message);
+      }
+
+      // Wait for website preview to complete
+      const previewImage = await previewPromise;
+
+      // Set to 95% as we're almost done
+      setFetchProgress(95);
+
       if (!productData) {
-        throw new Error("Failed to extract product data");
+        // Create a fallback product preview with website screenshot
+        setProductPreview({
+          name: "Product information couldn't be fully extracted",
+          price: "N/A",
+          priceInr: 0,
+          image: previewImage || "https://placehold.co/600x400?text=No+Image",
+          description: "Please verify the product details before proceeding.",
+          platformFee: 5.00
+        });
+        
+        toast({
+          title: "Limited Information",
+          description: "Only partial product details could be extracted. Please verify before proceeding.",
+          variant: "warning",
+        });
+        
+        setFetchProgress(100);
+        return;
       }
 
       // Check if we received valid product data
@@ -66,37 +114,57 @@ export const useProductPreview = () => {
         setProductPreview({
           name: "Product information couldn't be extracted",
           price: "N/A",
-          priceInr: 0, // Fixed type: using number instead of string
-          image: "https://placehold.co/600x400?text=No+Image",
+          priceInr: 0,
+          image: previewImage || "https://placehold.co/600x400?text=No+Image",
           description: "Please try a different URL or enter product details manually.",
           platformFee: 5.00
         });
         setError("Couldn't extract product details from this URL");
+        setFetchProgress(100);
         return;
       }
 
       // Set the product preview data
-      setProductPreview({
+      const preview = {
         name: productData.title,
         price: productData.price?.toString() || "Price not available",
-        priceInr: parseFloat(productData.price) || 0, // Fixed type: ensuring number type
-        image: productData.image || "https://placehold.co/600x400?text=No+Image",
+        priceInr: parseFloat(productData.price) || 0,
+        image: productData.image || previewImage || "https://placehold.co/600x400?text=No+Image",
         description: productData.description || "No description available",
         platformFee: 5.00
-      });
-
+      };
+      
+      console.log("Setting product preview:", preview);
+      setProductPreview(preview);
       setFetchProgress(100);
+
+      // Success notification
+      toast({
+        title: "Product Processed",
+        description: "Product information has been successfully extracted.",
+        variant: "default",
+      });
 
     } catch (err) {
       console.error("Error in product preview:", err);
+      
+      // Try to still get a website preview even if extraction failed
+      const previewImage = await fetchWebsitePreview(url);
+      
       setError(err instanceof Error ? err.message : "An error occurred extracting product details");
       setProductPreview({
         name: "Enter a product URL to preview",
         price: "N/A",
-        priceInr: 0, // Fixed type: using number instead of string
-        image: "https://placehold.co/600x400?text=No+Image",
+        priceInr: 0,
+        image: previewImage || "https://placehold.co/600x400?text=No+Image",
         description: "Please try a different URL or enter product details manually.",
         platformFee: 5.00
+      });
+      
+      toast({
+        title: "Extraction Failed",
+        description: "Could not extract product details. You can still proceed with the URL.",
+        variant: "destructive",
       });
     } finally {
       setIsFetchingProduct(false);
@@ -110,6 +178,7 @@ export const useProductPreview = () => {
     fetchProgress,
     handlePreviewProduct,
     error,
-    resetExtractionState
+    resetExtractionState,
+    websitePreview
   };
 };

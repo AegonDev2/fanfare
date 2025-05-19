@@ -47,7 +47,8 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     fetchProgress, 
     handlePreviewProduct,
     error: productPreviewError,
-    resetExtractionState
+    resetExtractionState,
+    websitePreview
   } = useProductPreview();
 
   const { isLoading, paymentStep, orderError, submitOrder } = useOrderSubmission();
@@ -55,6 +56,12 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
   useEffect(() => {
     if (influencerId) {
       fetchInfluencerAddress();
+    } else {
+      toast({
+        title: "Missing Information",
+        description: "No influencer was selected. Please go back and select an influencer.",
+        variant: "destructive",
+      });
     }
   }, [influencerId]);
 
@@ -136,6 +143,11 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     });
   };
 
+  const handleProcessProduct = () => {
+    console.log("Processing product URL:", giftItem);
+    handlePreviewProduct(giftItem);
+  };
+
   const renderErrorMessage = () => {
     const error = productPreviewError || orderError;
     if (!error) return null;
@@ -158,7 +170,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
         <ProductUrlInput
           giftItem={giftItem}
           onUrlChange={handleUrlChange}
-          onPreviewClick={() => handlePreviewProduct(giftItem)}
+          onPreviewClick={handleProcessProduct}
           isFetchingProduct={isFetchingProduct}
           fetchProgress={fetchProgress}
         />
@@ -172,6 +184,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
           isLoading={isLoading}
           paymentStep={paymentStep === 'pending' ? 'processing' : paymentStep}
           giftUrl={giftItem}
+          websitePreview={websitePreview}
         />
       </div>
     </div>

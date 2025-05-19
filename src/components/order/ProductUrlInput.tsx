@@ -113,6 +113,7 @@ const ProductUrlInput = ({
       </div>;
   };
 
+  // Sample recommendations
   const recommendations = ["https://www.flipkart.com/fastrack-optimus-pro-1-43-amoled-display-aod-466x466-functional-crown-bt-calling-smartwatch/p/itma4744c9053b72?pid=SMWGV3ZY9YJYEYEC", "https://amzn.in/d/2pPwjuQ", "https://www.myntra.com/watches/fastrack/fastrack-unisex-black-digital-watch-38045pp02/14599416/buy"];
 
   return <section className="mb-8 py-0 my-[20px]">
@@ -126,7 +127,14 @@ const ProductUrlInput = ({
               Product URL
             </label>
             <div className="relative">
-              <Input id="productUrl" value={giftItem} onChange={e => handleUrlChange(e.target.value)} className={`w-full p-2 border ${!isValid ? 'border-red-500' : 'border-gray-300'} rounded-lg pr-10`} placeholder="Paste any product URL here..." disabled={isFetchingProduct} />
+              <Input 
+                id="productUrl" 
+                value={giftItem} 
+                onChange={e => handleUrlChange(e.target.value)} 
+                className={`w-full p-2 border ${!isValid ? 'border-red-500' : 'border-gray-300'} rounded-lg pr-10`} 
+                placeholder="Paste any product URL here..." 
+                disabled={isFetchingProduct} 
+              />
               {!isValid && <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <AlertCircle className="h-5 w-5 text-red-500" />
                 </div>}
@@ -134,7 +142,11 @@ const ProductUrlInput = ({
             {!isValid && validationMessage && <p className="text-red-500 text-sm mt-1">{validationMessage}</p>}
           </div>
           
-          <Button type="submit" disabled={isFetchingProduct || !giftItem || !isValid} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 w-full sm:w-auto">
+          <Button 
+            type="submit" 
+            disabled={isFetchingProduct || !giftItem || !isValid} 
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 w-full sm:w-auto"
+          >
             {getButtonPrompt()}
           </Button>
           

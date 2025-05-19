@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -6,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon, Image } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { generateWebsitePreview } from "@/utils/pikwy";
 import { Skeleton } from "@/components/ui/skeleton";
+
 interface ProductPreviewProps {
   productPreview: ProductDetails | null;
   influencerAddress: InfluencerAddress | null;
@@ -17,7 +18,9 @@ interface ProductPreviewProps {
   isLoading: boolean;
   paymentStep?: 'initial' | 'processing' | 'complete';
   giftUrl?: string;
+  websitePreview?: string | null;
 }
+
 const ProductPreview = ({
   productPreview,
   influencerAddress,
@@ -26,7 +29,8 @@ const ProductPreview = ({
   onSubmit,
   isLoading,
   paymentStep = 'initial',
-  giftUrl = ''
+  giftUrl = '',
+  websitePreview = null
 }: ProductPreviewProps) => {
   const isPreviewAvailable = productPreview && productPreview.name !== "Enter a product URL to preview";
   const hasProcessedUrl = isPreviewAvailable || giftUrl.trim() !== '';
@@ -37,35 +41,13 @@ const ProductPreview = ({
   // Track if product has been processed
   const [productProcessed, setProductProcessed] = useState<boolean>(isPreviewAvailable);
 
-  // Website screenshot preview
-  const [websitePreview, setWebsitePreview] = useState<string | null>(null);
-  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
-
-  // Generate website preview when URL is available
-  useEffect(() => {
-    const fetchWebsitePreview = async () => {
-      if (!giftUrl) return;
-      setIsLoadingPreview(true);
-      try {
-        const imageUrl = await generateWebsitePreview(giftUrl);
-        setWebsitePreview(imageUrl);
-      } catch (error) {
-        console.error("Failed to load website preview:", error);
-      } finally {
-        setIsLoadingPreview(false);
-      }
-    };
-    if (hasProcessedUrl && giftUrl && !websitePreview) {
-      fetchWebsitePreview();
-    }
-  }, [giftUrl, hasProcessedUrl]);
-
   // Update when product preview changes
   useEffect(() => {
     if (isPreviewAvailable) {
       setProductProcessed(true);
     }
   }, [isPreviewAvailable]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === "message" || !isPreviewAvailable) {
@@ -74,6 +56,7 @@ const ProductPreview = ({
       setActiveTab("message");
     }
   };
+
   if (paymentStep === 'complete') {
     return <div className="bg-white p-6 shadow-md rounded-lg mt-8 max-w-md mx-auto">
         <div className="flex flex-col items-center text-center">
@@ -99,22 +82,31 @@ const ProductPreview = ({
   const totalAmount = productPrice + platformFee;
 
   // Website preview component
-  const WebsitePreviewComponent = () => <div className="mb-4 border rounded-md overflow-hidden">
+  const WebsitePreviewComponent = () => {
+    console.log("Rendering website preview with:", websitePreview);
+    return <div className="mb-4 border rounded-md overflow-hidden">
       <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
         <div className="flex items-center">
           <Image className="h-4 w-4 mr-2 text-gray-500" />
           <span className="text-sm font-medium text-gray-600">Website Preview</span>
         </div>
-        
-        {isLoadingPreview && <span className="text-xs text-gray-500">Loading...</span>}
       </div>
       
       <div className="aspect-video relative bg-gray-50">
-        {isLoadingPreview ? <Skeleton className="h-full w-full" /> : websitePreview ? <img src={websitePreview} alt="Website preview" className="w-full h-full object-contain" /> : <div className="flex items-center justify-center h-full">
+        {websitePreview ? (
+          <img 
+            src={websitePreview} 
+            alt="Website preview" 
+            className="w-full h-full object-contain" 
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full">
             <p className="text-sm text-gray-400">Preview not available</p>
-          </div>}
+          </div>
+        )}
       </div>
     </div>;
+  };
 
   // Simplified view when no product preview is available
   if (!isPreviewAvailable) {
@@ -188,13 +180,20 @@ const ProductPreview = ({
           <div className="bg-white p-6 shadow-md rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                {isPreviewAvailable && productPreview?.image ? <img src={productPreview.image} alt={productPreview.name} className="w-full h-auto rounded-md object-contain" style={{
-                maxHeight: "300px"
-              }} /> : <WebsitePreviewComponent />}
+                {isPreviewAvailable && productPreview?.image ? (
+                  <img 
+                    src={productPreview.image} 
+                    alt={productPreview.name} 
+                    className="w-full h-auto rounded-md object-contain" 
+                    style={{maxHeight: "300px"}} 
+                  />
+                ) : (
+                  <WebsitePreviewComponent />
+                )}
               </div>
               <div className="flex flex-col justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold mb-4">{productPreview.name}</h2>
+                  <h2 className="text-xl font-semibold mb-4">{productPreview?.name}</h2>
                   
                   <div className="p-4 rounded-md mb-4 bg-slate-50">
                     <div className="flex justify-between mb-2">
@@ -269,4 +268,5 @@ const ProductPreview = ({
       </Tabs>
     </div>;
 };
+
 export default ProductPreview;
