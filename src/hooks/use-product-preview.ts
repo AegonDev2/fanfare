@@ -66,7 +66,7 @@ export const useProductPreview = () => {
       const previewPromise = fetchWebsitePreview(url);
 
       // Extract product information from supplied URL
-      const { data: productData, error: extractError } = await supabase.functions.invoke(
+      const { data: extractionResponse, error: extractError } = await supabase.functions.invoke(
         "jigsawstack-extraction",
         {
           body: { url },
@@ -88,7 +88,10 @@ export const useProductPreview = () => {
       // Set to 95% as we're almost done
       setFetchProgress(95);
 
-      if (!productData) {
+      // Check if we received valid extraction response
+      if (!extractionResponse || !extractionResponse.productData) {
+        console.log("No product data in response:", extractionResponse);
+        
         // Create a fallback product preview with website screenshot
         setProductPreview({
           name: "Product information couldn't be fully extracted",
@@ -102,15 +105,18 @@ export const useProductPreview = () => {
         toast({
           title: "Limited Information",
           description: "Only partial product details could be extracted. Please verify before proceeding.",
-          variant: "warning",
+          variant: "default",
         });
         
         setFetchProgress(100);
         return;
       }
 
+      const productData = extractionResponse.productData;
+      
       // Check if we received valid product data
-      if (!productData.title) {
+      if (!productData.name) {
+        console.log("Product data missing name:", productData);
         setProductPreview({
           name: "Product information couldn't be extracted",
           price: "N/A",
@@ -124,11 +130,21 @@ export const useProductPreview = () => {
         return;
       }
 
+      // Parse price from string if needed
+      let priceNumber = 0;
+      if (typeof productData.price === 'string') {
+        // Extract numeric value from price string (e.g. "₹ 999" -> 999)
+        const priceMatch = productData.price.match(/[\d.]+/);
+        priceNumber = priceMatch ? parseFloat(priceMatch[0]) : 0;
+      } else {
+        priceNumber = parseFloat(productData.price) || 0;
+      }
+
       // Set the product preview data
       const preview = {
-        name: productData.title,
+        name: productData.name,
         price: productData.price?.toString() || "Price not available",
-        priceInr: parseFloat(productData.price) || 0,
+        priceInr: priceNumber,
         image: productData.image || previewImage || "https://placehold.co/600x400?text=No+Image",
         description: productData.description || "No description available",
         platformFee: 5.00

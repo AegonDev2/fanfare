@@ -5,9 +5,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// API token is now stored securely in the edge function
-const PIKWY_API_TOKEN = "c39990741cf427d7baa5750d20bfaefc66c45915a84af5d8";
-
 /**
  * Generates a screenshot of a website URL using Pikwy API via Supabase Edge Function
  * @param url The URL to capture
