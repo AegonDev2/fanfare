@@ -20,7 +20,7 @@ const GiftCard = memo(({
     navigate(`/gift-selection?gift=${encodeURIComponent(gift.id)}`);
   }, [navigate, gift.id]);
   return <div className="relative p-2 h-full rounded-xl overflow-hidden transition-all duration-300 transform group" onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
-      <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/5 to-funky-pink/5 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg transition-all duration-500 z-0 group-hover:bg-gradient-to-tr group-hover:from-funky-purple/10 group-hover:to-funky-pink/10 bg-emerald-950"></div>
+      <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/5 to-funky-pink/5 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg transition-all duration-500 z-0 group-hover:bg-gradient-to-tr group-hover:from-funky-purple/10 group-hover:to-funky-pink/10 bg-slate-50"></div>
       
       <div className="relative z-10">
         <div className={cn("w-full aspect-square mb-2 overflow-hidden rounded-lg transition-all duration-500", isHovering ? "shadow-lg shadow-funky-purple/20" : "")}>
@@ -28,7 +28,7 @@ const GiftCard = memo(({
         </div>
         
         <div className="mt-1 relative">
-          <h3 className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate font-display">{gift.name}</h3>
+          <h3 className="text-xs font-semibold truncate font-display text-gray-950">{gift.name}</h3>
           <p className="text-xs text-funky-purple font-medium">₹{gift.price}</p>
           <Button size="sm" onClick={handleGiftClick} className={cn("mt-1 w-full text-[10px] py-1 px-2 transition-all duration-300", "bg-gradient-to-r from-funky-purple to-funky-pink text-white hover:shadow-lg hover:shadow-funky-purple/20")}>
             <Gift className="h-3 w-3 mr-1" />
