@@ -45,10 +45,10 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
     try {
       console.log("Generating preview for URL:", productUrl);
       const imageUrl = await generateWebsitePreview(productUrl);
-      console.log("Preview generated successfully:", imageUrl);
+      console.log("Preview generated successfully, data URL length:", imageUrl?.length || 0);
       setWebsitePreview(imageUrl);
       
-      // Show toast to confirm API is working
+      // Show toast to confirm preview generation
       toast({ 
         title: "Preview Generated",
         description: "Website preview successfully generated"
@@ -152,7 +152,15 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
                 )}
               </div>
               <div className="aspect-video bg-white">
-                <img src={websitePreview} alt="Product preview" className="w-full h-full object-contain" />
+                <img 
+                  src={websitePreview} 
+                  alt="Product preview" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    console.error("Error loading preview image");
+                    (e.target as HTMLImageElement).src = "https://placehold.co/600x400?text=Preview+Error";
+                  }}
+                />
               </div>
             </div>
           )}

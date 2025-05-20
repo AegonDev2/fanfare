@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,7 @@ const ProductPreview = ({
 
   // Website preview component
   const WebsitePreviewComponent = () => {
-    console.log("Rendering website preview with:", websitePreview);
+    console.log("Rendering website preview with:", websitePreview ? "image data available" : "no image data");
     return <div className="mb-4 border rounded-md overflow-hidden">
       <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
         <div className="flex items-center">
@@ -98,6 +97,10 @@ const ProductPreview = ({
             src={websitePreview} 
             alt="Website preview" 
             className="w-full h-full object-contain" 
+            onError={(e) => {
+              console.error("Error loading preview image:", e);
+              (e.target as HTMLImageElement).src = "https://placehold.co/600x400?text=Preview+Error";
+            }}
           />
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -180,12 +183,20 @@ const ProductPreview = ({
           <div className="bg-white p-6 shadow-md rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                {isPreviewAvailable && productPreview?.image ? (
+                {isPreviewAvailable && productPreview?.image && !productPreview.image.startsWith("https://placehold.co") ? (
                   <img 
                     src={productPreview.image} 
                     alt={productPreview.name} 
                     className="w-full h-auto rounded-md object-contain" 
                     style={{maxHeight: "300px"}} 
+                    onError={(e) => {
+                      console.log("Error loading product image, falling back to website preview");
+                      if (websitePreview) {
+                        (e.target as HTMLImageElement).src = websitePreview;
+                      } else {
+                        (e.target as HTMLImageElement).src = "https://placehold.co/600x400?text=No+Image";
+                      }
+                    }}
                   />
                 ) : (
                   <WebsitePreviewComponent />

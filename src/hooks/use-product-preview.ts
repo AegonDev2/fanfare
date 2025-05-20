@@ -38,7 +38,7 @@ export const useProductPreview = () => {
     try {
       console.log("Generating website preview for URL:", url);
       const imageUrl = await generateWebsitePreview(url);
-      console.log("Website preview generated:", imageUrl);
+      console.log("Website preview generated, data URL length:", imageUrl?.length || 0);
       setWebsitePreview(imageUrl);
       return imageUrl;
     } catch (err) {
@@ -84,6 +84,7 @@ export const useProductPreview = () => {
 
       // Wait for website preview to complete
       const previewImage = await previewPromise;
+      console.log("Preview image received:", previewImage ? "yes (length: " + previewImage.length + ")" : "no");
 
       // Set to 95% as we're almost done
       setFetchProgress(95);
@@ -151,6 +152,7 @@ export const useProductPreview = () => {
       };
       
       console.log("Setting product preview:", preview);
+      console.log("Website preview image:", websitePreview ? "available" : "not available");
       setProductPreview(preview);
       setFetchProgress(100);
 
