@@ -46,6 +46,7 @@ export const useProductPreview = () => {
       return imageUrl;
     } catch (err) {
       console.error("Failed to generate website preview:", err);
+      // Don't fail completely, just return null for the preview
       return null;
     } finally {
       setIsGeneratingPreview(false);
@@ -80,7 +81,7 @@ export const useProductPreview = () => {
 
       // Stop the progress interval
       clearInterval(progressInterval);
-      setFetchProgress(90);
+      setFetchProgress(85);
 
       if (extractError) {
         console.error("Extraction error:", extractError);
@@ -171,18 +172,30 @@ export const useProductPreview = () => {
     } catch (err) {
       console.error("Error in product preview:", err);
       
-      // Try to still get a website preview even if extraction failed
-      const previewImage = await fetchWebsitePreview(url);
-      
-      setError(err instanceof Error ? err.message : "An error occurred extracting product details");
-      setProductPreview({
-        name: "Enter a product URL to preview",
-        price: "N/A",
-        priceInr: 0,
-        image: previewImage || "https://placehold.co/600x400?text=No+Image",
-        description: "Please try a different URL or enter product details manually.",
-        platformFee: 5.00
-      });
+      try {
+        // Try to still get a website preview even if extraction failed
+        const previewImage = await fetchWebsitePreview(url);
+        
+        setError(err instanceof Error ? err.message : "An error occurred extracting product details");
+        setProductPreview({
+          name: "Enter a product URL to preview",
+          price: "N/A",
+          priceInr: 0,
+          image: previewImage || "https://placehold.co/600x400?text=No+Image",
+          description: "Please try a different URL or enter product details manually.",
+          platformFee: 5.00
+        });
+      } catch (previewErr) {
+        // In case of failure, create product preview without image
+        setProductPreview({
+          name: "Enter a product URL to preview",
+          price: "N/A",
+          priceInr: 0,
+          image: "https://placehold.co/600x400?text=No+Image",
+          description: "Please try a different URL or enter product details manually.",
+          platformFee: 5.00
+        });
+      }
       
       toast({
         title: "Extraction Failed",
@@ -191,6 +204,7 @@ export const useProductPreview = () => {
       });
     } finally {
       setIsFetchingProduct(false);
+      setFetchProgress(100);
     }
   };
 

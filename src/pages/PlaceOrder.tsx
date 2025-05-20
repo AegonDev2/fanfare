@@ -39,6 +39,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
   const influencerId = searchParams.get("influencer") || "";
   const [message, setMessage] = useState("");
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+  const [autoProcessed, setAutoProcessed] = useState(false);
 
   const { 
     productPreview, 
@@ -69,10 +70,12 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
   // If there's a URL in the search params, automatically process it
   useEffect(() => {
     const urlParam = searchParams.get("gift");
-    if (urlParam && !productPreview && !isFetchingProduct) {
+    if (urlParam && !autoProcessed && !isFetchingProduct && !productPreview) {
+      console.log("Auto-processing product URL from params:", urlParam);
+      setAutoProcessed(true);
       handleProcessProduct();
     }
-  }, []);
+  }, [searchParams, autoProcessed, isFetchingProduct, productPreview]);
 
   const fetchInfluencerAddress = async () => {
     try {

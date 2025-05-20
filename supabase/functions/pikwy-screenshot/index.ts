@@ -38,7 +38,8 @@ serve(async (req) => {
     console.log(`Using encoded URL: ${encodedUrl}`);
     
     // Make the request to Pikwy API with rt=json to get JSON response with base64 encoded image
-    const apiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=json`;
+    // We'll use the rt=raw parameter to get raw binary data instead of JSON
+    const apiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=raw`;
     
     console.log(`Making request to Pikwy API: ${apiUrl}`);
     
@@ -62,16 +63,19 @@ serve(async (req) => {
       );
     }
     
-    // Parse the JSON response
-    const jsonResponse = await response.json();
+    // Get the image as an ArrayBuffer
+    const imageBuffer = await response.arrayBuffer();
     
-    // Extract the base64 image data
-    const base64Image = jsonResponse.image;
+    // Convert the ArrayBuffer to a Base64 string
+    const base64Image = btoa(
+      new Uint8Array(imageBuffer)
+        .reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
     
-    if (!base64Image) {
-      console.error("No image data returned from Pikwy API:", jsonResponse);
+    if (!base64Image || base64Image.length === 0) {
+      console.error("Failed to convert image to base64");
       return new Response(
-        JSON.stringify({ error: 'No image data returned from Pikwy API', details: jsonResponse }),
+        JSON.stringify({ error: 'Failed to process image data' }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 500
@@ -79,8 +83,9 @@ serve(async (req) => {
       );
     }
     
+    console.log(`Successfully generated screenshot, base64 length: ${base64Image.length}`);
+    
     // Return the image URL (which is now a base64 data URL)
-    console.log("Successfully generated screenshot, base64 data length:", base64Image.length);
     return new Response(
       JSON.stringify({ imageUrl: `data:image/jpeg;base64,${base64Image}` }),
       { 
