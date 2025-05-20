@@ -8,13 +8,15 @@ import { supabase } from "@/integrations/supabase/client";
  * @param message - Message to display in notification
  * @param referenceId - Optional: id of related object (e.g. gift_request id)
  * @param senderId - Optional: id of the user who triggered the notification
+ * @param imageUrl - Optional: URL or data URL of the image to include
  */
 export const sendNotification = async (
   recipientId: string,
   type: string,
   message: string,
   referenceId?: string,
-  senderId?: string
+  senderId?: string,
+  imageUrl?: string
 ) => {
   try {
     console.log(`Sending notification to ${recipientId}: ${message}`);
@@ -25,7 +27,8 @@ export const sendNotification = async (
       message,
       reference_id: referenceId,
       sender_id: senderId,
-      is_read: false
+      is_read: false,
+      image_url: imageUrl
     });
     
     if (error) {
@@ -47,12 +50,14 @@ export const sendNotification = async (
  * @param message - Message to display in notification
  * @param referenceId - Optional: id of related object (e.g. order id)
  * @param senderId - Optional: id of the user who triggered the notification
+ * @param imageUrl - Optional: URL or data URL of the image to include
  */
 export const sendAdminNotification = async (
   type: string,
   message: string,
   referenceId?: string,
-  senderId?: string
+  senderId?: string,
+  imageUrl?: string
 ) => {
   try {
     console.log(`Sending admin notification: ${message}`);
@@ -82,7 +87,8 @@ export const sendAdminNotification = async (
       message,
       reference_id: referenceId,
       sender_id: senderId,
-      is_read: false
+      is_read: false,
+      image_url: imageUrl
     }));
     
     const { data, error } = await supabase.from("notifications").insert(notifications);

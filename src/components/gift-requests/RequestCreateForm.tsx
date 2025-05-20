@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import { generateWebsitePreview } from "@/utils/pikwy";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Image, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import ImageViewer from "@/components/common/ImageViewer";
 
 const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, onSubmit?: () => void }) => {
   const [productUrl, setProductUrl] = useState("");
@@ -152,14 +152,9 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
                 )}
               </div>
               <div className="aspect-video bg-white">
-                <img 
-                  src={websitePreview} 
+                <ImageViewer 
+                  imageUrl={websitePreview} 
                   alt="Product preview" 
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    console.error("Error loading preview image");
-                    (e.target as HTMLImageElement).src = "https://placehold.co/600x400?text=Preview+Error";
-                  }}
                 />
               </div>
             </div>

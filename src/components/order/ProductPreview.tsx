@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon, Image } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import ImageViewer from "@/components/common/ImageViewer";
 
 interface ProductPreviewProps {
   productPreview: ProductDetails | null;
@@ -89,18 +90,23 @@ const ProductPreview = ({
           <Image className="h-4 w-4 mr-2 text-gray-500" />
           <span className="text-sm font-medium text-gray-600">Website Preview</span>
         </div>
+        {giftUrl && (
+          <a
+            href={giftUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
+          >
+            View Site <LinkIcon className="h-3 w-3 ml-1" />
+          </a>
+        )}
       </div>
       
       <div className="aspect-video relative bg-gray-50">
         {websitePreview ? (
-          <img 
-            src={websitePreview} 
+          <ImageViewer 
+            imageUrl={websitePreview} 
             alt="Website preview" 
-            className="w-full h-full object-contain" 
-            onError={(e) => {
-              console.error("Error loading preview image:", e);
-              (e.target as HTMLImageElement).src = "https://placehold.co/600x400?text=Preview+Error";
-            }}
           />
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -184,19 +190,9 @@ const ProductPreview = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 {isPreviewAvailable && productPreview?.image && !productPreview.image.startsWith("https://placehold.co") ? (
-                  <img 
-                    src={productPreview.image} 
+                  <ImageViewer 
+                    imageUrl={productPreview.image} 
                     alt={productPreview.name} 
-                    className="w-full h-auto rounded-md object-contain" 
-                    style={{maxHeight: "300px"}} 
-                    onError={(e) => {
-                      console.log("Error loading product image, falling back to website preview");
-                      if (websitePreview) {
-                        (e.target as HTMLImageElement).src = websitePreview;
-                      } else {
-                        (e.target as HTMLImageElement).src = "https://placehold.co/600x400?text=No+Image";
-                      }
-                    }}
                   />
                 ) : (
                   <WebsitePreviewComponent />

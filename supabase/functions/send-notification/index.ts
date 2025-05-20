@@ -18,7 +18,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const { type, recipientId, senderId, giftRequestId, message } = await req.json()
+    const { type, recipientId, senderId, giftRequestId, message, imageUrl } = await req.json()
 
     // Validate required data
     if (!type || !message) {
@@ -57,6 +57,7 @@ serve(async (req) => {
         sender_id: senderId,
         reference_id: giftRequestId,
         message,
+        image_url: imageUrl,
         is_read: false
       }))
 
@@ -80,6 +81,7 @@ serve(async (req) => {
           sender_id: senderId,
           reference_id: giftRequestId,
           message,
+          image_url: imageUrl,
           is_read: false
         })
 

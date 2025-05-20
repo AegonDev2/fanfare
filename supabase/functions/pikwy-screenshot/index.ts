@@ -37,9 +37,8 @@ serve(async (req) => {
     console.log(`Generating screenshot for URL: ${url}`);
     console.log(`Using encoded URL: ${encodedUrl}`);
     
-    // Make the request to Pikwy API with rt=json to get JSON response with base64 encoded image
-    // We'll use the rt=raw parameter to get raw binary data instead of JSON
-    const apiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=raw`;
+    // Request JSON response with base64 encoded image for better handling
+    const apiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=json`;
     
     console.log(`Making request to Pikwy API: ${apiUrl}`);
     
@@ -63,17 +62,25 @@ serve(async (req) => {
       );
     }
     
-    // Get the image as an ArrayBuffer
-    const imageBuffer = await response.arrayBuffer();
+    // Parse the JSON response which contains base64 encoded image
+    const responseData = await response.json();
     
-    // Convert the ArrayBuffer to a Base64 string
-    const base64Image = btoa(
-      new Uint8Array(imageBuffer)
-        .reduce((data, byte) => data + String.fromCharCode(byte), '')
-    );
+    if (!responseData || !responseData.base64) {
+      console.error("Failed to get valid response from Pikwy API", responseData);
+      return new Response(
+        JSON.stringify({ error: 'Failed to get valid screenshot data' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500
+        }
+      );
+    }
+    
+    // The base64 data from the API
+    const base64Image = responseData.base64;
     
     if (!base64Image || base64Image.length === 0) {
-      console.error("Failed to convert image to base64");
+      console.error("Failed to get base64 image data");
       return new Response(
         JSON.stringify({ error: 'Failed to process image data' }),
         { 
@@ -85,7 +92,7 @@ serve(async (req) => {
     
     console.log(`Successfully generated screenshot, base64 length: ${base64Image.length}`);
     
-    // Return the image URL (which is now a base64 data URL)
+    // Return the image URL as data URL
     return new Response(
       JSON.stringify({ imageUrl: `data:image/jpeg;base64,${base64Image}` }),
       { 

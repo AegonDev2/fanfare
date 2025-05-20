@@ -1,126 +1,101 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductDetails, InfluencerAddress } from "@/types/order";
-import { useWallet } from "@/hooks/use-wallet";
-
-export type PaymentStep = 'initial' | 'pending' | 'complete';
+import { sendNotification, sendAdminNotification } from "@/utils/notifications";
 
 export const useOrderSubmission = () => {
-  const { toast } = useToast();
-  const { checkWalletBalance } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
-  const [paymentStep, setPaymentStep] = useState<PaymentStep>('initial');
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [paymentStep, setPaymentStep] = useState<'initial' | 'pending' | 'complete'>('initial');
+  const { toast } = useToast();
 
   const submitOrder = async (
-    giftItem: string,
+    gift_url: string,
     message: string,
-    influencerId: string,
-    productDetails: ProductDetails | null,
-    influencerAddress: InfluencerAddress
+    influencer_id: string,
+    product_preview: ProductDetails | null,
+    shipping_address: InfluencerAddress
   ) => {
-    if (!giftItem || !influencerId) {
-      toast({
-        title: "Error",
-        description: "Missing required information",
-        variant: "destructive",
-      });
-      setOrderError("Missing gift item URL or influencer ID");
-      return;
-    }
-
-    setIsLoading(true);
-    setPaymentStep('pending');
-    setOrderError(null);
-
     try {
-      console.log("Submitting order with product details:", productDetails);
-      console.log("Gift URL being submitted:", giftItem);
-      
-      // Get the current authenticated user
+      setIsLoading(true);
+      setPaymentStep("pending");
+      setOrderError(null);
+
+      // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         throw new Error("You must be logged in to place an order");
       }
-      
-      // Default values in case product details are not available
-      const productTitle = productDetails?.name || "Product from URL";
-      const productPrice = productDetails?.priceInr || 0;
-      const platformFee = productDetails?.platformFee || 5.00;
-      const totalAmount = productPrice + platformFee;
-      
-      // Instead of charging immediately, just check if user has enough balance
-      const hasEnoughBalance = await checkWalletBalance(totalAmount);
-      
-      if (!hasEnoughBalance) {
-        setPaymentStep('initial');
-        toast({
-          title: "Insufficient wallet balance",
-          description: `Your order total is ₹${totalAmount.toFixed(2)}. Please top up your wallet.`,
-          variant: "destructive",
-        });
-        
-        // Redirect to wallet page after a delay
-        setTimeout(() => {
-          window.location.href = "/wallet";
-        }, 2000);
-        
-        return;
-      }
-      
-      // Create gift request without charging the wallet yet
-      const { data: giftRequest, error: giftRequestError } = await supabase
-        .from('gift_requests')
-        .insert({
-          influencer_id: influencerId,
-          sender_id: user.id,
-          product_url: giftItem,
-          product_title: productTitle,
-          product_price: productPrice,
-          message: message,
-          status: "pending"
-        })
+
+      console.log("Submitting order with product preview:", product_preview);
+
+      const price = product_preview?.priceInr || 0;
+      const platform_fee = product_preview?.platformFee || 5;
+      const total_amount = price + platform_fee;
+
+      // Create the gift request
+      const gift_request_data = {
+        product_url: gift_url,
+        product_title: product_preview?.name || "Custom Gift",
+        product_price: product_preview?.price || "Price not available",
+        product_image_url: product_preview?.image || null,
+        website_preview_url: product_preview?.image.startsWith("data:") ? product_preview?.image : null,
+        message,
+        influencer_id,
+        sender_id: user.id,
+        status: "pending",
+        total_amount
+      };
+
+      const { data: giftRequest, error: createError } = await supabase
+        .from("gift_requests")
+        .insert(gift_request_data)
         .select()
         .single();
 
-      if (giftRequestError) {
-        console.error("Database gift request creation error:", giftRequestError);
-        throw new Error(giftRequestError.message);
+      if (createError) {
+        throw createError;
       }
 
       console.log("Gift request created successfully:", giftRequest);
-      
-      setPaymentStep('complete');
-      
+
+      // Send notification to influencer with screenshot
+      await sendNotification(
+        influencer_id,
+        "new_gift_request",
+        "You have received a new gift request.",
+        giftRequest.id,
+        user.id,
+        giftRequest.website_preview_url || giftRequest.product_image_url  // Send screenshot
+      );
+
+      // Send notification to admin with screenshot
+      await sendAdminNotification(
+        "new_gift_request_admin",
+        `New gift request from ${user.email} to influencer ID: ${influencer_id}`,
+        giftRequest.id,
+        user.id,
+        giftRequest.website_preview_url || giftRequest.product_image_url  // Send screenshot
+      );
+
+      setPaymentStep("complete");
+
+      // Show success message
       toast({
-        title: "Gift Request Submitted",
-        description: "Your gift request has been submitted to the influencer for approval.",
+        title: "Success!",
+        description: "Your gift request has been submitted successfully.",
       });
 
-      // Create notification for the influencer about the new gift request
-      await supabase.from("notifications").insert({
-        recipient_id: influencerId,
-        sender_id: user.id,
-        type: "new_gift_request",
-        message: `Someone wants to send you a gift! Check your gift requests.`,
-        reference_id: giftRequest.id,
-      });
-
-      // Redirect to success page after a delay
-      setTimeout(() => {
-        window.location.href = `/gift-requests`;
-      }, 2000);
-
+      return giftRequest.id;
     } catch (error) {
-      console.error("Order submission error:", error);
-      setPaymentStep('initial');
-      setOrderError(error instanceof Error ? error.message : "An unknown error occurred");
+      console.error("Error submitting order:", error);
+      setOrderError(error instanceof Error ? error.message : "An error occurred during checkout");
+      setPaymentStep("initial");
       
+      // Show error message
       toast({
-        title: "Request Failed",
+        title: "Error placing order",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
@@ -131,8 +106,8 @@ export const useOrderSubmission = () => {
 
   return {
     isLoading,
-    paymentStep,
     orderError,
-    submitOrder
+    paymentStep,
+    submitOrder,
   };
 };
