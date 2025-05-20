@@ -48,7 +48,8 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     handlePreviewProduct,
     error: productPreviewError,
     resetExtractionState,
-    websitePreview
+    websitePreview,
+    isGeneratingPreview
   } = useProductPreview();
 
   const { isLoading, paymentStep, orderError, submitOrder } = useOrderSubmission();
@@ -64,6 +65,14 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       });
     }
   }, [influencerId]);
+
+  // If there's a URL in the search params, automatically process it
+  useEffect(() => {
+    const urlParam = searchParams.get("gift");
+    if (urlParam && !productPreview && !isFetchingProduct) {
+      handleProcessProduct();
+    }
+  }, []);
 
   const fetchInfluencerAddress = async () => {
     try {
@@ -173,6 +182,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
           onPreviewClick={handleProcessProduct}
           isFetchingProduct={isFetchingProduct}
           fetchProgress={fetchProgress}
+          isGeneratingPreview={isGeneratingPreview}
         />
 
         <ProductPreview

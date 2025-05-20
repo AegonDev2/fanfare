@@ -40,7 +40,11 @@ serve(async (req) => {
     // Make the request to Pikwy API with rt=json to get JSON response with base64 encoded image
     const apiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=json`;
     
+    console.log(`Making request to Pikwy API: ${apiUrl}`);
+    
     const response = await fetch(apiUrl, { method: "GET" });
+    
+    console.log(`Pikwy API response status: ${response.status}`);
     
     // Check if the request was successful
     if (!response.ok) {
@@ -65,8 +69,9 @@ serve(async (req) => {
     const base64Image = jsonResponse.image;
     
     if (!base64Image) {
+      console.error("No image data returned from Pikwy API:", jsonResponse);
       return new Response(
-        JSON.stringify({ error: 'No image data returned from Pikwy API' }),
+        JSON.stringify({ error: 'No image data returned from Pikwy API', details: jsonResponse }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 500
@@ -75,7 +80,7 @@ serve(async (req) => {
     }
     
     // Return the image URL (which is now a base64 data URL)
-    console.log("Successfully generated screenshot (base64 data)");
+    console.log("Successfully generated screenshot, base64 data length:", base64Image.length);
     return new Response(
       JSON.stringify({ imageUrl: `data:image/jpeg;base64,${base64Image}` }),
       { 

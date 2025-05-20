@@ -34,7 +34,7 @@ export const generateWebsitePreview = async (url: string, fullScreen: boolean = 
       throw new Error("Failed to generate preview: Invalid response");
     }
     
-    console.log("Preview generated successfully:", data.imageUrl.substring(0, 50) + "...");
+    console.log("Preview generated successfully, data URL length:", data.imageUrl.length);
     return data.imageUrl;
   } catch (error) {
     console.error("Error generating website preview:", error);

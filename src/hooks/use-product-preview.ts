@@ -12,6 +12,7 @@ export const useProductPreview = () => {
   const [fetchProgress, setFetchProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [websitePreview, setWebsitePreview] = useState<string | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
   const resetExtractionState = () => {
     setProductPreview(null);
@@ -19,6 +20,7 @@ export const useProductPreview = () => {
     setFetchProgress(0);
     setError(null);
     setWebsitePreview(null);
+    setIsGeneratingPreview(false);
   };
 
   const incrementProgress = (interval: number) => {
@@ -36,14 +38,17 @@ export const useProductPreview = () => {
     if (!url) return null;
     
     try {
+      setIsGeneratingPreview(true);
       console.log("Generating website preview for URL:", url);
       const imageUrl = await generateWebsitePreview(url);
-      console.log("Website preview generated, data URL length:", imageUrl?.length || 0);
+      console.log("Website preview generated successfully, data URL length:", imageUrl?.length || 0);
       setWebsitePreview(imageUrl);
       return imageUrl;
     } catch (err) {
       console.error("Failed to generate website preview:", err);
       return null;
+    } finally {
+      setIsGeneratingPreview(false);
     }
   };
 
@@ -197,6 +202,7 @@ export const useProductPreview = () => {
     handlePreviewProduct,
     error,
     resetExtractionState,
-    websitePreview
+    websitePreview,
+    isGeneratingPreview
   };
 };
