@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { GiftItem } from './useGiftItems';
 
@@ -14,45 +14,65 @@ export function useGiftCart() {
   const { toast } = useToast();
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // Load cart from localStorage only once on component mount
+  // Load cart from localStorage once on component mount
   useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem('giftCart');
-      console.log("Checking localStorage for cart:", savedCart);
-      
-      if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        console.log("Loading cart from localStorage:", parsedCart);
-        setCartItems(parsedCart);
+    const loadCart = () => {
+      try {
+        const savedCart = localStorage.getItem('giftCart');
+        console.log("Initial loading from localStorage:", savedCart);
+        
+        if (savedCart) {
+          const parsedCart = JSON.parse(savedCart);
+          console.log("Parsed cart from localStorage:", parsedCart);
+          
+          // Validate parsed cart
+          if (Array.isArray(parsedCart)) {
+            setCartItems(parsedCart);
+            console.log("Cart loaded successfully with items:", parsedCart.length);
+          } else {
+            console.error("Invalid cart format in localStorage, resetting");
+            localStorage.removeItem('giftCart');
+          }
+        } else {
+          console.log("No cart found in localStorage");
+        }
+      } catch (error) {
+        console.error('Error loading cart from localStorage:', error);
+        localStorage.removeItem('giftCart'); // Reset corrupted data
+      } finally {
+        setIsInitialized(true);
       }
-      setIsInitialized(true);
-    } catch (error) {
-      console.error('Error loading cart from localStorage:', error);
-      setIsInitialized(true);
-    }
+    };
+    
+    loadCart();
   }, []);
 
   // Save cart to localStorage whenever it changes, but only after initial load
   useEffect(() => {
     if (!isInitialized) {
-      return; // Skip saving during initialization to prevent overwriting
+      return; // Skip saving during initialization
     }
     
     try {
-      console.log("Saving cart to localStorage:", cartItems);
+      console.log("Saving to localStorage, items count:", cartItems.length);
       localStorage.setItem('giftCart', JSON.stringify(cartItems));
     } catch (error) {
       console.error('Error saving cart to localStorage:', error);
     }
   }, [cartItems, isInitialized]);
 
-  const addToCart = (gift: GiftItem, influencerId: string, message?: string) => {
-    console.log("Adding to cart:", { gift, influencerId, message });
+  // Function to add item to cart
+  const addToCart = useCallback((gift: GiftItem, influencerId: string, message?: string) => {
+    console.log("addToCart called with:", { 
+      giftId: gift.id,
+      giftName: gift.name,
+      influencerId,
+      messageLength: message?.length
+    });
     
     // Create a sanitized gift object to ensure it can be serialized
     const sanitizedGift = {
       ...gift,
-      // Ensure all properties are serializable
       id: gift.id || "",
       name: gift.name || "",
       price: gift.price || 0,
@@ -65,32 +85,35 @@ export function useGiftCart() {
     };
     
     const newItem = { gift: sanitizedGift, influencerId, message };
-    console.log("New cart item to be added:", newItem);
+    console.log("Prepared new cart item:", newItem);
     
     // Add new item to cart
     setCartItems(prev => {
       const newCart = [...prev, newItem];
-      console.log("Updated cart items:", newCart);
+      console.log("Updated cart will have items:", newCart.length);
       return newCart;
     });
     
-    // Double-check that the item was added to localStorage
+    // Verify localStorage update
     setTimeout(() => {
       const currentStorage = localStorage.getItem('giftCart');
-      console.log("Verifying localStorage after add:", currentStorage);
+      const parsedStorage = currentStorage ? JSON.parse(currentStorage) : [];
+      console.log("Verification - localStorage items count:", parsedStorage.length);
     }, 100);
     
     toast({
       title: 'Added to Cart',
       description: `${gift.name} added to your gift cart`,
     });
-  };
+  }, [toast]);
 
-  const removeFromCart = (index: number) => {
+  // Function to remove item from cart
+  const removeFromCart = useCallback((index: number) => {
     console.log("Removing item at index:", index);
     setCartItems(prev => {
       const newCart = [...prev];
       newCart.splice(index, 1);
+      console.log("Cart after removal, items count:", newCart.length);
       return newCart;
     });
     
@@ -98,9 +121,10 @@ export function useGiftCart() {
       title: 'Removed from Cart',
       description: 'Item removed from your gift cart',
     });
-  };
+  }, [toast]);
 
-  const clearCart = () => {
+  // Function to clear the cart
+  const clearCart = useCallback(() => {
     console.log("Clearing cart");
     setCartItems([]);
     localStorage.removeItem('giftCart');
@@ -109,7 +133,7 @@ export function useGiftCart() {
       title: 'Cart Cleared',
       description: 'All items have been removed from your cart',
     });
-  };
+  }, [toast]);
 
   return {
     cartItems,

@@ -177,7 +177,27 @@ export default function GiftSelection() {
 
     console.log("Adding to cart with clean gift:", cleanGift);
     
-    addToCart(cleanGift, selectedInfluencerId, giftMessage);
+    // Force flush the previous localStorage state before adding new item
+    try {
+      const currentCart = localStorage.getItem('giftCart');
+      console.log("Current cart in localStorage before adding:", currentCart);
+      
+      // Add to cart through hook
+      addToCart(cleanGift, selectedInfluencerId, giftMessage);
+      
+      // Double check localStorage was updated
+      setTimeout(() => {
+        const updatedCart = localStorage.getItem('giftCart');
+        console.log("Cart in localStorage after adding:", updatedCart);
+      }, 200);
+    } catch (err) {
+      console.error("Error in cart update process:", err);
+      toast({
+        title: 'Error',
+        description: 'There was a problem adding the item to your cart',
+        variant: 'destructive',
+      });
+    }
     
     // Clear selection state
     setSelectedInfluencerId(null);

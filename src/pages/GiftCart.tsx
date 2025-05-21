@@ -57,10 +57,19 @@ export default function GiftCart() {
   const platformFee = cartItems.length > 0 ? 5 : 0;
   const totalAmount = totalPrice + platformFee;
   
-  // Debug log to check cartItems when component renders
+  // Debug log for checking cart state
   useEffect(() => {
+    console.log("GiftCart component mounted");
     const savedCart = localStorage.getItem('giftCart');
-    console.log("Cart items from localStorage in GiftCart component:", savedCart);
+    console.log("Cart data in localStorage:", savedCart);
+    if (savedCart) {
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        console.log("Parsed cart items count:", parsedCart.length);
+      } catch (e) {
+        console.error("Error parsing cart data:", e);
+      }
+    }
   }, []);
   
   const handleCheckout = async () => {

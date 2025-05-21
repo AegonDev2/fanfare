@@ -45,7 +45,7 @@ export const useOrderSubmission = () => {
         message,
         influencer_id,
         sender_id: user.id,
-        status: "pending",
+        status: "pending" as "pending" | "accepted" | "rejected" | "under process" | "completed", // Explicitly type as the allowed enum
         total_amount
       };
 
