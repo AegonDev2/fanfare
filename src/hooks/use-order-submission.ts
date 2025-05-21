@@ -39,9 +39,9 @@ export const useOrderSubmission = () => {
       const gift_request_data = {
         product_url: gift_url,
         product_title: product_preview?.name || "Custom Gift",
-        product_price: price, // Changed to number type
+        product_price: price, 
         product_image_url: product_preview?.image || null,
-        website_preview_url: product_preview?.image && product_preview?.image.startsWith("data:") ? product_preview?.image : null,
+        website_preview_url: product_preview?.image && typeof product_preview?.image === 'string' && product_preview?.image.startsWith("data:") ? product_preview?.image : null,
         message,
         influencer_id,
         sender_id: user.id,
@@ -52,7 +52,7 @@ export const useOrderSubmission = () => {
       // Add type assertion to satisfy TypeScript
       const { data: giftRequest, error: createError } = await supabase
         .from("gift_requests")
-        .insert(gift_request_data as any) // Type assertion to bypass strict type checking
+        .insert(gift_request_data)
         .select()
         .single();
 
@@ -105,6 +105,8 @@ export const useOrderSubmission = () => {
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
+      
+      return null;
     } finally {
       setIsLoading(false);
     }

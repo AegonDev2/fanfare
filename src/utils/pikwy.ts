@@ -38,6 +38,6 @@ export const generateWebsitePreview = async (url: string, fullScreen: boolean = 
     return data.imageUrl;
   } catch (error) {
     console.error("Error generating website preview:", error);
-    throw error;
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };

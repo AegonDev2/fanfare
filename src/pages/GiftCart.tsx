@@ -52,9 +52,16 @@ export default function GiftCart() {
     loadInfluencerDetails();
   }, [cartItems]);
 
+  // Calculate totals based on cart items
   const totalPrice = cartItems.reduce((sum, item) => sum + (item.gift?.price || 0), 0);
   const platformFee = cartItems.length > 0 ? 5 : 0;
   const totalAmount = totalPrice + platformFee;
+  
+  // Debug log to check cartItems when component renders
+  useEffect(() => {
+    const savedCart = localStorage.getItem('giftCart');
+    console.log("Cart items from localStorage in GiftCart component:", savedCart);
+  }, []);
   
   const handleCheckout = async () => {
     if (cartItems.length === 0) {
@@ -88,6 +95,7 @@ export default function GiftCart() {
     }
   };
   
+  // The rest of the component stays the same
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
