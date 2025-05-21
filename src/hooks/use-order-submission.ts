@@ -63,7 +63,8 @@ export const useOrderSubmission = () => {
       console.log("Gift request created successfully:", giftRequest);
 
       // Get screenshot from gift request
-      const screenshotUrl = giftRequest.website_preview_url || giftRequest.product_image_url || null;
+      // The database might not have these fields, so we need to extract from our local object
+      const screenshotUrl = product_preview?.image || null;
 
       // Send notification to influencer with screenshot
       await sendNotification(

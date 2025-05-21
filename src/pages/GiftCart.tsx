@@ -19,6 +19,8 @@ export default function GiftCart() {
   const [loading, setLoading] = useState(false);
   const [influencerDetails, setInfluencerDetails] = useState<Record<string, any>>({});
   
+  console.log("GiftCart rendered with cartItems:", cartItems);
+  
   // Load influencer details for each item in the cart
   useEffect(() => {
     async function loadInfluencerDetails() {
@@ -27,6 +29,7 @@ export default function GiftCart() {
       if (influencerIds.length === 0) return;
       
       try {
+        console.log("Fetching influencer details for IDs:", influencerIds);
         const { data, error } = await supabase
           .from('influencer_profiles')
           .select('id, name, profile_image')
@@ -39,6 +42,7 @@ export default function GiftCart() {
           details[influencer.id] = influencer;
         });
         
+        console.log("Fetched influencer details:", details);
         setInfluencerDetails(details);
       } catch (error) {
         console.error('Error loading influencer details:', error);
@@ -48,7 +52,7 @@ export default function GiftCart() {
     loadInfluencerDetails();
   }, [cartItems]);
 
-  const totalPrice = cartItems.reduce((sum, item) => sum + item.gift.price, 0);
+  const totalPrice = cartItems.reduce((sum, item) => sum + (item.gift?.price || 0), 0);
   const platformFee = cartItems.length > 0 ? 5 : 0;
   const totalAmount = totalPrice + platformFee;
   
@@ -73,9 +77,6 @@ export default function GiftCart() {
         // After the first order is complete, they can come back to process the remaining items
         break;
       }
-      
-      // Clear the cart after a successful checkout
-      // clearCart();
     } catch (error) {
       console.error('Error processing checkout:', error);
       toast({
@@ -140,6 +141,7 @@ export default function GiftCart() {
                   <div className="space-y-4">
                     {cartItems.map((item, index) => {
                       const influencer = influencerDetails[item.influencerId] || {};
+                      console.log(`Item ${index}:`, item, "Influencer:", influencer);
                       
                       return (
                         <div key={index} className="flex gap-4 p-4 border rounded-lg">

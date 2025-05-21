@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -157,13 +156,28 @@ export default function GiftSelection() {
       return;
     }
     
+    console.log("handleAddToCart called with:", { gift, selectedInfluencerId, giftMessage });
+    
     // For wishlist items, we need to use gift_url instead of id for the product URL
     const productUrl = wishlistUrl ? gift.gift_url || '' : (gift.gift_url || '');
     
-    addToCart({
+    // Create a clean gift object to ensure it can be properly serialized
+    const cleanGift = {
       ...gift,
+      id: gift.id || '',
+      name: gift.name || '',
+      price: gift.price || 0,
+      image_url: gift.image_url || '',
+      description: gift.description || '',
+      is_featured: !!gift.is_featured,
+      created_at: gift.created_at || new Date().toISOString(),
+      updated_at: gift.updated_at || new Date().toISOString(),
       gift_url: productUrl
-    }, selectedInfluencerId, giftMessage);
+    };
+
+    console.log("Adding to cart with clean gift:", cleanGift);
+    
+    addToCart(cleanGift, selectedInfluencerId, giftMessage);
     
     // Clear selection state
     setSelectedInfluencerId(null);

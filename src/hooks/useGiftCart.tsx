@@ -18,7 +18,9 @@ export function useGiftCart() {
     try {
       const savedCart = localStorage.getItem('giftCart');
       if (savedCart) {
-        setCartItems(JSON.parse(savedCart));
+        const parsedCart = JSON.parse(savedCart);
+        console.log("Loading cart from localStorage:", parsedCart);
+        setCartItems(parsedCart);
       }
     } catch (error) {
       console.error('Error loading cart from localStorage:', error);
@@ -28,6 +30,7 @@ export function useGiftCart() {
   // Save cart to localStorage whenever it changes
   useEffect(() => {
     try {
+      console.log("Saving cart to localStorage:", cartItems);
       localStorage.setItem('giftCart', JSON.stringify(cartItems));
     } catch (error) {
       console.error('Error saving cart to localStorage:', error);
@@ -35,7 +38,28 @@ export function useGiftCart() {
   }, [cartItems]);
 
   const addToCart = (gift: GiftItem, influencerId: string, message?: string) => {
-    setCartItems((prev) => [...prev, { gift, influencerId, message }]);
+    console.log("Adding to cart:", { gift, influencerId, message });
+    
+    // Create a sanitized gift object to ensure it can be serialized
+    const sanitizedGift = {
+      ...gift,
+      // Ensure all properties are serializable
+      id: gift.id || "",
+      name: gift.name || "",
+      price: gift.price || 0,
+      image_url: gift.image_url || "",
+      description: gift.description || "",
+      is_featured: gift.is_featured || false,
+      created_at: gift.created_at || new Date().toISOString(),
+      updated_at: gift.updated_at || new Date().toISOString(),
+      gift_url: gift.gift_url || "",
+    };
+    
+    // Add new item to cart
+    setCartItems(prev => {
+      const newCart = [...prev, { gift: sanitizedGift, influencerId, message }];
+      return newCart;
+    });
     
     toast({
       title: 'Added to Cart',
@@ -44,7 +68,8 @@ export function useGiftCart() {
   };
 
   const removeFromCart = (index: number) => {
-    setCartItems((prev) => {
+    console.log("Removing item at index:", index);
+    setCartItems(prev => {
       const newCart = [...prev];
       newCart.splice(index, 1);
       return newCart;
@@ -57,6 +82,7 @@ export function useGiftCart() {
   };
 
   const clearCart = () => {
+    console.log("Clearing cart");
     setCartItems([]);
     localStorage.removeItem('giftCart');
     
