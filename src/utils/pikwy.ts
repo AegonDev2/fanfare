@@ -19,9 +19,10 @@ export const generateWebsitePreview = async (url: string, fullScreen: boolean = 
   try {
     console.log(`Generating preview for URL: ${url}`);
     
-    // Call our Supabase Edge Function
+    // Call our Supabase Edge Function with timeout
     const { data, error } = await supabase.functions.invoke("pikwy-screenshot", {
-      body: { url, fullScreen }
+      body: { url, fullScreen },
+      options: { timeout: 40000 } // 40 second timeout
     });
     
     if (error) {

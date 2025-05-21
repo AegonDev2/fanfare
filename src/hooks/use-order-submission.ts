@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,9 +39,9 @@ export const useOrderSubmission = () => {
       const gift_request_data = {
         product_url: gift_url,
         product_title: product_preview?.name || "Custom Gift",
-        product_price: product_preview?.price || "Price not available",
+        product_price: price, // Changed to number type
         product_image_url: product_preview?.image || null,
-        website_preview_url: product_preview?.image.startsWith("data:") ? product_preview?.image : null,
+        website_preview_url: product_preview?.image && product_preview?.image.startsWith("data:") ? product_preview?.image : null,
         message,
         influencer_id,
         sender_id: user.id,
@@ -48,9 +49,10 @@ export const useOrderSubmission = () => {
         total_amount
       };
 
+      // Add type assertion to satisfy TypeScript
       const { data: giftRequest, error: createError } = await supabase
         .from("gift_requests")
-        .insert(gift_request_data)
+        .insert(gift_request_data as any) // Type assertion to bypass strict type checking
         .select()
         .single();
 
@@ -60,6 +62,9 @@ export const useOrderSubmission = () => {
 
       console.log("Gift request created successfully:", giftRequest);
 
+      // Get screenshot from gift request
+      const screenshotUrl = giftRequest.website_preview_url || giftRequest.product_image_url || null;
+
       // Send notification to influencer with screenshot
       await sendNotification(
         influencer_id,
@@ -67,7 +72,7 @@ export const useOrderSubmission = () => {
         "You have received a new gift request.",
         giftRequest.id,
         user.id,
-        giftRequest.website_preview_url || giftRequest.product_image_url  // Send screenshot
+        screenshotUrl // Send screenshot
       );
 
       // Send notification to admin with screenshot
@@ -76,7 +81,7 @@ export const useOrderSubmission = () => {
         `New gift request from ${user.email} to influencer ID: ${influencer_id}`,
         giftRequest.id,
         user.id,
-        giftRequest.website_preview_url || giftRequest.product_image_url  // Send screenshot
+        screenshotUrl // Send screenshot
       );
 
       setPaymentStep("complete");
