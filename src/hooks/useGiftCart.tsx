@@ -16,7 +16,7 @@ export interface CartItem {
   influencerId: string;
   message?: string;
   id: string;
-  quantity?: number;
+  quantity: number;
 }
 
 export function useGiftCart() {
@@ -35,12 +35,15 @@ export function useGiftCart() {
     },
     influencerId: item.influencer_id,
     message: item.message,
-    quantity: 1 // Default quantity
+    quantity: item.quantity || 1
   }));
+  
+  console.log("useGiftCart - converted items:", items);
   
   return {
     ...dbCart,
-    items
+    items,
+    updateQuantity: dbCart.updateCartItemQuantity
   };
 }
 

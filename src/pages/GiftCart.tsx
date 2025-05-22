@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useGiftCart } from '@/hooks/useGiftCart';
 import { useUser } from '@/hooks/useUser';
+
 export default function GiftCart() {
   const {
     items,
@@ -18,28 +20,17 @@ export default function GiftCart() {
     clearCart,
     checkout,
     isLoading,
-    refreshCart
+    refreshCart,
+    updateQuantity
   } = useGiftCart();
-  const {
-    user
-  } = useUser();
-  const {
-    toast
-  } = useToast();
+  
+  const { user } = useUser();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [processing, setProcessing] = useState(false);
   const [influencerDetails, setInfluencerDetails] = useState<Record<string, any>>({});
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  
   console.log("GiftCart rendered with items:", items);
-
-  // Initialize quantities
-  useEffect(() => {
-    const initialQuantities: Record<string, number> = {};
-    items.forEach(item => {
-      initialQuantities[item.id] = item.quantity || 1;
-    });
-    setQuantities(initialQuantities);
-  }, [items]);
 
   // Load influencer details for each item in the cart
   useEffect(() => {
@@ -48,46 +39,41 @@ export default function GiftCart() {
       if (influencerIds.length === 0) return;
       try {
         console.log("Fetching influencer details for IDs:", influencerIds);
-        const {
-          data,
-          error
-        } = await supabase.from('influencer_profiles').select('id, name, profile_image').in('id', influencerIds);
+        const { data, error } = await supabase
+          .from('influencer_profiles')
+          .select('id, name, profile_image')
+          .in('id', influencerIds);
+        
         if (error) throw error;
+        
         const details: Record<string, any> = {};
         data?.forEach(influencer => {
           details[influencer.id] = influencer;
         });
+        
         console.log("Fetched influencer details:", details);
         setInfluencerDetails(details);
       } catch (error) {
         console.error('Error loading influencer details:', error);
       }
     }
+    
     loadInfluencerDetails();
   }, [items]);
+  
   useEffect(() => {
     // Refresh cart when component mounts
     refreshCart();
   }, [refreshCart, user]);
 
-  // Update item quantity
-  const updateQuantity = (itemId: string, change: number) => {
-    setQuantities(prev => {
-      const newQuantity = Math.max(1, (prev[itemId] || 1) + change);
-      return {
-        ...prev,
-        [itemId]: newQuantity
-      };
-    });
-  };
-
   // Calculate totals based on cart items and quantities
   const totalPrice = items.reduce((sum, item) => {
-    const quantity = quantities[item.id] || 1;
-    return sum + Number(item.gift.price || 0) * quantity;
+    return sum + Number(item.gift.price || 0) * (item.quantity || 1);
   }, 0);
+  
   const platformFee = items.length > 0 ? items.length * 5 : 0;
   const totalAmount = totalPrice + platformFee;
+  
   const handleCheckout = async () => {
     if (items.length === 0) {
       toast({
@@ -97,6 +83,7 @@ export default function GiftCart() {
       });
       return;
     }
+    
     if (!user) {
       toast({
         title: 'Authentication Required',
@@ -106,6 +93,7 @@ export default function GiftCart() {
       navigate('/auth');
       return;
     }
+    
     setProcessing(true);
     try {
       const orderId = await checkout();
@@ -139,6 +127,7 @@ export default function GiftCart() {
         </div>
       </div>;
   }
+  
   return <div className="min-h-screen bg-gray-100">
       <Header />
       <div className="container mx-auto px-4 pt-20 py-8">
@@ -147,8 +136,6 @@ export default function GiftCart() {
             <ArrowLeft className="h-4 w-4 mr-1" />
             Continue Shopping
           </Button>
-          
-          
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -176,9 +163,10 @@ export default function GiftCart() {
                     </Button>
                   </div> : <div className="space-y-4">
                     {items.map(item => {
-                  const influencer = influencerDetails[item.influencerId] || {};
-                  const quantity = quantities[item.id] || 1;
-                  return <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
+                      const influencer = influencerDetails[item.influencerId] || {};
+                      const quantity = item.quantity || 1;
+                      
+                      return <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
                           <div className="w-16 h-16 rounded-md overflow-hidden bg-white">
                             <img src={item.gift.image_url || '/placeholder.svg'} alt={item.gift.name} className="w-full h-full object-contain" />
                           </div>
@@ -210,21 +198,25 @@ export default function GiftCart() {
                             
                             <div className="flex items-center justify-between mt-2">
                               <div className="flex items-center">
-                                <Button size="sm" variant="outline" className="h-7 w-7 p-0 rounded-full" onClick={() => updateQuantity(item.id, -1)} disabled={quantity <= 1}>
+                                <Button size="sm" variant="outline" className="h-7 w-7 p-0 rounded-full" 
+                                  onClick={() => updateQuantity(item.id, quantity - 1)} 
+                                  disabled={quantity <= 1}>
                                   <Minus className="h-3 w-3" />
                                 </Button>
                                 <span className="mx-2 min-w-[2rem] text-center">{quantity}</span>
-                                <Button size="sm" variant="outline" className="h-7 w-7 p-0 rounded-full" onClick={() => updateQuantity(item.id, 1)}>
+                                <Button size="sm" variant="outline" className="h-7 w-7 p-0 rounded-full" 
+                                  onClick={() => updateQuantity(item.id, quantity + 1)}>
                                   <Plus className="h-3 w-3" />
                                 </Button>
                               </div>
-                              <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 h-8 w-8 p-0 rounded-full" onClick={() => removeFromCart(item.id)}>
+                              <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 h-8 w-8 p-0 rounded-full" 
+                                onClick={() => removeFromCart(item.id)}>
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
                         </div>;
-                })}
+                    })}
                   </div>}
               </CardContent>
             </Card>

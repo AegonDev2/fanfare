@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +17,7 @@ export interface DbCartItem {
   message?: string;
   created_at: string;
   updated_at: string;
+  quantity?: number;
 }
 
 export interface DbCart {
@@ -38,6 +38,7 @@ export function useDbCart() {
   const fetchCart = useCallback(async () => {
     if (!user) {
       console.log("User not authenticated, can't fetch cart");
+      setCartItems([]);
       setIsLoading(false);
       return;
     }
@@ -94,8 +95,15 @@ export function useDbCart() {
         throw itemsError;
       }
 
-      console.log(`Fetched ${items?.length || 0} cart items`);
-      setCartItems(items || []);
+      console.log(`Fetched ${items?.length || 0} cart items:`, items);
+      
+      // Ensure each item has a quantity property with default 1
+      const itemsWithQuantity = (items || []).map(item => ({
+        ...item,
+        quantity: item.quantity || 1
+      }));
+      
+      setCartItems(itemsWithQuantity);
     } catch (error) {
       console.error("Error in fetchCart:", error);
       toast({
@@ -108,9 +116,15 @@ export function useDbCart() {
     }
   }, [user, toast]);
 
+  // Only run fetchCart when the user changes
   useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+    if (user) {
+      fetchCart();
+    } else {
+      setCartItems([]);
+      setCartId(null);
+    }
+  }, [user, fetchCart]);
 
   const addToCart = useCallback(async (
     gift: GiftItem,
@@ -318,6 +332,41 @@ export function useDbCart() {
     }
   }, [cartId, user, cartItems, clearCart, toast]);
 
+  const updateCartItemQuantity = useCallback(async (itemId: string, quantity: number) => {
+    try {
+      if (quantity < 1) {
+        return removeFromCart(itemId);
+      }
+      
+      console.log(`Updating quantity for item ${itemId} to ${quantity}`);
+      
+      const { error } = await supabase
+        .from('cart_items')
+        .update({ quantity })
+        .eq('id', itemId);
+
+      if (error) {
+        console.error("Error updating cart item quantity:", error);
+        throw error;
+      }
+
+      // Update local state
+      setCartItems(prevItems => 
+        prevItems.map(item => 
+          item.id === itemId ? { ...item, quantity } : item
+        )
+      );
+      
+    } catch (error: any) {
+      console.error("Error in updateCartItemQuantity:", error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update quantity',
+        variant: 'destructive',
+      });
+    }
+  }, [toast, removeFromCart]);
+
   return {
     isLoading,
     cartItems,
@@ -328,6 +377,7 @@ export function useDbCart() {
     checkout,
     refreshCart: fetchCart,
     cartCount: cartItems.length,
+    updateCartItemQuantity
   };
 }
 
