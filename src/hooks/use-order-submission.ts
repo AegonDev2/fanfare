@@ -35,6 +35,9 @@ export const useOrderSubmission = () => {
       const platform_fee = product_preview?.platformFee || 5;
       const total_amount = price + platform_fee;
 
+      // Convert InfluencerAddress to a JSON-compatible format (as required by Supabase)
+      const shipping_address_json = { ...shipping_address } as unknown as Record<string, any>;
+
       // Create the order directly in orders_under_process
       const orderData = {
         user_id: user.id,
@@ -45,7 +48,7 @@ export const useOrderSubmission = () => {
         platform_fee,
         total_amount,
         message,
-        shipping_address
+        shipping_address: shipping_address_json
       };
 
       // Insert the order into orders_under_process
