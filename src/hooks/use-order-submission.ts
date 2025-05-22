@@ -35,7 +35,34 @@ export const useOrderSubmission = () => {
       const platform_fee = product_preview?.platformFee || 5;
       const total_amount = price + platform_fee;
 
-      // Create the gift request
+      // Create the order directly in orders_under_process
+      const orderData = {
+        user_id: user.id,
+        influencer_id,
+        product_url: gift_url,
+        product_title: product_preview?.name || "Custom Gift",
+        product_price: price, 
+        platform_fee,
+        total_amount,
+        message,
+        shipping_address
+      };
+
+      // Insert the order into orders_under_process
+      const { data: orderResult, error: orderError } = await supabase
+        .from("orders_under_process")
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error("Error creating order:", orderError);
+        throw orderError;
+      }
+
+      console.log("Order created successfully:", orderResult);
+
+      // Create the gift request in gift_requests table as well for backwards compatibility
       const gift_request_data = {
         product_url: gift_url,
         product_title: product_preview?.name || "Custom Gift",
@@ -45,11 +72,10 @@ export const useOrderSubmission = () => {
         message,
         influencer_id,
         sender_id: user.id,
-        status: "pending" as "pending" | "accepted" | "rejected" | "under process" | "completed", // Explicitly type as the allowed enum
+        status: "pending" as "pending" | "accepted" | "rejected" | "under process" | "completed",
         total_amount
       };
 
-      // Add type assertion to satisfy TypeScript
       const { data: giftRequest, error: createError } = await supabase
         .from("gift_requests")
         .insert(gift_request_data)
@@ -57,13 +83,13 @@ export const useOrderSubmission = () => {
         .single();
 
       if (createError) {
-        throw createError;
+        console.error("Error creating gift request:", createError);
+        // Do not throw, just log as this is for backwards compatibility
+      } else {
+        console.log("Gift request created successfully:", giftRequest);
       }
 
-      console.log("Gift request created successfully:", giftRequest);
-
-      // Get screenshot from gift request
-      // The database might not have these fields, so we need to extract from our local object
+      // Get screenshot or image URL for notifications
       const screenshotUrl = product_preview?.image || null;
 
       // Send notification to influencer with screenshot
@@ -71,18 +97,18 @@ export const useOrderSubmission = () => {
         influencer_id,
         "new_gift_request",
         "You have received a new gift request.",
-        giftRequest.id,
+        orderResult.id,
         user.id,
-        screenshotUrl // Send screenshot
+        screenshotUrl
       );
 
       // Send notification to admin with screenshot
       await sendAdminNotification(
         "new_gift_request_admin",
         `New gift request from ${user.email} to influencer ID: ${influencer_id}`,
-        giftRequest.id,
+        orderResult.id,
         user.id,
-        screenshotUrl // Send screenshot
+        screenshotUrl
       );
 
       setPaymentStep("complete");
@@ -93,7 +119,7 @@ export const useOrderSubmission = () => {
         description: "Your gift request has been submitted successfully.",
       });
 
-      return giftRequest.id;
+      return orderResult.id;
     } catch (error) {
       console.error("Error submitting order:", error);
       setOrderError(error instanceof Error ? error.message : "An error occurred during checkout");

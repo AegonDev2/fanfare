@@ -11,7 +11,8 @@ import GiftSection from '@/components/landing/GiftSection';
 import InfluencerSelector from '@/components/gift-selection/InfluencerSelector';
 import GiftMessage from '@/components/gift-selection/GiftMessage';
 import { useGiftItems, GiftItem } from '@/hooks/useGiftItems';
-import { useGiftCart } from '@/hooks/useGiftCart';
+import { useDbCart } from '@/hooks/useDbCart';
+import { useUser } from '@/hooks/useUser';
 
 interface WishlistItemData {
   url: string;
@@ -35,7 +36,8 @@ export default function GiftSelection() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { getGiftById } = useGiftItems();
-  const { addToCart, cartCount } = useGiftCart();
+  const { addToCart, cartCount, isLoading: cartLoading } = useDbCart();
+  const { user } = useUser();
   
   const giftId = searchParams.get('gift');
   // Check for wishlist params
@@ -136,7 +138,7 @@ export default function GiftSelection() {
     };
   }, [loadGift, fetchAttempted, giftId]);
   
-  const handleAddToCart = useCallback(() => {
+  const handleAddToCart = useCallback(async () => {
     if (!gift) {
       toast({
         title: 'Error',
@@ -155,57 +157,33 @@ export default function GiftSelection() {
       setActiveTab('influencer');
       return;
     }
+
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to add items to your cart',
+        variant: 'destructive',
+      });
+      navigate('/auth');
+      return;
+    }
     
     console.log("handleAddToCart called with:", { gift, selectedInfluencerId, giftMessage });
     
-    // For wishlist items, we need to use gift_url instead of id for the product URL
-    const productUrl = wishlistUrl ? gift.gift_url || '' : (gift.gift_url || '');
-    
-    // Create a clean gift object to ensure it can be properly serialized
-    const cleanGift = {
-      ...gift,
-      id: gift.id || '',
-      name: gift.name || '',
-      price: gift.price || 0,
-      image_url: gift.image_url || '',
-      description: gift.description || '',
-      is_featured: !!gift.is_featured,
-      created_at: gift.created_at || new Date().toISOString(),
-      updated_at: gift.updated_at || new Date().toISOString(),
-      gift_url: productUrl
-    };
-
-    console.log("Adding to cart with clean gift:", cleanGift);
-    
-    // Force flush the previous localStorage state before adding new item
     try {
-      const currentCart = localStorage.getItem('giftCart');
-      console.log("Current cart in localStorage before adding:", currentCart);
+      await addToCart(gift, selectedInfluencerId, giftMessage);
       
-      // Add to cart through hook
-      addToCart(cleanGift, selectedInfluencerId, giftMessage);
+      // Clear selection state
+      setSelectedInfluencerId(null);
+      setGiftMessage('');
       
-      // Double check localStorage was updated
-      setTimeout(() => {
-        const updatedCart = localStorage.getItem('giftCart');
-        console.log("Cart in localStorage after adding:", updatedCart);
-      }, 200);
+      // Redirect to cart
+      navigate('/gift-cart');
     } catch (err) {
       console.error("Error in cart update process:", err);
-      toast({
-        title: 'Error',
-        description: 'There was a problem adding the item to your cart',
-        variant: 'destructive',
-      });
     }
     
-    // Clear selection state
-    setSelectedInfluencerId(null);
-    setGiftMessage('');
-    
-    // Redirect to cart
-    navigate('/gift-cart');
-  }, [gift, selectedInfluencerId, giftMessage, addToCart, navigate, toast, wishlistUrl]);
+  }, [gift, selectedInfluencerId, giftMessage, addToCart, navigate, toast, user]);
   
   // Create loading and error UI components using memoization
   const loadingContent = useMemo(() => (
@@ -239,7 +217,7 @@ export default function GiftSelection() {
   ), [navigate]);
 
   // Early return for loading state
-  if (loading) {
+  if (loading || cartLoading) {
     return loadingContent;
   }
   
@@ -397,7 +375,7 @@ export default function GiftSelection() {
                 <Button
                   className="w-full bg-gradient-to-r from-funky-purple to-funky-pink text-white"
                   onClick={handleAddToCart}
-                  disabled={!gift || !selectedInfluencerId}
+                  disabled={!gift || !selectedInfluencerId || !user}
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Add to Cart

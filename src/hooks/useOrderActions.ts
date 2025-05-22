@@ -34,6 +34,22 @@ export const useOrderActions = (
       const order = orders.find(o => o.id === orderId);
       if (!order) throw new Error("Order not found in local state");
 
+      // Update the gift_order_items status if it exists
+      const { data: orderItems, error: itemsError } = await supabase
+        .from('gift_order_items')
+        .select('id')
+        .eq('order_id', orderId);
+
+      if (!itemsError && orderItems && orderItems.length > 0) {
+        console.log("Updating gift order items status to completed");
+        await supabase
+          .from('gift_order_items')
+          .update({ 
+            status: 'completed',
+          })
+          .eq('order_id', orderId);
+      }
+
       // Also update the gift_request status to completed if it exists
       const { data: giftRequests, error: giftReqError } = await supabase
         .from('gift_requests')
@@ -93,5 +109,68 @@ export const useOrderActions = (
     }
   };
 
-  return { handleOrderComplete };
+  // Add a function to handle individual gift order item status changes
+  const handleGiftOrderItemStatusChange = async (
+    itemId: string, 
+    newStatus: 'accepted' | 'rejected' | 'processing' | 'completed',
+    orderId?: string
+  ) => {
+    try {
+      console.log(`Changing gift order item ${itemId} status to ${newStatus}`);
+      
+      // Update the gift order item status
+      const { error } = await supabase
+        .from('gift_order_items')
+        .update({ status: newStatus })
+        .eq('id', itemId);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Status Updated",
+        description: `Item status has been updated to ${newStatus}`,
+      });
+      
+      // If order ID was provided, check if all items in the order are in the same status
+      if (orderId) {
+        const { data: items, error: itemsError } = await supabase
+          .from('gift_order_items')
+          .select('status')
+          .eq('order_id', orderId);
+          
+        if (!itemsError && items) {
+          const allSameStatus = items.every(i => i.status === newStatus);
+          
+          if (allSameStatus && items.length > 0) {
+            // If all items have the same status, update the order status
+            const { error: orderError } = await supabase
+              .from('gift_orders')
+              .update({ status: newStatus })
+              .eq('id', orderId);
+              
+            if (orderError) {
+              console.error("Error updating order status:", orderError);
+            }
+          }
+        }
+      }
+      
+      // Refresh orders list if necessary
+      if (fetchAllOrders) {
+        await fetchAllOrders();
+      }
+    } catch (error: any) {
+      console.error("Error updating item status:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update the item status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return { 
+    handleOrderComplete,
+    handleGiftOrderItemStatusChange
+  };
 };

@@ -5,18 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Gift, Trash2, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { Gift, Trash2, ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Header from '@/components/landing/Header';
-import { useGiftCart, CartItem } from '@/hooks/useGiftCart';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useDbCart } from '@/hooks/useDbCart';
+import { useUser } from '@/hooks/useUser';
 
 export default function GiftCart() {
-  const { cartItems, removeFromCart, clearCart } = useGiftCart();
+  const { cartItems, removeFromCart, clearCart, checkout, isLoading, refreshCart } = useDbCart();
+  const { user } = useUser();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [influencerDetails, setInfluencerDetails] = useState<Record<string, any>>({});
   
   console.log("GiftCart rendered with cartItems:", cartItems);
@@ -24,7 +26,7 @@ export default function GiftCart() {
   // Load influencer details for each item in the cart
   useEffect(() => {
     async function loadInfluencerDetails() {
-      const influencerIds = [...new Set(cartItems.map(item => item.influencerId))];
+      const influencerIds = [...new Set(cartItems.map(item => item.influencer_id))];
       
       if (influencerIds.length === 0) return;
       
@@ -52,25 +54,15 @@ export default function GiftCart() {
     loadInfluencerDetails();
   }, [cartItems]);
 
-  // Calculate totals based on cart items
-  const totalPrice = cartItems.reduce((sum, item) => sum + (item.gift?.price || 0), 0);
-  const platformFee = cartItems.length > 0 ? 5 : 0;
-  const totalAmount = totalPrice + platformFee;
-  
-  // Debug log for checking cart state
   useEffect(() => {
-    console.log("GiftCart component mounted");
-    const savedCart = localStorage.getItem('giftCart');
-    console.log("Cart data in localStorage:", savedCart);
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart);
-        console.log("Parsed cart items count:", parsedCart.length);
-      } catch (e) {
-        console.error("Error parsing cart data:", e);
-      }
-    }
-  }, []);
+    // Refresh cart when component mounts
+    refreshCart();
+  }, [refreshCart, user]);
+
+  // Calculate totals based on cart items
+  const totalPrice = cartItems.reduce((sum, item) => sum + Number(item.gift_price || 0), 0);
+  const platformFee = cartItems.length > 0 ? cartItems.length * 5 : 0;
+  const totalAmount = totalPrice + platformFee;
   
   const handleCheckout = async () => {
     if (cartItems.length === 0) {
@@ -82,16 +74,25 @@ export default function GiftCart() {
       return;
     }
     
-    setLoading(true);
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to checkout',
+        variant: 'destructive',
+      });
+      navigate('/auth');
+      return;
+    }
+    
+    setProcessing(true);
     
     try {
-      // Process each gift request
-      for (const item of cartItems) {
-        // For each gift, redirect to place order with the gift URL
-        navigate(`/place-order?gift=${encodeURIComponent(item.gift.gift_url || '')}&influencer=${item.influencerId}`, { replace: true });
-        // We only process the first item and let the user complete that flow
-        // After the first order is complete, they can come back to process the remaining items
-        break;
+      const orderId = await checkout();
+      if (orderId) {
+        // Redirect to success page
+        navigate('/order-success', { 
+          state: { orderId } 
+        });
       }
     } catch (error) {
       console.error('Error processing checkout:', error);
@@ -100,11 +101,24 @@ export default function GiftCart() {
         description: 'There was an error processing your request. Please try again.',
         variant: 'destructive',
       });
-      setLoading(false);
+    } finally {
+      setProcessing(false);
     }
   };
   
-  // The rest of the component stays the same
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Header />
+        <div className="container mx-auto px-4 pt-20 py-8 flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-funky-purple" />
+          <p className="mt-4 text-lg">Loading your cart...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
@@ -156,24 +170,23 @@ export default function GiftCart() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {cartItems.map((item, index) => {
-                      const influencer = influencerDetails[item.influencerId] || {};
-                      console.log(`Item ${index}:`, item, "Influencer:", influencer);
+                    {cartItems.map((item) => {
+                      const influencer = influencerDetails[item.influencer_id] || {};
                       
                       return (
-                        <div key={index} className="flex gap-4 p-4 border rounded-lg">
+                        <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
                           <div className="w-16 h-16 rounded-md overflow-hidden bg-white">
                             <img
-                              src={item.gift.image_url}
-                              alt={item.gift.name}
+                              src={item.gift_image_url || '/placeholder.svg'}
+                              alt={item.gift_name}
                               className="w-full h-full object-contain"
                             />
                           </div>
                           
                           <div className="flex-1">
                             <div className="flex justify-between">
-                              <h3 className="font-medium">{item.gift.name}</h3>
-                              <p className="font-medium text-funky-purple">₹{item.gift.price}</p>
+                              <h3 className="font-medium">{item.gift_name}</h3>
+                              <p className="font-medium text-funky-purple">₹{item.gift_price}</p>
                             </div>
                             
                             <div className="flex items-center mt-2">
@@ -202,7 +215,7 @@ export default function GiftCart() {
                             size="sm"
                             variant="ghost"
                             className="text-red-500 hover:text-red-700 h-8 w-8 p-0 rounded-full"
-                            onClick={() => removeFromCart(index)}
+                            onClick={() => removeFromCart(item.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -247,14 +260,14 @@ export default function GiftCart() {
                   <Button
                     className={cn(
                       "w-full bg-gradient-to-r from-funky-purple to-funky-pink text-white",
-                      loading && "opacity-70 cursor-not-allowed"
+                      (processing || !user) && "opacity-70 cursor-not-allowed"
                     )}
                     onClick={handleCheckout}
-                    disabled={cartItems.length === 0 || loading}
+                    disabled={cartItems.length === 0 || processing || !user}
                   >
-                    {loading ? (
+                    {processing ? (
                       <>
-                        <ShoppingCart className="h-4 w-4 mr-2 animate-pulse" />
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Processing...
                       </>
                     ) : (

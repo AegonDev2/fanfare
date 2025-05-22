@@ -45,6 +45,59 @@ export type Database = {
         }
         Relationships: []
       }
+      cart_items: {
+        Row: {
+          cart_id: string
+          created_at: string
+          gift_description: string | null
+          gift_id: string | null
+          gift_image_url: string | null
+          gift_name: string
+          gift_price: number
+          gift_url: string | null
+          id: string
+          influencer_id: string
+          message: string | null
+          updated_at: string
+        }
+        Insert: {
+          cart_id: string
+          created_at?: string
+          gift_description?: string | null
+          gift_id?: string | null
+          gift_image_url?: string | null
+          gift_name: string
+          gift_price: number
+          gift_url?: string | null
+          id?: string
+          influencer_id: string
+          message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cart_id?: string
+          created_at?: string
+          gift_description?: string | null
+          gift_id?: string | null
+          gift_image_url?: string | null
+          gift_name?: string
+          gift_price?: number
+          gift_url?: string | null
+          id?: string
+          influencer_id?: string
+          message?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "user_cart"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ecommerce_credentials: {
         Row: {
           created_at: string
@@ -72,6 +125,89 @@ export type Database = {
           platform?: Database["public"]["Enums"]["ecommerce_platform"]
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      gift_order_items: {
+        Row: {
+          created_at: string
+          gift_description: string | null
+          gift_image_url: string | null
+          gift_name: string
+          gift_price: number
+          gift_url: string
+          id: string
+          influencer_id: string
+          message: string | null
+          order_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gift_description?: string | null
+          gift_image_url?: string | null
+          gift_name: string
+          gift_price: number
+          gift_url: string
+          id?: string
+          influencer_id: string
+          message?: string | null
+          order_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gift_description?: string | null
+          gift_image_url?: string | null
+          gift_name?: string
+          gift_price?: number
+          gift_url?: string
+          id?: string
+          influencer_id?: string
+          message?: string | null
+          order_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "gift_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_orders: {
+        Row: {
+          created_at: string
+          id: string
+          platform_fee: number
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform_fee?: number
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform_fee?: number
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -695,6 +831,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_cart: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

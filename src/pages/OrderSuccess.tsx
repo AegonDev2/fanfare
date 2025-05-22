@@ -1,97 +1,148 @@
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, Home, ShoppingBag } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import type { OrderDetails } from "@/types/admin";
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { CheckCircle2, Gift, ArrowLeft, ShoppingBag, Home } from 'lucide-react';
+import Header from '@/components/landing/Header';
+import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
-const OrderSuccess = () => {
-  const [searchParams] = useSearchParams();
-  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const orderId = searchParams.get('id');
+export default function OrderSuccess() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const orderId = location.state?.orderId;
   
   useEffect(() => {
-    const fetchOrder = async () => {
+    async function fetchOrderDetails() {
       if (!orderId) {
         setLoading(false);
         return;
       }
+      
       try {
-        // First try to find the order in the under_process table
-        let {
-          data,
-          error
-        } = await supabase.from('orders_under_process').select('*, influencer:influencer_id(*)').eq('id', orderId).single();
-
-        // If not found there, try the completed table
+        setLoading(true);
+        
+        // Fetch order items
+        const { data: items, error } = await supabase
+          .from('gift_order_items')
+          .select('*')
+          .eq('order_id', orderId);
+          
         if (error) {
-          const {
-            data: completedData,
-            error: completedError
-          } = await supabase.from('orders_completed').select('*, influencer:influencer_id(*)').eq('id', orderId).single();
-          if (!completedError && completedData) {
-            const orderWithStatus = {
-              ...completedData,
-              status: 'completed' as const,
-              fan_email: "N/A",
-              fan_name: "N/A",
-              influencer_name: completedData.influencer?.name || "N/A"
-            };
-            setOrderDetails(orderWithStatus);
-          }
-        } else if (data) {
-          // Add status property if from under_process
-          const orderWithStatus = {
-            ...data,
-            status: 'under_process' as const,
-            fan_email: "N/A",
-            fan_name: "N/A",
-            influencer_name: data.influencer?.name || "N/A"
-          };
-          setOrderDetails(orderWithStatus);
+          console.error('Error fetching order items:', error);
+          throw error;
         }
+        
+        console.log('Order items:', items);
+        setOrderItems(items || []);
       } catch (error) {
-        console.error("Error fetching order:", error);
+        console.error('Error in fetchOrderDetails:', error);
       } finally {
         setLoading(false);
       }
-    };
-    fetchOrder();
+    }
+    
+    fetchOrderDetails();
   }, [orderId]);
   
-  return <div className="min-h-screen bg-gray-100 pt-6">
-      <div className="container mx-auto px-4 py-6">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="pt-6 flex flex-col items-center text-center bg-slate-50 py-[22px] mx-[5px] my-[5px] rounded-xl">
-            <div className="bg-green-100 p-6 rounded-full mb-6">
-              <CheckCircle2 className="h-16 w-16 text-green-600" />
-            </div>
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <Header />
+      <div className="container mx-auto px-4 pt-20 py-8">
+        <div className="max-w-2xl mx-auto">
+          <Card className="border-green-100 mb-6">
+            <CardHeader className="bg-green-50 border-b border-green-100">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-8 w-8 text-green-500" />
+                <CardTitle>Order Placed Successfully!</CardTitle>
+              </div>
+            </CardHeader>
             
-            <h1 className="text-2xl font-bold mb-4 text-gray-800">Order Successfully Placed!</h1>
+            <CardContent className="py-6">
+              <div className="text-center mb-6">
+                <p className="text-gray-600 mb-4">
+                  Thank you for your order! Your gift requests have been sent to the influencers for approval.
+                </p>
+                <p className="text-gray-500 text-sm">
+                  You'll receive notifications when they accept or when your gifts are on their way.
+                </p>
+              </div>
+              
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-pulse w-full h-20 bg-gray-200 rounded-lg mb-4"></div>
+                  <div className="animate-pulse w-full h-20 bg-gray-200 rounded-lg"></div>
+                </div>
+              ) : orderItems.length > 0 ? (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium mb-3 flex items-center">
+                    <Gift className="h-5 w-5 mr-2 text-funky-purple" />
+                    Order Items
+                  </h3>
+                  
+                  {orderItems.map((item, index) => (
+                    <div key={index} className="p-3 border rounded-lg flex items-center gap-3">
+                      {item.gift_image_url ? (
+                        <img 
+                          src={item.gift_image_url} 
+                          alt={item.gift_name} 
+                          className="h-12 w-12 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 bg-gray-100 rounded flex items-center justify-center">
+                          <Gift className="h-6 w-6 text-gray-400" />
+                        </div>
+                      )}
+                      
+                      <div className="flex-1">
+                        <p className="font-medium">{item.gift_name}</p>
+                        <p className="text-sm text-gray-500">₹{item.gift_price}</p>
+                      </div>
+                      
+                      <div className="px-2 py-1 rounded bg-yellow-50 text-yellow-700 text-xs border border-yellow-100">
+                        Pending
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  No items found for this order.
+                </div>
+              )}
+            </CardContent>
             
-            <p className="text-gray-600 mb-6">
-              Your gift request has been submitted to the influencer for approval.
-              You'll be notified when they respond.
-            </p>
-            
-            <div className="grid grid-cols-2 gap-4 w-full mt-4">
-              <Button variant="outline" className="w-full" onClick={() => navigate('/')}>
+            <CardFooter className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+              <Button 
+                variant="outline" 
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/')}
+              >
                 <Home className="h-4 w-4 mr-2" />
-                Home
+                Go Home
               </Button>
-              <Button className="w-full" onClick={() => navigate('/gift-requests')}>
+              
+              <Button 
+                className={cn(
+                  "w-full sm:w-auto bg-gradient-to-r from-funky-purple to-funky-pink text-white"
+                )}
+                onClick={() => navigate('/gift-selection')}
+              >
                 <ShoppingBag className="h-4 w-4 mr-2" />
-                My Requests
+                Continue Shopping
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardFooter>
+          </Card>
+          
+          <div className="text-center text-sm text-gray-500">
+            <p>You can track your orders in your profile dashboard.</p>
+          </div>
+        </div>
       </div>
-    </div>;
-};
-
-export default OrderSuccess;
+    </div>
+  );
+}
