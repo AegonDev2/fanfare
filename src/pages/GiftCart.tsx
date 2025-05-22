@@ -62,9 +62,9 @@ export default function GiftCart() {
   }, [items]);
   
   useEffect(() => {
-    // Refresh cart when component mounts
+    // Force refresh cart when component mounts
     refreshCart();
-  }, [refreshCart, user]);
+  }, [refreshCart]);
 
   // Calculate totals based on cart items and quantities
   const totalPrice = items.reduce((sum, item) => {

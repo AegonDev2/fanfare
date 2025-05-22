@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +18,7 @@ export interface DbCartItem {
   message?: string;
   created_at: string;
   updated_at: string;
-  quantity?: number;
+  quantity: number;
 }
 
 export interface DbCart {
@@ -165,7 +166,8 @@ export function useDbCart() {
           gift_description: gift.description || null,
           gift_url: gift.gift_url || null,
           influencer_id: influencerId,
-          message: message || null
+          message: message || null,
+          quantity: 1
         })
         .select();
 
@@ -267,7 +269,7 @@ export function useDbCart() {
       console.log("Processing checkout for cart:", cartId);
       
       // Calculate total amount
-      const itemsTotal = cartItems.reduce((sum, item) => sum + Number(item.gift_price), 0);
+      const itemsTotal = cartItems.reduce((sum, item) => sum + Number(item.gift_price) * (item.quantity || 1), 0);
       const platformFee = cartItems.length * 5; // Assuming 5 per item
       const totalAmount = itemsTotal + platformFee;
       

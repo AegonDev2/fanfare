@@ -35,7 +35,7 @@ export function useGiftCart() {
     },
     influencerId: item.influencer_id,
     message: item.message,
-    quantity: item.quantity || 1
+    quantity: item.quantity
   }));
   
   console.log("useGiftCart - converted items:", items);
