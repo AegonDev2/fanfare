@@ -5,28 +5,38 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Gift, Trash2, ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
+import { Gift, Trash2, ShoppingCart, ArrowLeft, Loader2, Plus, Minus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Header from '@/components/landing/Header';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useDbCart } from '@/hooks/useDbCart';
+import { useGiftCart } from '@/hooks/useGiftCart';
 import { useUser } from '@/hooks/useUser';
 
 export default function GiftCart() {
-  const { cartItems, removeFromCart, clearCart, checkout, isLoading, refreshCart } = useDbCart();
+  const { items, removeFromCart, clearCart, checkout, isLoading, refreshCart } = useGiftCart();
   const { user } = useUser();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [processing, setProcessing] = useState(false);
   const [influencerDetails, setInfluencerDetails] = useState<Record<string, any>>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   
-  console.log("GiftCart rendered with cartItems:", cartItems);
+  console.log("GiftCart rendered with items:", items);
   
+  // Initialize quantities
+  useEffect(() => {
+    const initialQuantities: Record<string, number> = {};
+    items.forEach(item => {
+      initialQuantities[item.id] = item.quantity || 1;
+    });
+    setQuantities(initialQuantities);
+  }, [items]);
+
   // Load influencer details for each item in the cart
   useEffect(() => {
     async function loadInfluencerDetails() {
-      const influencerIds = [...new Set(cartItems.map(item => item.influencer_id))];
+      const influencerIds = [...new Set(items.map(item => item.influencerId))];
       
       if (influencerIds.length === 0) return;
       
@@ -52,20 +62,32 @@ export default function GiftCart() {
     }
     
     loadInfluencerDetails();
-  }, [cartItems]);
+  }, [items]);
 
   useEffect(() => {
     // Refresh cart when component mounts
     refreshCart();
   }, [refreshCart, user]);
 
-  // Calculate totals based on cart items
-  const totalPrice = cartItems.reduce((sum, item) => sum + Number(item.gift_price || 0), 0);
-  const platformFee = cartItems.length > 0 ? cartItems.length * 5 : 0;
+  // Update item quantity
+  const updateQuantity = (itemId: string, change: number) => {
+    setQuantities(prev => {
+      const newQuantity = Math.max(1, (prev[itemId] || 1) + change);
+      return { ...prev, [itemId]: newQuantity };
+    });
+  };
+
+  // Calculate totals based on cart items and quantities
+  const totalPrice = items.reduce((sum, item) => {
+    const quantity = quantities[item.id] || 1;
+    return sum + (Number(item.gift.price || 0) * quantity);
+  }, 0);
+  
+  const platformFee = items.length > 0 ? items.length * 5 : 0;
   const totalAmount = totalPrice + platformFee;
   
   const handleCheckout = async () => {
-    if (cartItems.length === 0) {
+    if (items.length === 0) {
       toast({
         title: 'Cart Empty',
         description: 'Your cart is empty. Please add some gifts.',
@@ -141,9 +163,9 @@ export default function GiftCart() {
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle>Your Gifts ({cartItems.length})</CardTitle>
+                  <CardTitle>Your Gifts ({items.length})</CardTitle>
                   
-                  {cartItems.length > 0 && (
+                  {items.length > 0 && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -158,7 +180,7 @@ export default function GiftCart() {
               </CardHeader>
               
               <CardContent>
-                {cartItems.length === 0 ? (
+                {items.length === 0 ? (
                   <div className="text-center py-16">
                     <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-500 mb-2">Your cart is empty</h3>
@@ -170,23 +192,24 @@ export default function GiftCart() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {cartItems.map((item) => {
-                      const influencer = influencerDetails[item.influencer_id] || {};
+                    {items.map((item) => {
+                      const influencer = influencerDetails[item.influencerId] || {};
+                      const quantity = quantities[item.id] || 1;
                       
                       return (
                         <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
                           <div className="w-16 h-16 rounded-md overflow-hidden bg-white">
                             <img
-                              src={item.gift_image_url || '/placeholder.svg'}
-                              alt={item.gift_name}
+                              src={item.gift.image_url || '/placeholder.svg'}
+                              alt={item.gift.name}
                               className="w-full h-full object-contain"
                             />
                           </div>
                           
                           <div className="flex-1">
                             <div className="flex justify-between">
-                              <h3 className="font-medium">{item.gift_name}</h3>
-                              <p className="font-medium text-funky-purple">₹{item.gift_price}</p>
+                              <h3 className="font-medium">{item.gift.name}</h3>
+                              <p className="font-medium text-funky-purple">₹{item.gift.price}</p>
                             </div>
                             
                             <div className="flex items-center mt-2">
@@ -209,16 +232,38 @@ export default function GiftCart() {
                                 "{item.message.length > 50 ? `${item.message.slice(0, 50)}...` : item.message}"
                               </div>
                             )}
+                            
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 w-7 p-0 rounded-full"
+                                  onClick={() => updateQuantity(item.id, -1)}
+                                  disabled={quantity <= 1}
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="mx-2 min-w-[2rem] text-center">{quantity}</span>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 w-7 p-0 rounded-full"
+                                  onClick={() => updateQuantity(item.id, 1)}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-red-500 hover:text-red-700 h-8 w-8 p-0 rounded-full"
+                                onClick={() => removeFromCart(item.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                          
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-red-500 hover:text-red-700 h-8 w-8 p-0 rounded-full"
-                            onClick={() => removeFromCart(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
                         </div>
                       );
                     })}
@@ -263,7 +308,7 @@ export default function GiftCart() {
                       (processing || !user) && "opacity-70 cursor-not-allowed"
                     )}
                     onClick={handleCheckout}
-                    disabled={cartItems.length === 0 || processing || !user}
+                    disabled={items.length === 0 || processing || !user}
                   >
                     {processing ? (
                       <>
