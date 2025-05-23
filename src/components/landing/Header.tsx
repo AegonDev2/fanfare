@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
@@ -10,6 +9,7 @@ import WalletWidget from "@/components/wallet/WalletWidget";
 import MobileDock from "@/components/navigation/MobileDock";
 import Navbar from "@/components/navigation/Navbar";
 import FloatingHeader from "@/components/ui/floating-header";
+import CartIcon from '@/components/cart/CartIcon';
 
 interface HeaderProps {
   setNavOpen?: (isOpen: boolean) => void;
@@ -63,18 +63,27 @@ const Header = ({
   };
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm shadow-sm">
-        <div className="container mx-auto md:px-6 lg:px-8 px-0 bg-transparent">
-          <FloatingHeader setNavOpen={setNavOpen} />
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-8">
+            <FloatingHeader setNavOpen={setNavOpen} />
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <CartIcon />
+            <Button onClick={handleSignOut} variant="ghost" className="h-8 w-8">
+              <X size={16} />
+            </Button>
+          </div>
         </div>
-      </header>
-      
-      {/* Navbar that slides in from the side */}
-      <Navbar isOpen={isOpen} setIsOpen={setIsOpen} />
-      
-      {isMobile && <MobileDock setNavOpen={setNavOpen} />}
-    </>
+      </div>
+    </header>
+    
+    {/* Navbar that slides in from the side */}
+    <Navbar isOpen={isOpen} setIsOpen={setIsOpen} />
+    
+    {isMobile && <MobileDock setNavOpen={setNavOpen} />}
   );
 };
 

@@ -47,7 +47,6 @@ export type Database = {
       }
       cart_items: {
         Row: {
-          cart_id: string
           created_at: string
           gift_description: string | null
           gift_id: string | null
@@ -58,10 +57,11 @@ export type Database = {
           id: string
           influencer_id: string
           message: string | null
+          quantity: number
           updated_at: string
+          user_id: string
         }
         Insert: {
-          cart_id: string
           created_at?: string
           gift_description?: string | null
           gift_id?: string | null
@@ -72,10 +72,11 @@ export type Database = {
           id?: string
           influencer_id: string
           message?: string | null
+          quantity?: number
           updated_at?: string
+          user_id: string
         }
         Update: {
-          cart_id?: string
           created_at?: string
           gift_description?: string | null
           gift_id?: string | null
@@ -86,17 +87,11 @@ export type Database = {
           id?: string
           influencer_id?: string
           message?: string | null
+          quantity?: number
           updated_at?: string
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "cart_items_cart_id_fkey"
-            columns: ["cart_id"]
-            isOneToOne: false
-            referencedRelation: "user_cart"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       ecommerce_credentials: {
         Row: {
@@ -831,27 +826,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      user_cart: {
-        Row: {
-          created_at: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       user_roles: {
         Row: {
