@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +12,7 @@ import GiftSection from '@/components/landing/GiftSection';
 import InfluencerSelector from '@/components/gift-selection/InfluencerSelector';
 import GiftMessage from '@/components/gift-selection/GiftMessage';
 import { useGiftItems, GiftItem } from '@/hooks/useGiftItems';
-import { useDbCart } from '@/hooks/useDbCart';
+import { useCart } from '@/hooks/useCart';
 import { useUser } from '@/hooks/useUser';
 
 interface WishlistItemData {
@@ -36,7 +37,7 @@ export default function GiftSelection() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { getGiftById } = useGiftItems();
-  const { addToCart, cartCount, isLoading: cartLoading } = useDbCart();
+  const { addToCart, itemCount } = useCart();
   const { user } = useUser();
   
   const giftId = searchParams.get('gift');
@@ -171,14 +172,23 @@ export default function GiftSelection() {
     console.log("handleAddToCart called with:", { gift, selectedInfluencerId, giftMessage });
     
     try {
-      await addToCart(gift, selectedInfluencerId, giftMessage);
+      await addToCart({
+        gift_id: gift.id,
+        gift_name: gift.name,
+        gift_price: gift.price,
+        gift_image_url: gift.image_url,
+        gift_description: gift.description,
+        gift_url: gift.gift_url,
+        influencer_id: selectedInfluencerId,
+        message: giftMessage
+      });
       
       // Clear selection state
       setSelectedInfluencerId(null);
       setGiftMessage('');
       
       // Redirect to cart
-      navigate('/gift-cart');
+      navigate('/cart');
     } catch (err) {
       console.error("Error in cart update process:", err);
     }
@@ -217,7 +227,7 @@ export default function GiftSelection() {
   ), [navigate]);
 
   // Early return for loading state
-  if (loading || cartLoading) {
+  if (loading) {
     return loadingContent;
   }
   
@@ -236,13 +246,13 @@ export default function GiftSelection() {
           <Button
             variant="outline"
             className="flex items-center gap-2"
-            onClick={() => navigate('/gift-cart')}
+            onClick={() => navigate('/cart')}
           >
             <ShoppingCart className="h-4 w-4" />
             <span>Cart</span>
-            {cartCount > 0 && (
+            {itemCount > 0 && (
               <Badge variant="secondary" className="ml-1 bg-funky-purple text-white">
-                {cartCount}
+                {itemCount}
               </Badge>
             )}
           </Button>
@@ -384,9 +394,9 @@ export default function GiftSelection() {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => navigate('/gift-cart')}
+                  onClick={() => navigate('/cart')}
                 >
-                  View Cart ({cartCount})
+                  View Cart ({itemCount})
                 </Button>
               </CardFooter>
             </Card>
