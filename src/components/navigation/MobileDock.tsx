@@ -33,11 +33,11 @@ const MobileDock = ({
   }, {
     icon: Gift,
     label: "Gifts",
-    path: user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent"
+    path: user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gift-selection"
   }, {
     icon: User,
     label: "Profile",
-    path: "/profile"
+    path: user ? "/profile" : "/auth"
   }, {
     icon: Menu,
     label: "Menu",
