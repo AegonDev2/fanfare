@@ -89,20 +89,24 @@ export function useCart() {
     try {
       console.log("Adding item to cart:", item);
       
+      const cartItemData = {
+        user_id: user.id,
+        gift_id: item.gift_id || null,
+        gift_name: item.gift_name,
+        gift_price: item.gift_price,
+        gift_image_url: item.gift_image_url || null,
+        gift_description: item.gift_description || null,
+        gift_url: item.gift_url || null,
+        influencer_id: item.influencer_id,
+        message: item.message || null,
+        quantity: 1
+      };
+
+      console.log("Inserting cart item data:", cartItemData);
+
       const { data, error } = await supabase
         .from('cart_items')
-        .insert({
-          user_id: user.id,
-          gift_id: item.gift_id || null,
-          gift_name: item.gift_name,
-          gift_price: item.gift_price,
-          gift_image_url: item.gift_image_url || null,
-          gift_description: item.gift_description || null,
-          gift_url: item.gift_url || null,
-          influencer_id: item.influencer_id,
-          message: item.message || null,
-          quantity: 1
-        })
+        .insert(cartItemData)
         .select()
         .single();
 
@@ -111,7 +115,7 @@ export function useCart() {
         throw error;
       }
 
-      console.log("Item added to cart:", data);
+      console.log("Item added to cart successfully:", data);
       await fetchCartItems(); // Refresh cart
       
       toast({
@@ -138,7 +142,7 @@ export function useCart() {
       
       const { error } = await supabase
         .from('cart_items')
-        .update({ quantity })
+        .update({ quantity, updated_at: new Date().toISOString() })
         .eq('id', itemId)
         .eq('user_id', user?.id);
 
