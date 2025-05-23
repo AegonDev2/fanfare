@@ -28,6 +28,7 @@ export function useCart() {
 
   const fetchCartItems = useCallback(async () => {
     if (!user) {
+      console.log("User not authenticated, can't fetch cart");
       setCartItems([]);
       setIsLoading(false);
       return;
