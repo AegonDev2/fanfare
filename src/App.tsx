@@ -27,16 +27,15 @@ function App() {
     <Router>
       <div className="min-h-screen bg-background">
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Index />} /> {/* Renamed from / to /dashboard */}
+          <Route path="/landing" element={<Landing />} />
           <Route path="/gift-selection" element={<GiftSelection />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/place-order" element={<PlaceOrder />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/profile/:influencerId" element={<Profile />} />
-          <Route path="/profile" element={<Profile />} /> {/* Added for easier Profile access */}
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/create-influencer-profile" element={<CreateInfluencerProfile />} />
           <Route path="/gift-requests" element={<GiftRequests />} />

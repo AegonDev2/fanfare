@@ -14,48 +14,11 @@ export const useUser = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state change:", event, session?.user?.id);
-      
-      if (session === null) {
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
-      // Defer fetching profile with setTimeout to avoid deadlocks
-      setTimeout(async () => {
-        try {
-          const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .maybeSingle();
-
-          if (error) {
-            console.error("Error fetching profile:", error);
-            setUser(null);
-          } else {
-            console.log("Profile fetched:", profile);
-            setUser(profile);
-          }
-        } catch (error) {
-          console.error("Error in profile fetch:", error);
-          setUser(null);
-        } finally {
-          setIsLoading(false);
-        }
-      }, 0);
-    });
-
-    // THEN check for existing session
     const fetchUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
-          console.log("Existing session found:", session.user.id);
           const { data: profile, error } = await supabase
             .from("profiles")
             .select("*")
@@ -63,19 +26,13 @@ export const useUser = () => {
             .maybeSingle();
 
           if (error) {
-            console.error("Error fetching profile:", error);
-            setUser(null);
-          } else {
-            console.log("Profile loaded:", profile);
-            setUser(profile);
+            throw error;
           }
-        } else {
-          console.log("No existing session found");
-          setUser(null);
+
+          setUser(profile);
         }
       } catch (error) {
-        console.error("Error checking session:", error);
-        setUser(null);
+        console.error("Error fetching user:", error);
       } finally {
         setIsLoading(false);
       }
@@ -83,8 +40,18 @@ export const useUser = () => {
 
     fetchUser();
 
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session === null) {
+        setUser(null);
+      } else {
+        fetchUser();
+      }
+    });
+
     return () => {
-      subscription.unsubscribe();
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, []);
 

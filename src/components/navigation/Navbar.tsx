@@ -45,33 +45,16 @@ const Navbar = ({
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
-      // Clean up auth state before signing out
-      const cleanupAuthState = () => {
-        localStorage.removeItem('supabase.auth.token');
-        Object.keys(localStorage).forEach((key) => {
-          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-            localStorage.removeItem(key);
-          }
-        });
-        Object.keys(sessionStorage || {}).forEach((key) => {
-          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-            sessionStorage.removeItem(key);
-          }
-        });
-      };
-      
-      cleanupAuthState();
-      
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      const {
+        error
+      } = await supabase.auth.signOut();
       if (error) throw error;
-      
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account"
       });
-      
-      // Force full page reload to ensure clean state
-      window.location.href = "/";
+      navigate("/");
+      handleCloseNav();
     } catch (error) {
       console.error("Error signing out:", error);
       toast({

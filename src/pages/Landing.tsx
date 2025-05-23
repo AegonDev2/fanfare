@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/landing/Header';
 import Hero from '@/components/landing/Hero';
@@ -8,8 +7,6 @@ import WhyUs from '@/components/landing/WhyUs';
 import Testimonials from '@/components/landing/Testimonials';
 import Footer from '@/components/landing/Footer';
 import FAQ from '@/components/landing/FAQ';
-import Navbar from '@/components/navigation/Navbar';
-import MobileDock from '@/components/navigation/MobileDock';
 
 export default function Landing() {
   const [navOpen, setNavOpen] = useState(false);
@@ -18,18 +15,12 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <Header setNavOpen={setNavOpen} />
       <Hero />
-      <div className="container mx-auto px-4 py-4">
-        <GiftSection />
-      </div>
+      <GiftSection />
       <HowItWorks />
       <WhyUs />
       <Testimonials />
       <FAQ />
       <Footer />
-      
-      {/* Add the Navbar and MobileDock components */}
-      <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
-      <MobileDock setNavOpen={setNavOpen} />
     </div>
   );
 }
