@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
@@ -21,12 +21,42 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Helper function to clean up auth state
+  const cleanupAuthState = () => {
+    // Remove standard auth tokens
+    localStorage.removeItem('supabase.auth.token');
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    // Remove from sessionStorage if in use
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setLoginError(null);
 
     try {
+      // Clean up existing auth state before attempting login
+      cleanupAuthState();
+      
+      // Attempt a global sign out first to ensure clean state
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log("Pre-signout failed but continuing with login");
+      }
+
+      console.log("Attempting login with email:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -41,9 +71,12 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
           title: "Success",
           description: "You have successfully logged in!",
         });
-        navigate("/");
+        
+        // Force full page reload to ensure clean state
+        window.location.href = "/";
       }
     } catch (error: any) {
+      console.error("Login error:", error);
       setLoginError(error.message);
       toast({
         variant: "destructive",
