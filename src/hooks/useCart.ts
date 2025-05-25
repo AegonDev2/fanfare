@@ -89,20 +89,23 @@ export function useCart() {
     try {
       console.log("Adding item to cart:", item);
       
+      // Prepare the data according to cart_items schema
+      const cartItemData = {
+        user_id: user.id,
+        gift_id: item.gift_id || null,
+        gift_name: item.gift_name,
+        gift_price: item.gift_price,
+        gift_image_url: item.gift_image_url || null,
+        gift_description: item.gift_description || null,
+        gift_url: item.gift_url || null,
+        influencer_id: item.influencer_id,
+        message: item.message || null,
+        quantity: 1
+      };
+
       const { data, error } = await supabase
         .from('cart_items')
-        .insert({
-          user_id: user.id,
-          gift_id: item.gift_id || null,
-          gift_name: item.gift_name,
-          gift_price: item.gift_price,
-          gift_image_url: item.gift_image_url || null,
-          gift_description: item.gift_description || null,
-          gift_url: item.gift_url || null,
-          influencer_id: item.influencer_id,
-          message: item.message || null,
-          quantity: 1
-        })
+        .insert(cartItemData)
         .select()
         .single();
 

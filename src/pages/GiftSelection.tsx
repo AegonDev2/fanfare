@@ -172,6 +172,7 @@ export default function GiftSelection() {
     console.log("handleAddToCart called with:", { gift, selectedInfluencerId, giftMessage });
     
     try {
+      // Prepare data according to cart_items schema
       await addToCart({
         gift_id: gift.id !== 'custom-wishlist-item' ? gift.id : undefined,
         gift_name: gift.name,

@@ -81,7 +81,7 @@ export default function Cart() {
 
     setProcessing(true);
     try {
-      // Create order
+      // Create order in gift_orders table
       const { data: order, error: orderError } = await supabase
         .from('gift_orders')
         .insert({
@@ -95,7 +95,7 @@ export default function Cart() {
 
       if (orderError) throw orderError;
 
-      // Add order items
+      // Add order items to gift_order_items table
       const orderItems = cartItems.map(item => ({
         order_id: order.id,
         gift_name: item.gift_name,
