@@ -3,11 +3,6 @@ import React, { useState } from 'react';
 import Header from '@/components/landing/Header';
 import Hero from '@/components/landing/Hero';
 import GiftSection from '@/components/landing/GiftSection';
-import HowItWorks from '@/components/landing/HowItWorks';
-import WhyUs from '@/components/landing/WhyUs';
-import Testimonials from '@/components/landing/Testimonials';
-import Footer from '@/components/landing/Footer';
-import FAQ from '@/components/landing/FAQ';
 import MobileDock from '@/components/navigation/MobileDock';
 
 export default function Landing() {
@@ -18,11 +13,6 @@ export default function Landing() {
       <Header setNavOpen={setNavOpen} />
       <Hero />
       <GiftSection />
-      <HowItWorks />
-      <WhyUs />
-      <Testimonials />
-      <FAQ />
-      <Footer />
       <MobileDock setNavOpen={setNavOpen} />
     </div>
   );

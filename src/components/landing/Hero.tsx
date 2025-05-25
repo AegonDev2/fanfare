@@ -14,7 +14,7 @@ export default function Hero() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, profile_image, user_type')
+        .select('id, name, user_type')
         .eq('user_type', 'influencer')
         .limit(10);
       
@@ -24,7 +24,7 @@ export default function Hero() {
         id: profile.id,
         name: profile.name || 'Unknown',
         platform: 'Platform',
-        profile_image: profile.profile_image || '',
+        profile_image: '',
         followers: Math.floor(Math.random() * 100000) + 10000
       }));
     }
