@@ -1,93 +1,140 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import WalletWidget from "@/components/wallet/WalletWidget";
-import MobileDock from "@/components/navigation/MobileDock";
-import Navbar from "@/components/navigation/Navbar";
-import FloatingHeader from "@/components/ui/floating-header";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Menu, Search, User, Gift } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from '@/hooks/useUser';
 import CartIcon from '@/components/cart/CartIcon';
 
 interface HeaderProps {
   setNavOpen?: (isOpen: boolean) => void;
 }
 
-const Header = ({
-  setNavOpen = () => {}
-}: HeaderProps) => {
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [isLoading, setIsLoading] = useState(false);
+export default function Header({ setNavOpen }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const { toast } = useToast();
-  
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data?.user || null);
-    };
-    checkUser();
-  }, []);
+  const navigate = useNavigate();
+  const { user } = useUser();
 
-  const handleNavToggle = () => {
-    setIsOpen(!isOpen);
+  const handleNavOpen = (isOpen: boolean) => {
+    setIsOpen(isOpen);
     if (setNavOpen) {
-      setNavOpen(!isOpen);
+      setNavOpen(isOpen);
     }
   };
 
-  const handleSignOut = async () => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      toast({
-        title: "Signed out successfully",
-        description: "You have been logged out of your account"
-      });
-      navigate("/");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast({
-        title: "Sign out failed",
-        description: "There was a problem signing you out. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const navItems = [
+    { label: 'Home', path: '/' },
+    { label: 'Gifts', path: '/gift-selection' },
+    { label: 'Leaderboard', path: '/leaderboard' },
+    { label: 'Track Order', path: '/track-order' },
+  ];
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <FloatingHeader setNavOpen={setNavOpen} />
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <CartIcon />
-              <Button onClick={handleSignOut} variant="ghost" className="h-8 w-8">
-                <X size={16} />
-              </Button>
-            </div>
-          </div>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <h1 
+            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent cursor-pointer"
+            onClick={() => navigate('/')}
+          >
+            FanFare
+          </h1>
         </div>
-      </header>
-      
-      {/* Navbar that slides in from the side */}
-      <Navbar isOpen={isOpen} setIsOpen={setIsOpen} />
-      
-      {isMobile && <MobileDock setNavOpen={setNavOpen} />}
-    </>
-  );
-};
 
-export default Header;
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-6">
+          {navItems.map((item) => (
+            <Button
+              key={item.path}
+              variant="ghost"
+              onClick={() => navigate(item.path)}
+              className="text-gray-600 hover:text-purple-600"
+            >
+              {item.label}
+            </Button>
+          ))}
+        </nav>
+
+        {/* Desktop Actions */}
+        <div className="hidden md:flex items-center space-x-4">
+          <Button variant="ghost" size="sm">
+            <Search className="h-5 w-5" />
+          </Button>
+          
+          <CartIcon />
+          
+          {user ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/profile')}
+            >
+              <User className="h-5 w-5" />
+            </Button>
+          ) : (
+            <Button onClick={() => navigate('/auth')}>
+              Sign In
+            </Button>
+          )}
+        </div>
+
+        {/* Mobile Menu */}
+        <div className="md:hidden flex items-center space-x-2">
+          <CartIcon />
+          
+          <Sheet open={isOpen} onOpenChange={handleNavOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px]">
+              <div className="flex flex-col space-y-4 mt-8">
+                {navItems.map((item) => (
+                  <Button
+                    key={item.path}
+                    variant="ghost"
+                    onClick={() => {
+                      navigate(item.path);
+                      setIsOpen(false);
+                    }}
+                    className="justify-start text-gray-600 hover:text-purple-600"
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+                
+                <hr className="my-4" />
+                
+                {user ? (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      navigate('/profile');
+                      setIsOpen(false);
+                    }}
+                    className="justify-start"
+                  >
+                    <User className="h-5 w-5 mr-2" />
+                    Profile
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      navigate('/auth');
+                      setIsOpen(false);
+                    }}
+                    className="justify-start"
+                  >
+                    Sign In
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+    </header>
+  );
+}

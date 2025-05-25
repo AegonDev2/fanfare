@@ -173,7 +173,7 @@ export default function GiftSelection() {
     
     try {
       await addToCart({
-        gift_id: gift.id,
+        gift_id: gift.id !== 'custom-wishlist-item' ? gift.id : undefined,
         gift_name: gift.name,
         gift_price: gift.price,
         gift_image_url: gift.image_url,

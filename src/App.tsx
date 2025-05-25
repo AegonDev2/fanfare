@@ -27,7 +27,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-background">
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/gift-selection" element={<GiftSelection />} />
