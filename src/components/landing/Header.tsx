@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Search, User, Gift } from 'lucide-react';
+import { Menu, Search, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/hooks/useUser';
 import CartIcon from '@/components/cart/CartIcon';
@@ -68,7 +68,7 @@ export default function Header({ setNavOpen }: HeaderProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate(`/profile/${user.id}`)}
             >
               <User className="h-5 w-5" />
             </Button>
@@ -111,7 +111,7 @@ export default function Header({ setNavOpen }: HeaderProps) {
                   <Button
                     variant="ghost"
                     onClick={() => {
-                      navigate('/profile');
+                      navigate(`/profile/${user.id}`);
                       setIsOpen(false);
                     }}
                     className="justify-start"

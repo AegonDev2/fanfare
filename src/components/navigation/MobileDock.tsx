@@ -8,9 +8,7 @@ interface MobileDockProps {
   setNavOpen: (isOpen: boolean) => void;
 }
 
-const MobileDock = ({
-  setNavOpen
-}: MobileDockProps) => {
+const MobileDock = ({ setNavOpen }: MobileDockProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
@@ -22,32 +20,38 @@ const MobileDock = ({
     return null;
   }
   
-  const dockItems = [{
-    icon: Home,
-    label: "Home",
-    path: "/",
-    action: () => navigate("/")
-  }, {
-    icon: Search,
-    label: "Search",
-    path: "/gift-selection",
-    action: () => navigate("/gift-selection")
-  }, {
-    icon: Gift,
-    label: "Gifts",
-    path: user?.user_type === "influencer" ? "/wishlist" : "/gifts-sent",
-    action: () => navigate(user?.user_type === "influencer" ? "/wishlist" : "/gifts-sent")
-  }, {
-    icon: User,
-    label: "Profile",
-    path: user ? `/profile/${user.id}` : "/auth",
-    action: () => navigate(user ? `/profile/${user.id}` : "/auth")
-  }, {
-    icon: Menu,
-    label: "Menu",
-    path: "/settings",
-    action: () => setNavOpen(true)
-  }];
+  const dockItems = [
+    {
+      icon: Home,
+      label: "Home",
+      path: "/",
+      action: () => navigate("/")
+    }, 
+    {
+      icon: Search,
+      label: "Search",
+      path: "/gift-selection",
+      action: () => navigate("/gift-selection")
+    }, 
+    {
+      icon: Gift,
+      label: "Gifts",
+      path: user?.user_type === "influencer" ? "/wishlist" : "/gifts-sent",
+      action: () => navigate(user?.user_type === "influencer" ? "/wishlist" : "/gifts-sent")
+    }, 
+    {
+      icon: User,
+      label: "Profile",
+      path: user ? `/profile/${user.id}` : "/auth",
+      action: () => navigate(user ? `/profile/${user.id}` : "/auth")
+    }, 
+    {
+      icon: Menu,
+      label: "Menu",
+      path: "/settings",
+      action: () => setNavOpen(true)
+    }
+  ];
   
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === path;

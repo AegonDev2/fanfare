@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/landing/Header';
 import Hero from '@/components/landing/Hero';
@@ -7,6 +8,7 @@ import WhyUs from '@/components/landing/WhyUs';
 import Testimonials from '@/components/landing/Testimonials';
 import Footer from '@/components/landing/Footer';
 import FAQ from '@/components/landing/FAQ';
+import MobileDock from '@/components/navigation/MobileDock';
 
 export default function Landing() {
   const [navOpen, setNavOpen] = useState(false);
@@ -21,6 +23,7 @@ export default function Landing() {
       <Testimonials />
       <FAQ />
       <Footer />
+      <MobileDock setNavOpen={setNavOpen} />
     </div>
   );
 }
