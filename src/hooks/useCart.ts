@@ -89,43 +89,20 @@ export function useCart() {
     try {
       console.log("Adding item to cart:", item);
       
-      // Check if item already exists in cart
-      const existingItem = cartItems.find(
-        cartItem => 
-          cartItem.gift_name === item.gift_name && 
-          cartItem.influencer_id === item.influencer_id &&
-          cartItem.gift_url === item.gift_url
-      );
-
-      if (existingItem) {
-        // Update quantity instead of adding duplicate
-        await updateQuantity(existingItem.id, existingItem.quantity + 1);
-        toast({
-          title: 'Updated Cart',
-          description: `${item.gift_name} quantity updated in your cart`,
-        });
-        return;
-      }
-
-      // Insert new item with proper data structure
-      const insertData = {
-        user_id: user.id,
-        gift_id: item.gift_id || null,
-        gift_name: item.gift_name,
-        gift_price: Number(item.gift_price),
-        gift_image_url: item.gift_image_url || null,
-        gift_description: item.gift_description || null,
-        gift_url: item.gift_url || null,
-        influencer_id: item.influencer_id,
-        message: item.message || null,
-        quantity: 1
-      };
-
-      console.log("Inserting cart item:", insertData);
-
       const { data, error } = await supabase
         .from('cart_items')
-        .insert(insertData)
+        .insert({
+          user_id: user.id,
+          gift_id: item.gift_id || null,
+          gift_name: item.gift_name,
+          gift_price: item.gift_price,
+          gift_image_url: item.gift_image_url || null,
+          gift_description: item.gift_description || null,
+          gift_url: item.gift_url || null,
+          influencer_id: item.influencer_id,
+          message: item.message || null,
+          quantity: 1
+        })
         .select()
         .single();
 
@@ -134,10 +111,8 @@ export function useCart() {
         throw error;
       }
 
-      console.log("Item added to cart successfully:", data);
-      
-      // Refresh cart items
-      await fetchCartItems();
+      console.log("Item added to cart:", data);
+      await fetchCartItems(); // Refresh cart
       
       toast({
         title: 'Added to Cart',
@@ -151,20 +126,11 @@ export function useCart() {
         variant: 'destructive',
       });
     }
-  }, [user, toast, fetchCartItems, cartItems]);
+  }, [user, toast, fetchCartItems]);
 
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
     if (quantity < 1) {
       return removeFromCart(itemId);
-    }
-
-    if (!user) {
-      toast({
-        title: 'Authentication Required',
-        description: 'Please log in to update cart',
-        variant: 'destructive',
-      });
-      return;
     }
 
     try {
@@ -172,12 +138,9 @@ export function useCart() {
       
       const { error } = await supabase
         .from('cart_items')
-        .update({ 
-          quantity,
-          updated_at: new Date().toISOString()
-        })
+        .update({ quantity })
         .eq('id', itemId)
-        .eq('user_id', user.id);
+        .eq('user_id', user?.id);
 
       if (error) {
         console.error("Error updating quantity:", error);
@@ -190,8 +153,6 @@ export function useCart() {
           item.id === itemId ? { ...item, quantity } : item
         )
       );
-
-      console.log(`Successfully updated quantity for item ${itemId}`);
     } catch (error: any) {
       console.error("Error in updateQuantity:", error);
       toast({
@@ -203,15 +164,6 @@ export function useCart() {
   }, [user, toast]);
 
   const removeFromCart = useCallback(async (itemId: string) => {
-    if (!user) {
-      toast({
-        title: 'Authentication Required',
-        description: 'Please log in to remove items',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     try {
       console.log("Removing item from cart:", itemId);
       
@@ -219,22 +171,19 @@ export function useCart() {
         .from('cart_items')
         .delete()
         .eq('id', itemId)
-        .eq('user_id', user.id);
+        .eq('user_id', user?.id);
 
       if (error) {
         console.error("Error removing from cart:", error);
         throw error;
       }
 
-      // Update local state immediately
-      setCartItems(prev => prev.filter(item => item.id !== itemId));
+      await fetchCartItems(); // Refresh cart
       
       toast({
         title: 'Removed from Cart',
         description: 'Item has been removed from your cart',
       });
-      
-      console.log(`Successfully removed item ${itemId} from cart`);
     } catch (error: any) {
       console.error("Error in removeFromCart:", error);
       toast({
@@ -243,17 +192,10 @@ export function useCart() {
         variant: 'destructive',
       });
     }
-  }, [user, toast]);
+  }, [user, toast, fetchCartItems]);
 
   const clearCart = useCallback(async () => {
-    if (!user) {
-      toast({
-        title: 'Authentication Required',
-        description: 'Please log in to clear cart',
-        variant: 'destructive',
-      });
-      return;
-    }
+    if (!user) return;
 
     try {
       console.log("Clearing cart for user:", user.id);
@@ -274,8 +216,6 @@ export function useCart() {
         title: 'Cart Cleared',
         description: 'All items have been removed from your cart',
       });
-      
-      console.log("Successfully cleared cart");
     } catch (error: any) {
       console.error("Error in clearCart:", error);
       toast({

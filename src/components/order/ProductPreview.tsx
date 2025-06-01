@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon, Image } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import ImageViewer from "@/components/common/ImageViewer";
 
 interface ProductPreviewProps {
@@ -35,9 +35,13 @@ const ProductPreview = ({
   const isPreviewAvailable = productPreview && productPreview.name !== "Enter a product URL to preview";
   const hasProcessedUrl = isPreviewAvailable || giftUrl.trim() !== '';
 
+  // Only show tabs if product preview is available AND user has processed product
   const [activeTab, setActiveTab] = useState<string>(isPreviewAvailable ? "product" : "message");
+
+  // Track if product has been processed
   const [productProcessed, setProductProcessed] = useState<boolean>(isPreviewAvailable);
 
+  // Update when product preview changes
   useEffect(() => {
     if (isPreviewAvailable) {
       setProductProcessed(true);
@@ -54,8 +58,7 @@ const ProductPreview = ({
   };
 
   if (paymentStep === 'complete') {
-    return (
-      <div className="bg-white p-6 shadow-md rounded-lg mt-8 max-w-md mx-auto">
+    return <div className="bg-white p-6 shadow-md rounded-lg mt-8 max-w-md mx-auto">
         <div className="flex flex-col items-center text-center">
           <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
           <h3 className="text-lg font-semibold">Request Submitted</h3>
@@ -63,61 +66,60 @@ const ProductPreview = ({
             Your gift request has been submitted successfully. The influencer will be notified.
           </p>
         </div>
-      </div>
-    );
+      </div>;
   }
 
+  // Don't show anything until product has been processed
   if (!hasProcessedUrl) {
     return null;
   }
 
+  // Calculate total even when no valid preview exists
   const defaultPrice = 0;
   const defaultPlatformFee = 5.00;
   const productPrice = isPreviewAvailable ? productPreview.priceInr : defaultPrice;
   const platformFee = isPreviewAvailable ? productPreview.platformFee : defaultPlatformFee;
   const totalAmount = productPrice + platformFee;
 
+  // Website preview component
   const WebsitePreviewComponent = () => {
     console.log("Rendering website preview with:", websitePreview ? "image data available" : "no image data");
-    
-    return (
-      <div className="mb-4 border rounded-md overflow-hidden">
-        <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
-          <div className="flex items-center">
-            <Image className="h-4 w-4 mr-2 text-gray-500" />
-            <span className="text-sm font-medium text-gray-600">Website Preview</span>
-          </div>
-          {giftUrl && (
-            <a
-              href={giftUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
-            >
-              View Site <LinkIcon className="h-3 w-3 ml-1" />
-            </a>
-          )}
+    return <div className="mb-4 border rounded-md overflow-hidden">
+      <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
+        <div className="flex items-center">
+          <Image className="h-4 w-4 mr-2 text-gray-500" />
+          <span className="text-sm font-medium text-gray-600">Website Preview</span>
         </div>
-        
-        <div className="aspect-video relative bg-gray-50">
-          {websitePreview ? (
-            <ImageViewer 
-              imageUrl={websitePreview} 
-              alt="Website preview" 
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-sm text-gray-400">Preview not available</p>
-            </div>
-          )}
-        </div>
+        {giftUrl && (
+          <a
+            href={giftUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
+          >
+            View Site <LinkIcon className="h-3 w-3 ml-1" />
+          </a>
+        )}
       </div>
-    );
+      
+      <div className="aspect-video relative bg-gray-50">
+        {websitePreview ? (
+          <ImageViewer 
+            imageUrl={websitePreview} 
+            alt="Website preview" 
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-gray-400">Preview not available</p>
+          </div>
+        )}
+      </div>
+    </div>;
   };
 
+  // Simplified view when no product preview is available
   if (!isPreviewAvailable) {
-    return (
-      <div className="mt-8">
+    return <div className="mt-8">
         <div className="bg-white p-6 shadow-md rounded-lg">
           <h3 className="text-lg font-medium mb-4">Gift Request</h3>
           
@@ -142,15 +144,7 @@ const ProductPreview = ({
             <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
               Add a Personal Message
             </label>
-            <Textarea 
-              id="message" 
-              placeholder="Write a personal message to the influencer..." 
-              value={message} 
-              onChange={e => onMessageChange(e.target.value)} 
-              rows={6} 
-              disabled={isLoading} 
-              className="mb-4 bg-slate-50" 
-            />
+            <Textarea id="message" placeholder="Write a personal message to the influencer..." value={message} onChange={e => onMessageChange(e.target.value)} rows={6} disabled={isLoading} className="mb-4 bg-slate-50" />
           </div>
           
           <div className="p-4 rounded-md mb-6 bg-stone-900">
@@ -170,20 +164,15 @@ const ProductPreview = ({
             </div>
           </div>
           
-          <Button 
-            onClick={handleSubmit} 
-            className="w-full bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple transition-all" 
-            disabled={isLoading}
-          >
+          <Button onClick={handleSubmit} className="w-full bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple transition-all" disabled={isLoading}>
             {isLoading ? "Processing..." : "Submit Gift Request"}
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
 
-  return (
-    <div className="mt-8">
+  // Original tabbed view for when product preview is available
+  return <div className="mt-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="product" disabled={isLoading}>
@@ -250,14 +239,7 @@ const ProductPreview = ({
         <TabsContent value="message" className="mt-4">
           <div className="bg-white p-6 shadow-md rounded-lg">
             <h3 className="text-lg font-medium mb-4 text-slate-950">Add a Personal Message</h3>
-            <Textarea 
-              placeholder="Write a personal message to the influencer..." 
-              value={message} 
-              onChange={e => onMessageChange(e.target.value)} 
-              rows={6} 
-              disabled={isLoading} 
-              className="mb-6 bg-slate-50" 
-            />
+            <Textarea placeholder="Write a personal message to the influencer..." value={message} onChange={e => onMessageChange(e.target.value)} rows={6} disabled={isLoading} className="mb-6 bg-slate-50" />
             
             <div className="p-4 rounded-md mb-6 bg-stone-900">
               <div className="flex items-center mb-4">
@@ -291,8 +273,7 @@ const ProductPreview = ({
           </div>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
 
 export default ProductPreview;

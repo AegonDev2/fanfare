@@ -37,9 +37,9 @@ serve(async (req) => {
     console.log(`Generating screenshot for URL: ${url}`);
     console.log(`Using encoded URL: ${encodedUrl}`);
     
-    // Set a longer timeout for the fetch operation (30 seconds)
+    // Set a longer timeout for the fetch operation (10 seconds)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
     
     try {
       // Try fetching as binary first (more reliable)
@@ -73,20 +73,11 @@ serve(async (req) => {
       
       console.log(`Successfully generated screenshot, binary length: ${imageBuffer.byteLength} bytes`);
       
-      // Convert ArrayBuffer to base64 using proper encoding
-      const uint8Array = new Uint8Array(imageBuffer);
-      let binaryString = '';
-      
-      // Process in chunks to avoid call stack size exceeded
-      const chunkSize = 8192;
-      for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        const chunk = uint8Array.slice(i, i + chunkSize);
-        binaryString += String.fromCharCode.apply(null, Array.from(chunk));
-      }
-      
-      const base64Image = btoa(binaryString);
-      
-      console.log(`Base64 conversion successful, length: ${base64Image.length}`);
+      // Convert ArrayBuffer to base64
+      const base64Image = btoa(
+        new Uint8Array(imageBuffer)
+          .reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
       
       // Return the image URL as data URL
       return new Response(
@@ -103,7 +94,7 @@ serve(async (req) => {
       
       // Set a new timeout for the JSON fetch
       const jsonController = new AbortController();
-      const jsonTimeoutId = setTimeout(() => jsonController.abort(), 30000);
+      const jsonTimeoutId = setTimeout(() => jsonController.abort(), 30000); // 30 second timeout
       
       try {
         const jsonApiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=json`;
