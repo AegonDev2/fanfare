@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -110,7 +111,7 @@ export function useCart() {
 
         console.log("Updated existing cart item quantity");
       } else {
-        // Insert new item with auto-generated ID
+        // Insert new item
         const { data, error } = await supabase
           .from('cart_items')
           .insert({
