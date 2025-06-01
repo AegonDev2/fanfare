@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon, Image } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import ImageViewer from "@/components/common/ImageViewer";
 
 interface ProductPreviewProps {
@@ -81,9 +81,10 @@ const ProductPreview = ({
   const platformFee = isPreviewAvailable ? productPreview.platformFee : defaultPlatformFee;
   const totalAmount = productPrice + platformFee;
 
-  // Website preview component
+  // Website preview component with improved image handling
   const WebsitePreviewComponent = () => {
     console.log("Rendering website preview with:", websitePreview ? "image data available" : "no image data");
+    
     return <div className="mb-4 border rounded-md overflow-hidden">
       <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
         <div className="flex items-center">
@@ -103,14 +104,16 @@ const ProductPreview = ({
       </div>
       
       <div className="aspect-video relative bg-gray-50">
-        {websitePreview ? (
+        {websitePreview && websitePreview.startsWith('data:image/') ? (
           <ImageViewer 
             imageUrl={websitePreview} 
             alt="Website preview" 
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-gray-400">Preview not available</p>
+            <p className="text-sm text-gray-400">
+              {websitePreview ? 'Invalid preview data' : 'Preview not available'}
+            </p>
           </div>
         )}
       </div>

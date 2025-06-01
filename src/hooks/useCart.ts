@@ -89,29 +89,54 @@ export function useCart() {
     try {
       console.log("Adding item to cart:", item);
       
-      const { data, error } = await supabase
+      // Check if item already exists in cart for this user and influencer
+      const { data: existingItems } = await supabase
         .from('cart_items')
-        .insert({
-          user_id: user.id,
-          gift_id: item.gift_id || null,
-          gift_name: item.gift_name,
-          gift_price: item.gift_price,
-          gift_image_url: item.gift_image_url || null,
-          gift_description: item.gift_description || null,
-          gift_url: item.gift_url || null,
-          influencer_id: item.influencer_id,
-          message: item.message || null,
-          quantity: 1
-        })
-        .select()
-        .single();
+        .select('id, quantity')
+        .eq('user_id', user.id)
+        .eq('gift_name', item.gift_name)
+        .eq('influencer_id', item.influencer_id);
 
-      if (error) {
-        console.error("Error adding to cart:", error);
-        throw error;
+      if (existingItems && existingItems.length > 0) {
+        // Update quantity of existing item
+        const existingItem = existingItems[0];
+        const { error: updateError } = await supabase
+          .from('cart_items')
+          .update({ quantity: existingItem.quantity + 1 })
+          .eq('id', existingItem.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        console.log("Updated existing cart item quantity");
+      } else {
+        // Insert new item
+        const { data, error } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            gift_id: item.gift_id || null,
+            gift_name: item.gift_name,
+            gift_price: item.gift_price,
+            gift_image_url: item.gift_image_url || null,
+            gift_description: item.gift_description || null,
+            gift_url: item.gift_url || null,
+            influencer_id: item.influencer_id,
+            message: item.message || null,
+            quantity: 1
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Error adding to cart:", error);
+          throw error;
+        }
+
+        console.log("Item added to cart:", data);
       }
-
-      console.log("Item added to cart:", data);
+      
       await fetchCartItems(); // Refresh cart
       
       toast({
@@ -153,6 +178,11 @@ export function useCart() {
           item.id === itemId ? { ...item, quantity } : item
         )
       );
+
+      toast({
+        title: 'Cart Updated',
+        description: 'Item quantity has been updated',
+      });
     } catch (error: any) {
       console.error("Error in updateQuantity:", error);
       toast({
