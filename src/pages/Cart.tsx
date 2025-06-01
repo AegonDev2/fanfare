@@ -93,12 +93,7 @@ export default function Cart() {
         .select()
         .single();
 
-      if (orderError) {
-        console.error("Order creation error:", orderError);
-        throw orderError;
-      }
-
-      console.log("Order created successfully:", order);
+      if (orderError) throw orderError;
 
       // Add order items
       const orderItems = cartItems.map(item => ({
@@ -113,19 +108,11 @@ export default function Cart() {
         message: item.message
       }));
 
-      console.log("Creating order items:", orderItems);
-
-      const { data: orderItemsData, error: itemsError } = await supabase
+      const { error: itemsError } = await supabase
         .from('gift_order_items')
-        .insert(orderItems)
-        .select();
+        .insert(orderItems);
 
-      if (itemsError) {
-        console.error("Order items creation error:", itemsError);
-        throw itemsError;
-      }
-
-      console.log("Order items created successfully:", orderItemsData);
+      if (itemsError) throw itemsError;
 
       // Clear cart
       await clearCart();
