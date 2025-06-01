@@ -42,8 +42,16 @@ export const useProductPreview = () => {
       console.log("Generating website preview for URL:", url);
       const imageUrl = await generateWebsitePreview(url);
       console.log("Website preview generated successfully, data URL length:", imageUrl?.length || 0);
-      setWebsitePreview(imageUrl);
-      return imageUrl;
+      
+      // Validate that we got a proper data URL
+      if (imageUrl && imageUrl.startsWith('data:image/')) {
+        setWebsitePreview(imageUrl);
+        console.log("Website preview set successfully");
+        return imageUrl;
+      } else {
+        console.warn("Invalid image URL format received:", imageUrl?.substring(0, 100));
+        return null;
+      }
     } catch (err) {
       console.error("Failed to generate website preview:", err);
       // Don't fail completely, just return null for the preview
@@ -158,7 +166,7 @@ export const useProductPreview = () => {
       };
       
       console.log("Setting product preview:", preview);
-      console.log("Website preview image:", websitePreview ? "available" : "not available");
+      console.log("Website preview image set:", websitePreview ? "available" : "not available");
       setProductPreview(preview);
       setFetchProgress(100);
 
