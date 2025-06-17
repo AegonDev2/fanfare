@@ -9,6 +9,7 @@ import WhyUs from '@/components/landing/WhyUs';
 import Testimonials from '@/components/landing/Testimonials';
 import Footer from '@/components/landing/Footer';
 import FAQ from '@/components/landing/FAQ';
+import LeaderboardWidget from '@/components/landing/LeaderboardWidget';
 
 export default function Landing() {
   const [navOpen, setNavOpen] = useState(false);
@@ -63,6 +64,9 @@ export default function Landing() {
       <Testimonials />
       <FAQ />
       <Footer />
+      
+      {/* Fixed Leaderboard Widget */}
+      <LeaderboardWidget />
     </div>
   );
 }
