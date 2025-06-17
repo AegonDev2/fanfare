@@ -16,7 +16,7 @@ const MobileDock = ({
   const { user } = useUser();
   
   // Only show the mobile dock on pages other than landing
-  const showMobileDock = location.pathname !== "/";
+  const showMobileDock = location.pathname !== "/" && location.pathname !== "/landing";
   
   if (!showMobileDock) {
     return null;
@@ -25,32 +25,38 @@ const MobileDock = ({
   const dockItems = [{
     icon: Home,
     label: "Home",
-    path: "/"
+    path: "/",
+    action: () => navigate("/")
   }, {
     icon: Search,
-    label: "Search",
-    path: "/creators"
+    label: "Search", 
+    path: "/gift-selection",
+    action: () => navigate("/gift-selection")
   }, {
     icon: Gift,
     label: "Gifts",
-    path: user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent"
+    path: user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent",
+    action: () => navigate(user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent")
   }, {
     icon: User,
     label: "Profile",
-    path: "/profile"
+    path: "/profile",
+    action: () => navigate(`/profile/${user?.id || ''}`)
   }, {
     icon: Menu,
     label: "Menu",
+    path: "",
     action: () => setNavOpen(true)
   }];
   
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === path;
+    if (path === "") return false; // Menu button is never active
     return location.pathname.startsWith(path);
   };
   
   return <div className="fixed bottom-0 left-0 right-0 md:hidden z-50 backdrop-blur-md border-t border-slate-700/30 bg-slate-950/80 flex justify-around items-center py-[8px] my-0 px-0">
-      {dockItems.map((item, index) => <div key={index} className={cn("flex flex-col items-center justify-center pt-1 pb-1 px-2 rounded-full transition-all duration-300", isActive(item.path) && "bg-funky-purple/20")} onClick={item.action ? item.action : () => navigate(item.path)}>
+      {dockItems.map((item, index) => <div key={index} className={cn("flex flex-col items-center justify-center pt-1 pb-1 px-2 rounded-full transition-all duration-300", isActive(item.path) && "bg-funky-purple/20")} onClick={item.action}>
           <item.icon className={cn("h-4 w-4 mb-1", isActive(item.path) ? "text-funky-purple" : "text-gray-300")} />
           <span className={cn("text-[10px] font-medium", isActive(item.path) ? "text-funky-purple" : "text-gray-300")}>
             {item.label}

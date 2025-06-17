@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, User, Bell, X } from "lucide-react";
@@ -7,9 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import WalletWidget from "@/components/wallet/WalletWidget";
+
 interface FloatingHeaderProps {
   setNavOpen: (isOpen: boolean) => void;
 }
+
 const FloatingHeader = ({
   setNavOpen
 }: FloatingHeaderProps) => {
@@ -17,21 +20,20 @@ const FloatingHeader = ({
   const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const {
-          data
-        } = await supabase.auth.getUser();
+        const { data } = await supabase.auth.getUser();
         setUser(data?.user || null);
       } catch (error) {
         console.error("Error checking user:", error);
       }
     };
+    
     checkUser();
+    
     const handleScroll = () => {
       if (window.scrollY > 20) {
         setIsScrolled(true);
@@ -39,15 +41,15 @@ const FloatingHeader = ({
         setIsScrolled(false);
       }
     };
+    
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   const handleSignOut = async () => {
     setIsLoading(true);
     try {
-      const {
-        error
-      } = await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast({
         title: "Signed out successfully",
@@ -65,6 +67,7 @@ const FloatingHeader = ({
       setIsLoading(false);
     }
   };
+
   return <header className={cn("fixed top-0 left-0 right-0 z-40 transition-all duration-300", isScrolled ? "py-2" : "py-4")}>
       <div className="bg-transparent">
         <div className="flex items-center justify-between h-16 bg-cyan-950/85 backdrop-blur-md px-0 mx-[7px] rounded-full py-0 my-0">
@@ -72,11 +75,11 @@ const FloatingHeader = ({
             <Button variant="ghost" size="icon" onClick={() => setNavOpen(true)} className="mr-2 hover:bg-funky-purple/10 text-slate-100 px-0 mx-[17px]">
               <Menu className="h-6 w-6" />
             </Button>
-            <a href="/" className="flex items-center">
+            <button onClick={() => navigate("/")} className="flex items-center">
               <span className="text-2xl font-graffiti bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-slate-50">
                 FanFare
               </span>
-            </a>
+            </button>
           </div>
 
           <div className="hidden md:flex space-x-2 items-center">
@@ -114,4 +117,5 @@ const FloatingHeader = ({
       </div>
     </header>;
 };
+
 export default FloatingHeader;
