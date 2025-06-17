@@ -5,14 +5,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Gift, ShoppingCart, ChevronRight, Loader2, X } from 'lucide-react';
+import { Gift, ChevronRight, Loader2, X } from 'lucide-react';
 import Header from '@/components/landing/Header';
 import GiftSection from '@/components/landing/GiftSection';
 import InfluencerSelector from '@/components/gift-selection/InfluencerSelector';
 import GiftMessage from '@/components/gift-selection/GiftMessage';
 import { useGiftItems, GiftItem } from '@/hooks/useGiftItems';
-import { useCart } from '@/hooks/useCart';
 import { useUser } from '@/hooks/useUser';
 
 interface WishlistItemData {
@@ -37,7 +35,6 @@ export default function GiftSelection() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { getGiftById } = useGiftItems();
-  const { addToCart, itemCount } = useCart();
   const { user } = useUser();
   
   const giftId = searchParams.get('gift');
@@ -139,7 +136,7 @@ export default function GiftSelection() {
     };
   }, [loadGift, fetchAttempted, giftId]);
   
-  const handleAddToCart = useCallback(async () => {
+  const handleGiftThis = useCallback(async () => {
     if (!gift) {
       toast({
         title: 'Error',
@@ -162,38 +159,26 @@ export default function GiftSelection() {
     if (!user) {
       toast({
         title: 'Authentication Required',
-        description: 'Please log in to add items to your cart',
+        description: 'Please log in to send gifts',
         variant: 'destructive',
       });
       navigate('/auth');
       return;
     }
     
-    console.log("handleAddToCart called with:", { gift, selectedInfluencerId, giftMessage });
+    console.log("handleGiftThis called with:", { gift, selectedInfluencerId, giftMessage });
     
-    try {
-      await addToCart({
-        gift_id: gift.id,
-        gift_name: gift.name,
-        gift_price: gift.price,
-        gift_image_url: gift.image_url,
-        gift_description: gift.description,
-        gift_url: gift.gift_url,
-        influencer_id: selectedInfluencerId,
-        message: giftMessage
-      });
-      
-      // Clear selection state
-      setSelectedInfluencerId(null);
-      setGiftMessage('');
-      
-      // Redirect to cart
-      navigate('/cart');
-    } catch (err) {
-      console.error("Error in cart update process:", err);
-    }
+    // Navigate to place order page with gift data
+    const params = new URLSearchParams({
+      gift: gift.gift_url || gift.image_url || '',
+      influencer: selectedInfluencerId,
+      giftId: gift.id,
+      message: giftMessage || ''
+    });
     
-  }, [gift, selectedInfluencerId, giftMessage, addToCart, navigate, toast, user]);
+    navigate(`/place-order?${params.toString()}`);
+    
+  }, [gift, selectedInfluencerId, giftMessage, navigate, toast, user]);
   
   // Create loading and error UI components using memoization
   const loadingContent = useMemo(() => (
@@ -240,22 +225,8 @@ export default function GiftSelection() {
     <div className="min-h-screen bg-gray-100">
       <Header />
       <div className="container mx-auto px-4 pt-20 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3 mb-6">
           <h1 className="text-2xl font-bold">Send a Gift</h1>
-          
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => navigate('/cart')}
-          >
-            <ShoppingCart className="h-4 w-4" />
-            <span>Cart</span>
-            {itemCount > 0 && (
-              <Badge variant="secondary" className="ml-1 bg-funky-purple text-white">
-                {itemCount}
-              </Badge>
-            )}
-          </Button>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -381,22 +352,14 @@ export default function GiftSelection() {
                 </Tabs>
               </CardContent>
               
-              <CardFooter className="flex flex-col space-y-4">
+              <CardFooter>
                 <Button
                   className="w-full bg-gradient-to-r from-funky-purple to-funky-pink text-white"
-                  onClick={handleAddToCart}
+                  onClick={handleGiftThis}
                   disabled={!gift || !selectedInfluencerId || !user}
                 >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Add to Cart
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => navigate('/cart')}
-                >
-                  View Cart ({itemCount})
+                  <Gift className="h-4 w-4 mr-2" />
+                  Gift This
                 </Button>
               </CardFooter>
             </Card>

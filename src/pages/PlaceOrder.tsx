@@ -10,6 +10,7 @@ import { useOrderSubmission } from "@/hooks/use-order-submission";
 import { InfluencerAddress } from "@/types/order";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useGiftItems } from "@/hooks/useGiftItems";
 
 interface PlaceOrderProps {
   setNavOpen?: (isOpen: boolean) => void;
@@ -37,9 +38,13 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
   const [influencerAddress, setInfluencerAddress] = useState<InfluencerAddress | null>(null);
   const [giftItem, setGiftItem] = useState(searchParams.get("gift") || "");
   const influencerId = searchParams.get("influencer") || "";
-  const [message, setMessage] = useState("");
+  const giftId = searchParams.get("giftId") || "";
+  const [message, setMessage] = useState(searchParams.get("message") || "");
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
   const [autoProcessed, setAutoProcessed] = useState(false);
+  const [isGiftFromDatabase, setIsGiftFromDatabase] = useState(false);
+
+  const { getGiftById } = useGiftItems();
 
   const { 
     productPreview, 
@@ -67,15 +72,50 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
     }
   }, [influencerId]);
 
-  // If there's a URL in the search params, automatically process it
+  // Check if this is a gift from database and load its data
+  useEffect(() => {
+    const loadGiftFromDatabase = async () => {
+      if (giftId && giftId !== 'custom-wishlist-item') {
+        try {
+          console.log("Loading gift from database:", giftId);
+          const giftData = await getGiftById(giftId);
+          
+          if (giftData) {
+            console.log("Gift data loaded:", giftData);
+            setIsGiftFromDatabase(true);
+            
+            // Create product preview from gift data
+            const preview = {
+              name: giftData.name,
+              price: giftData.price.toString(),
+              priceInr: giftData.price,
+              image: giftData.image_url,
+              description: giftData.description || "",
+              platformFee: 5, // Standard platform fee
+              url: giftData.gift_url || giftItem
+            };
+            
+            setProductPreview(preview);
+            setAutoProcessed(true);
+          }
+        } catch (error) {
+          console.error("Error loading gift from database:", error);
+        }
+      }
+    };
+
+    loadGiftFromDatabase();
+  }, [giftId, getGiftById, setProductPreview, giftItem]);
+
+  // If there's a URL in the search params and it's not a gift from database, automatically process it
   useEffect(() => {
     const urlParam = searchParams.get("gift");
-    if (urlParam && !autoProcessed && !isFetchingProduct && !productPreview) {
+    if (urlParam && !autoProcessed && !isFetchingProduct && !productPreview && !isGiftFromDatabase) {
       console.log("Auto-processing product URL from params:", urlParam);
       setAutoProcessed(true);
       handleProcessProduct();
     }
-  }, [searchParams, autoProcessed, isFetchingProduct, productPreview]);
+  }, [searchParams, autoProcessed, isFetchingProduct, productPreview, isGiftFromDatabase]);
 
   const fetchInfluencerAddress = async () => {
     try {
@@ -143,7 +183,6 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       return;
     }
     
-    // No longer require a valid product preview
     await submitOrder(giftItem, message, influencerId, productPreview, influencerAddress);
   };
 
@@ -179,14 +218,17 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
       <div className="container mx-auto px-4 py-6 pb-24">
         {renderErrorMessage()}
         
-        <ProductUrlInput
-          giftItem={giftItem}
-          onUrlChange={handleUrlChange}
-          onPreviewClick={handleProcessProduct}
-          isFetchingProduct={isFetchingProduct}
-          fetchProgress={fetchProgress}
-          isGeneratingPreview={isGeneratingPreview}
-        />
+        {/* Only show URL input if this is not a gift from database */}
+        {!isGiftFromDatabase && (
+          <ProductUrlInput
+            giftItem={giftItem}
+            onUrlChange={handleUrlChange}
+            onPreviewClick={handleProcessProduct}
+            isFetchingProduct={isFetchingProduct}
+            fetchProgress={fetchProgress}
+            isGeneratingPreview={isGeneratingPreview}
+          />
+        )}
 
         <ProductPreview
           productPreview={productPreview}
