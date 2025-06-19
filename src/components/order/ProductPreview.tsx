@@ -8,7 +8,6 @@ import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import ImageViewer from "@/components/common/ImageViewer";
-
 interface ProductPreviewProps {
   productPreview: ProductDetails | null;
   influencerAddress: InfluencerAddress | null;
@@ -20,7 +19,6 @@ interface ProductPreviewProps {
   giftUrl?: string;
   websitePreview?: string | null;
 }
-
 const ProductPreview = ({
   productPreview,
   influencerAddress,
@@ -47,7 +45,6 @@ const ProductPreview = ({
       setProductProcessed(true);
     }
   }, [isPreviewAvailable]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === "message" || !isPreviewAvailable) {
@@ -56,7 +53,6 @@ const ProductPreview = ({
       setActiveTab("message");
     }
   };
-
   if (paymentStep === 'complete') {
     return <div className="bg-white p-6 shadow-md rounded-lg mt-8 max-w-md mx-auto">
         <div className="flex flex-col items-center text-center">
@@ -90,29 +86,15 @@ const ProductPreview = ({
           <Image className="h-4 w-4 mr-2 text-gray-500" />
           <span className="text-sm font-medium text-gray-600">Website Preview</span>
         </div>
-        {giftUrl && (
-          <a
-            href={giftUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
-          >
+        {giftUrl && <a href={giftUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:text-blue-700 flex items-center">
             View Site <LinkIcon className="h-3 w-3 ml-1" />
-          </a>
-        )}
+          </a>}
       </div>
       
       <div className="aspect-video relative bg-gray-50">
-        {websitePreview ? (
-          <ImageViewer 
-            imageUrl={websitePreview} 
-            alt="Website preview" 
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full">
+        {websitePreview ? <ImageViewer imageUrl={websitePreview} alt="Website preview" /> : <div className="flex items-center justify-center h-full">
             <p className="text-sm text-gray-400">Preview not available</p>
-          </div>
-        )}
+          </div>}
       </div>
     </div>;
   };
@@ -189,14 +171,7 @@ const ProductPreview = ({
           <div className="bg-white p-6 shadow-md rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                {isPreviewAvailable && productPreview?.image && !productPreview.image.startsWith("https://placehold.co") ? (
-                  <ImageViewer 
-                    imageUrl={productPreview.image} 
-                    alt={productPreview.name} 
-                  />
-                ) : (
-                  <WebsitePreviewComponent />
-                )}
+                {isPreviewAvailable && productPreview?.image && !productPreview.image.startsWith("https://placehold.co") ? <ImageViewer imageUrl={productPreview.image} alt={productPreview.name} /> : <WebsitePreviewComponent />}
               </div>
               <div className="flex flex-col justify-between">
                 <div>
@@ -241,7 +216,7 @@ const ProductPreview = ({
             <h3 className="text-lg font-medium mb-4 text-slate-950">Add a Personal Message</h3>
             <Textarea placeholder="Write a personal message to the influencer..." value={message} onChange={e => onMessageChange(e.target.value)} rows={6} disabled={isLoading} className="mb-6 bg-slate-50" />
             
-            <div className="p-4 rounded-md mb-6 bg-stone-900">
+            <div className="p-4 rounded-md mb-6 bg-zinc-200">
               <div className="flex items-center mb-4">
                 <Wallet className="h-5 w-5 mr-2 text-primary" />
                 <span className="font-semibold">Payment via Wallet</span>
@@ -275,5 +250,4 @@ const ProductPreview = ({
       </Tabs>
     </div>;
 };
-
 export default ProductPreview;
