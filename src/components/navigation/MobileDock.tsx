@@ -40,8 +40,8 @@ const MobileDock = ({
   }, {
     icon: User,
     label: "Profile",
-    path: "/profile",
-    action: () => navigate(`/profile/${user?.id || ''}`)
+    path: user ? `/profile/${user.id}` : "/profile",
+    action: () => navigate(user ? `/profile/${user.id}` : "/profile")
   }, {
     icon: Menu,
     label: "Menu",

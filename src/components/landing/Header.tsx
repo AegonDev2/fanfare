@@ -35,10 +35,9 @@ const Header = ({
   }, []);
 
   const handleNavToggle = () => {
-    setIsOpen(!isOpen);
-    if (setNavOpen) {
-      setNavOpen(!isOpen);
-    }
+    const newState = !isOpen;
+    setIsOpen(newState);
+    setNavOpen(newState);
   };
 
   const handleSignOut = async () => {
@@ -69,7 +68,7 @@ const Header = ({
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
-              <FloatingHeader setNavOpen={setNavOpen} />
+              <FloatingHeader setNavOpen={handleNavToggle} />
             </div>
 
             <div className="flex items-center space-x-4">
@@ -85,7 +84,7 @@ const Header = ({
       {/* Navbar that slides in from the side */}
       <Navbar isOpen={isOpen} setIsOpen={setIsOpen} />
       
-      {isMobile && <MobileDock setNavOpen={setNavOpen} />}
+      {isMobile && <MobileDock setNavOpen={handleNavToggle} />}
     </>
   );
 };
