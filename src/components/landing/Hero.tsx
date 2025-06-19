@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Gift, Heart } from 'lucide-react';
+import { Gift } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import HeroCarousel from './HeroCarousel';
 
@@ -15,32 +15,22 @@ const Hero = () => {
         <HeroCarousel />
         
         <div className="text-center max-w-4xl mx-auto mt-8">
-          <h1 className="text-3xl md:text-5xl font-bold font-display mb-6 bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold font-display mb-4 md:mb-6 bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent">
             Send Gifts to Your Favorite Influencers
           </h1>
           
-          <p className="text-lg md:text-xl text-gray-600 mb-8 font-body max-w-3xl mx-auto">
+          <p className="text-base md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8 font-body max-w-3xl mx-auto">
             Connect with influencers through meaningful gifts. Support creators you love and build genuine relationships in the digital space.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button 
               size="lg"
-              className="bg-gradient-to-r from-funky-purple to-funky-pink text-white hover:from-funky-purple/90 hover:to-funky-pink/90 transform hover:scale-105 transition-all duration-200"
+              className="bg-gradient-to-r from-funky-purple to-funky-pink text-white hover:from-funky-purple/90 hover:to-funky-pink/90 transform hover:scale-105 transition-all duration-200 text-sm md:text-base px-6 md:px-8"
               onClick={() => navigate('/gift-selection')}
             >
-              <Gift className="h-5 w-5 mr-2" />
+              <Gift className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               Start Gifting
-            </Button>
-            
-            <Button 
-              size="lg"
-              variant="outline"
-              className="border-funky-purple text-funky-purple hover:bg-funky-purple hover:text-white transition-all duration-200"
-              onClick={() => navigate('/leaderboard')}
-            >
-              <Heart className="h-5 w-5 mr-2" />
-              Top Fans
             </Button>
           </div>
         </div>

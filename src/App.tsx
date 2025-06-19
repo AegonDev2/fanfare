@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Index from '@/pages/Index';
-import Auth from '@/pages/Auth';
 import Landing from '@/pages/Landing';
+import Auth from '@/pages/Auth';
+import Index from '@/pages/Index';
 import GiftSelection from '@/pages/GiftSelection';
 import PlaceOrder from '@/pages/PlaceOrder';
 import OrderSuccess from '@/pages/OrderSuccess';
@@ -27,9 +27,9 @@ function App() {
     <Router>
       <div className="min-h-screen bg-background">
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/landing" element={<Landing />} />
+          <Route path="/index" element={<Index />} />
           <Route path="/gift-selection" element={<GiftSelection />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/place-order" element={<PlaceOrder />} />

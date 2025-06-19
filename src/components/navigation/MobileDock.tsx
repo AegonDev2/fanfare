@@ -16,7 +16,7 @@ const MobileDock = ({
   const { user } = useUser();
   
   // Only show the mobile dock on pages other than landing
-  const showMobileDock = location.pathname !== "/" && location.pathname !== "/landing";
+  const showMobileDock = location.pathname !== "/";
   
   if (!showMobileDock) {
     return null;
