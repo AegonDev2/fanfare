@@ -15,10 +15,10 @@ const MobileDock = ({
   const location = useLocation();
   const { user } = useUser();
   
-  // Only show the mobile dock on pages other than landing
-  const showMobileDock = location.pathname !== "/";
+  // Hide mobile dock only on auth page
+  const hideMobileDock = location.pathname === "/auth";
   
-  if (!showMobileDock) {
+  if (hideMobileDock) {
     return null;
   }
   

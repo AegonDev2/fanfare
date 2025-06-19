@@ -46,8 +46,8 @@ const HeroCarousel = () => {
   if (isLoading) {
     return (
       <div className="relative pb-2 pt-2 sm:pb-4 sm:pt-6 mx-0 overflow-hidden">
-        <div className="w-full max-w-3xl lg:max-w-4xl mx-auto px-1">
-          <Skeleton className="w-full h-32 sm:h-48 lg:h-56 rounded-lg" />
+        <div className="w-full max-w-3xl lg:max-w-2xl mx-auto px-1">
+          <Skeleton className="w-full h-32 sm:h-48 lg:h-40 rounded-lg" />
         </div>
       </div>
     );
@@ -64,7 +64,7 @@ const HeroCarousel = () => {
           loop: true,
           align: "center"
         }}
-        className="w-full max-w-3xl lg:max-w-4xl mx-auto"
+        className="w-full max-w-3xl lg:max-w-2xl mx-auto"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         ref={carouselRef}
@@ -81,11 +81,11 @@ const HeroCarousel = () => {
                     className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-1000"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-4 flex flex-col items-start justify-end z-20">
-                    <h3 className="text-white text-sm lg:text-base font-bold mb-0.5 sm:mb-1 font-display">
+                    <h3 className="text-white text-sm lg:text-sm font-bold mb-0.5 sm:mb-1 font-display">
                       {slide.title}
                     </h3>
                     {slide.subtitle && (
-                      <p className="text-white/80 text-xs lg:text-sm max-w-lg line-clamp-2">
+                      <p className="text-white/80 text-xs lg:text-xs max-w-lg line-clamp-2">
                         {slide.subtitle}
                       </p>
                     )}
@@ -98,11 +98,11 @@ const HeroCarousel = () => {
         
         <CarouselPrevious
           onClick={previousSlide}
-          className="left-1 h-6 w-6 lg:h-8 lg:w-8 bg-white/20 backdrop-blur-md border-white/10 hover:bg-white/40 text-white"
+          className="left-1 h-6 w-6 lg:h-7 lg:w-7 bg-white/20 backdrop-blur-md border-white/10 hover:bg-white/40 text-white"
         />
         <CarouselNext
           onClick={nextSlide}
-          className="right-1 h-6 w-6 lg:h-8 lg:w-8 bg-white/20 backdrop-blur-md border-white/10 hover:bg-white/40 text-white"
+          className="right-1 h-6 w-6 lg:h-7 lg:w-7 bg-white/20 backdrop-blur-md border-white/10 hover:bg-white/40 text-white"
         />
       </Carousel>
     </div>

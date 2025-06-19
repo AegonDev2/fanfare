@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Landing from '@/pages/Landing';
 import Auth from '@/pages/Auth';
@@ -21,8 +21,11 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import AdminOrderDetails from '@/pages/AdminOrderDetails';
 import NotFound from '@/pages/NotFound';
 import Cart from '@/pages/Cart';
+import MobileDock from '@/components/navigation/MobileDock';
 
 function App() {
+  const [navOpen, setNavOpen] = useState(false);
+
   return (
     <Router>
       <div className="min-h-screen bg-background">
@@ -48,6 +51,7 @@ function App() {
           <Route path="/admin/order/:orderId" element={<AdminOrderDetails />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <MobileDock setNavOpen={setNavOpen} />
       </div>
     </Router>
   );
