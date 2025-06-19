@@ -84,7 +84,7 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
             console.log("Gift data loaded:", giftData);
             setIsGiftFromDatabase(true);
             
-            // Create product preview from gift data
+            // Create product preview from gift data without calling edge functions
             const preview = {
               name: giftData.name,
               price: giftData.price.toString(),
@@ -97,6 +97,8 @@ const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
             
             setProductPreview(preview);
             setAutoProcessed(true);
+            
+            console.log("Product preview set from database without edge function calls:", preview);
           }
         } catch (error) {
           console.error("Error loading gift from database:", error);
