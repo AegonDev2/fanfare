@@ -179,7 +179,7 @@ const InfluencerSection = ({
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2 mx-1">
           <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-gray-900 text-lg lg:text-xl font-semibold">Discover Influencers</h2>
           
-          <div ref={searchInputRef} className="relative w-full md:w-auto py-[6px] bg-rose-100/0">
+          <div ref={searchInputRef} className="relative w-full md:w-auto py-[6px] bg-rose-100/0 px-0 mx-[700px]">
             <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} className="w-full md:w-64 lg:w-72 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs lg:text-sm shadow-sm bg-zinc-100" />
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 lg:h-4 lg:w-4 text-funky-purple/60" />
             
