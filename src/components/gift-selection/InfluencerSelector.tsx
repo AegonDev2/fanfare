@@ -1,22 +1,11 @@
 
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, Gift, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-
-interface Influencer {
-  id: string;
-  name: string;
-  platform: string;
-  followers: number;
-  profile_image: string | null;
-  about: string | null;
-}
+import { useInfluencers, DatabaseInfluencer } from '@/hooks/useInfluencers';
 
 interface InfluencerSelectorProps {
   onSelect: (influencerId: string) => void;
@@ -24,43 +13,10 @@ interface InfluencerSelectorProps {
 }
 
 export default function InfluencerSelector({ onSelect, selectedInfluencerId }: InfluencerSelectorProps) {
-  const [influencers, setInfluencers] = useState<Influencer[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const { toast } = useToast();
+  const { data: influencers = [], isLoading } = useInfluencers(searchQuery);
 
-  useEffect(() => {
-    async function fetchInfluencers() {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('influencer_profiles')
-          .select('*')
-          .order('followers', { ascending: false });
-
-        if (error) throw error;
-        
-        setInfluencers(data || []);
-      } catch (error: any) {
-        console.error('Error fetching influencers:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load influencers',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchInfluencers();
-  }, [toast]);
-
-  const filteredInfluencers = influencers.filter(
-    (influencer) => influencer.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-8">
         <Loader2 className="h-8 w-8 text-funky-purple animate-spin" />
@@ -81,13 +37,13 @@ export default function InfluencerSelector({ onSelect, selectedInfluencerId }: I
         />
       </div>
 
-      {filteredInfluencers.length === 0 ? (
+      {influencers.length === 0 ? (
         <div className="text-center py-8 border rounded-md border-dashed border-gray-300">
           <p className="text-gray-500">No influencers found</p>
         </div>
       ) : (
         <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-          {filteredInfluencers.map((influencer) => (
+          {influencers.map((influencer) => (
             <div
               key={influencer.id}
               className={cn(
@@ -107,7 +63,10 @@ export default function InfluencerSelector({ onSelect, selectedInfluencerId }: I
               
               <div className="flex-1">
                 <h4 className="font-medium">{influencer.name}</h4>
-                <p className="text-xs text-gray-500">{influencer.platform} • {influencer.followers} followers</p>
+                <p className="text-xs text-gray-500">
+                  {influencer.platform} • {influencer.followers.toLocaleString()} followers
+                  {influencer.category && ` • ${influencer.category}`}
+                </p>
               </div>
               
               {selectedInfluencerId === influencer.id && (

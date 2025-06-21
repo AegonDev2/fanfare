@@ -45,84 +45,6 @@ export type Database = {
         }
         Relationships: []
       }
-      cart_items: {
-        Row: {
-          created_at: string
-          gift_description: string | null
-          gift_id: string | null
-          gift_image_url: string | null
-          gift_name: string
-          gift_price: number
-          gift_url: string | null
-          id: string
-          influencer_id: string
-          message: string | null
-          quantity: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          gift_description?: string | null
-          gift_id?: string | null
-          gift_image_url?: string | null
-          gift_name: string
-          gift_price: number
-          gift_url?: string | null
-          id?: string
-          influencer_id: string
-          message?: string | null
-          quantity?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          gift_description?: string | null
-          gift_id?: string | null
-          gift_image_url?: string | null
-          gift_name?: string
-          gift_price?: number
-          gift_url?: string | null
-          id?: string
-          influencer_id?: string
-          message?: string | null
-          quantity?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ecommerce_credentials: {
-        Row: {
-          created_at: string
-          encrypted_password: string
-          id: string
-          is_active: boolean | null
-          platform: Database["public"]["Enums"]["ecommerce_platform"]
-          updated_at: string
-          username: string
-        }
-        Insert: {
-          created_at?: string
-          encrypted_password: string
-          id?: string
-          is_active?: boolean | null
-          platform: Database["public"]["Enums"]["ecommerce_platform"]
-          updated_at?: string
-          username: string
-        }
-        Update: {
-          created_at?: string
-          encrypted_password?: string
-          id?: string
-          is_active?: boolean | null
-          platform?: Database["public"]["Enums"]["ecommerce_platform"]
-          updated_at?: string
-          username?: string
-        }
-        Relationships: []
-      }
       gift_order_items: {
         Row: {
           created_at: string
@@ -391,6 +313,7 @@ export type Database = {
       influencer_profiles: {
         Row: {
           about: string | null
+          category: string | null
           created_at: string
           facebook_url: string | null
           followers: number
@@ -407,6 +330,7 @@ export type Database = {
         }
         Insert: {
           about?: string | null
+          category?: string | null
           created_at?: string
           facebook_url?: string | null
           followers?: number
@@ -423,6 +347,7 @@ export type Database = {
         }
         Update: {
           about?: string | null
+          category?: string | null
           created_at?: string
           facebook_url?: string | null
           followers?: number
