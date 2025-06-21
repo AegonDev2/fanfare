@@ -1,68 +1,72 @@
 
-import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Gift, User, Search, Menu } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useUser } from "@/hooks/useUser";
+import { useState } from 'react';
+import { Home, Search, ShoppingBag, User, Menu } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import CartIcon from '@/components/cart/CartIcon';
 
 interface MobileDockProps {
-  setNavOpen: (isOpen: boolean) => void;
+  setNavOpen?: (open: boolean) => void;
 }
 
-const MobileDock = ({
-  setNavOpen
-}: MobileDockProps) => {
-  const navigate = useNavigate();
+export default function MobileDock({ setNavOpen }: MobileDockProps) {
   const location = useLocation();
-  const { user } = useUser();
-  
-  // Hide mobile dock only on auth page
-  const hideMobileDock = location.pathname === "/auth";
-  
-  if (hideMobileDock) {
-    return null;
-  }
-  
-  const dockItems = [{
-    icon: Home,
-    label: "Home",
-    path: "/",
-    action: () => navigate("/")
-  }, {
-    icon: Search,
-    label: "Search", 
-    path: "/gift-selection",
-    action: () => navigate("/gift-selection")
-  }, {
-    icon: Gift,
-    label: "Gifts",
-    path: user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent",
-    action: () => navigate(user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent")
-  }, {
-    icon: User,
-    label: "Profile",
-    path: user ? `/profile/${user.id}` : "/profile",
-    action: () => navigate(user ? `/profile/${user.id}` : "/profile")
-  }, {
-    icon: Menu,
-    label: "Menu",
-    path: "",
-    action: () => setNavOpen(true)
-  }];
-  
-  const isActive = (path: string) => {
-    if (path === "/") return location.pathname === path;
-    if (path === "") return false; // Menu button is never active
-    return location.pathname.startsWith(path);
-  };
-  
-  return <div className="fixed bottom-0 left-0 right-0 md:hidden z-50 backdrop-blur-md border-t border-slate-700/30 bg-slate-950/80 flex justify-around items-center py-[8px] my-0 px-0">
-      {dockItems.map((item, index) => <div key={index} className={cn("flex flex-col items-center justify-center pt-1 pb-1 px-2 rounded-full transition-all duration-300", isActive(item.path) && "bg-funky-purple/20")} onClick={item.action}>
-          <item.icon className={cn("h-4 w-4 mb-1", isActive(item.path) ? "text-funky-purple" : "text-gray-300")} />
-          <span className={cn("text-[10px] font-medium", isActive(item.path) ? "text-funky-purple" : "text-gray-300")}>
-            {item.label}
-          </span>
-        </div>)}
-    </div>;
-};
+  const navigate = useNavigate();
+  const [localNavOpen, setLocalNavOpen] = useState(false);
 
-export default MobileDock;
+  const handleNavToggle = () => {
+    if (setNavOpen) {
+      setNavOpen(!localNavOpen);
+      setLocalNavOpen(!localNavOpen);
+    }
+  };
+
+  const navItems = [
+    { icon: Home, label: 'Home', path: '/home' },
+    { icon: Search, label: 'Influencers', path: '/influencers' },
+    { icon: ShoppingBag, label: 'Gifts', path: '/gift-selection' },
+    { icon: User, label: 'Profile', path: '/profile' },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50 md:hidden">
+      <div className="flex items-center justify-around">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          
+          return (
+            <Button
+              key={item.path}
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "flex flex-col items-center gap-1 h-auto py-2 px-3",
+                isActive && "text-purple-600"
+              )}
+              onClick={() => navigate(item.path)}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-xs">{item.label}</span>
+            </Button>
+          );
+        })}
+        
+        <CartIcon />
+        
+        {setNavOpen && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex flex-col items-center gap-1 h-auto py-2 px-3"
+            onClick={handleNavToggle}
+          >
+            <Menu className="h-5 w-5" />
+            <span className="text-xs">Menu</span>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
