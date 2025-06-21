@@ -100,9 +100,9 @@ const PaymentForm = ({
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="pt-6 flex flex-col items-center">
           <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
-          <h3 className="text-lg font-semibold">Payment Successful</h3>
+          <h3 className="text-lg font-semibold">Order Submitted Successfully</h3>
           <p className="text-sm text-gray-500 mt-2">
-            Your payment has been processed successfully. Processing your gift request...
+            Your order has been submitted and is being processed.
           </p>
         </CardContent>
       </Card>
@@ -114,65 +114,22 @@ const PaymentForm = ({
       <CardHeader>
         <CardTitle className="flex items-center">
           <CreditCard className="mr-2 h-5 w-5" />
-          <span>Payment Details</span>
+          <span>Order Summary</span>
         </CardTitle>
         <CardDescription>
-          Enter your card information to complete the purchase
+          Review your order details
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="cardName">Name on Card</Label>
-            <Input
-              id="cardName"
-              placeholder="John Doe"
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value)}
-              required
-              disabled={isProcessing}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="cardNumber">Card Number</Label>
-            <Input
-              id="cardNumber"
-              placeholder="1234 5678 9012 3456"
-              value={cardNumber}
-              onChange={handleCardNumberChange}
-              required
-              disabled={isProcessing}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="expiryDate">Expiry Date</Label>
-              <Input
-                id="expiryDate"
-                placeholder="MM/YY"
-                value={expiryDate}
-                onChange={handleExpiryChange}
-                required
-                disabled={isProcessing}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cvv">CVV</Label>
-              <Input
-                id="cvv"
-                placeholder="123"
-                value={cvv}
-                onChange={handleCvvChange}
-                required
-                disabled={isProcessing}
-                type="password"
-              />
-            </div>
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="font-semibold text-lg">{productPreview.name}</h3>
+            <p className="text-gray-600">{productPreview.description}</p>
           </div>
 
           <div className="mt-6">
             <div className="flex justify-between mb-2 text-sm">
-              <span>Subtotal</span>
+              <span>Product Price</span>
               <span>₹{productPreview.priceInr.toFixed(2)}</span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
@@ -185,7 +142,7 @@ const PaymentForm = ({
               <span>₹{(productPreview.priceInr + productPreview.platformFee).toFixed(2)}</span>
             </div>
           </div>
-        </form>
+        </div>
       </CardContent>
       <CardFooter>
         <Button
@@ -193,7 +150,7 @@ const PaymentForm = ({
           onClick={handleSubmit}
           disabled={isProcessing}
         >
-          {isProcessing ? "Processing..." : "Pay Now"}
+          {isProcessing ? "Processing..." : "Place Order"}
         </Button>
       </CardFooter>
     </Card>

@@ -4,7 +4,6 @@ import { Home, Search, ShoppingBag, User, Menu } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import CartIcon from '@/components/cart/CartIcon';
 
 interface MobileDockProps {
   setNavOpen?: (open: boolean) => void;
@@ -52,8 +51,6 @@ export default function MobileDock({ setNavOpen }: MobileDockProps) {
             </Button>
           );
         })}
-        
-        <CartIcon />
         
         {setNavOpen && (
           <Button
