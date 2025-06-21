@@ -1,92 +1,135 @@
-
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import WalletWidget from "@/components/wallet/WalletWidget";
-import MobileDock from "@/components/navigation/MobileDock";
-import Navbar from "@/components/navigation/Navbar";
-import FloatingHeader from "@/components/ui/floating-header";
-import CartIcon from '@/components/cart/CartIcon';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/hooks/useUser';
+import MobileDock from '@/components/navigation/MobileDock';
 
 interface HeaderProps {
-  setNavOpen?: (isOpen: boolean) => void;
+  setNavOpen: (open: boolean) => void;
 }
 
-const Header = ({
-  setNavOpen = () => {}
-}: HeaderProps) => {
+export default function Header({ setNavOpen }: HeaderProps) {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const { toast } = useToast();
-  
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data?.user || null);
-    };
-    checkUser();
-  }, []);
+  const { user } = useUser();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleNavToggle = () => {
-    const newState = !isOpen;
-    setIsOpen(newState);
-    setNavOpen(newState);
+  const handleAuthAction = async () => {
+    if (user) {
+      await supabase.auth.signOut();
+      navigate('/');
+    } else {
+      navigate('/auth');
+    }
   };
 
-  const handleSignOut = async () => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      toast({
-        title: "Signed out successfully",
-        description: "You have been logged out of your account"
-      });
-      navigate("/");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast({
-        title: "Sign out failed",
-        description: "There was a problem signing you out. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+    setNavOpen(!mobileMenuOpen);
   };
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <FloatingHeader setNavOpen={handleNavToggle} />
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-funky-purple/10 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-funky-purple to-funky-pink rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">F</span>
+              </div>
+              <span className="font-display text-xl font-bold bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent">
+                FanFare
+              </span>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <CartIcon />
-              <Button onClick={handleSignOut} variant="ghost" className="h-8 w-8">
-                <X size={16} />
+            <nav className="hidden md:flex items-center space-x-6">
+              <a href="#influencers" className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium">
+                Influencers
+              </a>
+              <a href="#gifts" className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium">
+                Gifts
+              </a>
+              <a href="#how-it-works" className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium">
+                How it Works
+              </a>
+              <a href="#testimonials" className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium">
+                Testimonials
+              </a>
+            </nav>
+
+            <div className="flex items-center space-x-3">
+              <div className="hidden md:flex items-center space-x-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAuthAction}
+                  className="border-funky-purple/30 text-funky-purple hover:bg-funky-purple/10"
+                >
+                  {user ? 'Sign Out' : 'Sign In'}
+                </Button>
+                {user && (
+                  <Button
+                    size="sm"
+                    onClick={() => navigate('/home')}
+                    className="bg-gradient-to-r from-funky-purple to-funky-pink text-white hover:shadow-lg transition-all"
+                  >
+                    Dashboard
+                  </Button>
+                )}
+              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden"
+                onClick={toggleMobileMenu}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
             </div>
           </div>
+
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 border-t border-funky-purple/10 pt-4">
+              <nav className="flex flex-col space-y-3">
+                <a href="#influencers" className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium py-2">
+                  Influencers
+                </a>
+                <a href="#gifts" className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium py-2">
+                  Gifts
+                </a>
+                <a href="#how-it-works" className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium py-2">
+                  How it Works
+                </a>
+                <a href="#testimonials" className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium py-2">
+                  Testimonials
+                </a>
+                <div className="flex flex-col space-y-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAuthAction}
+                    className="border-funky-purple/30 text-funky-purple hover:bg-funky-purple/10"
+                  >
+                    {user ? 'Sign Out' : 'Sign In'}
+                  </Button>
+                  {user && (
+                    <Button
+                      size="sm"
+                      onClick={() => navigate('/home')}
+                      className="bg-gradient-to-r from-funky-purple to-funky-pink text-white hover:shadow-lg transition-all"
+                    >
+                      Dashboard
+                    </Button>
+                  )}
+                </div>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
-      
-      {/* Navbar that slides in from the side */}
-      <Navbar isOpen={isOpen} setIsOpen={setIsOpen} />
-      
-      {isMobile && <MobileDock setNavOpen={handleNavToggle} />}
+      <MobileDock />
     </>
   );
-};
-
-export default Header;
+}

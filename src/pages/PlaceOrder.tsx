@@ -1,251 +1,261 @@
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import ProductUrlInput from "@/components/order/ProductUrlInput";
-import ProductPreview from "@/components/order/ProductPreview";
-import { useProductPreview } from "@/hooks/use-product-preview";
-import { useOrderSubmission } from "@/hooks/use-order-submission";
-import { InfluencerAddress } from "@/types/order";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useGiftItems } from "@/hooks/useGiftItems";
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Gift, User } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/hooks/useUser';
+import ProductUrlInput from '@/components/order/ProductUrlInput';
+import ProductPreview from '@/components/order/ProductPreview';
+import GiftMessage from '@/components/gift-selection/GiftMessage';
+import InfluencerSelector from '@/components/gift-selection/InfluencerSelector';
+import PaymentForm from '@/components/payment/PaymentForm';
+import { useProductPreview } from '@/hooks/use-product-preview';
+import { useOrderSubmission } from '@/hooks/use-order-submission';
+import { useInfluencerProfile } from '@/hooks/useInfluencerProfile';
+import { ProductDetails, InfluencerAddress } from '@/types/order';
 
-interface PlaceOrderProps {
-  setNavOpen?: (isOpen: boolean) => void;
-}
-
-interface SupabaseAddress {
-  id: string;
-  influencer_id: string;
-  street_address: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-  created_at: string;
-  is_primary: boolean;
-  name?: string;
-  address_line1?: string;
-  address_line2?: string;
-  phone?: string;
-}
-
-const PlaceOrder = ({ setNavOpen }: PlaceOrderProps) => {
-  const [searchParams, setSearchParams] = useSearchParams();
+export default function PlaceOrder() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useUser();
   const { toast } = useToast();
-  const [influencerAddress, setInfluencerAddress] = useState<InfluencerAddress | null>(null);
-  const [giftItem, setGiftItem] = useState(searchParams.get("gift") || "");
-  const influencerId = searchParams.get("influencer") || "";
-  const giftId = searchParams.get("giftId") || "";
-  const [message, setMessage] = useState(searchParams.get("message") || "");
-  const [isLoadingAddress, setIsLoadingAddress] = useState(false);
-  const [autoProcessed, setAutoProcessed] = useState(false);
-  const [isGiftFromDatabase, setIsGiftFromDatabase] = useState(false);
+  
+  const [selectedInfluencerId, setSelectedInfluencerId] = useState<string | null>(
+    searchParams.get('influencer')
+  );
+  const [giftUrl, setGiftUrl] = useState('');
+  const [message, setMessage] = useState('');
+  const [currentStep, setCurrentStep] = useState<'select' | 'preview' | 'payment'>('select');
 
-  const { getGiftById } = useGiftItems();
-
-  const { 
-    productPreview, 
-    setProductPreview,
-    isFetchingProduct, 
-    fetchProgress, 
-    handlePreviewProduct,
-    error: productPreviewError,
-    resetExtractionState,
-    websitePreview,
-    isGeneratingPreview
-  } = useProductPreview();
-
+  const { data: productPreview, isLoading: productLoading, fetchPreview } = useProductPreview();
   const { isLoading, paymentStep, orderError, submitOrder } = useOrderSubmission();
+  const { data: influencerProfile } = useInfluencerProfile(selectedInfluencerId || '');
 
   useEffect(() => {
-    if (influencerId) {
-      fetchInfluencerAddress();
-    } else {
+    if (!user) {
       toast({
-        title: "Missing Information",
-        description: "No influencer was selected. Please go back and select an influencer.",
-        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please log in to place an order",
+        variant: "destructive"
       });
+      navigate('/auth');
     }
-  }, [influencerId]);
+  }, [user, navigate, toast]);
 
-  // Check if this is a gift from database and load its data
-  useEffect(() => {
-    const loadGiftFromDatabase = async () => {
-      if (giftId && giftId !== 'custom-wishlist-item') {
-        try {
-          console.log("Loading gift from database:", giftId);
-          const giftData = await getGiftById(giftId);
-          
-          if (giftData) {
-            console.log("Gift data loaded:", giftData);
-            setIsGiftFromDatabase(true);
-            
-            // Create product preview from gift data without calling edge functions
-            const preview = {
-              name: giftData.name,
-              price: giftData.price.toString(),
-              priceInr: giftData.price,
-              image: giftData.image_url,
-              description: giftData.description || "",
-              platformFee: 5, // Standard platform fee
-              url: giftData.gift_url || giftItem
-            };
-            
-            setProductPreview(preview);
-            setAutoProcessed(true);
-            
-            console.log("Product preview set from database without edge function calls:", preview);
-          }
-        } catch (error) {
-          console.error("Error loading gift from database:", error);
-        }
-      }
-    };
-
-    loadGiftFromDatabase();
-  }, [giftId, getGiftById, setProductPreview, giftItem]);
-
-  // If there's a URL in the search params and it's not a gift from database, automatically process it
-  useEffect(() => {
-    const urlParam = searchParams.get("gift");
-    if (urlParam && !autoProcessed && !isFetchingProduct && !productPreview && !isGiftFromDatabase) {
-      console.log("Auto-processing product URL from params:", urlParam);
-      setAutoProcessed(true);
-      handleProcessProduct();
-    }
-  }, [searchParams, autoProcessed, isFetchingProduct, productPreview, isGiftFromDatabase]);
-
-  const fetchInfluencerAddress = async () => {
-    try {
-      setIsLoadingAddress(true);
-      const { data: addresses, error } = await supabase
-        .from('influencer_addresses')
-        .select('*')
-        .eq('influencer_id', influencerId)
-        .eq('is_primary', true)
-        .single();
-
-      if (error) {
-        console.error('Error fetching address:', error);
-        toast({
-          title: "Warning",
-          description: "Could not verify shipping address. Please try again later.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!addresses) {
-        toast({
-          title: "Warning",
-          description: "This influencer hasn't set up their shipping address yet.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const supabaseAddress = addresses as SupabaseAddress;
-      
-      const transformedAddress: InfluencerAddress = {
-        id: supabaseAddress.id,
-        name: supabaseAddress.name || "Recipient", 
-        street_address: supabaseAddress.street_address || "",
-        address_line1: supabaseAddress.address_line1 || supabaseAddress.street_address || "",
-        address_line2: supabaseAddress.address_line2 || "",
-        city: supabaseAddress.city,
-        state: supabaseAddress.state,
-        postal_code: supabaseAddress.postal_code,
-        country: supabaseAddress.country || "India",
-        phone: supabaseAddress.phone || "Not provided",
-        is_primary: supabaseAddress.is_primary,
-        influencer_id: supabaseAddress.influencer_id,
-        created_at: supabaseAddress.created_at
-      };
-
-      setInfluencerAddress(transformedAddress);
-    } catch (error) {
-      console.error('Error in fetchInfluencerAddress:', error);
-    } finally {
-      setIsLoadingAddress(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!influencerAddress) {
+  const handleUrlSubmit = async () => {
+    if (!giftUrl.trim()) {
       toast({
-        title: "Error",
-        description: "Could not verify shipping address. Please try again later.",
-        variant: "destructive",
+        title: "URL Required",
+        description: "Please enter a product URL",
+        variant: "destructive"
       });
       return;
     }
+
+    try {
+      await fetchPreview(giftUrl);
+      setCurrentStep('preview');
+    } catch (error) {
+      console.error('Error fetching product preview:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch product details. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleProceedToPayment = () => {
+    if (!selectedInfluencerId) {
+      toast({
+        title: "Influencer Required",
+        description: "Please select an influencer",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!productPreview) {
+      toast({
+        title: "Product Required",
+        description: "Please add a product first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setCurrentStep('payment');
+  };
+
+  const handleOrderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    await submitOrder(giftItem, message, influencerId, productPreview, influencerAddress);
-  };
+    if (!selectedInfluencerId || !productPreview || !influencerProfile) {
+      toast({
+        title: "Missing Information",
+        description: "Please ensure all required fields are filled",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const handleUrlChange = (newUrl: string) => {
-    setGiftItem(newUrl);
-    setSearchParams(prev => {
-      prev.set("gift", newUrl);
-      return prev;
-    });
-  };
+    // Create influencer address from profile
+    const influencerAddress: InfluencerAddress = {
+      name: influencerProfile.name,
+      street_address: "123 Default Street", // You might want to get this from influencer_addresses table
+      city: "Default City",
+      state: "Default State", 
+      postal_code: "000000",
+      country: "India",
+      phone: "1234567890"
+    };
 
-  const handleProcessProduct = () => {
-    console.log("Processing product URL:", giftItem);
-    handlePreviewProduct(giftItem);
-  };
-
-  const renderErrorMessage = () => {
-    const error = productPreviewError || orderError;
-    if (!error) return null;
-    
-    return (
-      <Alert className="mb-6 border-red-200 bg-red-50">
-        <AlertCircle className="h-4 w-4 text-red-500" />
-        <AlertDescription className="text-red-600">
-          {error}
-        </AlertDescription>
-      </Alert>
+    await submitOrder(
+      giftUrl,
+      message,
+      selectedInfluencerId,
+      productPreview,
+      influencerAddress
     );
   };
 
+  if (paymentStep === 'complete') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 text-center">
+            <Gift className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold mb-2">Order Placed Successfully!</h2>
+            <p className="text-gray-600 mb-4">
+              Your gift order has been submitted and is being processed.
+            </p>
+            <Button onClick={() => navigate('/home')} className="w-full">
+              Return to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 font-roboto">
-      <div className="container mx-auto px-4 py-6 pb-24">
-        {renderErrorMessage()}
-        
-        {/* Only show URL input if this is not a gift from database */}
-        {!isGiftFromDatabase && (
-          <ProductUrlInput
-            giftItem={giftItem}
-            onUrlChange={handleUrlChange}
-            onPreviewClick={handleProcessProduct}
-            isFetchingProduct={isFetchingProduct}
-            fetchProgress={fetchProgress}
-            isGeneratingPreview={isGeneratingPreview}
-          />
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="text-funky-purple hover:bg-funky-purple/10"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent">
+            Place Gift Order
+          </h1>
+        </div>
+
+        {orderError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800">{orderError}</p>
+          </div>
         )}
 
-        <ProductPreview
-          productPreview={productPreview}
-          influencerAddress={influencerAddress}
-          message={message}
-          onMessageChange={(newMessage) => setMessage(newMessage)}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          paymentStep={paymentStep === 'pending' ? 'processing' : paymentStep}
-          giftUrl={giftItem}
-          websitePreview={websitePreview}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Order Details */}
+          <div className="space-y-6">
+            {/* Step 1: Product URL */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Gift className="mr-2 h-5 w-5" />
+                  <span>Product Details</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ProductUrlInput
+                  url={giftUrl}
+                  onUrlChange={setGiftUrl}
+                  onSubmit={handleUrlSubmit}
+                  isLoading={productLoading}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Step 2: Product Preview */}
+            {productPreview && currentStep !== 'select' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product Preview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ProductPreview product={productPreview} />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 3: Influencer Selection */}
+            {currentStep !== 'select' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <User className="mr-2 h-5 w-5" />
+                    <span>Select Influencer</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <InfluencerSelector
+                    onSelect={setSelectedInfluencerId}
+                    selectedInfluencerId={selectedInfluencerId}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 4: Gift Message */}
+            {currentStep !== 'select' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gift Message</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <GiftMessage
+                    message={message}
+                    onMessageChange={setMessage}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Proceed Button */}
+            {currentStep === 'preview' && (
+              <Button
+                onClick={handleProceedToPayment}
+                className="w-full bg-funky-purple hover:bg-funky-purple/90"
+                disabled={!selectedInfluencerId || !productPreview}
+              >
+                Proceed to Payment
+              </Button>
+            )}
+          </div>
+
+          {/* Right Column - Payment */}
+          {currentStep === 'payment' && productPreview && (
+            <div className="lg:sticky lg:top-6">
+              <PaymentForm
+                productPreview={productPreview}
+                isProcessing={isLoading}
+                paymentStep={paymentStep}
+                onSubmit={handleOrderSubmit}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
-};
-
-export default PlaceOrder;
+}
