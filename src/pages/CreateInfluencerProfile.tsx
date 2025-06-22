@@ -1,609 +1,285 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
-import Header from "@/components/landing/Header";
-import type { InfluencerAddress } from "@/types/order";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/hooks/useUser";
+import FloatingHeader from '@/components/ui/floating-header';
+import Navbar from '@/components/navigation/Navbar';
+import { ArrowLeft } from "lucide-react";
 
-const CreateInfluencerProfile = () => {
+interface FormState {
+  name: string;
+  bio: string;
+  instagram_url: string;
+  youtube_url: string;
+  website_url: string;
+  street_address: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  phone: string;
+}
+
+export default function CreateInfluencerProfile() {
   const navigate = useNavigate();
+  const { user } = useUser();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [addresses, setAddresses] = useState<InfluencerAddress[]>([]);
-  const [newAddress, setNewAddress] = useState({
+  const [navOpen, setNavOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<FormState>({
+    name: "",
+    bio: "",
+    instagram_url: "",
+    youtube_url: "",
+    website_url: "",
     street_address: "",
     city: "",
     state: "",
     postal_code: "",
-    country: "India",
-  });
-  const [formData, setFormData] = useState({
-    name: "",
-    platform: "",
-    followers: 0,
-    about: "",
-    profile_image: "",
-    youtube_url: "",
-    instagram_url: "",
-    twitter_url: "",
-    facebook_url: "",
-    hobbies: [] as string[],
-    newHobby: ""
+    phone: "",
   });
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload an image file",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Image size should be less than 5MB",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      setUploadingImage(true);
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('profile_images')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile_images')
-        .getPublicUrl(filePath);
-
-      setFormData(prev => ({
-        ...prev,
-        profile_image: publicUrl
-      }));
-
-      toast({
-        title: "Success",
-        description: "Image uploaded successfully"
-      });
-    } catch (error: any) {
-      console.error("Error uploading image:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to upload image",
-        variant: "destructive"
-      });
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const checkAuth = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Not authenticated",
-          description: "Please sign in first",
-          variant: "destructive"
-        });
-        navigate("/auth");
-        return;
-      }
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw new Error("Failed to verify user type");
-      }
-
-      if (!profile || profile.user_type !== "influencer") {
-        toast({
-          title: "Access Denied",
-          description: "Only influencers can create profiles",
-          variant: "destructive"
-        });
-        navigate("/");
-        return;
-      }
-
-      const { data: existingProfile, error: existingProfileError } = await supabase
-        .from("influencer_profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (existingProfileError) {
-        throw existingProfileError;
-      }
-
-      if (existingProfile) {
-        navigate(`/profile/${user.id}`);
-        return;
-      }
-
-      if (existingProfile) {
-        setFormData({
-          ...existingProfile,
-          newHobby: "",
-          hobbies: existingProfile.hobbies || []
-        });
-      }
-    } catch (error: any) {
-      console.error("Error in checkAuth:", error);
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred while checking authentication",
-        variant: "destructive"
-      });
-      navigate("/");
-    } finally {
-      setIsAuthChecking(false);
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+
+    if (!user) {
+      toast({
+        title: "Not authenticated",
+        description: "You must be logged in to create a profile.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
-      const { error } = await supabase
-        .from("influencer_profiles")
-        .upsert({
-          id: user.id,
-          name: formData.name,
-          platform: formData.platform,
-          followers: formData.followers,
-          about: formData.about,
-          profile_image: formData.profile_image,
-          youtube_url: formData.youtube_url || null,
-          instagram_url: formData.instagram_url || null,
-          twitter_url: formData.twitter_url || null,
-          facebook_url: formData.facebook_url || null,
-          hobbies: formData.hobbies
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Success",
-        description: "Your profile has been saved!"
-      });
-      
-      navigate(`/profile/${user.id}`);
-    } catch (error: any) {
-      console.error("Error in handleSubmit:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save profile",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const addHobby = () => {
-    if (formData.newHobby.trim() && !formData.hobbies.includes(formData.newHobby.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        hobbies: [...prev.hobbies, prev.newHobby.trim()],
-        newHobby: ""
-      }));
-    }
-  };
-
-  const removeHobby = (hobby: string) => {
-    setFormData(prev => ({
-      ...prev,
-      hobbies: prev.hobbies.filter(h => h !== hobby)
-    }));
-  };
-
-  const handleAddAddress = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      if (!newAddress.street_address || !newAddress.city || !newAddress.state || !newAddress.postal_code) {
-        toast({
-          title: "Error",
-          description: "Please fill in all address fields",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("influencer_addresses")
-        .insert({
-          ...newAddress,
-          influencer_id: user.id,
-          is_primary: addresses.length === 0
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const transformedAddress: InfluencerAddress = {
-        id: data.id,
-        influencer_id: data.influencer_id,
-        street_address: data.street_address,
-        address_line1: data.street_address,
-        city: data.city,
-        state: data.state,
-        postal_code: data.postal_code,
-        country: data.country,
-        phone: "Not provided",
-        name: "Address",
-        is_primary: data.is_primary,
-        created_at: data.created_at
+      // Basic profile data
+      const profileData = {
+        id: user.id,
+        name: formData.name,
+        bio: formData.bio,
+        instagram_url: formData.instagram_url,
+        youtube_url: formData.youtube_url,
+        website_url: formData.website_url,
+        user_type: 'influencer'
       };
 
-      setAddresses(prev => [...prev, transformedAddress]);
-      setNewAddress({
-        street_address: "",
-        city: "",
-        state: "",
-        postal_code: "",
-        country: "India",
-      });
+      // Insert or update profile data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert([profileData], { onConflict: 'id' });
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      // Create address record
+      const addressData = {
+        influencer_id: profileData.id,
+        name: profileData.name,
+        street_address: formData.street_address || 'Not provided',
+        city: formData.city || 'Not provided',
+        state: formData.state || 'Not provided',
+        postal_code: formData.postal_code || '000000',
+        country: 'India',
+        phone: formData.phone || '0000000000'
+      };
+
+      // Insert address data
+      const { error: addressError } = await supabase
+        .from('influencer_addresses')
+        .insert([addressData]);
+
+      if (addressError) {
+        throw addressError;
+      }
 
       toast({
-        title: "Success",
-        description: "Address added successfully"
+        title: "Profile created",
+        description: "Your influencer profile has been created successfully.",
       });
+      navigate(`/profile/${user.id}`);
+
     } catch (error: any) {
-      console.error("Error adding address:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to add address",
-        variant: "destructive"
+        description: error.message || "Failed to create profile.",
+        variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handleRemoveAddress = async (addressId: string) => {
-    try {
-      const { error } = await supabase
-        .from("influencer_addresses")
-        .delete()
-        .eq("id", addressId);
-
-      if (error) throw error;
-
-      setAddresses(prev => prev.filter(addr => addr.id !== addressId));
-      toast({
-        title: "Success",
-        description: "Address removed successfully"
-      });
-    } catch (error: any) {
-      console.error("Error removing address:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to remove address",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSetPrimaryAddress = async (addressId: string) => {
-    try {
-      const { error } = await supabase
-        .from("influencer_addresses")
-        .update({ is_primary: true })
-        .eq("id", addressId);
-
-      if (error) throw error;
-
-      setAddresses(prev => prev.map(addr => ({
-        ...addr,
-        is_primary: addr.id === addressId
-      })));
-
-      toast({
-        title: "Success",
-        description: "Primary address updated"
-      });
-    } catch (error: any) {
-      console.error("Error updating primary address:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update primary address",
-        variant: "destructive"
-      });
-    }
-  };
-
-  if (isAuthChecking) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header setNavOpen={() => {}} />
-      <div className="container mx-auto px-4 py-8 pt-20">
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold mb-6 text-center">Create Your Influencer Profile</h1>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="name">Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                required
-              />
-            </div>
+    <>
+      <FloatingHeader setNavOpen={setNavOpen} />
+      <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+      
+      <div className="min-h-screen bg-background pt-20 p-4">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="text-funky-purple hover:bg-funky-purple/10"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back
+            </Button>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent">
+              Create Influencer Profile
+            </h1>
+          </div>
 
-            <div>
-              <Label htmlFor="platform">Platform *</Label>
-              <Input
-                id="platform"
-                value={formData.platform}
-                onChange={e => setFormData(prev => ({ ...prev, platform: e.target.value }))}
-                required
-                placeholder="e.g., YouTube, Instagram, TikTok"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="followers">Followers *</Label>
-              <Input
-                id="followers"
-                type="number"
-                value={formData.followers}
-                onChange={e => setFormData(prev => ({ ...prev, followers: parseInt(e.target.value) || 0 }))}
-                required
-                min="0"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="about">About</Label>
-              <Textarea
-                id="about"
-                value={formData.about || ""}
-                onChange={e => setFormData(prev => ({ ...prev, about: e.target.value }))}
-                placeholder="Tell us about yourself..."
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="profile_image">Profile Image</Label>
-              <div className="space-y-2">
-                <Input
-                  id="profile_image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploadingImage}
-                  className="cursor-pointer"
-                />
-                {uploadingImage && <p className="text-sm text-gray-500">Uploading image...</p>}
-                {formData.profile_image && (
-                  <div className="mt-2">
-                    <img 
-                      src={formData.profile_image} 
-                      alt="Profile preview" 
-                      className="w-32 h-32 object-cover rounded-full"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label>Social Media Links</Label>
-              <div className="space-y-4">
-                <Input
-                  placeholder="YouTube URL"
-                  value={formData.youtube_url || ""}
-                  onChange={e => setFormData(prev => ({ ...prev, youtube_url: e.target.value }))}
-                />
-                <Input
-                  placeholder="Instagram URL"
-                  value={formData.instagram_url || ""}
-                  onChange={e => setFormData(prev => ({ ...prev, instagram_url: e.target.value }))}
-                />
-                <Input
-                  placeholder="Twitter URL"
-                  value={formData.twitter_url || ""}
-                  onChange={e => setFormData(prev => ({ ...prev, twitter_url: e.target.value }))}
-                />
-                <Input
-                  placeholder="Facebook URL"
-                  value={formData.facebook_url || ""}
-                  onChange={e => setFormData(prev => ({ ...prev, facebook_url: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label>Hobbies</Label>
-              <div className="flex gap-2 mb-2">
-                <Input
-                  value={formData.newHobby}
-                  onChange={e => setFormData(prev => ({ ...prev, newHobby: e.target.value }))}
-                  placeholder="Add a hobby"
-                />
-                <Button type="button" onClick={addHobby}>Add</Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {formData.hobbies.map((hobby, index) => (
-                  <span
-                    key={index}
-                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                  >
-                    {hobby}
-                    <button
-                      type="button"
-                      onClick={() => removeHobby(hobby)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Delivery Addresses</h2>
-              
-              <div className="space-y-4">
-                {addresses.map((address) => (
-                  <div key={address.id} className="p-4 border rounded-lg relative">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p>{address.street_address}</p>
-                        <p>{address.city}, {address.state} {address.postal_code}</p>
-                        <p>{address.country}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        {!address.is_primary && (
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleSetPrimaryAddress(address.id)}
-                          >
-                            Set as Primary
-                          </Button>
-                        )}
-                        <Button 
-                          type="button" 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => handleRemoveAddress(address.id)}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
-                    {address.is_primary && (
-                      <span className="absolute top-2 right-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                        Primary
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="border rounded-lg p-4 space-y-4">
-                <h3 className="font-medium">Add New Address</h3>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="street_address">Street Address *</Label>
-                    <Input
-                      id="street_address"
-                      value={newAddress.street_address}
-                      onChange={e => setNewAddress(prev => ({ ...prev, street_address: e.target.value }))}
-                      placeholder="Enter your street address"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">City *</Label>
-                      <Input
-                        id="city"
-                        value={newAddress.city}
-                        onChange={e => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
-                        placeholder="Enter city"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="state">State *</Label>
-                      <Input
-                        id="state"
-                        value={newAddress.state}
-                        onChange={e => setNewAddress(prev => ({ ...prev, state: e.target.value }))}
-                        placeholder="Enter state"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="postal_code">Postal Code *</Label>
-                      <Input
-                        id="postal_code"
-                        value={newAddress.postal_code}
-                        onChange={e => setNewAddress(prev => ({ ...prev, postal_code: e.target.value }))}
-                        placeholder="Enter postal code"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="country">Country</Label>
-                      <Input
-                        id="country"
-                        value={newAddress.country}
-                        onChange={e => setNewAddress(prev => ({ ...prev, country: e.target.value }))}
-                        disabled
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    onClick={handleAddAddress}
-                    className="w-full"
-                  >
-                    Add Address
-                  </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Display Name</Label>
+                  <Input
+                    type="text"
+                    id="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter your display name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    placeholder="Write a short bio about yourself"
+                  />
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <Button type="submit" disabled={isLoading || uploadingImage} className="w-full">
-              {isLoading ? "Saving..." : "Save Profile"}
-            </Button>
-          </form>
+          <Card>
+            <CardHeader>
+              <CardTitle>Social Links</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="instagram_url">Instagram URL</Label>
+                  <Input
+                    type="url"
+                    id="instagram_url"
+                    value={formData.instagram_url}
+                    onChange={handleChange}
+                    placeholder="Enter your Instagram URL"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="youtube_url">YouTube URL</Label>
+                  <Input
+                    type="url"
+                    id="youtube_url"
+                    value={formData.youtube_url}
+                    onChange={handleChange}
+                    placeholder="Enter your YouTube URL"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="website_url">Website URL</Label>
+                <Input
+                  type="url"
+                  id="website_url"
+                  value={formData.website_url}
+                  onChange={handleChange}
+                  placeholder="Enter your Website URL"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Address Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="street_address">Street Address</Label>
+                  <Input
+                    type="text"
+                    id="street_address"
+                    value={formData.street_address}
+                    onChange={handleChange}
+                    placeholder="Enter your street address"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    type="text"
+                    id="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    placeholder="Enter your city"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    type="text"
+                    id="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                    placeholder="Enter your state"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="postal_code">Postal Code</Label>
+                  <Input
+                    type="text"
+                    id="postal_code"
+                    value={formData.postal_code}
+                    onChange={handleChange}
+                    placeholder="Enter your postal code"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  type="tel"
+                  id="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="Enter your phone number"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button onClick={handleSubmit} disabled={loading} className="bg-funky-purple hover:bg-funky-purple/90">
+            {loading ? "Creating..." : "Create Profile"}
+          </Button>
         </div>
       </div>
-    </div>
+    </>
   );
-};
-
-export default CreateInfluencerProfile;
+}

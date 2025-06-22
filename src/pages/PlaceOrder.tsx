@@ -37,7 +37,6 @@ export default function PlaceOrder() {
     setProductPreview, 
     isFetchingProduct, 
     fetchProgress, 
-    setFetchProgress, 
     isGeneratingPreview, 
     fetchProductPreview 
   } = useProductPreview();
@@ -214,7 +213,16 @@ export default function PlaceOrder() {
                     <CardTitle>Product Preview</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ProductPreview productPreview={productPreview} />
+                    <ProductPreview 
+                      productPreview={productPreview}
+                      influencerAddress={null}
+                      message={message}
+                      onMessageChange={setMessage}
+                      onSubmit={handleOrderSubmit}
+                      isLoading={isLoading}
+                      paymentStep={paymentStep}
+                      giftUrl={giftUrl}
+                    />
                   </CardContent>
                 </Card>
               )}

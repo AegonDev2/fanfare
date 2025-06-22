@@ -1,294 +1,224 @@
-import Header from "@/components/landing/Header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { OrderDetails, UnderProcessOrder, CompletedOrder } from "@/types/admin";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { Package, ArrowLeft, CheckCircle, Clock, Truck } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-const AdminOrderDetails = () => {
-  const {
-    id
-  } = useParams<{
-    id: string;
-  }>();
+import { supabase } from "@/integrations/supabase/client";
+import Header from "@/components/landing/Header";
+import { 
+  ArrowLeft, 
+  Package,
+  User,
+  Calendar,
+  DollarSign,
+  MapPin,
+  MessageSquare,
+  ExternalLink
+} from "lucide-react";
+import { format } from "date-fns";
+
+interface OrderDetails {
+  id: string;
+  user_id: string;
+  product_title: string;
+  product_url: string;
+  product_price: number;
+  platform_fee: number;
+  total_amount: number;
+  created_at: string;
+  message?: string;
+  influencer_id?: string;
+  shipping_address?: any;
+  delivery_estimate?: string;
+}
+
+export default function AdminOrderDetails() {
+  const { orderId } = useParams();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
-  const {
-    userRole
-  } = useAdminAuth();
+  const { toast } = useToast();
+  const [navOpen, setNavOpen] = useState(false);
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Redirect if not admin
-  useEffect(() => {
-    if (userRole === null) {
-      // Still loading auth status, wait
-      return;
-    }
-    if (userRole !== 'admin') {
-      navigate('/');
-    }
-  }, [userRole, navigate]);
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      if (!id) return;
-      try {
-        setLoading(true);
-
-        // First try under_process table
-        let {
-          data: underProcessData,
-          error: underProcessError
-        } = await supabase.from('orders_under_process').select('*, influencer:influencer_id(*)').eq('id', id).maybeSingle();
-        if (underProcessError) throw underProcessError;
-        let orderData = null;
-
-        // Then try completed table if not found
-        if (!underProcessData) {
-          const {
-            data: completedData,
-            error: completedError
-          } = await supabase.from('orders_completed').select('*, influencer:influencer_id(*)').eq('id', id).maybeSingle();
-          if (completedError) throw completedError;
-          if (completedData) {
-            orderData = {
-              ...completedData,
-              status: 'completed' as const
-            };
-          }
-        } else {
-          orderData = {
-            ...underProcessData,
-            status: 'under_process' as const
-          };
-        }
-        if (!orderData) {
-          toast({
-            title: "Order not found",
-            description: `No order with ID ${id} was found`,
-            variant: "destructive"
-          });
-          navigate('/admin-dashboard');
-          return;
-        }
-
-        // Get fan's email
-        const {
-          data: fanData
-        } = await supabase.from('profiles').select('email, name').eq('id', orderData.user_id).maybeSingle();
-
-        // Create enriched order with all required fields
-        const enrichedOrder: OrderDetails = {
-          ...orderData,
-          fan_email: fanData?.email || "Unknown",
-          fan_name: fanData?.name || "Unknown",
-          influencer_name: orderData.influencer?.name || "Unknown"
-        };
-        setOrder(enrichedOrder);
-      } catch (error) {
-        console.error("Error fetching order details:", error);
+      if (!orderId) {
         toast({
           title: "Error",
-          description: "Failed to load order details",
-          variant: "destructive"
+          description: "Order ID is missing.",
+          variant: "destructive",
         });
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('gift_requests')
+          .select('*')
+          .eq('id', orderId)
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        setOrder(data as OrderDetails);
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to load order details.",
+          variant: "destructive",
+        });
+        setOrder(null);
       } finally {
         setLoading(false);
       }
     };
+
     fetchOrderDetails();
-  }, [id, navigate, toast]);
-  const handleCompleteOrder = async () => {
-    if (!order || !id) return;
-    try {
-      const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const {
-        data,
-        error
-      } = await supabase.rpc('move_order_to_completed', {
-        order_id: id,
-        p_delivery_estimate: deliveryEstimate
-      });
-      if (error) throw error;
-      toast({
-        title: "Order Processed",
-        description: "Order has been marked as completed"
-      });
-      navigate('/admin-dashboard');
-    } catch (error) {
-      console.error("Error completing order:", error);
-      toast({
-        title: "Error",
-        description: "Failed to process order",
-        variant: "destructive"
-      });
-    }
-  };
-  if (loading || userRole === null) {
-    return <div className="min-h-screen bg-gray-100">
-        <Header />
-        <main className="container mx-auto p-4 pt-20">
-          <div className="flex items-center justify-center h-64">
-            <p>Loading order details...</p>
-          </div>
-        </main>
-      </div>;
+  }, [orderId, toast]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header setNavOpen={setNavOpen} />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-funky-purple"></div>
+        </div>
+      </div>
+    );
   }
+
   if (!order) {
-    return <div className="min-h-screen bg-gray-100">
-        <Header />
-        <main className="container mx-auto p-4 pt-20 py-[100px]">
-          <Button variant="outline" onClick={() => navigate('/admin-dashboard')}>
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
-          </Button>
-          <Card className="mt-6">
-            <CardContent className="py-10 text-center">
-              <p>Order not found</p>
+    return (
+      <div className="min-h-screen bg-background">
+        <Header setNavOpen={setNavOpen} />
+        <div className="max-w-4xl mx-auto p-6 pt-24">
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <h2 className="text-xl font-semibold mb-2">Order Not Found</h2>
+              <p className="text-gray-600 mb-4">The requested order could not be found.</p>
+              <Button onClick={() => navigate('/admin')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
             </CardContent>
           </Card>
-        </main>
-      </div>;
+        </div>
+      </div>
+    );
   }
-  const shippingAddress = order.shipping_address as Record<string, string> | null;
-  return <div className="min-h-screen bg-gray-100">
-      <Header />
-      <main className="container mx-auto p-4 pt-20 pb-20">
-        <div className="flex items-center mb-6">
-          <Button variant="outline" onClick={() => navigate('/admin-dashboard')} className="mr-4">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header setNavOpen={setNavOpen} />
+      
+      <div className="max-w-4xl mx-auto p-6 pt-24">
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="text-funky-purple hover:bg-funky-purple/10"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
           </Button>
-          <h1 className="text-2xl font-bold">Order {id?.substring(0, 8)}</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent">
+            Order Details
+          </h1>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Package className="h-5 w-5 mr-2" /> Order Details
-                </CardTitle>
-                <CardDescription>
-                  {new Date(order.created_at).toLocaleString()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Product</h3>
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-medium">{order.product_title || "Product"}</h4>
-                    <p className="text-sm text-muted-foreground mb-2 break-all">{order.product_url}</p>
-                    <div className="flex justify-between items-center">
-                      <span>₹{order.product_price?.toFixed(2) || "0.00"}</span>
-                    </div>
-                  </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Order ID: {order.id}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Product:</span>
                 </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Gift Message</h3>
-                  <div className="border rounded-lg p-4 bg-muted/30">
-                    <p className="italic text-sm">"{order.message || "No message provided"}"</p>
-                  </div>
+                <p className="text-gray-900">{order.product_title}</p>
+                <a href={order.product_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-1">
+                  <ExternalLink className="h-4 w-4" />
+                  View Product
+                </a>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">User ID:</span>
                 </div>
-                
-                {shippingAddress && <div>
-                    <h3 className="font-semibold mb-2">Shipping Address</h3>
-                    <div className="border rounded-lg p-4">
-                      <p>{shippingAddress.name || ""}</p>
-                      <p>{shippingAddress.street || ""}</p>
-                      <p>{shippingAddress.city || ""}, {shippingAddress.state || ""} {shippingAddress.zip || ""}</p>
-                      <p>{shippingAddress.country || ""}</p>
-                      <p>{shippingAddress.phone || ""}</p>
-                    </div>
-                  </div>}
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Payment Summary</h3>
-                  <div className="border rounded-lg p-4">
-                    <div className="flex justify-between py-1">
-                      <span>Product Price</span>
-                      <span>₹{order.product_price?.toFixed(2) || "0.00"}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span>Platform Fee</span>
-                      <span>₹{order.platform_fee?.toFixed(2) || "0.00"}</span>
-                    </div>
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-bold py-1">
-                      <span>Total</span>
-                      <span>₹{order.total_amount?.toFixed(2) || "0.00"}</span>
-                    </div>
-                  </div>
+                <p className="text-gray-900">{order.user_id}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Order Date:</span>
                 </div>
-              </CardContent>
-              
-              {order.status === 'under_process' && <CardFooter>
-                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleCompleteOrder}>
-                    <CheckCircle className="h-4 w-4 mr-2" /> Mark as Processed
-                  </Button>
-                </CardFooter>}
-            </Card>
-          </div>
-          
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    {order.status === 'completed' ? <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3" /> : <Clock className="h-5 w-5 text-amber-500 mt-0.5 mr-3" />}
-                    <div>
-                      <p className="font-medium">
-                        {order.status === 'completed' ? 'Processed' : 'Awaiting Processing'}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {order.status === 'completed' ? `Completed on ${new Date(order.completed_at || '').toLocaleDateString()}` : 'Order is waiting for admin approval'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    {order.status === 'completed' ? <Truck className="h-5 w-5 text-blue-500 mt-0.5 mr-3" /> : <Truck className="h-5 w-5 text-gray-300 mt-0.5 mr-3" />}
-                    <div>
-                      <p className="font-medium">
-                        {order.status === 'completed' ? 'Shipping' : 'Shipping Pending'}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {order.status === 'completed' && order.delivery_estimate ? `Estimated delivery: ${new Date(order.delivery_estimate).toLocaleDateString()}` : 'Will be available after processing'}
-                      </p>
-                    </div>
-                  </div>
+                <p className="text-gray-900">{format(new Date(order.created_at), 'MMM dd, yyyy hh:mm a')}</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Amount:</span>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="text-lg">People</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Fan</h4>
-                  <p>{order.fan_name}</p>
-                  <p className="text-sm">{order.fan_email}</p>
+                <p className="text-gray-900">₹{order.total_amount.toFixed(2)}</p>
+              </div>
+            </div>
+
+            {order.message && (
+              <div>
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Message:</span>
                 </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Influencer</h4>
-                  <p>{order.influencer_name}</p>
+                <p className="text-gray-900">{order.message}</p>
+              </div>
+            )}
+
+            {order.influencer_id && (
+              <div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Influencer ID:</span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </div>;
-};
-export default AdminOrderDetails;
+                <p className="text-gray-900">{order.influencer_id}</p>
+              </div>
+            )}
+
+            {order.shipping_address && (
+              <div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Shipping Address:</span>
+                </div>
+                <p className="text-gray-900">
+                  {order.shipping_address.street_address}, {order.shipping_address.city}, {order.shipping_address.state}, {order.shipping_address.postal_code}, {order.shipping_address.country}
+                </p>
+              </div>
+            )}
+
+            {order.delivery_estimate && (
+              <div>
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Delivery Estimate:</span>
+                </div>
+                <p className="text-gray-900">{order.delivery_estimate}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

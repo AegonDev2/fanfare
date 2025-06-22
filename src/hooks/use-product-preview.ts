@@ -53,7 +53,7 @@ export const useProductPreview = () => {
     }
   };
 
-  const handlePreviewProduct = async (url: string) => {
+  const fetchProductPreview = async (url: string) => {
     if (!url) {
       setError("Please enter a product URL");
       return;
@@ -213,7 +213,8 @@ export const useProductPreview = () => {
     setProductPreview,
     isFetchingProduct,
     fetchProgress,
-    handlePreviewProduct,
+    setFetchProgress,
+    fetchProductPreview,
     error,
     resetExtractionState,
     websitePreview,

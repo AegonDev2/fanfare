@@ -3,8 +3,10 @@ export interface ProductDetails {
   id?: string;
   name: string;
   description: string;
+  price?: string;
   priceInr: number;
   platformFee: number;
+  image?: string;
   imageUrl?: string;
   previewUrl?: string;
 }

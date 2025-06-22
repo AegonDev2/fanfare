@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 
 export default function GiftRequests() {
   const [navOpen, setNavOpen] = useState(false);
-  const { data: giftRequests, isLoading, error } = useGiftRequests();
+  const { requests: giftRequests, loading: isLoading, error } = useGiftRequests();
 
   if (isLoading) {
     return (
