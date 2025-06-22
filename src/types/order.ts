@@ -1,27 +1,32 @@
 
 export interface ProductDetails {
+  id?: string;
   name: string;
-  price: string;
+  description: string;
   priceInr: number;
   platformFee: number;
-  image: string;
-  id?: string;
-  platform?: 'amazon' | 'flipkart' | 'other';
-  description?: string;
+  imageUrl?: string;
+  previewUrl?: string;
 }
 
 export interface InfluencerAddress {
   id: string;
-  name?: string;
+  name: string;
   street_address: string;
-  address_line1?: string;
-  address_line2?: string;
   city: string;
   state: string;
   postal_code: string;
   country: string;
-  phone?: string;
+  phone: string;
   is_primary: boolean;
   influencer_id: string;
   created_at: string;
+}
+
+export interface OrderFormData {
+  giftUrl: string;
+  message: string;
+  influencerId: string;
+  productDetails: ProductDetails;
+  shippingAddress: InfluencerAddress;
 }
