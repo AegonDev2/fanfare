@@ -28,8 +28,8 @@ export default function PlaceOrder() {
   const [selectedInfluencerId, setSelectedInfluencerId] = useState<string | null>(
     searchParams.get('influencer')
   );
-  const [giftUrl, setGiftUrl] = useState('');
-  const [message, setMessage] = useState('');
+  const [giftUrl, setGiftUrl] = useState(searchParams.get('gift') || '');
+  const [message, setMessage] = useState(searchParams.get('message') || '');
   const [currentStep, setCurrentStep] = useState<'select' | 'preview' | 'payment'>('select');
 
   const { 
@@ -42,6 +42,28 @@ export default function PlaceOrder() {
   } = useProductPreview();
   const { isLoading, paymentStep, orderError, submitOrder } = useOrderSubmission();
   const { influencer } = useInfluencerProfile(selectedInfluencerId || '');
+
+  // Handle pre-filled data from GiftSelection
+  useEffect(() => {
+    const giftName = searchParams.get('giftName');
+    const giftPrice = searchParams.get('giftPrice');
+    const giftImage = searchParams.get('giftImage');
+    
+    if (giftName && giftPrice && giftImage && giftUrl) {
+      // Create ProductDetails from the provided data
+      const prefilledProduct: ProductDetails = {
+        name: decodeURIComponent(giftName),
+        price: `₹${giftPrice}`,
+        priceInr: parseFloat(giftPrice),
+        image: decodeURIComponent(giftImage),
+        description: 'Selected gift item',
+        platformFee: 5.00
+      };
+      
+      setProductPreview(prefilledProduct);
+      setCurrentStep('preview');
+    }
+  }, [searchParams, giftUrl, setProductPreview]);
 
   useEffect(() => {
     if (!user) {

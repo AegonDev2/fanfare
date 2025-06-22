@@ -15,6 +15,10 @@ export interface GiftRequest {
   created_at: string;
   updated_at: string;
   completed_at?: string;
+  sender?: {
+    name: string;
+    email: string;
+  };
 }
 
 export const useGiftRequests = () => {
@@ -32,7 +36,10 @@ export const useGiftRequests = () => {
       
       const { data, error: fetchError } = await supabase
         .from('gift_requests')
-        .select('*')
+        .select(`
+          *,
+          sender:profiles!gift_requests_sender_id_fkey(name, email)
+        `)
         .eq('influencer_id', user.id)
         .order('created_at', { ascending: false });
 

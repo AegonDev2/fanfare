@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +37,7 @@ export default function EditProfile() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('name, bio')
+          .select('name')
           .eq('id', user.id)
           .single();
 
@@ -45,7 +46,7 @@ export default function EditProfile() {
         if (profile) {
           setFormData({
             name: profile.name || "",
-            bio: profile.bio || "",
+            bio: "", // Bio field doesn't exist in profiles table
           });
         }
       } catch (error: any) {
@@ -79,7 +80,6 @@ export default function EditProfile() {
         .from('profiles')
         .update({
           name: formData.name,
-          bio: formData.bio,
         })
         .eq('id', user.id);
 
@@ -136,12 +136,14 @@ export default function EditProfile() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                  <Label htmlFor="bio">Bio (Coming Soon)</Label>
                   <Textarea
                     id="bio"
                     value={formData.bio}
                     onChange={handleChange}
                     rows={3}
+                    disabled
+                    placeholder="Bio feature will be available soon"
                   />
                 </div>
 

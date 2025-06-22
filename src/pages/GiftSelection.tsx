@@ -174,9 +174,13 @@ export default function GiftSelection() {
       gift: gift.gift_url || gift.image_url || '',
       influencer: selectedInfluencerId,
       giftId: gift.id,
-      message: giftMessage || ''
+      message: giftMessage || '',
+      giftName: gift.name,
+      giftPrice: gift.price.toString(),
+      giftImage: gift.image_url || ''
     });
     
+    console.log("Navigating to place-order with params:", params.toString());
     navigate(`/place-order?${params.toString()}`);
     
   }, [gift, selectedInfluencerId, giftMessage, navigate, toast, user]);
