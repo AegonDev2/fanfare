@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/hooks/useUser';
 
-interface GiftRequest {
+export interface GiftRequest {
   id: string;
   sender_id: string;
   influencer_id: string;

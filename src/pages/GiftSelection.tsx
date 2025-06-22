@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -366,7 +365,7 @@ export default function GiftSelection() {
                     disabled={!gift || !selectedInfluencerId || !user}
                   >
                     <Gift className="h-4 w-4 mr-2" />
-                    Gift This
+                    Process Gift
                   </Button>
                 </CardFooter>
               </Card>

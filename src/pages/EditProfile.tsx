@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,10 +36,7 @@ export default function EditProfile() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select(`
-            name,
-            bio
-          `)
+          .select('name, bio')
           .eq('id', user.id)
           .single();
 
