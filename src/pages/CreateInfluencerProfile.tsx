@@ -64,21 +64,19 @@ export default function CreateInfluencerProfile() {
     setLoading(true);
 
     try {
-      // Basic profile data
+      // Basic profile data with required email field
       const profileData = {
         id: user.id,
+        email: user.email || '', // Add required email field
         name: formData.name,
-        bio: formData.bio,
-        instagram_url: formData.instagram_url,
-        youtube_url: formData.youtube_url,
-        website_url: formData.website_url,
         user_type: 'influencer'
+        // Remove fields that don't exist in the profiles table
       };
 
       // Insert or update profile data
       const { error: profileError } = await supabase
         .from('profiles')
-        .upsert([profileData], { onConflict: 'id' });
+        .upsert(profileData, { onConflict: 'id' });
 
       if (profileError) {
         throw profileError;

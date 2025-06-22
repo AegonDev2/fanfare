@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,11 +15,6 @@ import Navbar from '@/components/navigation/Navbar';
 
 interface FormData {
   name: string;
-  street_address: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  phone: string;
   bio: string;
 }
 
@@ -30,11 +26,6 @@ export default function EditProfile() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: "",
-    street_address: "",
-    city: "",
-    state: "",
-    postal_code: "",
-    phone: "",
     bio: "",
   });
 
@@ -48,11 +39,6 @@ export default function EditProfile() {
           .from('profiles')
           .select(`
             name,
-            street_address,
-            city,
-            state,
-            postal_code,
-            phone,
             bio
           `)
           .eq('id', user.id)
@@ -63,11 +49,6 @@ export default function EditProfile() {
         if (profile) {
           setFormData({
             name: profile.name || "",
-            street_address: profile.street_address || "",
-            city: profile.city || "",
-            state: profile.state || "",
-            postal_code: profile.postal_code || "",
-            phone: profile.phone || "",
             bio: profile.bio || "",
           });
         }
@@ -97,7 +78,7 @@ export default function EditProfile() {
 
     setLoading(true);
     try {
-      // Update profile
+      // Update profile - only update fields that exist in the profiles table
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -107,23 +88,6 @@ export default function EditProfile() {
         .eq('id', user.id);
 
       if (profileError) throw profileError;
-
-      // Update address
-      const addressData = {
-        name: formData.name,
-        street_address: formData.street_address || 'Not provided',
-        city: formData.city || 'Not provided', 
-        state: formData.state || 'Not provided',
-        postal_code: formData.postal_code || '000000',
-        phone: formData.phone || '0000000000'
-      };
-
-      const { error: addressError } = await supabase
-        .from('profiles')
-        .update(addressData)
-        .eq('id', user.id);
-
-      if (addressError) throw addressError;
 
       toast({
         title: "Profile updated",
@@ -164,26 +128,15 @@ export default function EditProfile() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Display Name</Label>
-                    <Input
-                      type="text"
-                      id="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      type="tel"
-                      id="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Display Name</Label>
+                  <Input
+                    type="text"
+                    id="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -194,50 +147,6 @@ export default function EditProfile() {
                     onChange={handleChange}
                     rows={3}
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Address</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="street_address">Street Address</Label>
-                      <Input
-                        type="text"
-                        id="street_address"
-                        value={formData.street_address}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
-                      <Input
-                        type="text"
-                        id="city"
-                        value={formData.city}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state">State</Label>
-                      <Input
-                        type="text"
-                        id="state"
-                        value={formData.state}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="postal_code">Postal Code</Label>
-                      <Input
-                        type="text"
-                        id="postal_code"
-                        value={formData.postal_code}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
                 </div>
 
                 <Button disabled={loading} className="bg-funky-purple hover:bg-funky-purple/90">

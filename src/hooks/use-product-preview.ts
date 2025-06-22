@@ -208,6 +208,9 @@ export const useProductPreview = () => {
     }
   };
 
+  // Add the missing handlePreviewProduct method
+  const handlePreviewProduct = fetchProductPreview;
+
   return {
     productPreview,
     setProductPreview,
@@ -215,6 +218,7 @@ export const useProductPreview = () => {
     fetchProgress,
     setFetchProgress,
     fetchProductPreview,
+    handlePreviewProduct,
     error,
     resetExtractionState,
     websitePreview,
