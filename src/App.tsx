@@ -26,6 +26,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrderDetails from "./pages/AdminOrderDetails";
 import NotFound from "./pages/NotFound";
 import Influencers from "./pages/Influencers";
+import GiftShop from "./pages/GiftShop";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/order/:orderId" element={<AdminOrderDetails />} />
             <Route path="/influencers" element={<Influencers />} />
+            <Route path="/gift-shop" element={<GiftShop />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

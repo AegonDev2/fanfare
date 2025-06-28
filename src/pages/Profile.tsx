@@ -1,370 +1,164 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-import ProfileHeader from "@/components/profile/ProfileHeader";
-import ProfileBio from "@/components/profile/ProfileBio";
-import SocialLinks from "@/components/profile/SocialLinks";
-import FanProfile from "@/components/profile/FanProfile";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useUser } from "@/hooks/useUser";
-import { Gift, Edit } from "lucide-react";
-import { useInfluencerProfile } from "@/hooks/useInfluencerProfile";
-import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 
-const Profile = () => {
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useUser } from "@/hooks/useUser";
+import { useInfluencerProfile } from "@/hooks/useInfluencerProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import FloatingHeader from '@/components/ui/floating-header';
+import Navbar from '@/components/navigation/Navbar';
+import ProfileHeader from '@/components/profile/ProfileHeader';
+import ProfileBio from '@/components/profile/ProfileBio';
+import SocialLinks from '@/components/profile/SocialLinks';
+import FanProfile from '@/components/profile/FanProfile';
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function Profile() {
   const { id } = useParams();
+  const { user } = useUser();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useUser();
-  
-  const isCurrentUserProfile = id ? user?.id === id : false;
+  const [navOpen, setNavOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   const profileId = id || user?.id;
-  
-  console.log("Profile component - profileId:", profileId, "user?.id:", user?.id);
-  
-  // First, fetch the basic profile to determine user type
-  const { data: basicProfile, isLoading: basicProfileLoading, error: basicProfileError } = useQuery({
-    queryKey: ['basic_profile', profileId],
-    queryFn: async () => {
-      if (!profileId) return null;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .maybeSingle();
+  const isCurrentUserProfile = profileId === user?.id;
 
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!profileId
-  });
+  const { influencer, isLoading: influencerLoading } = useInfluencerProfile(profileId || '');
 
-  // Only fetch influencer profile if user_type is 'influencer'
-  const { influencer, isLoading: influencerLoading, error: influencerError } = useInfluencerProfile(
-    basicProfile?.user_type === 'influencer' ? profileId : null
-  );
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!profileId) return;
 
-  const isLoading = basicProfileLoading || (basicProfile?.user_type === 'influencer' && influencerLoading);
-  const error = basicProfileError || (basicProfile?.user_type === 'influencer' ? influencerError : null);
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', profileId)
+          .single();
 
-  // Debug logging
-  console.log("Profile data:", { basicProfile, influencer, isLoading, error, profileId });
+        if (error) throw error;
 
-  // Handle redirection for missing profiles
-  if (!isLoading && !basicProfile && profileId) {
-    // If it's the current user and no profile exists, redirect to create profile
-    if (isCurrentUserProfile) {
-      // Check user role from user_roles table to determine which profile creation page
-      supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', profileId)
-        .then(({ data: roles }) => {
-          const hasInfluencerRole = roles?.some(r => r.role === 'influencer');
-          if (hasInfluencerRole) {
-            navigate('/create-influencer-profile');
-          } else {
-            navigate('/create-fan-profile');
-          }
-        })
-        .catch(() => {
-          // Default to fan profile creation
+        setUserProfile(profile);
+
+        // If it's the current user and they don't have a profile, redirect to create profile
+        if (isCurrentUserProfile && !profile) {
           navigate('/create-fan-profile');
+          return;
+        }
+
+        // If profile doesn't exist and it's not current user, show error
+        if (!profile) {
+          toast({
+            title: "Profile not found",
+            description: "The requested profile does not exist.",
+            variant: "destructive",
+          });
+          navigate('/home');
+          return;
+        }
+
+        // Check if current user needs to create their profile based on user type
+        if (isCurrentUserProfile && user) {
+          if (profile.user_type === 'influencer' && !influencer) {
+            navigate('/create-influencer-profile');
+            return;
+          }
+          if (profile.user_type === 'fan') {
+            // Fan profile exists in profiles table, no need for separate influencer profile
+            return;
+          }
+        }
+
+      } catch (error: any) {
+        console.error('Error fetching profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile",
+          variant: "destructive",
         });
-      return null;
-    }
-  }
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const foodPreferenceColors: Record<string, string> = {
-    "Vegetarian": "green",
-    "Vegan": "emerald", 
-    "Non-Vegetarian": "red",
-    "Pescatarian": "blue",
-    "Gluten-Free": "amber",
-    "Dairy-Free": "indigo",
-    "Keto": "purple",
-    "Paleo": "orange"
-  };
+    fetchProfile();
+  }, [profileId, user, navigate, toast, isCurrentUserProfile, influencer]);
 
-  const handleSendGift = async (giftItem: string, giftMessage: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to send gifts",
-        variant: "destructive"
-      });
-      navigate("/auth");
-      return;
-    }
-
-    const { error } = await supabase
-      .from('gifts_to_influencers')
-      .insert({
-        influencer_id: id,
-        sender_id: user.id,
-        gift_item: giftItem,
-        message: giftMessage
-      });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send gift. Please try again.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "Success",
-      description: "Gift sent successfully!"
-    });
-  };
-
-  if (isLoading) {
+  if (isLoading || influencerLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-        <div className="container mx-auto px-4 py-6">
-          <div className="bg-white/90 backdrop-blur-sm shadow-md rounded-lg p-6 animate-pulse border border-funky-purple/10">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="w-32 h-32 rounded-full bg-funky-purple/20"></div>
-              <div className="flex-1">
-                <div className="h-8 w-48 bg-funky-purple/20 rounded mb-2"></div>
-                <div className="h-4 w-32 bg-funky-purple/10 rounded mb-2"></div>
-                <div className="h-4 w-40 bg-funky-purple/10 rounded"></div>
-              </div>
-            </div>
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        
+        <div className="min-h-screen bg-background pt-20 p-4">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-24 w-full" />
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
-  if (error) {
-    console.error("Profile error:", error);
+  if (!userProfile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-        <div className="container mx-auto px-4 py-6">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error instanceof Error ? error.message : "Failed to load profile"}
-            <div className="mt-2">
-              <Button onClick={() => navigate('/influencers')} variant="outline" size="sm">
-                Back to Influencers
-              </Button>
-            </div>
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        
+        <div className="min-h-screen bg-background pt-20 p-4 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold mb-2">Profile not found</h2>
+            <p className="text-gray-600">The requested profile does not exist.</p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
-  if (!basicProfile) {
+  // Show fan profile for fan users
+  if (userProfile.user_type === 'fan') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-        <div className="container mx-auto px-4 py-6">
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
-            <p>Profile not found for ID: {profileId}</p>
-            <div className="mt-2">
-              <Button onClick={() => navigate('/influencers')} variant="outline" size="sm">
-                Back to Influencers
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        <FanProfile profile={userProfile} isCurrentUserProfile={isCurrentUserProfile} />
+      </>
     );
   }
 
-  // Render Fan Profile
-  if (basicProfile.user_type === 'fan') {
-    return <FanProfile profile={basicProfile} isCurrentUserProfile={isCurrentUserProfile} />;
-  }
-
-  // Render Influencer Profile
-  if (basicProfile.user_type === 'influencer' && !influencer) {
+  // Show influencer profile for influencer users
+  if (userProfile.user_type === 'influencer' && influencer) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-        <div className="container mx-auto px-4 py-6">
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
-            <p>Influencer profile not found. The user may need to complete their influencer profile setup.</p>
-            {isCurrentUserProfile && (
-              <div className="mt-2">
-                <Button onClick={() => navigate('/create-influencer-profile')} variant="outline" size="sm">
-                  Complete Influencer Profile
-                </Button>
-              </div>
-            )}
-          </div>
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        
+        <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pb-24">
+          <main className="container mx-auto px-4 py-6">
+            <ProfileHeader influencer={influencer} isCurrentUserProfile={isCurrentUserProfile} />
+            <ProfileBio influencer={influencer} />
+            <SocialLinks influencer={influencer} />
+          </main>
         </div>
-      </div>
-    );
-  }
-
-  if (!influencer) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-        <div className="container mx-auto px-4 py-6">
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
-            <p>Profile data not available</p>
-            <div className="mt-2">
-              <Button onClick={() => navigate('/influencers')} variant="outline" size="sm">
-                Back to Influencers
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pb-24 bg-rose-100 py-0">
-      <main className="container mx-auto px-4 py-6 bg-rose-100">
-        <motion.section 
-          className="shadow-md p-6 mb-8 rounded-3xl bg-white/80 backdrop-blur-sm border border-funky-purple/10"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <ProfileHeader
-            name={influencer.name}
-            platform={influencer.platform}
-            followers={influencer.followers}
-            profileImage={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'}  
-            onSendGift={handleSendGift}
-            profileId={influencer.id}
-          />
-          
-          <div className="flex flex-wrap gap-4 mt-6 mb-8">
-            {isCurrentUserProfile && (
-              <Button
-                onClick={() => navigate('/edit-profile')}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 border-funky-purple/20 hover:bg-funky-purple/10 text-funky-purple"
-              >
-                <Edit size={16} /> Edit Profile
-              </Button>
-            )}
-            
-            {influencer.id && (
-              <Button
-                onClick={() => navigate(`/wishlist/${influencer.id}`)}
-                variant="default"
-                size="sm"
-                className="flex items-center gap-2 bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple"
-              >
-                <Gift size={16} />
-                {isCurrentUserProfile ? "Manage Wishlist" : "View Wishlist"}
-              </Button>
-            )}
-          </div>
-          
-          <ProfileBio 
-            about={influencer.about || "No bio available."} 
-            hobbies={influencer.hobbies || []} 
-          />
-          
-          {/* Size & Preferences Section */}
-          {(influencer.size_preferences || isCurrentUserProfile) && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card className="p-6 mt-8 bg-white/90 backdrop-blur-sm shadow-md border border-funky-purple/10">
-                <h3 className="text-lg font-medium mb-4 bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">
-                  Size & Preferences
-                </h3>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {influencer.size_preferences?.tshirt_size && (
-                    <div className="p-3 rounded-lg bg-funky-purple/5 border border-funky-purple/10">
-                      <p className="text-xs text-gray-500 mb-1">T-shirt Size</p>
-                      <p className="font-medium text-funky-purple">{influencer.size_preferences.tshirt_size}</p>
-                    </div>
-                  )}
-                  
-                  {influencer.size_preferences?.pants_waist && (
-                    <div className="p-3 rounded-lg bg-funky-pink/5 border border-funky-pink/10">
-                      <p className="text-xs text-gray-500 mb-1">Pants Waist</p>
-                      <p className="font-medium text-funky-pink">{influencer.size_preferences.pants_waist}</p>
-                    </div>
-                  )}
-                  
-                  {influencer.size_preferences?.pants_length && (
-                    <div className="p-3 rounded-lg bg-funky-blue/5 border border-funky-blue/10">
-                      <p className="text-xs text-gray-500 mb-1">Pants Length</p>
-                      <p className="font-medium text-funky-blue">{influencer.size_preferences.pants_length}</p>
-                    </div>
-                  )}
-                  
-                  {influencer.size_preferences?.shoe_size && (
-                    <div className="p-3 rounded-lg bg-funky-orange/5 border border-funky-orange/10">
-                      <p className="text-xs text-gray-500 mb-1">Shoe Size</p>
-                      <p className="font-medium text-funky-orange">{influencer.size_preferences.shoe_size}</p>
-                    </div>
-                  )}
-                </div>
-                
-                {influencer.size_preferences?.food_preferences && influencer.size_preferences.food_preferences.length > 0 && (
-                  <div className="mt-6">
-                    <p className="text-xs text-gray-500 mb-2">Food Preferences</p>
-                    <div className="flex flex-wrap gap-2">
-                      {influencer.size_preferences.food_preferences.map((pref, index) => {
-                        const prefColor = foodPreferenceColors[pref] || "gray";
-                        return (
-                          <span 
-                            key={index}
-                            className={`bg-${prefColor}-100 text-${prefColor}-800 text-xs px-3 py-1 rounded-full border border-${prefColor}-200`}
-                          >
-                            {pref}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                
-                {isCurrentUserProfile && !influencer.size_preferences && (
-                  <div className="text-center py-4 bg-funky-purple/5 rounded-lg border border-funky-purple/10">
-                    <p className="text-sm text-gray-600 mb-3">You haven't added size & preference information yet</p>
-                    <Button
-                      onClick={() => navigate('/edit-profile')}
-                      variant="default"
-                      size="sm"
-                      className="bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple"
-                    >
-                      Add Sizes & Preferences
-                    </Button>
-                  </div>
-                )}
-              </Card>
-            </motion.div>
-          )}
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-8"
-          >
-            <SocialLinks
-              youtubeUrl={influencer.youtube_url}
-              instagramUrl={influencer.instagram_url}
-              twitterUrl={influencer.twitter_url}
-              facebookUrl={influencer.facebook_url}
-            />
-          </motion.div>
-        </motion.section>
-      </main>
-    </div>
+    <>
+      <FloatingHeader setNavOpen={setNavOpen} />
+      <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+      
+      <div className="min-h-screen bg-background pt-20 p-4 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">Profile Incomplete</h2>
+          <p className="text-gray-600">Please complete your profile setup.</p>
+        </div>
+      </div>
+    </>
   );
-};
-
-export default Profile;
+}
