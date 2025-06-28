@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInfluencers, useInfluencerCategories, DatabaseInfluencer } from '@/hooks/useInfluencers';
@@ -10,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Filter, Users, Gift, ArrowLeft } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export default function Influencers() {
   const navigate = useNavigate();
@@ -21,6 +19,7 @@ export default function Influencers() {
   const { data: categories = [] } = useInfluencerCategories();
 
   const handleProfileClick = (id: string) => {
+    console.log("Navigating to profile:", id);
     navigate(`/profile/${id}`);
   };
 

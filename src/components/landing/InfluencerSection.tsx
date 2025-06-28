@@ -1,10 +1,9 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Gift, User, Users } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import { memo, useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { memo, useState, useMemo, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useInfluencers, DatabaseInfluencer } from "@/hooks/useInfluencers";
@@ -24,6 +23,7 @@ const InfluencerCard = memo(({
 
   const handleGiftClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log("Gift click for influencer:", influencer.id);
     navigate(`/place-order?influencer=${influencer.id}`);
   };
 
@@ -39,7 +39,10 @@ const InfluencerCard = memo(({
   return (
     <div 
       className={cn("p-1 lg:p-2 h-full relative group cursor-pointer transition-all duration-300 transform hover:translate-y-[-5px]")}
-      onClick={() => onProfileClick(influencer.id)}
+      onClick={() => {
+        console.log("Profile click for influencer:", influencer.id);
+        onProfileClick(influencer.id);
+      }}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
@@ -83,7 +86,10 @@ const InfluencerCard = memo(({
           <Button 
             size="sm" 
             variant="secondary" 
-            onClick={() => onProfileClick(influencer.id)} 
+            onClick={(e) => {
+              e.stopPropagation();
+              onProfileClick(influencer.id);
+            }} 
             className="mt-1 w-full text-[10px] lg:text-xs py-1 px-2 transition-all duration-300 border border-funky-purple/20 text-stone-50 bg-funky-purple"
           >
             <User className="h-3 w-3 mr-1" />
@@ -107,6 +113,7 @@ const InfluencerSection = () => {
   const { data: influencers = [], isLoading } = useInfluencers(searchQuery);
 
   const handleProfileClick = (id: string) => {
+    console.log("Navigating to profile from InfluencerSection:", id);
     navigate(`/profile/${id}`);
     setShowSuggestions(false);
   };

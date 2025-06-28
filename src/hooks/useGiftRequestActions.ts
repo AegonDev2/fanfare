@@ -89,7 +89,7 @@ export const useGiftRequestActions = (
             .from('orders_under_process')
             .insert({
               influencer_id: request.influencer_id,
-              user_id: request.sender.id,
+              user_id: request.sender_id,
               product_url: request.product_url,
               product_title: request.product_title || "Gift from fan",
               product_price: request.product_price,
@@ -132,12 +132,12 @@ export const useGiftRequestActions = (
             'new_approved_gift',
             `New gift order approved by influencer and ready for processing`,
             orderData.id,
-            request.sender.id
+            request.sender_id
           );
 
           // Notify the fan that their gift request was approved
           await supabase.from("notifications").insert({
-            recipient_id: request.sender.id,
+            recipient_id: request.sender_id,
             type: "gift_request_approved",
             message: `Your gift request has been approved by the influencer and is being processed.`,
             reference_id: orderData.id,
@@ -151,7 +151,7 @@ export const useGiftRequestActions = (
         const request = requests.find(r => r.id === id);
         if (request) {
           await supabase.from("notifications").insert({
-            recipient_id: request.sender.id,
+            recipient_id: request.sender_id,
             type: "gift_request_rejected",
             message: `Your gift request has been rejected by the influencer.`,
             reference_id: id,
