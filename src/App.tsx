@@ -12,6 +12,7 @@ import PlaceOrder from "./pages/PlaceOrder";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import CreateInfluencerProfile from "./pages/CreateInfluencerProfile";
+import CreateFanProfile from "./pages/CreateFanProfile";
 import GiftSelection from "./pages/GiftSelection";
 import GiftRequests from "./pages/GiftRequests";
 import GiftsSent from "./pages/GiftsSent";
@@ -43,8 +44,10 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/place-order" element={<PlaceOrder />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/create-influencer-profile" element={<CreateInfluencerProfile />} />
+            <Route path="/create-fan-profile" element={<CreateFanProfile />} />
             <Route path="/gift-selection" element={<GiftSelection />} />
             <Route path="/gift-requests" element={<GiftRequests />} />
             <Route path="/gifts-sent" element={<GiftsSent />} />
@@ -53,6 +56,7 @@ function App() {
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/wishlist/:id" element={<Wishlist />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/order/:orderId" element={<AdminOrderDetails />} />

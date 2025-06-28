@@ -1,9 +1,9 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileBio from "@/components/profile/ProfileBio";
 import SocialLinks from "@/components/profile/SocialLinks";
+import FanProfile from "@/components/profile/FanProfile";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useUser } from "@/hooks/useUser";
@@ -11,6 +11,7 @@ import { Gift, Edit } from "lucide-react";
 import { useInfluencerProfile } from "@/hooks/useInfluencerProfile";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const Profile = () => {
   const { id } = useParams();
@@ -23,10 +24,59 @@ const Profile = () => {
   
   console.log("Profile component - profileId:", profileId, "user?.id:", user?.id);
   
-  const { influencer, isLoading, error } = useInfluencerProfile(profileId);
-  
+  // First, fetch the basic profile to determine user type
+  const { data: basicProfile, isLoading: basicProfileLoading, error: basicProfileError } = useQuery({
+    queryKey: ['basic_profile', profileId],
+    queryFn: async () => {
+      if (!profileId) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profileId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profileId
+  });
+
+  // Only fetch influencer profile if user_type is 'influencer'
+  const { influencer, isLoading: influencerLoading, error: influencerError } = useInfluencerProfile(
+    basicProfile?.user_type === 'influencer' ? profileId : null
+  );
+
+  const isLoading = basicProfileLoading || (basicProfile?.user_type === 'influencer' && influencerLoading);
+  const error = basicProfileError || (basicProfile?.user_type === 'influencer' ? influencerError : null);
+
   // Debug logging
-  console.log("Profile data:", { influencer, isLoading, error, profileId });
+  console.log("Profile data:", { basicProfile, influencer, isLoading, error, profileId });
+
+  // Handle redirection for missing profiles
+  if (!isLoading && !basicProfile && profileId) {
+    // If it's the current user and no profile exists, redirect to create profile
+    if (isCurrentUserProfile) {
+      // Check user role from user_roles table to determine which profile creation page
+      supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', profileId)
+        .then(({ data: roles }) => {
+          const hasInfluencerRole = roles?.some(r => r.role === 'influencer');
+          if (hasInfluencerRole) {
+            navigate('/create-influencer-profile');
+          } else {
+            navigate('/create-fan-profile');
+          }
+        })
+        .catch(() => {
+          // Default to fan profile creation
+          navigate('/create-fan-profile');
+        });
+      return null;
+    }
+  }
 
   const foodPreferenceColors: Record<string, string> = {
     "Vegetarian": "green",
@@ -39,7 +89,6 @@ const Profile = () => {
     "Paleo": "orange"
   };
 
-  // This function is no longer used directly, but kept for backward compatibility
   const handleSendGift = async (giftItem: string, giftMessage: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -102,7 +151,7 @@ const Profile = () => {
       <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
         <div className="container mx-auto px-4 py-6">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error instanceof Error ? error.message : "Failed to load influencer profile"}
+            {error instanceof Error ? error.message : "Failed to load profile"}
             <div className="mt-2">
               <Button onClick={() => navigate('/influencers')} variant="outline" size="sm">
                 Back to Influencers
@@ -114,12 +163,54 @@ const Profile = () => {
     );
   }
 
+  if (!basicProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
+        <div className="container mx-auto px-4 py-6">
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
+            <p>Profile not found for ID: {profileId}</p>
+            <div className="mt-2">
+              <Button onClick={() => navigate('/influencers')} variant="outline" size="sm">
+                Back to Influencers
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Fan Profile
+  if (basicProfile.user_type === 'fan') {
+    return <FanProfile profile={basicProfile} isCurrentUserProfile={isCurrentUserProfile} />;
+  }
+
+  // Render Influencer Profile
+  if (basicProfile.user_type === 'influencer' && !influencer) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
+        <div className="container mx-auto px-4 py-6">
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
+            <p>Influencer profile not found. The user may need to complete their influencer profile setup.</p>
+            {isCurrentUserProfile && (
+              <div className="mt-2">
+                <Button onClick={() => navigate('/create-influencer-profile')} variant="outline" size="sm">
+                  Complete Influencer Profile
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!influencer) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
         <div className="container mx-auto px-4 py-6">
           <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
-            <p>Influencer profile not found for ID: {profileId}</p>
+            <p>Profile data not available</p>
             <div className="mt-2">
               <Button onClick={() => navigate('/influencers')} variant="outline" size="sm">
                 Back to Influencers
