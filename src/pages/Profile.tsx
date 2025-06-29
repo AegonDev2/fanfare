@@ -1,92 +1,79 @@
 
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useUser } from "@/hooks/useUser";
-import { useInfluencerProfile } from "@/hooks/useInfluencerProfile";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useUser } from '@/hooks/useUser';
+import { useInfluencerProfile } from '@/hooks/useInfluencerProfile';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileBio from '@/components/profile/ProfileBio';
 import SocialLinks from '@/components/profile/SocialLinks';
 import FanProfile from '@/components/profile/FanProfile';
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Profile() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { user } = useUser();
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
+  // Determine the profile ID to load
   const profileId = id || user?.id;
-  const isCurrentUserProfile = profileId === user?.id;
+  const isCurrentUserProfile = !id || id === user?.id;
 
-  const { influencer, isLoading: influencerLoading } = useInfluencerProfile(profileId || '');
+  const { 
+    influencer, 
+    isLoading: influencerLoading, 
+    error: influencerError 
+  } = useInfluencerProfile(profileId || '');
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!profileId) return;
-
+    if (!user && !profileLoaded) return;
+    
+    const handleProfileLoad = async () => {
       try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', profileId)
-          .single();
-
-        if (error) throw error;
-
-        setUserProfile(profile);
-
-        // If it's the current user and they don't have a profile, redirect to create profile
-        if (isCurrentUserProfile && !profile) {
-          navigate('/create-fan-profile');
-          return;
-        }
-
-        // If profile doesn't exist and it's not current user, show error
-        if (!profile) {
+        if (!profileId) {
           toast({
-            title: "Profile not found",
-            description: "The requested profile does not exist.",
-            variant: "destructive",
+            title: "Profile Not Found",
+            description: "Unable to load profile information",
+            variant: "destructive"
           });
-          navigate('/home');
+          navigate('/');
           return;
         }
 
-        // Check if current user needs to create their profile based on user type
-        if (isCurrentUserProfile && user) {
-          if (profile.user_type === 'influencer' && !influencer) {
+        if (isCurrentUserProfile && user && !influencer && !influencerLoading) {
+          // Check if current user needs to create a profile
+          const userType = user.user_metadata?.user_type;
+          
+          if (userType === 'influencer') {
             navigate('/create-influencer-profile');
             return;
-          }
-          if (profile.user_type === 'fan') {
-            // Fan profile exists in profiles table, no need for separate influencer profile
+          } else if (userType === 'fan') {
+            navigate('/create-fan-profile');
             return;
           }
         }
 
-      } catch (error: any) {
-        console.error('Error fetching profile:', error);
+        setProfileLoaded(true);
+      } catch (error) {
+        console.error('Error in profile loading:', error);
         toast({
           title: "Error",
           description: "Failed to load profile",
-          variant: "destructive",
+          variant: "destructive"
         });
-      } finally {
-        setIsLoading(false);
       }
     };
 
-    fetchProfile();
-  }, [profileId, user, navigate, toast, isCurrentUserProfile, influencer]);
+    handleProfileLoad();
+  }, [user, profileId, isCurrentUserProfile, influencer, influencerLoading, navigate, toast, profileLoaded]);
 
-  if (isLoading || influencerLoading) {
+  // Show loading state
+  if (influencerLoading || !profileLoaded) {
     return (
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
@@ -94,16 +81,17 @@ export default function Profile() {
         
         <div className="min-h-screen bg-background pt-20 p-4">
           <div className="max-w-4xl mx-auto space-y-6">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-32 w-full rounded-lg" />
+            <Skeleton className="h-48 w-full rounded-lg" />
+            <Skeleton className="h-24 w-full rounded-lg" />
           </div>
         </div>
       </>
     );
   }
 
-  if (!userProfile) {
+  // Handle error states
+  if (influencerError) {
     return (
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
@@ -111,43 +99,62 @@ export default function Profile() {
         
         <div className="min-h-screen bg-background pt-20 p-4 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-2">Profile not found</h2>
-            <p className="text-gray-600">The requested profile does not exist.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Error</h2>
+            <p className="text-gray-600 mb-4">Unable to load profile information</p>
+            <button 
+              onClick={() => navigate('/')}
+              className="px-4 py-2 bg-funky-purple text-white rounded-md hover:bg-funky-purple/90"
+            >
+              Go Home
+            </button>
           </div>
         </div>
       </>
     );
   }
 
-  // Show fan profile for fan users
-  if (userProfile.user_type === 'fan') {
-    return (
-      <>
-        <FloatingHeader setNavOpen={setNavOpen} />
-        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
-        <FanProfile profile={userProfile} isCurrentUserProfile={isCurrentUserProfile} />
-      </>
-    );
-  }
-
-  // Show influencer profile for influencer users
-  if (userProfile.user_type === 'influencer' && influencer) {
+  // Show influencer profile if found
+  if (influencer) {
     return (
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
         <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
         
-        <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pb-24">
-          <main className="container mx-auto px-4 py-6">
-            <ProfileHeader influencer={influencer} isCurrentUserProfile={isCurrentUserProfile} />
-            <ProfileBio influencer={influencer} />
-            <SocialLinks influencer={influencer} />
-          </main>
+        <div className="min-h-screen bg-background pt-20">
+          <div className="max-w-4xl mx-auto p-4 space-y-6">
+            <ProfileHeader 
+              profile={influencer}
+              isCurrentUserProfile={isCurrentUserProfile}
+            />
+            <ProfileBio profile={influencer} />
+            <SocialLinks profile={influencer} />
+          </div>
         </div>
       </>
     );
   }
 
+  // Show fan profile or redirect to create profile
+  if (isCurrentUserProfile && user) {
+    const userType = user.user_metadata?.user_type;
+    
+    if (userType === 'fan') {
+      return (
+        <>
+          <FloatingHeader setNavOpen={setNavOpen} />
+          <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+          
+          <div className="min-h-screen bg-background pt-20">
+            <div className="max-w-4xl mx-auto p-4 space-y-6">
+              <FanProfile user={user} />
+            </div>
+          </div>
+        </>
+      );
+    }
+  }
+
+  // Fallback - profile not found
   return (
     <>
       <FloatingHeader setNavOpen={setNavOpen} />
@@ -155,8 +162,14 @@ export default function Profile() {
       
       <div className="min-h-screen bg-background pt-20 p-4 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Profile Incomplete</h2>
-          <p className="text-gray-600">Please complete your profile setup.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
+          <p className="text-gray-600 mb-4">The requested profile could not be found</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="px-4 py-2 bg-funky-purple text-white rounded-md hover:bg-funky-purple/90"
+          >
+            Go Home
+          </button>
         </div>
       </div>
     </>

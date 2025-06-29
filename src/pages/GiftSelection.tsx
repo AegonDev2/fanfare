@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -7,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Gift, ChevronRight, Loader2, X } from 'lucide-react';
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
-import GiftSection from '@/components/landing/GiftSection';
 import InfluencerSelector from '@/components/gift-selection/InfluencerSelector';
 import GiftMessage from '@/components/gift-selection/GiftMessage';
 import { useGiftItems, GiftItem } from '@/hooks/useGiftItems';
@@ -245,7 +245,7 @@ export default function GiftSelection() {
                 <CardHeader>
                   <CardTitle>Gift Selection</CardTitle>
                   <CardDescription>
-                    Select a gift to send to your favorite influencer
+                    {gift ? 'Selected gift ready to send' : 'Visit the Gift Shop to browse available gifts'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -280,19 +280,19 @@ export default function GiftSelection() {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-gray-500 py-4">
-                      Please select a gift from the options below
-                    </p>
+                    <div className="text-center py-8">
+                      <Gift className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 mb-4">No gift selected</p>
+                      <Button 
+                        onClick={() => navigate('/gift-shop')}
+                        className="bg-gradient-to-r from-funky-purple to-funky-pink text-white"
+                      >
+                        Browse Gift Shop
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>
-              
-              {/* Only show gift section if not coming from wishlist */}
-              {!wishlistUrl && (
-                <div className="mb-8">
-                  <GiftSection />
-                </div>
-              )}
             </div>
             
             <div className="md:col-span-1">
@@ -340,7 +340,13 @@ export default function GiftSelection() {
                       ) : (
                         <div className="text-center py-8">
                           <Gift className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                          <p className="text-gray-500">No gift selected</p>
+                          <p className="text-gray-500 mb-4">No gift selected</p>
+                          <Button 
+                            onClick={() => navigate('/gift-shop')}
+                            className="w-full bg-gradient-to-r from-funky-purple to-funky-pink text-white"
+                          >
+                            Browse Gift Shop
+                          </Button>
                         </div>
                       )}
                     </TabsContent>

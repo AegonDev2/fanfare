@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,6 @@ import { useShops } from '@/hooks/useShops';
 import { useShopProducts } from '@/hooks/useShopProducts';
 import { useUser } from '@/hooks/useUser';
 import { hasRole } from '@/utils/roleManager';
-import { supabase } from '@/integrations/supabase/client';
 
 export default function GiftShop() {
   const [navOpen, setNavOpen] = useState(false);
@@ -31,7 +30,7 @@ export default function GiftShop() {
   const { data: products = [], isLoading: productsLoading, refetch: refetchProducts } = useShopProducts(selectedShopId);
 
   // Check if user is admin
-  useState(() => {
+  useEffect(() => {
     const checkAdminRole = async () => {
       if (user) {
         const isUserAdmin = await hasRole(user.id, 'admin');
