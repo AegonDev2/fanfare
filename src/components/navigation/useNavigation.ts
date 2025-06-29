@@ -1,3 +1,4 @@
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -127,6 +128,13 @@ export const useNavigation = () => {
       title: 'About Us',
       path: '/about',
       icon: 'Info',
+      roles: ['fan', 'influencer', 'admin'] as NavRole[],
+    },
+    {
+      id: 'gift-shop',
+      title: 'Gift Shop',
+      path: '/gift-shop',
+      icon: 'Store',
       roles: ['fan', 'influencer', 'admin'] as NavRole[],
     },
     {
