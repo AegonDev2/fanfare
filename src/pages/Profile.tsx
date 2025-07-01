@@ -123,11 +123,11 @@ export default function Profile() {
         <div className="min-h-screen bg-background pt-20">
           <div className="max-w-4xl mx-auto p-4 space-y-6">
             <ProfileHeader 
-              profile={influencer}
+              profileId={influencer.id}
               isCurrentUserProfile={isCurrentUserProfile}
             />
-            <ProfileBio profile={influencer} />
-            <SocialLinks profile={influencer} />
+            <ProfileBio profileId={influencer.id} />
+            <SocialLinks profileId={influencer.id} />
           </div>
         </div>
       </>
@@ -146,7 +146,7 @@ export default function Profile() {
           
           <div className="min-h-screen bg-background pt-20">
             <div className="max-w-4xl mx-auto p-4 space-y-6">
-              <FanProfile user={user} />
+              <FanProfile userId={user.id} />
             </div>
           </div>
         </>

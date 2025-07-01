@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Store, ExternalLink } from "lucide-react";
 import { Shop } from "@/hooks/useShops";
+import { useNavigate } from "react-router-dom";
 
 interface ShopTileViewProps {
   shops: Shop[];
@@ -13,6 +14,8 @@ interface ShopTileViewProps {
 }
 
 export default function ShopTileView({ shops, isLoading, onShopSelect, selectedShopId }: ShopTileViewProps) {
+  const navigate = useNavigate();
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -41,7 +44,7 @@ export default function ShopTileView({ shops, isLoading, onShopSelect, selectedS
           className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
             selectedShopId === shop.id ? 'ring-2 ring-funky-purple bg-funky-purple/5' : ''
           }`}
-          onClick={() => onShopSelect(shop.id)}
+          onClick={() => navigate(`/shop/${shop.id}`)}
         >
           <CardContent className="p-0">
             {/* Shop Image/Logo */}
@@ -92,7 +95,7 @@ export default function ShopTileView({ shops, isLoading, onShopSelect, selectedS
                 className="w-full border-funky-purple text-funky-purple hover:bg-funky-purple hover:text-white"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onShopSelect(shop.id);
+                  navigate(`/shop/${shop.id}`);
                 }}
               >
                 View Products

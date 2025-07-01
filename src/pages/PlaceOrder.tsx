@@ -43,20 +43,21 @@ export default function PlaceOrder() {
   const { isLoading, paymentStep, orderError, submitOrder } = useOrderSubmission();
   const { influencer } = useInfluencerProfile(selectedInfluencerId || '');
 
-  // Handle pre-filled data from GiftSelection
+  // Handle pre-filled data from GiftSelection or ShopView
   useEffect(() => {
     const giftName = searchParams.get('giftName');
     const giftPrice = searchParams.get('giftPrice');
     const giftImage = searchParams.get('giftImage');
+    const giftId = searchParams.get('giftId');
     
-    if (giftName && giftPrice && giftImage && giftUrl) {
-      // Create ProductDetails from the provided data
+    if (giftName && giftPrice && giftImage && (giftUrl || giftId)) {
+      // Create ProductDetails from the provided data (shop product)
       const prefilledProduct: ProductDetails = {
         name: decodeURIComponent(giftName),
         price: `₹${giftPrice}`,
         priceInr: parseFloat(giftPrice),
         image: decodeURIComponent(giftImage),
-        description: 'Selected gift item',
+        description: 'Selected gift item from shop',
         platformFee: 5.00
       };
       
@@ -148,8 +149,11 @@ export default function PlaceOrder() {
       created_at: new Date().toISOString()
     };
 
+    // Use the actual gift URL if available, otherwise use a placeholder
+    const orderUrl = giftUrl || searchParams.get('gift') || 'shop-product';
+
     await submitOrder(
-      giftUrl,
+      orderUrl,
       message,
       selectedInfluencerId,
       productPreview,
@@ -175,6 +179,9 @@ export default function PlaceOrder() {
       </div>
     );
   }
+
+  // Check if this is a shop product (has giftName, giftPrice, giftImage)
+  const isShopProduct = searchParams.get('giftName') && searchParams.get('giftPrice') && searchParams.get('giftImage');
 
   return (
     <>
@@ -208,25 +215,27 @@ export default function PlaceOrder() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column - Order Details */}
             <div className="space-y-6">
-              {/* Step 1: Product URL */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Gift className="mr-2 h-5 w-5" />
-                    <span>Product Details</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ProductUrlInput
-                    giftItem={giftUrl}
-                    onUrlChange={setGiftUrl}
-                    onPreviewClick={handleUrlSubmit}
-                    isFetchingProduct={isFetchingProduct}
-                    fetchProgress={fetchProgress}
-                    isGeneratingPreview={isGeneratingPreview}
-                  />
-                </CardContent>
-              </Card>
+              {/* Step 1: Product URL - Only show if not a shop product */}
+              {!isShopProduct && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Gift className="mr-2 h-5 w-5" />
+                      <span>Product Details</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ProductUrlInput
+                      giftItem={giftUrl}
+                      onUrlChange={setGiftUrl}
+                      onPreviewClick={handleUrlSubmit}
+                      isFetchingProduct={isFetchingProduct}
+                      fetchProgress={fetchProgress}
+                      isGeneratingPreview={isGeneratingPreview}
+                    />
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Step 2: Product Preview */}
               {productPreview && currentStep !== 'select' && (
