@@ -47,7 +47,7 @@ export default function Profile() {
 
         if (isCurrentUserProfile && user && !influencer && !influencerLoading) {
           // Check if current user needs to create a profile
-          const userType = user.user_metadata?.user_type;
+          const userType = user.user_type; // Fixed: removed .user_metadata reference
           
           if (userType === 'influencer') {
             navigate('/create-influencer-profile');
@@ -113,7 +113,7 @@ export default function Profile() {
     );
   }
 
-  // Show influencer profile if found
+  // Show influencer profile if found  
   if (influencer) {
     return (
       <>
@@ -133,7 +133,7 @@ export default function Profile() {
 
   // Show fan profile or redirect to create profile
   if (isCurrentUserProfile && user) {
-    const userType = user.user_metadata?.user_type;
+    const userType = user.user_type; // Fixed: removed .user_metadata reference
     
     if (userType === 'fan') {
       return (

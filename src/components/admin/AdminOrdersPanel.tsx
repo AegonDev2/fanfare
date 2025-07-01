@@ -92,7 +92,7 @@ export default function AdminOrdersPanel() {
           platform_fee: item.platform_fee || 5.00,
           total_amount: item.total_amount || 0,
           created_at: item.created_at,
-          status: 'under_process',
+          status: 'under process', // Fixed: changed from 'under_process' to 'under process'
           influencer_id: item.influencer_id,
           message: item.message,
         })),
@@ -128,7 +128,7 @@ export default function AdminOrdersPanel() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      if (newStatus === 'under_process') {
+      if (newStatus === 'under process') {
         // Move from gift_requests to orders_under_process
         const order = orders.find(o => o.id === orderId);
         if (!order) throw new Error('Order not found');
@@ -153,7 +153,7 @@ export default function AdminOrdersPanel() {
         // Update gift_requests status
         const { error: updateError } = await supabase
           .from('gift_requests')
-          .update({ status: 'under_process' })
+          .update({ status: 'under process' })
           .eq('id', orderId);
 
         if (updateError) throw updateError;
@@ -199,7 +199,7 @@ export default function AdminOrdersPanel() {
   }, []);
 
   const pendingOrders = orders.filter(o => o.status === 'pending');
-  const underProcessOrders = orders.filter(o => o.status === 'under_process');
+  const underProcessOrders = orders.filter(o => o.status === 'under process');
   const completedOrders = orders.filter(o => o.status === 'completed');
   const acceptedOrders = orders.filter(o => o.status === 'accepted');
 
@@ -214,17 +214,17 @@ export default function AdminOrdersPanel() {
             variant={
               order.status === 'pending' ? 'secondary' :
               order.status === 'accepted' ? 'default' :
-              order.status === 'under_process' ? 'outline' :
+              order.status === 'under process' ? 'outline' :
               order.status === 'completed' ? 'secondary' : 'secondary'
             }
             className={
               order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
               order.status === 'accepted' ? 'bg-green-100 text-green-800' :
-              order.status === 'under_process' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+              order.status === 'under process' ? 'bg-blue-100 text-blue-800 border-blue-300' :
               order.status === 'completed' ? 'bg-green-100 text-green-800' : ''
             }
           >
-            {order.status === 'under_process' ? 'Processing' : 
+            {order.status === 'under process' ? 'Processing' : 
              order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
           </Badge>
         </div>
@@ -266,7 +266,7 @@ export default function AdminOrdersPanel() {
             <>
               <Button
                 size="sm"
-                onClick={() => handleStatusChange(order.id, 'under_process')}
+                onClick={() => handleStatusChange(order.id, 'under process')}
                 className="flex-1"
               >
                 Accept & Process
@@ -281,7 +281,7 @@ export default function AdminOrdersPanel() {
             </>
           )}
           
-          {order.status === 'under_process' && (
+          {order.status === 'under process' && (
             <Button
               size="sm"
               onClick={() => handleStatusChange(order.id, 'completed')}
