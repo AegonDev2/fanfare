@@ -1,11 +1,12 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, User, Bell, X } from "lucide-react";
+import { Menu, User, Settings, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { hasRole } from "@/utils/roleManager";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import WalletWidget from "@/components/wallet/WalletWidget";
 
@@ -19,6 +20,7 @@ const FloatingHeader = ({
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -26,7 +28,22 @@ const FloatingHeader = ({
     const checkUser = async () => {
       try {
         const { data } = await supabase.auth.getUser();
-        setUser(data?.user || null);
+        const currentUser = data?.user || null;
+        setUser(currentUser);
+        
+        // Check if user is admin
+        if (currentUser) {
+          // Special check for hardcoded admin user
+          if (currentUser.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237" || currentUser.email === 'admin@fanfare.com') {
+            setIsAdmin(true);
+          } else {
+            // Check role from database
+            const adminRole = await hasRole(currentUser.id, 'admin');
+            setIsAdmin(adminRole);
+          }
+        } else {
+          setIsAdmin(false);
+        }
       } catch (error) {
         console.error("Error checking user:", error);
       }
@@ -86,6 +103,17 @@ const FloatingHeader = ({
             {user ? <>
                 <WalletWidget />
                 <NotificationCenter />
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate('/admin')}
+                    className="rounded-full text-white mx-2 bg-red-600 hover:bg-red-700 h-8 w-8 lg:h-10 lg:w-10"
+                    title="Admin Panel"
+                  >
+                    <Settings className="h-4 w-4 lg:h-5 lg:w-5" />
+                  </Button>
+                )}
                 <div className="relative group">
                   <Button variant="ghost" size="icon" onClick={() => navigate(`/profile/${user.id}`)} className="rounded-full text-funky-purple mx-3 lg:mx-[20px] bg-stone-400 hover:bg-stone-300 h-8 w-8 lg:h-10 lg:w-10">
                     <User className="h-4 w-4 lg:h-5 lg:w-5" />
@@ -98,6 +126,11 @@ const FloatingHeader = ({
                       <Button variant="ghost" className="w-full justify-start text-left text-sm" onClick={() => navigate('/settings')}>
                         Settings
                       </Button>
+                      {isAdmin && (
+                        <Button variant="ghost" className="w-full justify-start text-left text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => navigate('/admin')}>
+                          Admin Panel
+                        </Button>
+                      )}
                       <Button variant="ghost" className="w-full justify-start text-left text-sm text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={handleSignOut} disabled={isLoading}>
                         {isLoading ? "Signing out..." : "Sign Out"}
                       </Button>
