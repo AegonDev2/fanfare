@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ import Navbar from '@/components/navigation/Navbar';
 export default function PlaceOrder() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useUser();
+  const { user, isLoading: userLoading } = useUser();
   const { toast } = useToast();
   const [navOpen, setNavOpen] = useState(false);
   
@@ -66,8 +65,13 @@ export default function PlaceOrder() {
     }
   }, [searchParams, giftUrl, setProductPreview]);
 
+  // Fixed authentication check - only redirect if user is explicitly not authenticated and not loading
   useEffect(() => {
-    if (!user) {
+    console.log("PlaceOrder auth check - User:", !!user, "Loading:", userLoading);
+    
+    // Only redirect if we're done loading and there's no user
+    if (!userLoading && !user) {
+      console.log("User not authenticated, redirecting to auth");
       toast({
         title: "Authentication Required",
         description: "Please log in to place an order",
@@ -75,7 +79,7 @@ export default function PlaceOrder() {
       });
       navigate('/auth');
     }
-  }, [user, navigate, toast]);
+  }, [user, userLoading, navigate, toast]);
 
   const handleUrlSubmit = async () => {
     if (!giftUrl.trim()) {
@@ -160,6 +164,24 @@ export default function PlaceOrder() {
       influencerAddress
     );
   };
+
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 text-center">
+            <p>Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Don't render the main content if user is not authenticated
+  if (!user) {
+    return null; // This will be handled by the useEffect redirect
+  }
 
   if (paymentStep === 'complete') {
     return (
