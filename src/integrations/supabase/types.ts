@@ -905,6 +905,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
       move_order_to_accepted: {
         Args: { order_id: string }
         Returns: boolean

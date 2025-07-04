@@ -24,6 +24,8 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
 
   // Redirects to place order page with influencer ID
   const handleSendGift = () => {
+    console.log("Send Gift clicked - Auth status:", isAuthenticated, "Loading:", isLoading);
+    
     // Check if user is authenticated
     if (!isAuthenticated) {
       toast({
@@ -38,6 +40,7 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
     }
     
     // If authenticated, proceed to place order
+    console.log("Navigating to place order with influencer:", profileId);
     navigate(`/place-order?influencer=${profileId}`);
   };
 
@@ -45,7 +48,18 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
   const checkUserPermissions = async () => {
     try {
       setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log("Checking user permissions...");
+      
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error("Auth error:", error);
+        setIsAuthenticated(false);
+        setCanEdit(false);
+        return;
+      }
+      
+      console.log("Auth user:", user ? "authenticated" : "not authenticated");
       
       // Set authentication status
       setIsAuthenticated(!!user);
@@ -53,8 +67,10 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
       // Set edit permission (only if user is owner of profile)
       if (user && user.id === profileId) {
         setCanEdit(true);
+        console.log("User can edit this profile");
       } else {
         setCanEdit(false);
+        console.log("User cannot edit this profile");
       }
     } catch (error) {
       console.error("Error checking user permissions:", error);
@@ -62,12 +78,30 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
       setCanEdit(false);
     } finally {
       setIsLoading(false);
+      console.log("Permission check complete");
     }
   };
 
   // Call checkUserPermissions when component mounts
   useEffect(() => {
     checkUserPermissions();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, !!session);
+      setIsAuthenticated(!!session);
+      
+      // Re-check permissions when auth state changes
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        setTimeout(() => {
+          checkUserPermissions();
+        }, 100);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [profileId]);
 
   return (
