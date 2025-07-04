@@ -19,6 +19,7 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
   const navigate = useNavigate();
   const [canEdit, setCanEdit] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   // Redirects to place order page with influencer ID
@@ -31,8 +32,8 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
         variant: "default"
       });
       
-      // Redirect to auth page if not authenticated
-      navigate(`/auth?redirectTo=/place-order?influencer=${profileId}`);
+      // Redirect to auth page with return URL
+      navigate(`/auth?redirectTo=${encodeURIComponent(`/place-order?influencer=${profileId}`)}`);
       return;
     }
     
@@ -43,6 +44,7 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
   // Check if the current user can edit this profile and if they're authenticated
   const checkUserPermissions = async () => {
     try {
+      setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
       // Set authentication status
@@ -51,9 +53,15 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
       // Set edit permission (only if user is owner of profile)
       if (user && user.id === profileId) {
         setCanEdit(true);
+      } else {
+        setCanEdit(false);
       }
     } catch (error) {
       console.error("Error checking user permissions:", error);
+      setIsAuthenticated(false);
+      setCanEdit(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -82,6 +90,7 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
                 variant="outline"
                 className="flex items-center gap-2 w-full sm:w-auto"
                 onClick={() => navigate('/edit-profile')}
+                disabled={isLoading}
               >
                 <Edit className="h-4 w-4" />
                 Edit Profile
@@ -90,6 +99,7 @@ const ProfileHeader = ({ name, platform, followers, profileImage, onSendGift, pr
             <Button 
               className="flex items-center gap-2 w-full sm:w-auto"
               onClick={handleSendGift}
+              disabled={isLoading}
             >
               <Gift className="h-4 w-4" />
               Send Gift
