@@ -37,47 +37,66 @@ serve(async (req) => {
     console.log(`Generating screenshot for URL: ${url}`);
     console.log(`Using encoded URL: ${encodedUrl}`);
     
-    // Set a longer timeout for the fetch operation (10 seconds)
+    // Set a longer timeout for the fetch operation (30 seconds)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     
     try {
-      // Try fetching as binary first (more reliable)
-      const apiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}`;
+      // Try JSON API first as it's more reliable for error handling
+      const jsonApiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=json`;
       
-      console.log(`Making request to Pikwy API for binary image: ${apiUrl}`);
+      console.log(`Making request to Pikwy JSON API: ${jsonApiUrl}`);
       
-      const response = await fetch(apiUrl, { 
+      const response = await fetch(jsonApiUrl, { 
         method: "GET",
-        signal: controller.signal
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
       });
       
       clearTimeout(timeoutId);
       
-      console.log(`Pikwy API binary response status: ${response.status}`);
+      console.log(`Pikwy API response status: ${response.status}`);
       
-      // Check if the request was successful
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Pikwy API error: ${response.status} - ${errorText}`);
-        throw new Error(`Failed to generate preview: ${response.status}`);
+        console.error(`Pikwy API HTTP error: ${response.status} - ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
       
-      // Get the raw image data as ArrayBuffer
-      const imageBuffer = await response.arrayBuffer();
+      // Parse the JSON response
+      const responseData = await response.json();
+      console.log(`Pikwy API response data:`, responseData);
       
-      if (!imageBuffer || imageBuffer.byteLength === 0) {
-        console.error("Failed to get image data");
-        throw new Error('Failed to get valid image data');
+      // Check if the response contains an error
+      if (responseData.code && responseData.code !== 200) {
+        console.error(`Pikwy API returned error code: ${responseData.code}, message: ${responseData.mesg || responseData.message}`);
+        
+        // Handle different error codes
+        if (responseData.code === 9090) {
+          throw new Error('Access denied - API token may be invalid or expired');
+        } else if (responseData.code === 9091) {
+          throw new Error('URL is not accessible or invalid');
+        } else {
+          throw new Error(`Pikwy API error: ${responseData.mesg || responseData.message || 'Unknown error'}`);
+        }
       }
       
-      console.log(`Successfully generated screenshot, binary length: ${imageBuffer.byteLength} bytes`);
+      // Check if we have valid base64 image data
+      if (!responseData.base64 || typeof responseData.base64 !== 'string') {
+        console.error("No valid base64 image data in response:", responseData);
+        throw new Error('No valid image data returned from Pikwy API');
+      }
       
-      // Convert ArrayBuffer to base64
-      const base64Image = btoa(
-        new Uint8Array(imageBuffer)
-          .reduce((data, byte) => data + String.fromCharCode(byte), '')
-      );
+      const base64Image = responseData.base64;
+      console.log(`Successfully received base64 image data, length: ${base64Image.length} characters`);
+      
+      // Validate that the base64 data is actually an image (should be much longer than error messages)
+      if (base64Image.length < 100) {
+        console.error(`Base64 data too short (${base64Image.length} chars), likely an error response`);
+        throw new Error('Received invalid image data - data too short');
+      }
       
       // Return the image URL as data URL
       return new Response(
@@ -88,66 +107,28 @@ serve(async (req) => {
       );
       
     } catch (fetchError) {
-      // If binary fetch fails, fall back to JSON response with base64
-      console.error("Error with binary fetch:", fetchError);
       clearTimeout(timeoutId);
+      console.error("Error with Pikwy API request:", fetchError);
       
-      // Set a new timeout for the JSON fetch
-      const jsonController = new AbortController();
-      const jsonTimeoutId = setTimeout(() => jsonController.abort(), 30000); // 30 second timeout
-      
-      try {
-        const jsonApiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=json`;
-        
-        console.log(`Falling back to JSON API: ${jsonApiUrl}`);
-        
-        const jsonResponse = await fetch(jsonApiUrl, { 
-          method: "GET",
-          signal: jsonController.signal
-        });
-        
-        clearTimeout(jsonTimeoutId);
-        
-        console.log(`Pikwy JSON API response status: ${jsonResponse.status}`);
-        
-        if (!jsonResponse.ok) {
-          const errorText = await jsonResponse.text();
-          console.error(`Pikwy JSON API error: ${jsonResponse.status} - ${errorText}`);
-          throw new Error(`Failed to generate preview: ${jsonResponse.status}`);
-        }
-        
-        // Parse the JSON response which contains base64 encoded image
-        const responseData = await jsonResponse.json();
-        
-        if (!responseData || !responseData.base64) {
-          console.error("No image data returned from Pikwy API:", responseData);
-          throw new Error('No image data returned from Pikwy API');
-        }
-        
-        // The base64 data from the API
-        const base64Image = responseData.base64;
-        
-        console.log(`JSON method returned base64 data of length: ${base64Image.length}`);
-        
-        // Return the image URL as data URL
-        return new Response(
-          JSON.stringify({ imageUrl: `data:image/jpeg;base64,${base64Image}` }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      } catch (jsonError) {
-        clearTimeout(jsonTimeoutId);
-        console.error("Error with JSON fetch:", jsonError);
-        throw jsonError;
+      // If it's an abort error, handle it specifically
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Screenshot generation timed out - URL may be too slow to load');
       }
+      
+      throw fetchError;
     }
   } catch (error) {
     console.error("Error in pikwy-screenshot function:", error);
+    
+    // Return a more detailed error response
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorDetails = String(error);
+    
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error',
-        details: String(error)
+        error: errorMessage,
+        details: errorDetails,
+        success: false
       }),
       { 
         status: 500, 
