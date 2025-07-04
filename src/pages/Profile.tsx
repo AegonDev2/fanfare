@@ -47,7 +47,7 @@ export default function Profile() {
 
         if (isCurrentUserProfile && user && !influencer && !influencerLoading) {
           // Check if current user needs to create a profile
-          const userType = user.user_metadata?.user_type || 'fan';
+          const userType = user.user_type || 'fan';
           
           if (userType === 'influencer') {
             navigate('/create-influencer-profile');
@@ -125,20 +125,20 @@ export default function Profile() {
             <ProfileHeader 
               name={influencer.name}
               platform={influencer.platform}
-              followers={influencer.followers_count}
-              profileImage={influencer.profile_image_url || '/placeholder.svg'}
+              followers={influencer.followers}
+              profileImage={influencer.profile_image || '/placeholder.svg'}
               onSendGift={async () => {}}
               profileId={influencer.id}
             />
             <ProfileBio 
-              bio={influencer.bio}
-              categories={influencer.categories}
+              about={influencer.about || ''}
+              hobbies={influencer.hobbies || []}
             />
             <SocialLinks 
-              instagram={influencer.instagram_url}
-              youtube={influencer.youtube_url}
-              twitter={influencer.twitter_url}
-              tiktok={influencer.tiktok_url}
+              instagramUrl={influencer.instagram_url}
+              youtubeUrl={influencer.youtube_url}
+              twitterUrl={influencer.twitter_url}
+              facebookUrl={influencer.facebook_url}
             />
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function Profile() {
 
   // Show fan profile or redirect to create profile
   if (isCurrentUserProfile && user) {
-    const userType = user.user_metadata?.user_type || 'fan';
+    const userType = user.user_type || 'fan';
     
     if (userType === 'fan') {
       return (
@@ -159,9 +159,8 @@ export default function Profile() {
           <div className="min-h-screen bg-background pt-20">
             <div className="max-w-4xl mx-auto p-4 space-y-6">
               <FanProfile 
-                name={user.user_metadata?.name || user.email || 'Fan'}
-                email={user.email || ''}
-                profileImage={user.user_metadata?.avatar_url || '/placeholder.svg'}
+                profile={user}
+                isCurrentUserProfile={isCurrentUserProfile}
               />
             </div>
           </div>
