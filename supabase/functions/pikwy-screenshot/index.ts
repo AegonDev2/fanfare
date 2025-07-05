@@ -37,16 +37,16 @@ serve(async (req) => {
     console.log(`Generating screenshot for URL: ${url}`);
     console.log(`Using encoded URL: ${encodedUrl}`);
     
-    // Set a longer timeout for the fetch operation (60 seconds)
+    // Set a longer timeout for the fetch operation (90 seconds)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       console.log('Request timeout reached, aborting...');
       controller.abort();
-    }, 60000); // 60 seconds timeout
+    }, 90000); // 90 seconds timeout
     
     try {
-      // Try JSON API first as it's more reliable for error handling
-      const jsonApiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=json`;
+      // Use JSON API format as specified in the documentation
+      const jsonApiUrl = `https://api.pikwy.com?u=${encodedUrl}&tkn=${PIKWY_API_TOKEN}&fs=${fullScreenParam}&rt=json&f=jpg&w=1280&h=1024`;
       
       console.log(`Making request to Pikwy JSON API: ${jsonApiUrl}`);
       
@@ -72,7 +72,7 @@ serve(async (req) => {
       const responseData = await response.json();
       console.log(`Pikwy API response data:`, responseData);
       
-      // Check if the response contains an error code
+      // Check if the response contains an error code (according to Pikwy docs)
       if (responseData.code && responseData.code !== 200) {
         console.error(`Pikwy API returned error code: ${responseData.code}, message: ${responseData.mesg || responseData.message}`);
         
@@ -86,20 +86,29 @@ serve(async (req) => {
         }
       }
       
-      // Check if response has a date field (indicates error response)
-      if (responseData.date && !responseData.base64) {
-        console.error("Response contains date field but no base64 data, likely an error response");
-        throw new Error('Invalid response format from Pikwy API');
+      // For JSON response type, Pikwy returns base64 image data along with metadata
+      // The response structure is: { date: "timestamp", body: "base64_image_data" }
+      let base64Image = null;
+      
+      // Check different possible response formats from Pikwy
+      if (responseData.body && typeof responseData.body === 'string') {
+        // Format: { date: "...", body: "base64_data" }
+        base64Image = responseData.body;
+        console.log(`Found base64 image in 'body' field, length: ${base64Image.length} characters`);
+      } else if (responseData.base64 && typeof responseData.base64 === 'string') {
+        // Format: { date: "...", base64: "base64_data" }
+        base64Image = responseData.base64;
+        console.log(`Found base64 image in 'base64' field, length: ${base64Image.length} characters`);
+      } else if (typeof responseData === 'string' && responseData.length > 1000) {
+        // Sometimes the entire response is just the base64 string
+        base64Image = responseData;
+        console.log(`Response is direct base64 string, length: ${base64Image.length} characters`);
       }
       
-      // Check if we have valid base64 image data
-      if (!responseData.base64 || typeof responseData.base64 !== 'string') {
-        console.error("No valid base64 image data in response:", responseData);
+      if (!base64Image) {
+        console.error("No valid base64 image data found in response:", Object.keys(responseData));
         throw new Error('No valid image data returned from Pikwy API');
       }
-      
-      const base64Image = responseData.base64;
-      console.log(`Received base64 image data, length: ${base64Image.length} characters`);
       
       // Validate that the base64 data is actually a valid image
       // Valid JPEG base64 should start with /9j/ and be substantial in length
@@ -108,9 +117,9 @@ serve(async (req) => {
         throw new Error('Received invalid image data - data too short');
       }
       
-      // Check if it starts with valid JPEG header in base64
-      if (!base64Image.startsWith('/9j/') && !base64Image.startsWith('iVBOR')) {
-        console.error('Base64 data does not start with valid image header');
+      // Check if it starts with valid image header in base64
+      if (!base64Image.startsWith('/9j/') && !base64Image.startsWith('iVBOR') && !base64Image.startsWith('UklGR')) {
+        console.error('Base64 data does not start with valid image header, first 20 chars:', base64Image.substring(0, 20));
         throw new Error('Invalid image format received');
       }
       
@@ -123,7 +132,7 @@ serve(async (req) => {
         throw new Error('Invalid base64 image data format');
       }
       
-      console.log('Successfully generated screenshot, binary length:', base64Image.length, 'bytes');
+      console.log('Successfully generated screenshot, base64 length:', base64Image.length, 'characters');
       
       // Return the image URL as data URL
       return new Response(
@@ -142,7 +151,7 @@ serve(async (req) => {
       
       // If it's an abort error, handle it specifically
       if (fetchError.name === 'AbortError') {
-        console.warn('Screenshot generation timed out after 60 seconds');
+        console.warn('Screenshot generation timed out after 90 seconds');
         return new Response(
           JSON.stringify({ 
             error: 'Screenshot generation timed out',
