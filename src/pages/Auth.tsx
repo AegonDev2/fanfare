@@ -61,7 +61,7 @@ const Auth = () => {
   };
   return <div className="min-h-screen p-4 bg-slate-50">
       <div className="max-w-md mx-auto pt-8">
-        <Card className="p-6 bg-gray-900">
+        <Card className="p-6 bg-slate-50">
           <Button variant="ghost" className="mb-4" onClick={() => navigate("/")}>
             ← Back to Home
           </Button>
