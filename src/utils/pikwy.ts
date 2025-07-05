@@ -35,9 +35,13 @@ export const generateWebsitePreview = async (url: string, fullScreen: boolean = 
       return null;
     }
     
-    // Check if the response contains an error
-    if (data.error || !data.success === false) {
-      console.error("Pikwy API error:", data.error, data.details);
+    // Check if the response contains an error or timeout
+    if (data.error || data.success === false) {
+      if (data.timeout) {
+        console.warn("Screenshot generation timed out:", data.error);
+      } else {
+        console.error("Pikwy API error:", data.error, data.details);
+      }
       console.warn("Screenshot generation failed:", data.error);
       return null; // Return null for graceful fallback
     }

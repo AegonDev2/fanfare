@@ -37,9 +37,12 @@ serve(async (req) => {
     console.log(`Generating screenshot for URL: ${url}`);
     console.log(`Using encoded URL: ${encodedUrl}`);
     
-    // Set a longer timeout for the fetch operation (30 seconds)
+    // Set a longer timeout for the fetch operation (60 seconds)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => {
+      console.log('Request timeout reached, aborting...');
+      controller.abort();
+    }, 60000); // Increased to 60 seconds
     
     try {
       // Try JSON API first as it's more reliable for error handling
@@ -100,7 +103,10 @@ serve(async (req) => {
       
       // Return the image URL as data URL
       return new Response(
-        JSON.stringify({ imageUrl: `data:image/jpeg;base64,${base64Image}` }),
+        JSON.stringify({ 
+          imageUrl: `data:image/jpeg;base64,${base64Image}`,
+          success: true 
+        }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
@@ -112,7 +118,19 @@ serve(async (req) => {
       
       // If it's an abort error, handle it specifically
       if (fetchError.name === 'AbortError') {
-        throw new Error('Screenshot generation timed out - URL may be too slow to load');
+        console.warn('Screenshot generation timed out after 60 seconds');
+        // Return a graceful response instead of throwing
+        return new Response(
+          JSON.stringify({ 
+            error: 'Screenshot generation timed out',
+            success: false,
+            timeout: true
+          }),
+          { 
+            status: 408, // Request Timeout
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
       
       throw fetchError;
