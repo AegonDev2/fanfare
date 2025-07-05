@@ -2,7 +2,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getUserRoles, hasRole } from "@/utils/roleManager";
+import { getUserRoles } from "@/utils/roleManager";
 
 export type NavRole = 'fan' | 'influencer' | 'admin';
 
@@ -21,6 +21,7 @@ export const useNavigation = () => {
       try {
         setIsLoading(true);
         setError(null);
+        
         // Get session first to check if user is authenticated
         const { data: sessionData } = await supabase.auth.getSession();
         
@@ -44,33 +45,25 @@ export const useNavigation = () => {
               console.error("Error fetching profile:", profileError);
             }
             
-            // Get user roles directly from user_roles table
-            const rolesResponse = await getUserRoles(userData.user.id);
-            
             setUser(userData.user);
             setUserEmail(profileData?.email || userData.user.email);
             setUserName(profileData?.name || null);
             
-            // Special case for admin UID
-            if (userData.user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237") {
+            // Special case for hardcoded admin UID
+            if (userData.user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237" || userData.user.email === 'admin@fanfare.com') {
               setUserRole('admin');
-            }
-            // Set role priority: admin > influencer > fan
-            // If user has admin role, set it regardless of other roles
-            else if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
-              setUserRole('admin');
-            } 
-            // Otherwise if user has influencer role, set it
-            else if (rolesResponse.success && rolesResponse.roles.includes('influencer')) {
-              setUserRole('influencer');
-            } 
-            // Otherwise set fan role as default
-            else if (rolesResponse.success && rolesResponse.roles.includes('fan')) {
-              setUserRole('fan');
-            }
-            // If no roles found, default to fan
-            else {
-              setUserRole('fan');
+            } else {
+              // Get user roles from database
+              const rolesResponse = await getUserRoles(userData.user.id);
+              
+              // Set role priority: admin > influencer > fan
+              if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
+                setUserRole('admin');
+              } else if (rolesResponse.success && rolesResponse.roles.includes('influencer')) {
+                setUserRole('influencer');
+              } else {
+                setUserRole('fan');
+              }
             }
           }
         } else {
@@ -185,11 +178,11 @@ export const useNavigation = () => {
     },
   ];
 
-  // Always return mainNavItems for guest users, but for logged-in users, filter based on role
+  // Filter navigation items based on user role
   const allNavItems = user
     ? [...mainNavItems, ...roleNavItems].filter(item => {
-        // Special admin access for specific UID
-        if (user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237" && item.roles.includes('admin')) {
+        // Special admin access for specific UID or email
+        if ((user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237" || user.email === 'admin@fanfare.com') && item.roles.includes('admin')) {
           return true;
         }
         return item.roles.includes(userRole);

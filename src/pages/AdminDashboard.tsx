@@ -1,66 +1,16 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@/hooks/useUser";
-import { hasRole } from "@/utils/roleManager";
+import { useState } from "react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 import AdminOrdersPanel from '@/components/admin/AdminOrdersPanel';
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
-  const { user } = useUser();
-  const { toast } = useToast();
+  const { userRole, isLoading } = useAdminAuth();
   const [navOpen, setNavOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  useEffect(() => {
-    const checkAdminAccess = async () => {
-      try {
-        if (!user) {
-          navigate('/auth');
-          return;
-        }
-
-        // Special check for hardcoded admin user
-        if (user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237" || user.email === 'admin@fanfare.com') {
-          setIsAdmin(true);
-          setIsCheckingAuth(false);
-          return;
-        }
-
-        // Check role from database
-        const adminRole = await hasRole(user.id, 'admin');
-        if (!adminRole) {
-          toast({
-            title: "Unauthorized",
-            description: "You do not have permission to access this page.",
-            variant: "destructive"
-          });
-          navigate('/home');
-          return;
-        }
-
-        setIsAdmin(true);
-      } catch (error) {
-        console.error("Error checking admin access:", error);
-        toast({
-          title: "Authentication Error",
-          description: "Failed to verify admin access. Please try again.",
-          variant: "destructive"
-        });
-        navigate('/');
-      } finally {
-        setIsCheckingAuth(false);
-      }
-    };
-
-    checkAdminAccess();
-  }, [user, navigate, toast]);
-
-  if (isCheckingAuth || !isAdmin) {
+  // Show loading spinner while checking auth
+  if (isLoading) {
     return (
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
@@ -68,10 +18,16 @@ export default function AdminDashboard() {
         <div className="min-h-screen bg-background pt-20">
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-funky-purple"></div>
+            <span className="ml-2">Verifying admin access...</span>
           </div>
         </div>
       </>
     );
+  }
+
+  // Only render admin panel if user has admin role
+  if (userRole !== 'admin') {
+    return null; // This should not render as useAdminAuth handles redirects
   }
 
   return (

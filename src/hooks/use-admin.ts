@@ -5,19 +5,21 @@ import { useAdminOrders } from '@/hooks/useAdminOrders';
 import { useOrderActions } from '@/hooks/useOrderActions';
 
 export const useAdmin = () => {
-  const { userRole } = useAdminAuth();
-  const { orders, isLoading, fetchAllOrders, setOrders } = useAdminOrders();
+  const { userRole, isLoading: authLoading } = useAdminAuth();
+  const { orders, isLoading: ordersLoading, fetchAllOrders, setOrders } = useAdminOrders();
   const { handleOrderComplete } = useOrderActions(orders, fetchAllOrders);
   
   useEffect(() => {
-    if (userRole === 'admin') {
+    // Only fetch orders if user is confirmed admin
+    if (userRole === 'admin' && !authLoading) {
+      console.log("Fetching orders for admin user");
       fetchAllOrders();
     }
-  }, [userRole, fetchAllOrders]);
+  }, [userRole, authLoading, fetchAllOrders]);
 
   return {
     orders,
-    isLoading,
+    isLoading: authLoading || ordersLoading,
     userRole,
     fetchAllOrders,
     handleOrderComplete
