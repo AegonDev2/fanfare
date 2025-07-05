@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +9,6 @@ import WalletHeader from "@/components/wallet/WalletHeader";
 import TransactionHistory from "@/components/wallet/TransactionHistory";
 import TopUpWallet from "@/components/wallet/TopUpWallet";
 import { supabase } from "@/integrations/supabase/client";
-
 const WalletPage = () => {
   const {
     wallet,
@@ -25,7 +23,6 @@ const WalletPage = () => {
   const {
     toast
   } = useToast();
-  
   useEffect(() => {
     const checkSession = async () => {
       const {
@@ -46,11 +43,9 @@ const WalletPage = () => {
     };
     checkSession();
   }, []);
-  
   if (!isLoggedIn) {
     return null;
   }
-  
   return <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-6 pb-24">
         <div className="flex items-center mb-6">
@@ -103,7 +98,7 @@ const WalletPage = () => {
                         <span>Add Money</span>
                       </button>
                       
-                      <button onClick={() => setActiveTab("transactions")} className="flex items-center justify-center gap-2 p-3 rounded-md border border-gray-300 bg-zinc-950 hover:bg-zinc-800">
+                      <button onClick={() => setActiveTab("transactions")} className="flex items-center justify-center gap-2 p-3 rounded-md border border-gray-300 bg-stone-200 hover:bg-stone-100">
                         <Receipt className="w-5 h-5" />
                         <span>View Transactions</span>
                       </button>
@@ -125,5 +120,4 @@ const WalletPage = () => {
       </div>
     </div>;
 };
-
 export default WalletPage;
