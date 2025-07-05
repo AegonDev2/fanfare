@@ -51,6 +51,12 @@ export const generateWebsitePreview = async (url: string, fullScreen: boolean = 
       return null;
     }
     
+    // Validate the data URL format
+    if (!data.imageUrl.startsWith('data:image/')) {
+      console.error("Invalid image URL format:", data.imageUrl.substring(0, 50));
+      return null;
+    }
+    
     console.log("Preview generated successfully, data URL length:", data.imageUrl.length);
     return data.imageUrl;
   } catch (error) {
