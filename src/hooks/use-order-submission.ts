@@ -5,12 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProductDetails, InfluencerAddress } from "@/types/order";
 import { useUser } from "@/hooks/useUser";
 import { useNavigate } from "react-router-dom";
+import { useWallet } from "@/hooks/use-wallet";
 
 export function useOrderSubmission() {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStep, setPaymentStep] = useState<'initial' | 'processing' | 'complete'>('initial');
   const [orderError, setOrderError] = useState<string | null>(null);
   const { user } = useUser();
+  const { wallet, checkWalletBalance } = useWallet();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -44,11 +46,19 @@ export function useOrderSubmission() {
 
     try {
       // Use the correct price from productPreview
-      const productPrice = productPreview.priceInr;
-      const platformFee = productPreview.platformFee;
+      const productPrice = productPreview.priceInr || 0;
+      const platformFee = productPreview.platformFee || 5.00;
       const totalAmount = productPrice + platformFee;
 
       console.log("Order amounts:", { productPrice, platformFee, totalAmount });
+
+      // Check wallet balance (but don't block order if insufficient)
+      const hasSufficientBalance = wallet ? wallet.balance >= totalAmount : false;
+      console.log("Wallet balance check:", { 
+        walletBalance: wallet?.balance, 
+        totalAmount, 
+        hasSufficientBalance 
+      });
 
       const { data: order, error } = await supabase
         .from('orders_under_process')
@@ -84,8 +94,8 @@ export function useOrderSubmission() {
       setPaymentStep('complete');
       
       toast({
-        title: "Order Placed Successfully",
-        description: "Your gift order has been submitted and is being processed.",
+        title: "Order Submitted Successfully",
+        description: "Your order has been submitted for admin review. Payment will be processed after approval.",
       });
 
       // Navigate to success page with order ID

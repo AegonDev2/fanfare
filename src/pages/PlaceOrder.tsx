@@ -9,7 +9,7 @@ import ProductUrlInput from '@/components/order/ProductUrlInput';
 import ProductPreview from '@/components/order/ProductPreview';
 import GiftMessage from '@/components/gift-selection/GiftMessage';
 import InfluencerSelector from '@/components/gift-selection/InfluencerSelector';
-import PaymentForm from '@/components/payment/PaymentForm';
+import WalletPaymentForm from '@/components/payment/WalletPaymentForm';
 import { useProductPreview } from '@/hooks/use-product-preview';
 import { useOrderSubmission } from '@/hooks/use-order-submission';
 import { useInfluencerProfile } from '@/hooks/useInfluencerProfile';
@@ -328,7 +328,7 @@ export default function PlaceOrder() {
             {/* Right Column - Payment */}
             {currentStep === 'payment' && productPreview && (
               <div className="lg:sticky lg:top-6">
-                <PaymentForm
+                <WalletPaymentForm
                   productPreview={productPreview}
                   isProcessing={isLoading}
                   paymentStep={paymentStep}
