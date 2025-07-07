@@ -4,6 +4,11 @@ const JIGSAWSTACK_URL = "https://api.jigsawstack.com/v1";
 export const fetchJigsawStack = async (path: string, body: any) => {
   const apiKey = Deno.env.get("JIGSAWSTACK_API_KEY");
   
+  if (!apiKey) {
+    console.error("JIGSAWSTACK_API_KEY not found in environment");
+    throw new Error("API key not configured");
+  }
+  
   try {
     const headers = {
       "Content-Type": "application/json",
