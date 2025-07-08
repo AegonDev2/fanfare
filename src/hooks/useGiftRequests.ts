@@ -7,18 +7,24 @@ export interface GiftRequest {
   id: string;
   sender_id: string;
   influencer_id: string;
-  product_title: string;
+  product_title: string | null;
   product_url: string;
-  product_price: number;
-  message: string;
+  product_price: number | null;
+  message: string | null;
   status: 'pending' | 'accepted' | 'rejected' | 'under process' | 'completed';
   created_at: string;
   updated_at: string;
-  completed_at?: string;
+  completed_at?: string | null;
+  admin_approved: boolean;
+  admin_approved_at: string | null;
+  influencer_response: string | null;
+  influencer_response_at: string | null;
   sender?: {
     name: string;
     email: string;
   };
+  sender_name?: string;
+  sender_email?: string;
 }
 
 export const useGiftRequests = () => {
@@ -77,6 +83,7 @@ export const useGiftRequests = () => {
     error,
     setRequests,
     fetchGiftRequests,
+    fetchRequests: fetchGiftRequests, // Alias for consistency
     getPendingRequests,
     getAcceptedRequests,
     getRejectedRequests

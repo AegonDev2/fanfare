@@ -135,10 +135,14 @@ export type Database = {
       }
       gift_requests: {
         Row: {
+          admin_approved: boolean | null
+          admin_approved_at: string | null
           completed_at: string | null
           created_at: string | null
           id: string
           influencer_id: string
+          influencer_response: string | null
+          influencer_response_at: string | null
           message: string | null
           product_price: number | null
           product_title: string | null
@@ -148,10 +152,14 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          admin_approved?: boolean | null
+          admin_approved_at?: string | null
           completed_at?: string | null
           created_at?: string | null
           id?: string
           influencer_id: string
+          influencer_response?: string | null
+          influencer_response_at?: string | null
           message?: string | null
           product_price?: number | null
           product_title?: string | null
@@ -161,10 +169,14 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          admin_approved?: boolean | null
+          admin_approved_at?: string | null
           completed_at?: string | null
           created_at?: string | null
           id?: string
           influencer_id?: string
+          influencer_response?: string | null
+          influencer_response_at?: string | null
           message?: string | null
           product_price?: number | null
           product_title?: string | null
@@ -532,6 +544,60 @@ export type Database = {
           },
         ]
       }
+      orders_rejected: {
+        Row: {
+          created_at: string
+          id: string
+          influencer_id: string | null
+          message: string | null
+          original_order_id: string
+          platform_fee: number | null
+          product_price: number | null
+          product_title: string | null
+          product_url: string
+          rejected_at: string | null
+          rejected_by: string
+          rejection_reason: string
+          shipping_address: Json | null
+          total_amount: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at: string
+          id?: string
+          influencer_id?: string | null
+          message?: string | null
+          original_order_id: string
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url: string
+          rejected_at?: string | null
+          rejected_by: string
+          rejection_reason: string
+          shipping_address?: Json | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          influencer_id?: string | null
+          message?: string | null
+          original_order_id?: string
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url?: string
+          rejected_at?: string | null
+          rejected_by?: string
+          rejection_reason?: string
+          shipping_address?: Json | null
+          total_amount?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       orders_under_process: {
         Row: {
           created_at: string
@@ -542,6 +608,7 @@ export type Database = {
           product_price: number | null
           product_title: string | null
           product_url: string
+          rejection_reason: string | null
           shipping_address: Json | null
           total_amount: number | null
           user_id: string | null
@@ -555,6 +622,7 @@ export type Database = {
           product_price?: number | null
           product_title?: string | null
           product_url: string
+          rejection_reason?: string | null
           shipping_address?: Json | null
           total_amount?: number | null
           user_id?: string | null
@@ -568,6 +636,7 @@ export type Database = {
           product_price?: number | null
           product_title?: string | null
           product_url?: string
+          rejection_reason?: string | null
           shipping_address?: Json | null
           total_amount?: number | null
           user_id?: string | null
@@ -922,9 +991,25 @@ export type Database = {
         Args: { order_id: string; p_delivery_estimate: string }
         Returns: boolean
       }
+      move_order_to_gift_request: {
+        Args: { order_id: string }
+        Returns: boolean
+      }
+      process_influencer_acceptance: {
+        Args: { gift_request_id: string }
+        Returns: boolean
+      }
       query_raw: {
         Args: { query: string }
         Returns: Json
+      }
+      reject_order_with_reason: {
+        Args: {
+          order_id: string
+          rejection_reason: string
+          rejected_by?: string
+        }
+        Returns: boolean
       }
       top_up_wallet: {
         Args: { p_user_id: string; p_amount: number; p_description: string }

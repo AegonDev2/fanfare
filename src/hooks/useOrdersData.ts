@@ -53,53 +53,81 @@ export const useOrdersData = () => {
 
       if (completedError) throw completedError;
 
-      // Combine and transform all orders
-      const allOrders: OrderData[] = [
-        ...(giftRequests || []).map(item => ({
-          id: item.id,
-          user_id: item.sender_id,
-          product_title: item.product_title || 'Unknown Product',
-          product_url: item.product_url,
-          product_price: item.product_price || 0,
-          platform_fee: 5.00,
-          total_amount: (item.product_price || 0) + 5.00,
-          created_at: item.created_at,
-          status: item.status,
-          influencer_id: item.influencer_id,
-          message: item.message,
-        })),
-        ...(underProcessOrders || []).map(item => ({
-          id: item.id,
-          user_id: item.user_id,
-          product_title: item.product_title || 'Unknown Product',
-          product_url: item.product_url,
-          product_price: item.product_price || 0,
-          platform_fee: item.platform_fee || 5.00,
-          total_amount: item.total_amount || 0,
-          created_at: item.created_at,
-          status: 'under process',
-          influencer_id: item.influencer_id,
-          message: item.message,
-        })),
-        ...(completedOrders || []).map(item => ({
-          id: item.id,
-          user_id: item.user_id,
-          product_title: item.product_title || 'Unknown Product',
-          product_url: item.product_url,
-          product_price: item.product_price || 0,
-          platform_fee: item.platform_fee || 5.00,
-          total_amount: item.total_amount || 0,
-          created_at: item.created_at,
-          status: 'completed',
-          influencer_id: item.influencer_id,
-          message: item.message,
-        }))
-      ];
+      // Enrich orders with user information
+      const enrichedOrders: OrderData[] = await Promise.all([
+        ...(underProcessOrders || []).map(async (item) => {
+          let fan_name = "Unknown";
+          let fan_email = "Unknown";
+          
+          if (item.user_id) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('name, email')
+              .eq('id', item.user_id)
+              .single();
+              
+            if (profile) {
+              fan_name = profile.name || "Unknown";
+              fan_email = profile.email || "Unknown";
+            }
+          }
+          
+          return {
+            id: item.id,
+            user_id: item.user_id,
+            product_title: item.product_title || 'Unknown Product',
+            product_url: item.product_url,
+            product_price: item.product_price || 0,
+            platform_fee: item.platform_fee || 5.00,
+            total_amount: item.total_amount || 0,
+            created_at: item.created_at,
+            status: 'pending', // These are pending admin approval
+            influencer_id: item.influencer_id,
+            message: item.message,
+            fan_name,
+            fan_email,
+          };
+        }),
+        ...(completedOrders || []).map(async (item) => {
+          let fan_name = "Unknown";
+          let fan_email = "Unknown";
+          
+          if (item.user_id) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('name, email')
+              .eq('id', item.user_id)
+              .single();
+              
+            if (profile) {
+              fan_name = profile.name || "Unknown";
+              fan_email = profile.email || "Unknown";
+            }
+          }
+          
+          return {
+            id: item.id,
+            user_id: item.user_id,
+            product_title: item.product_title || 'Unknown Product',
+            product_url: item.product_url,
+            product_price: item.product_price || 0,
+            platform_fee: item.platform_fee || 5.00,
+            total_amount: item.total_amount || 0,
+            created_at: item.created_at,
+            status: 'completed',
+            influencer_id: item.influencer_id,
+            message: item.message,
+            fan_name,
+            fan_email,
+          };
+        })
+      ]);
 
       // Sort by created_at descending
-      allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      enrichedOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-      setOrders(allOrders);
+      setOrders(enrichedOrders);
+
     } catch (error: any) {
       toast({
         title: "Error",
@@ -113,36 +141,17 @@ export const useOrdersData = () => {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      if (newStatus === 'under process') {
-        // Move from gift_requests to orders_under_process
-        const order = orders.find(o => o.id === orderId);
-        if (!order) throw new Error('Order not found');
+      if (newStatus === 'approved') {
+        // Move order to gift_requests for influencer approval
+        const { error } = await supabase.rpc('move_order_to_gift_request', {
+          order_id: orderId
+        });
 
-        const { error: insertError } = await supabase
-          .from('orders_under_process')
-          .insert({
-            id: orderId,
-            user_id: order.user_id,
-            influencer_id: order.influencer_id,
-            product_url: order.product_url,
-            product_title: order.product_title,
-            product_price: order.product_price,
-            platform_fee: order.platform_fee,
-            total_amount: order.total_amount,
-            message: order.message,
-            created_at: order.created_at
-          });
+        if (error) throw error;
 
-        if (insertError) throw insertError;
-
-        // Update gift_requests status
-        const { error: updateError } = await supabase
-          .from('gift_requests')
-          .update({ status: 'under process' })
-          .eq('id', orderId);
-
-        if (updateError) throw updateError;
-
+      } else if (newStatus === 'rejected') {
+        // This is handled by the AdminOrderCard component with rejection reason
+        
       } else if (newStatus === 'completed') {
         // Use the database function to move order to completed
         const { error } = await supabase.rpc('move_order_to_completed', {
@@ -151,17 +160,6 @@ export const useOrdersData = () => {
         });
 
         if (error) throw error;
-
-        // Update gift_requests status
-        const { error: updateError } = await supabase
-          .from('gift_requests')
-          .update({ 
-            status: 'completed',
-            completed_at: new Date().toISOString()
-          })
-          .eq('id', orderId);
-
-        if (updateError) throw updateError;
       }
 
       toast({

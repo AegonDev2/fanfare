@@ -3,14 +3,13 @@ import { useState } from 'react';
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 import { useGiftRequests } from '@/hooks/useGiftRequests';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Gift, Calendar, User } from 'lucide-react';
-import { format } from 'date-fns';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, Gift } from 'lucide-react';
+import GiftRequestCard from '@/components/gift-requests/GiftRequestCard';
 
 export default function GiftRequests() {
   const [navOpen, setNavOpen] = useState(false);
-  const { requests: giftRequests, loading: isLoading, error } = useGiftRequests();
+  const { requests: giftRequests, loading: isLoading, error, fetchRequests } = useGiftRequests();
 
   if (isLoading) {
     return (
@@ -49,42 +48,11 @@ export default function GiftRequests() {
           {giftRequests && giftRequests.length > 0 ? (
             <div className="grid gap-4">
               {giftRequests.map((request) => (
-                <Card key={request.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Gift className="h-5 w-5 text-funky-purple" />
-                        {request.product_title || 'Gift Request'}
-                      </CardTitle>
-                      <Badge 
-                        variant={request.status === 'completed' ? 'default' : 'secondary'}
-                        className={request.status === 'completed' ? 'bg-green-100 text-green-800' : ''}
-                      >
-                        {request.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {request.message && (
-                        <p className="text-gray-600">{request.message}</p>
-                      )}
-                      
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {format(new Date(request.created_at), 'MMM dd, yyyy')}
-                        </div>
-                        
-                        {request.product_price && (
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium">₹{request.product_price}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <GiftRequestCard 
+                  key={request.id} 
+                  request={request} 
+                  onStatusChange={fetchRequests}
+                />
               ))}
             </div>
           ) : (

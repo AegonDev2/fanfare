@@ -6,7 +6,7 @@ import {
   Package,
   CheckCircle2
 } from "lucide-react";
-import OrderCard from "./OrderCard";
+import AdminOrderCard from "./AdminOrderCard";
 
 interface OrderData {
   id: string;
@@ -49,7 +49,7 @@ export default function OrderTabsContent({ orders, onStatusChange }: OrderTabsCo
   const OrderGrid = ({ orders }: { orders: OrderData[] }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {orders.map(order => (
-        <OrderCard key={order.id} order={order} onStatusChange={onStatusChange} />
+        <AdminOrderCard key={order.id} order={order} onStatusChange={onStatusChange} />
       ))}
     </div>
   );
