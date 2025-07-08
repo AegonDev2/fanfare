@@ -8,7 +8,6 @@ import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import ImageViewer from "@/components/common/ImageViewer";
-
 interface ProductPreviewProps {
   productPreview: ProductDetails | null;
   influencerAddress: InfluencerAddress | null;
@@ -20,7 +19,6 @@ interface ProductPreviewProps {
   giftUrl?: string;
   websitePreview?: string | null;
 }
-
 const ProductPreview = ({
   productPreview,
   influencerAddress,
@@ -47,7 +45,6 @@ const ProductPreview = ({
       setProductProcessed(true);
     }
   }, [isPreviewAvailable]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === "message" || !isPreviewAvailable) {
@@ -56,10 +53,8 @@ const ProductPreview = ({
       setActiveTab("message");
     }
   };
-
   if (paymentStep === 'complete') {
-    return (
-      <div className="bg-white p-6 shadow-md rounded-lg mt-8 max-w-md mx-auto">
+    return <div className="bg-white p-6 shadow-md rounded-lg mt-8 max-w-md mx-auto">
         <div className="flex flex-col items-center text-center">
           <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
           <h3 className="text-lg font-semibold">Request Submitted</h3>
@@ -67,8 +62,7 @@ const ProductPreview = ({
             Your gift request has been submitted successfully. The influencer will be notified.
           </p>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Don't show anything until product has been processed
@@ -86,48 +80,33 @@ const ProductPreview = ({
   // Website preview component with better fallback handling
   const WebsitePreviewComponent = () => {
     console.log("Rendering website preview with:", websitePreview ? "image data available" : "no image data");
-    
-    return (
-      <div className="mb-4 border rounded-md overflow-hidden">
+    return <div className="mb-4 border rounded-md overflow-hidden">
         <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
           <div className="flex items-center">
             <Globe className="h-4 w-4 mr-2 text-gray-500" />
             <span className="text-sm font-medium text-gray-600">Website Preview</span>
           </div>
-          {giftUrl && (
-            <a 
-              href={giftUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
-            >
+          {giftUrl && <a href={giftUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:text-blue-700 flex items-center">
               View Site <LinkIcon className="h-3 w-3 ml-1" />
-            </a>
-          )}
+            </a>}
         </div>
         
         <div className="aspect-video relative bg-gray-50">
-          {websitePreview && websitePreview.length > 100 ? (
-            <ImageViewer imageUrl={websitePreview} alt="Website preview" />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          {websitePreview && websitePreview.length > 100 ? <ImageViewer imageUrl={websitePreview} alt="Website preview" /> : <div className="flex flex-col items-center justify-center h-full text-gray-400">
               <Globe className="h-12 w-12 mb-2 opacity-50" />
               <p className="text-sm text-center px-4">
                 Website preview unavailable
                 <br />
                 <span className="text-xs">Click "View Site" to visit the page directly</span>
               </p>
-            </div>
-          )}
+            </div>}
         </div>
-      </div>
-    );
+      </div>;
   };
 
   // Simplified view when no product preview is available
   if (!isPreviewAvailable) {
-    return (
-      <div className="mt-8">
+    return <div className="mt-8">
         <div className="bg-white p-6 shadow-md rounded-lg">
           <h3 className="text-lg font-medium mb-4">Gift Request</h3>
           
@@ -152,18 +131,10 @@ const ProductPreview = ({
             <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
               Add a Personal Message
             </label>
-            <Textarea 
-              id="message"
-              placeholder="Write a personal message to the influencer..."
-              value={message}
-              onChange={(e) => onMessageChange(e.target.value)}
-              rows={6}
-              disabled={isLoading}
-              className="mb-4 bg-slate-50"
-            />
+            <Textarea id="message" placeholder="Write a personal message to the influencer..." value={message} onChange={e => onMessageChange(e.target.value)} rows={6} disabled={isLoading} className="mb-4 bg-slate-50" />
           </div>
           
-          <div className="p-4 rounded-md mb-6 bg-stone-900">
+          <div className="p-4 rounded-md mb-6 bg-gray-50">
             <div className="flex items-center mb-4">
               <Wallet className="h-5 w-5 mr-2 text-primary" />
               <span className="font-semibold">Payment Summary</span>
@@ -180,21 +151,15 @@ const ProductPreview = ({
             </div>
           </div>
           
-          <Button 
-            onClick={handleSubmit}
-            className="w-full bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple transition-all"
-            disabled={isLoading}
-          >
+          <Button onClick={handleSubmit} className="w-full bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple transition-all" disabled={isLoading}>
             {isLoading ? "Processing..." : "Submit Gift Request"}
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Original tabbed view for when product preview is available
-  return (
-    <div className="mt-8">
+  return <div className="mt-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="product" disabled={isLoading}>
@@ -211,14 +176,7 @@ const ProductPreview = ({
           <div className="bg-white p-6 shadow-md rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                {isPreviewAvailable && productPreview?.image && !productPreview.image.startsWith("https://placehold.co") ? (
-                  <ImageViewer 
-                    imageUrl={productPreview.image} 
-                    alt={productPreview.name} 
-                  />
-                ) : (
-                  <WebsitePreviewComponent />
-                )}
+                {isPreviewAvailable && productPreview?.image && !productPreview.image.startsWith("https://placehold.co") ? <ImageViewer imageUrl={productPreview.image} alt={productPreview.name} /> : <WebsitePreviewComponent />}
               </div>
               <div className="flex flex-col justify-between">
                 <div>
@@ -250,11 +208,7 @@ const ProductPreview = ({
                   </p>
                 </div>
 
-                <Button 
-                  onClick={() => setActiveTab("message")}
-                  className="w-full mt-4"
-                  disabled={isLoading}
-                >
+                <Button onClick={() => setActiveTab("message")} className="w-full mt-4" disabled={isLoading}>
                   Next: Add a Message
                 </Button>
               </div>
@@ -265,14 +219,7 @@ const ProductPreview = ({
         <TabsContent value="message" className="mt-4">
           <div className="bg-white p-6 shadow-md rounded-lg">
             <h3 className="text-lg font-medium mb-4 text-slate-950">Add a Personal Message</h3>
-            <Textarea 
-              placeholder="Write a personal message to the influencer..."
-              value={message}
-              onChange={(e) => onMessageChange(e.target.value)}
-              rows={6}
-              disabled={isLoading}
-              className="mb-6 bg-slate-50"
-            />
+            <Textarea placeholder="Write a personal message to the influencer..." value={message} onChange={e => onMessageChange(e.target.value)} rows={6} disabled={isLoading} className="mb-6 bg-slate-50" />
             
             <div className="p-4 rounded-md mb-6 bg-zinc-200">
               <div className="flex items-center mb-4">
@@ -296,27 +243,16 @@ const ProductPreview = ({
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                onClick={() => setActiveTab("product")}
-                variant="outline"
-                className="w-full sm:w-1/2"
-                disabled={isLoading}
-              >
+              <Button onClick={() => setActiveTab("product")} variant="outline" className="w-full sm:w-1/2" disabled={isLoading}>
                 Back to Product Details
               </Button>
-              <Button 
-                onClick={handleSubmit}
-                className="w-full sm:w-1/2"
-                disabled={isLoading}
-              >
+              <Button onClick={handleSubmit} className="w-full sm:w-1/2" disabled={isLoading}>
                 {isLoading ? "Processing..." : "Submit Gift Request"}
               </Button>
             </div>
           </div>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default ProductPreview;
