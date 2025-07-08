@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Wallet, Transaction } from "@/types/wallet";
@@ -11,7 +11,7 @@ export const useWallet = () => {
   const { toast } = useToast();
   
   // Fetch user wallet
-  const fetchWallet = async () => {
+  const fetchWallet = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -62,7 +62,7 @@ export const useWallet = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
   
   // Fetch user transactions
   const fetchTransactions = async () => {
@@ -264,7 +264,7 @@ export const useWallet = () => {
     };
     
     checkSession();
-  }, []);
+  }, [fetchWallet]);
   
   return {
     wallet,
