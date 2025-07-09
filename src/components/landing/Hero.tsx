@@ -27,7 +27,7 @@ const Hero = () => {
             <Button 
               size="lg"
               className="bg-gradient-to-r from-funky-purple to-funky-pink text-white hover:from-funky-purple/90 hover:to-funky-pink/90 transform hover:scale-105 transition-all duration-200 text-sm md:text-base px-6 md:px-8"
-              onClick={() => navigate('/gift-selection')}
+              onClick={() => navigate('/gift-shop')}
             >
               <Gift className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               Start Gifting

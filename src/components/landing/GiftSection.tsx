@@ -6,30 +6,32 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useGiftItems, GiftItem } from "@/hooks/useGiftItems";
+import { useShops } from "@/hooks/useShops";
+import { useShopProducts } from "@/hooks/useShopProducts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
-const GiftCard = memo(({
-  gift
+import { supabase } from "@/integrations/supabase/client";
+const ProductCard = memo(({
+  product
 }: {
-  gift: GiftItem;
+  product: any;
 }) => {
   const navigate = useNavigate();
   const [isHovering, setIsHovering] = useState(false);
   const handleGiftClick = useCallback(() => {
-    navigate(`/gift-selection?gift=${encodeURIComponent(gift.id)}`);
-  }, [navigate, gift.id]);
+    navigate(`/place-order?productName=${encodeURIComponent(product.name)}&productPrice=${product.price}&productUrl=${encodeURIComponent(product.product_url || '')}&productImage=${encodeURIComponent(product.image_url || '')}&shopProduct=true`);
+  }, [navigate, product]);
   return <div className="relative p-1 lg:p-2 h-full rounded-xl overflow-hidden transition-all duration-300 transform group" onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
       <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/5 to-funky-pink/5 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg transition-all duration-500 z-0 group-hover:bg-gradient-to-tr group-hover:from-funky-purple/10 group-hover:to-funky-pink/10 bg-slate-50"></div>
       
       <div className="relative z-10">
         <div className={cn("w-full aspect-square mb-2 overflow-hidden rounded-lg transition-all duration-500", isHovering ? "shadow-lg shadow-funky-purple/20" : "")}>
-          <img src={gift.image_url} alt={gift.name} loading="lazy" className={cn("w-full h-full object-cover transition-all duration-500", isHovering ? "scale-110" : "scale-100")} />
+          <img src={product.image_url} alt={product.name} loading="lazy" className={cn("w-full h-full object-cover transition-all duration-500", isHovering ? "scale-110" : "scale-100")} />
         </div>
         
         <div className="mt-1 relative">
-          <h3 className="text-xs lg:text-sm font-semibold truncate font-display text-gray-950">{gift.name}</h3>
-          <p className="text-xs lg:text-sm text-funky-purple font-medium">₹{gift.price}</p>
+          <h3 className="text-xs lg:text-sm font-semibold truncate font-display text-gray-950">{product.name}</h3>
+          <p className="text-xs lg:text-sm text-funky-purple font-medium">₹{product.price}</p>
           <Button size="sm" onClick={handleGiftClick} className={cn("mt-1 w-full text-[10px] lg:text-xs py-1 px-2 transition-all duration-300", "bg-gradient-to-r from-funky-purple to-funky-pink text-white hover:shadow-lg hover:shadow-funky-purple/20")}>
             <Gift className="h-3 w-3 mr-1" />
             Gift This
@@ -38,24 +40,60 @@ const GiftCard = memo(({
       </div>
     </div>;
 });
-GiftCard.displayName = "GiftCard";
+ProductCard.displayName = "ProductCard";
 const GiftSection = () => {
-  const {
-    data: gifts = [],
-    isLoading
-  } = useGiftItems();
+  const { data: shops = [] } = useShops();
   const [searchValue, setSearchValue] = useState("");
   const carouselRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
-  // Using useMemo to filter gifts to prevent unnecessary re-renders
-  const filteredGifts = useMemo(() => {
-    if (!gifts || !Array.isArray(gifts)) return [];
+  // Get all products from all shops
+  const allShopProducts = useMemo(() => {
+    const products: any[] = [];
+    shops.forEach(shop => {
+      // For now, we'll create a hook to fetch all shop products
+      // This is a simplified approach - in production you might want to optimize this
+    });
+    return products;
+  }, [shops]);
+
+  // We need to create a custom hook to get all shop products
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('shop_products')
+          .select('*')
+          .eq('is_available', true)
+          .order('name');
+        
+        if (error) throw error;
+        setAllProducts(data || []);
+      } catch (error) {
+        console.error('Error fetching shop products:', error);
+        setAllProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAllProducts();
+  }, []);
+
+  // Using useMemo to filter products to prevent unnecessary re-renders
+  const filteredProducts = useMemo(() => {
+    if (!allProducts || !Array.isArray(allProducts)) return [];
     if (searchValue.trim() === "") {
-      return gifts;
+      return allProducts;
     }
-    return gifts.filter(gift => gift.name.toLowerCase().includes(searchValue.toLowerCase()) || gift.description && gift.description.toLowerCase().includes(searchValue.toLowerCase()));
-  }, [gifts, searchValue]);
+    return allProducts.filter(product => 
+      product.name.toLowerCase().includes(searchValue.toLowerCase()) || 
+      (product.description && product.description.toLowerCase().includes(searchValue.toLowerCase()))
+    );
+  }, [allProducts, searchValue]);
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   }, []);
@@ -85,11 +123,11 @@ const GiftSection = () => {
           dragFree: true
         }} className="w-full">
               <CarouselContent className="-ml-1">
-                {filteredGifts.length > 0 ? filteredGifts.map(gift => <CarouselItem key={gift.id} className="pl-1 basis-1/2 lg:basis-1/4 transition-all duration-300">
-                      <GiftCard gift={gift} />
+                {filteredProducts.length > 0 ? filteredProducts.map(product => <CarouselItem key={product.id} className="pl-1 basis-1/2 lg:basis-1/4 transition-all duration-300">
+                      <ProductCard product={product} />
                     </CarouselItem>) : <CarouselItem className="pl-1 basis-full">
                     <div className="p-3 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-funky-purple/10 text-center">
-                      <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-300">No gifts found matching your search.</p>
+                      <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-300">No products found matching your search.</p>
                     </div>
                   </CarouselItem>}
               </CarouselContent>
