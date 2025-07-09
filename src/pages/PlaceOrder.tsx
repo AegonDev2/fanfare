@@ -48,15 +48,18 @@ export default function PlaceOrder() {
     const giftPrice = searchParams.get('giftPrice');
     const giftImage = searchParams.get('giftImage');
     const giftId = searchParams.get('giftId');
+    const isShopProduct = searchParams.get('shopProduct') === 'true';
     
     if (giftName && giftPrice && giftImage && (giftUrl || giftId)) {
-      // Create ProductDetails from the provided data (shop product)
+      // Create ProductDetails from the provided data
       const prefilledProduct: ProductDetails = {
+        id: giftId || undefined,
         name: decodeURIComponent(giftName),
         price: `₹${giftPrice}`,
         priceInr: parseFloat(giftPrice),
         image: decodeURIComponent(giftImage),
-        description: 'Selected gift item from shop',
+        imageUrl: decodeURIComponent(giftImage),
+        description: isShopProduct ? 'Selected product from shop' : 'Selected gift item',
         platformFee: 5.00
       };
       

@@ -42,16 +42,17 @@ export default function ShopView() {
   );
 
   const handleGiftProduct = (product: any) => {
-    // Navigate to gift selection with product data
+    // Navigate directly to place order with shop product data
     const params = new URLSearchParams({
       giftName: encodeURIComponent(product.name),
       giftPrice: product.price.toString(),
       giftImage: encodeURIComponent(product.image_url || ''),
       giftId: product.id,
-      gift: product.product_url || product.image_url || ''
+      gift: product.product_url || product.image_url || '',
+      shopProduct: 'true' // Flag to indicate this is a shop product
     });
     
-    navigate(`/gift-selection?${params.toString()}`);
+    navigate(`/place-order?${params.toString()}`);
   };
 
   if (shopsLoading || !currentShop) {
