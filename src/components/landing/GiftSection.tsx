@@ -42,7 +42,9 @@ const ProductCard = memo(({
 });
 ProductCard.displayName = "ProductCard";
 const GiftSection = () => {
-  const { data: shops = [] } = useShops();
+  const {
+    data: shops = []
+  } = useShops();
   const [searchValue, setSearchValue] = useState("");
   const carouselRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -60,16 +62,13 @@ const GiftSection = () => {
   // We need to create a custom hook to get all shop products
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
-        const { data, error } = await supabase
-          .from('shop_products')
-          .select('*')
-          .eq('is_available', true)
-          .order('name');
-        
+        const {
+          data,
+          error
+        } = await supabase.from('shop_products').select('*').eq('is_available', true).order('name');
         if (error) throw error;
         setAllProducts(data || []);
       } catch (error) {
@@ -79,7 +78,6 @@ const GiftSection = () => {
         setIsLoading(false);
       }
     };
-
     fetchAllProducts();
   }, []);
 
@@ -89,10 +87,7 @@ const GiftSection = () => {
     if (searchValue.trim() === "") {
       return allProducts;
     }
-    return allProducts.filter(product => 
-      product.name.toLowerCase().includes(searchValue.toLowerCase()) || 
-      (product.description && product.description.toLowerCase().includes(searchValue.toLowerCase()))
-    );
+    return allProducts.filter(product => product.name.toLowerCase().includes(searchValue.toLowerCase()) || product.description && product.description.toLowerCase().includes(searchValue.toLowerCase()));
   }, [allProducts, searchValue]);
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
@@ -103,7 +98,7 @@ const GiftSection = () => {
           <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-gray-900 text-lg lg:text-xl font-semibold mx-0">Gift Shop</h2>
           
           <div className="relative w-full md:w-auto py-[6px]">
-            <Input placeholder="Search Gifts" type="text" value={searchValue} onChange={handleSearchChange} className="w-full md:w-64 lg:w-72 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs lg:text-sm shadow-sm bg-zinc-100" />
+            <Input placeholder="Search Gifts" type="text" value={searchValue} onChange={handleSearchChange} className="w-full md:w-64 lg:w-72 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs lg:text-sm shadow-sm bg-white" />
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 lg:h-4 lg:w-4 text-funky-purple/60" />
           </div>
         </div>
