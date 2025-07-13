@@ -183,7 +183,7 @@ const InfluencerSection = () => {
           dragFree: true
         }} className="w-full">
             <CarouselContent className="-ml-1">
-              {influencers && influencers.length > 0 ? influencers.slice(0, 8).map((influencer, index) => <CarouselItem key={index} className="pl-1 basis-1/2 lg:basis-1/4 transition-all duration-300">
+              {influencers && influencers.length > 0 ? influencers.slice(0, 8).map((influencer, index) => <CarouselItem key={index} className="pl-1 basis-1/2 lg:basis-1/4 transition-all duration-300 bg-transparent">
                     <InfluencerCard influencer={influencer} onProfileClick={handleProfileClick} isMobile={isMobile} />
                   </CarouselItem>) : <CarouselItem className="pl-1 basis-full">
                   <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg shadow-md text-center border border-funky-purple/10">
