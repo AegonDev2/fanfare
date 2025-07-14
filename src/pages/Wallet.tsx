@@ -1,14 +1,17 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/hooks/use-wallet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Wallet as WalletIcon, CreditCard, Receipt, PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Wallet as WalletIcon, CreditCard, Receipt, PlusCircle, ArrowLeft } from "lucide-react";
 import WalletHeader from "@/components/wallet/WalletHeader";
 import TransactionHistory from "@/components/wallet/TransactionHistory";
 import TopUpWallet from "@/components/wallet/TopUpWallet";
 import { supabase } from "@/integrations/supabase/client";
+
 const WalletPage = () => {
   const {
     wallet,
@@ -20,14 +23,11 @@ const WalletPage = () => {
   const [activeTab, setActiveTab] = useState<string>("balance");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
     const checkSession = async () => {
-      const {
-        data
-      } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
       if (!data.session) {
         toast({
           title: "Authentication required",
@@ -43,16 +43,43 @@ const WalletPage = () => {
     };
     checkSession();
   }, []);
+
   if (!isLoggedIn) {
     return null;
   }
-  return <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-6 pb-24">
-        <div className="flex items-center mb-6">
-          <WalletIcon className="w-8 h-8 mr-2 text-primary" />
-          <h1 className="text-3xl font-bold text-gray-950">My Wallet</h1>
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="lg:hidden"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center space-x-2">
+                <WalletIcon className="w-6 h-6 text-primary" />
+                <h1 className="text-xl font-bold text-gray-950">My Wallet</h1>
+              </div>
+            </div>
+            
+            <div className="hidden md:flex items-center space-x-2">
+              <span className="text-sm text-gray-500">Balance:</span>
+              <span className="text-lg font-semibold text-primary">
+                ₹{wallet?.balance.toFixed(2) || "0.00"}
+              </span>
+            </div>
+          </div>
         </div>
-        
+      </header>
+
+      <div className="container mx-auto px-4 py-6 pb-24">
         <WalletHeader wallet={wallet} loading={loading} />
         
         <div className="mt-8">
@@ -118,6 +145,8 @@ const WalletPage = () => {
           </Tabs>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default WalletPage;

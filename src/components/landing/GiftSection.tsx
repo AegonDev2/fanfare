@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Gift } from "lucide-react";
+import { Search, Gift, ArrowRight } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import { useShopProducts } from "@/hooks/useShopProducts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+
 const ProductCard = memo(({
   product
 }: {
@@ -41,10 +42,10 @@ const ProductCard = memo(({
     </div>;
 });
 ProductCard.displayName = "ProductCard";
+
 const GiftSection = () => {
-  const {
-    data: shops = []
-  } = useShops();
+  const navigate = useNavigate();
+  const { data: shops = [] } = useShops();
   const [searchValue, setSearchValue] = useState("");
   const carouselRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -92,14 +93,48 @@ const GiftSection = () => {
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   }, []);
-  return <section className="mb-4 relative px-4">
+
+  return (
+    <section className="mb-4 relative px-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 sm:mb-4 gap-2 mx-1">
-          <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-gray-900 text-lg lg:text-xl font-semibold mx-0">Gift Shop</h2>
+          <div className="flex items-center justify-between w-full md:w-auto">
+            <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-gray-900 text-lg lg:text-xl font-semibold mx-0">
+              Gift Shop
+            </h2>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/gift-shop')}
+              className="text-funky-purple hover:text-funky-pink hover:bg-funky-purple/10 flex items-center gap-1 md:hidden"
+            >
+              View All
+              <ArrowRight className="h-3 w-3" />
+            </Button>
+          </div>
           
-          <div className="relative w-full md:w-auto py-[6px]">
-            <Input placeholder="Search Gifts" type="text" value={searchValue} onChange={handleSearchChange} className="w-full md:w-64 lg:w-72 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs lg:text-sm shadow-sm bg-white" />
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 lg:h-4 lg:w-4 text-funky-purple/60" />
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:flex-none py-[6px]">
+              <Input
+                placeholder="Search Gifts"
+                type="text"
+                value={searchValue}
+                onChange={handleSearchChange}
+                className="w-full md:w-64 lg:w-72 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs lg:text-sm shadow-sm bg-white"
+              />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 lg:h-4 lg:w-4 text-funky-purple/60" />
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/gift-shop')}
+              className="hidden md:flex items-center gap-2 border-funky-purple/30 text-funky-purple hover:bg-funky-purple/10 hover:border-funky-purple/50"
+            >
+              View All
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
         
@@ -132,6 +167,8 @@ const GiftSection = () => {
             </Carousel>}
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default memo(GiftSection);
