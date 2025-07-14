@@ -34,11 +34,11 @@ const LeaderboardSection = () => {
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
               {[1, 2, 3].map(i => (
-                <div key={i} className="flex items-center space-x-3 animate-pulse p-3 rounded-lg bg-white/30">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-r from-gray-200 to-gray-300"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                    <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                <div key={i} className="flex items-center space-x-3 animate-pulse p-2 rounded-lg bg-white/30">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-gradient-to-r from-gray-200 to-gray-300"></div>
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-2 bg-gray-100 rounded w-1/2"></div>
                   </div>
                 </div>
               ))}
@@ -66,10 +66,10 @@ const LeaderboardSection = () => {
                 Top Fans This Month
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-center py-8 relative z-10">
-              <div className="bg-white/40 rounded-2xl p-6 backdrop-blur-sm">
-                <Users className="h-16 w-16 lg:h-20 lg:w-20 mx-auto mb-4 text-funky-purple/60" />
-                <p className="text-base lg:text-lg text-funky-purple font-semibold mb-4">Be the first to make history!</p>
+            <CardContent className="text-center py-6 relative z-10">
+              <div className="bg-white/40 rounded-2xl p-4 backdrop-blur-sm">
+                <Users className="h-12 w-12 lg:h-16 lg:w-16 mx-auto mb-3 text-funky-purple/60" />
+                <p className="text-base lg:text-lg text-funky-purple font-semibold mb-3">Be the first to make history!</p>
                 <Button 
                   size="lg" 
                   onClick={() => navigate('/gift-selection')}
@@ -140,10 +140,10 @@ const LeaderboardSection = () => {
             <div className="absolute top-1/2 left-8 w-8 h-8 bg-funky-blue rounded-full animate-ping"></div>
           </div>
           
-          <CardHeader className="pb-4 relative z-10">
+          <CardHeader className="pb-3 relative z-10">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl lg:text-2xl flex items-center bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent font-bold">
-                <Trophy className="mr-2 h-6 w-6 lg:h-7 lg:w-7 text-funky-yellow animate-pulse" />
+                <Trophy className="mr-2 h-6 w-6 lg:h-7 lg:w-7 text-funky-yellow" />
                 Top Fans This Month
               </CardTitle>
               <Badge variant="outline" className="border-funky-purple/50 text-funky-purple bg-funky-purple/10 backdrop-blur-sm">
@@ -152,50 +152,50 @@ const LeaderboardSection = () => {
             </div>
           </CardHeader>
           
-          <CardContent className="space-y-4 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <CardContent className="space-y-3 relative z-10 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {topFans.map((fan, index) => {
                 const display = getPositionDisplay(index);
                 const IconComponent = display.icon;
                 
                 return (
-                  <div key={fan.fan_id} className={`${display.bgColor} ${display.borderColor} border-2 rounded-2xl p-4 hover:scale-105 transition-all duration-300 hover:shadow-lg backdrop-blur-sm relative overflow-hidden`}>
+                  <div key={fan.fan_id} className={`${display.bgColor} ${display.borderColor} border-2 rounded-xl p-3 hover:scale-105 transition-all duration-300 hover:shadow-lg backdrop-blur-sm relative overflow-hidden`}>
                     {/* Rank indicator */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r ${display.gradient} text-white text-sm font-bold shadow-sm`}>
-                        <IconComponent className="h-4 w-4" />
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`flex items-center gap-2 px-2 py-1 rounded-full bg-gradient-to-r ${display.gradient} text-white text-xs font-bold shadow-sm`}>
+                        <IconComponent className="h-3 w-3" />
                         <span>{display.title}</span>
                       </div>
-                      <div className="text-2xl font-black text-gray-300">#{index + 1}</div>
+                      <div className="text-lg font-black text-gray-300">#{index + 1}</div>
                     </div>
                     
-                    {/* Fan avatar */}
-                    <div className="text-center mb-3">
-                      <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-r ${display.gradient} flex items-center justify-center text-white text-xl font-bold shadow-lg`}>
+                    {/* Fan avatar - smaller */}
+                    <div className="text-center mb-2">
+                      <div className={`w-12 h-12 mx-auto rounded-full bg-gradient-to-r ${display.gradient} flex items-center justify-center text-white text-base font-bold shadow-lg`}>
                         {fan.fan_name ? fan.fan_name.charAt(0).toUpperCase() : "?"}
                       </div>
                     </div>
                     
-                    {/* Fan details */}
-                    <div className="text-center space-y-2">
-                      <div className={`font-bold text-lg ${display.textColor} truncate`}>
+                    {/* Fan details - more compact */}
+                    <div className="text-center space-y-1">
+                      <div className={`font-bold text-sm ${display.textColor} truncate`}>
                         {fan.fan_name || "Anonymous Fan"}
                       </div>
                       
-                      <div className="text-sm text-gray-600 truncate">
+                      <div className="text-xs text-gray-600 truncate">
                         {fan.favorite_influencer_name ? 
                           `Favorite: ${fan.favorite_influencer_name}` : 
                           "No favorite yet"
                         }
                       </div>
                       
-                      {/* Gift count */}
-                      <div className="flex items-center justify-center gap-2 mt-3">
-                        <Trophy className={`h-4 w-4 ${display.textColor}`} />
-                        <span className={`text-2xl font-black ${display.textColor}`}>
+                      {/* Gift count - smaller */}
+                      <div className="flex items-center justify-center gap-1 mt-2">
+                        <Trophy className={`h-3 w-3 ${display.textColor}`} />
+                        <span className={`text-lg font-black ${display.textColor}`}>
                           {fan.total_gifts}
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs text-gray-500">
                           gift{fan.total_gifts !== 1 ? 's' : ''}
                         </span>
                       </div>
@@ -205,11 +205,11 @@ const LeaderboardSection = () => {
               })}
             </div>
             
-            <div className="text-center pt-4">
+            <div className="text-center pt-3">
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-2 border-funky-purple/50 text-funky-purple hover:bg-gradient-to-r hover:from-funky-purple hover:to-funky-pink hover:text-white hover:border-transparent font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm bg-white/50"
+                className="border-2 border-funky-purple/50 text-funky-purple hover:bg-gradient-to-r hover:from-funky-purple hover:to-funky-pink hover:text-white hover:border-transparent font-semibold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm bg-white/50"
                 onClick={() => navigate('/leaderboard')}
               >
                 <Trophy className="mr-2 h-4 w-4" />
