@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface FormState {
   name: string;
+  profileName: string;
   bio: string;
 }
 
@@ -29,6 +30,7 @@ export default function CreateFanProfile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormState>({
     name: "",
+    profileName: "",
     bio: "",
   });
 
@@ -140,6 +142,7 @@ export default function CreateFanProfile() {
       // Create fan profile
       const fanProfileData = {
         user_id: user.id,
+        profile_name: formData.profileName.trim() || null,
         bio: formData.bio.trim() || null,
         profile_image_url: profileImageUrl || null,
         total_gifts_sent: 0,
@@ -253,6 +256,17 @@ export default function CreateFanProfile() {
                     onChange={handleChange}
                     placeholder="Enter your full name"
                     required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="profileName">Profile Name (Optional)</Label>
+                  <Input
+                    type="text"
+                    id="profileName"
+                    value={formData.profileName}
+                    onChange={handleChange}
+                    placeholder="Enter a display name for your profile"
                   />
                 </div>
 

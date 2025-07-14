@@ -26,6 +26,7 @@ export interface FanProfileData {
   email: string;
   user_type: string;
   bio?: string;
+  profile_name?: string;
   profile_image_url?: string;
   favorite_categories?: string[];
   total_gifts_sent: number;
@@ -45,6 +46,11 @@ export const useFanProfile = (userId: string) => {
       setIsLoading(true);
       setError(null);
 
+      if (!userId) {
+        setError('User ID is required');
+        return;
+      }
+
       // Get basic profile info
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -52,7 +58,14 @@ export const useFanProfile = (userId: string) => {
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        throw new Error(`Failed to fetch profile: ${profileError.message}`);
+      }
+
+      if (!profile) {
+        throw new Error('Profile not found');
+      }
 
       // Get fan profile data
       const { data: fanProfileData, error: fanProfileError } = await supabase
@@ -60,6 +73,11 @@ export const useFanProfile = (userId: string) => {
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
+
+      if (fanProfileError) {
+        console.error('Fan profile fetch error:', fanProfileError);
+        throw new Error(`Failed to fetch fan profile: ${fanProfileError.message}`);
+      }
 
       // Get fan stats from gift requests
       const { data: giftRequestsData, error: giftRequestsError } = await supabase
@@ -76,7 +94,10 @@ export const useFanProfile = (userId: string) => {
         `)
         .eq('sender_id', userId);
 
-      if (giftRequestsError) throw giftRequestsError;
+      if (giftRequestsError) {
+        console.error('Gift requests fetch error:', giftRequestsError);
+        // Don't throw error here, just use empty array
+      }
 
       // Calculate stats
       const completedGifts = giftRequestsData?.filter(g => g.status === 'completed') || [];
@@ -104,6 +125,7 @@ export const useFanProfile = (userId: string) => {
       setFanProfile({
         ...profile,
         bio: fanProfileData?.bio,
+        profile_name: fanProfileData?.profile_name,
         profile_image_url: fanProfileData?.profile_image_url,
         favorite_categories: fanProfileData?.favorite_categories,
         total_gifts_sent: fanProfileData?.total_gifts_sent || 0,
@@ -114,10 +136,10 @@ export const useFanProfile = (userId: string) => {
 
     } catch (error: any) {
       console.error('Error fetching fan profile:', error);
-      setError(error.message);
+      setError(error.message || 'Failed to load fan profile');
       toast({
         title: "Error loading profile",
-        description: "Failed to load fan profile data",
+        description: error.message || "Failed to load fan profile data",
         variant: "destructive",
       });
     } finally {

@@ -15,7 +15,7 @@ import FanProfile from '@/components/profile/FanProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, List, Star, User } from 'lucide-react';
+import { Heart, List, Star, User, AlertCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Profile() {
@@ -26,6 +26,7 @@ export default function Profile() {
   const [navOpen, setNavOpen] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [userType, setUserType] = useState<string | null>(null);
+  const [profileCheckError, setProfileCheckError] = useState<string | null>(null);
 
   // Determine the profile ID to load
   const profileId = id || user?.id;
@@ -45,20 +46,38 @@ export default function Profile() {
 
   useEffect(() => {
     const checkUserType = async () => {
-      if (!profileId) return;
+      if (!profileId) {
+        setProfileCheckError('No profile ID provided');
+        return;
+      }
 
       try {
+        console.log('Checking user type for profile ID:', profileId);
+        
         // Get user type from profiles table
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('user_type')
+          .select('user_type, name, email')
           .eq('id', profileId)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching profile:', error);
+          setProfileCheckError(`Failed to load profile: ${error.message}`);
+          return;
+        }
+
+        if (!profile) {
+          setProfileCheckError('Profile not found');
+          return;
+        }
+
+        console.log('Profile found:', profile);
         setUserType(profile.user_type);
-      } catch (error) {
+        setProfileCheckError(null);
+      } catch (error: any) {
         console.error('Error checking user type:', error);
+        setProfileCheckError(`Error loading profile: ${error.message}`);
       }
     };
 
@@ -84,10 +103,12 @@ export default function Profile() {
 
         // For current user, check if they need to create a profile
         if (isCurrentUserProfile && user && userType) {
-          if (userType === 'influencer' && !influencer && !influencerLoading) {
+          if (userType === 'influencer' && !influencer && !influencerLoading && !influencerError) {
+            console.log('Redirecting to create influencer profile');
             navigate('/create-influencer-profile');
             return;
-          } else if (userType === 'fan' && !fanProfile && !fanLoading) {
+          } else if (userType === 'fan' && !fanProfile && !fanLoading && !fanError) {
+            console.log('Redirecting to create fan profile');
             navigate('/create-fan-profile');
             return;
           }
@@ -104,10 +125,10 @@ export default function Profile() {
       }
     };
 
-    if (userType !== null) {
+    if (userType !== null && !profileCheckError) {
       handleProfileLoad();
     }
-  }, [user, profileId, isCurrentUserProfile, influencer, influencerLoading, fanProfile, fanLoading, navigate, toast, profileLoaded, userType]);
+  }, [user, profileId, isCurrentUserProfile, influencer, influencerLoading, fanProfile, fanLoading, navigate, toast, profileLoaded, userType, influencerError, fanError, profileCheckError]);
 
   // Show loading state
   if (influencerLoading || fanLoading || !profileLoaded || userType === null) {
@@ -128,22 +149,33 @@ export default function Profile() {
   }
 
   // Handle error states
-  if (influencerError || fanError) {
+  if (profileCheckError || influencerError || fanError) {
     return (
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
         <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
         
         <div className="min-h-screen bg-background pt-20 p-4 flex items-center justify-center">
-          <div className="text-center">
+          <div className="text-center max-w-md">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Error</h2>
-            <p className="text-gray-600 mb-4">Unable to load profile information</p>
-            <button 
-              onClick={() => navigate('/')}
-              className="px-4 py-2 bg-funky-purple text-white rounded-md hover:bg-funky-purple/90"
-            >
-              Go Home
-            </button>
+            <p className="text-gray-600 mb-4">
+              {profileCheckError || influencerError || fanError || "Unable to load profile information"}
+            </p>
+            <div className="space-x-2">
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="outline"
+              >
+                Try Again
+              </Button>
+              <Button 
+                onClick={() => navigate('/')}
+                className="bg-funky-purple hover:bg-funky-purple/90"
+              >
+                Go Home
+              </Button>
+            </div>
           </div>
         </div>
       </>
@@ -316,14 +348,15 @@ export default function Profile() {
       
       <div className="min-h-screen bg-background pt-20 p-4 flex items-center justify-center">
         <div className="text-center">
+          <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
-          <p className="text-gray-600 mb-4">The requested profile could not be found</p>
-          <button 
+          <p className="text-gray-600 mb-4">The requested profile could not be found or is incomplete</p>
+          <Button 
             onClick={() => navigate('/')}
-            className="px-4 py-2 bg-funky-purple text-white rounded-md hover:bg-funky-purple/90"
+            className="bg-funky-purple hover:bg-funky-purple/90"
           >
             Go Home
-          </button>
+          </Button>
         </div>
       </div>
     </>

@@ -57,6 +57,7 @@ export type Database = {
           favorite_categories: string[] | null
           id: string
           profile_image_url: string | null
+          profile_name: string | null
           total_amount_spent: number | null
           total_gifts_sent: number | null
           updated_at: string
@@ -68,6 +69,7 @@ export type Database = {
           favorite_categories?: string[] | null
           id?: string
           profile_image_url?: string | null
+          profile_name?: string | null
           total_amount_spent?: number | null
           total_gifts_sent?: number | null
           updated_at?: string
@@ -79,6 +81,7 @@ export type Database = {
           favorite_categories?: string[] | null
           id?: string
           profile_image_url?: string | null
+          profile_name?: string | null
           total_amount_spent?: number | null
           total_gifts_sent?: number | null
           updated_at?: string
