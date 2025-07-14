@@ -999,6 +999,15 @@ export type Database = {
         Args: { order_id: string }
         Returns: boolean
       }
+      process_gift_payment: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_gift_request_id: string
+          p_description: string
+        }
+        Returns: boolean
+      }
       process_influencer_acceptance: {
         Args: { gift_request_id: string }
         Returns: boolean

@@ -21,36 +21,32 @@ export const useWallet = () => {
         throw new Error("User not authenticated");
       }
       
-      // Execute query to get wallet - using select() instead of maybeSingle() to handle multiple rows
+      // Get the single wallet for the user (due to unique constraint)
       const { data, error } = await supabase
         .from('wallets')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .single();
       
-      if (error) throw error;
-      
-      // Check if wallet exists - use the most recent one if multiple exist
-      if (data && data.length > 0) {
-        setWallet(data[0] as Wallet);
-        
-        // If we found multiple wallets, log a warning - this shouldn't normally happen
-        if (data.length > 1) {
-          console.warn(`Found ${data.length} wallets for user ${user.id}. Using most recent one.`);
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No wallet found, create one
+          const { data: newWallet, error: createError } = await supabase
+            .from('wallets')
+            .insert({
+              user_id: user.id,
+              balance: 0
+            })
+            .select()
+            .single();
+          
+          if (createError) throw createError;
+          setWallet(newWallet as Wallet);
+        } else {
+          throw error;
         }
       } else {
-        // Create a wallet with 0 balance
-        const { data: newWallet, error: createError } = await supabase
-          .from('wallets')
-          .insert({
-            user_id: user.id,
-            balance: 0
-          })
-          .select()
-          .single();
-        
-        if (createError) throw createError;
-        setWallet(newWallet as Wallet);
+        setWallet(data as Wallet);
       }
     } catch (error: any) {
       console.error("Error fetching wallet:", error);
