@@ -89,8 +89,7 @@ export const useFanProfile = (userId: string) => {
           created_at,
           completed_at,
           influencer_id,
-          product_title,
-          influencer_profiles!inner(name)
+          product_title
         `)
         .eq('sender_id', userId);
 
@@ -113,7 +112,7 @@ export const useFanProfile = (userId: string) => {
       // Format gift history
       const giftHistory: GiftHistory[] = (giftRequestsData || []).map(gift => ({
         id: gift.id,
-        influencer_name: (gift.influencer_profiles as any)?.name || 'Unknown',
+        influencer_name: 'Influencer', // We'll fetch this separately if needed
         influencer_id: gift.influencer_id,
         product_title: gift.product_title || 'Unknown Gift',
         product_price: gift.product_price || 0,
