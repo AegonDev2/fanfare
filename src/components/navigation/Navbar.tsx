@@ -1,7 +1,7 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Home, Gift, User, Search, Settings, Wallet, Trophy, Bell } from "lucide-react";
+import { X, Home, Gift, User, Search, Settings, Wallet, Trophy, Bell, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,12 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       path: user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent",
       action: () => handleNavigation(user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent")
     },
+    ...(user?.user_type === "influencer" ? [{
+      icon: Heart,
+      label: "Gift Requests",
+      path: "/gift-requests",
+      action: () => handleNavigation("/gift-requests")
+    }] : []),
     {
       icon: Trophy,
       label: "Leaderboard",
