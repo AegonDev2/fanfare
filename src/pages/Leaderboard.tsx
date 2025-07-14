@@ -1,9 +1,14 @@
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import LeaderboardHeader from "@/components/leaderboard/LeaderboardHeader";
 import LeaderboardList from "@/components/leaderboard/LeaderboardList";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { Separator } from "@/components/ui/separator";
+import FloatingHeader from '@/components/ui/floating-header';
+import Navbar from '@/components/navigation/Navbar';
+
 const Leaderboard = () => {
+  const [navOpen, setNavOpen] = useState(false);
   const {
     leaderboard,
     isLoading,
@@ -11,28 +16,44 @@ const Leaderboard = () => {
     currentMonth,
     currentYear
   } = useLeaderboard();
+
   useEffect(() => {
     document.title = `Fan of the Month | FanFare`;
   }, []);
+
   const handleMonthYearChange = (month: string, year: number) => {
     fetchLeaderboard(month, year);
   };
-  return <div className="min-h-screen w-full bg-[var(--background)]">
-      <div className="container mx-auto py-6 px-4 bg-rose-100">
-        <div className="max-w-7xl mx-auto">
-          <LeaderboardHeader month={currentMonth} year={currentYear} />
-          
-          <div className="grid grid-cols-1 gap-8">
-            <div>
-              <h2 className="text-2xl mb-3 text-center sm:text-left font-bold text-gray-900">
-                Top Fans Leaderboard
-              </h2>
-              <Separator className="mb-6" />
-              <LeaderboardList leaderboard={leaderboard} isLoading={isLoading} currentMonth={currentMonth} currentYear={currentYear} onMonthYearChange={handleMonthYearChange} />
+
+  return (
+    <>
+      <FloatingHeader setNavOpen={setNavOpen} />
+      <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+      <div className="min-h-screen w-full bg-[var(--background)] pt-20">
+        <div className="container mx-auto py-6 px-4 bg-rose-100">
+          <div className="max-w-7xl mx-auto">
+            <LeaderboardHeader month={currentMonth} year={currentYear} />
+            
+            <div className="grid grid-cols-1 gap-8">
+              <div>
+                <h2 className="text-2xl mb-3 text-center sm:text-left font-bold text-gray-900">
+                  Top Fans Leaderboard
+                </h2>
+                <Separator className="mb-6" />
+                <LeaderboardList 
+                  leaderboard={leaderboard} 
+                  isLoading={isLoading} 
+                  currentMonth={currentMonth} 
+                  currentYear={currentYear} 
+                  onMonthYearChange={handleMonthYearChange} 
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>;
+    </>
+  );
 };
+
 export default Leaderboard;

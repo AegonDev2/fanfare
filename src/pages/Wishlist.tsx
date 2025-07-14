@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Gift, User } from "lucide-react";
+import FloatingHeader from '@/components/ui/floating-header';
+import Navbar from '@/components/navigation/Navbar';
 
 const Wishlist = () => {
   const { id: influencerId } = useParams<{ id: string }>();
@@ -16,9 +18,9 @@ const Wishlist = () => {
   const { toast } = useToast();
   const [influencerName, setInfluencerName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [navOpen, setNavOpen] = useState(false);
 
   const userId = influencerId || (user?.user_type === 'influencer' ? user.id : null);
-
   const isOwner = user?.id === userId;
   
   const {
@@ -76,57 +78,65 @@ const Wishlist = () => {
 
   if (!userId) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-100">
-        <div className="container mx-auto py-6 px-4">
-          <Card className="border-funky-purple/10 shadow-lg backdrop-blur-md bg-white/90">
-            <CardContent className="pt-6 text-center">
-              <p className="text-gray-600">No influencer selected. Please go to an influencer's profile to view their wishlist.</p>
-            </CardContent>
-          </Card>
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-100 pt-20">
+          <div className="container mx-auto py-6 px-4">
+            <Card className="border-funky-purple/10 shadow-lg backdrop-blur-md bg-white/90">
+              <CardContent className="pt-6 text-center">
+                <p className="text-gray-600">No influencer selected. Please go to an influencer's profile to view their wishlist.</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-100">
-      <div className="container mx-auto py-6 px-4 pb-24">
-        <Card className="mb-8 border-funky-purple/10 shadow-lg backdrop-blur-md bg-white/90">
-          <CardHeader className="flex flex-row justify-between items-center">
-            <div>
-              <CardTitle className="text-2xl bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">
-                {isOwner ? "Your Wishlist" : `${influencerName || "Influencer"}'s Wishlist`}
-              </CardTitle>
-              <CardDescription>
-                {isOwner 
-                  ? "Manage items you'd like your fans to gift you"
-                  : `Browse items that ${influencerName || "this influencer"} would like to receive`}
-              </CardDescription>
-            </div>
-            
-            {!isOwner && userId && (
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2 border-funky-purple/20 hover:bg-funky-purple/10"
-                onClick={() => window.location.href = `/profile/${userId}`}
-              >
-                <User size={16} />
-                View Profile
-              </Button>
-            )}
-          </CardHeader>
-        </Card>
+    <>
+      <FloatingHeader setNavOpen={setNavOpen} />
+      <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+      <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-100 pt-20">
+        <div className="container mx-auto py-6 px-4 pb-24">
+          <Card className="mb-8 border-funky-purple/10 shadow-lg backdrop-blur-md bg-white/90">
+            <CardHeader className="flex flex-row justify-between items-center">
+              <div>
+                <CardTitle className="text-2xl bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">
+                  {isOwner ? "Your Wishlist" : `${influencerName || "Influencer"}'s Wishlist`}
+                </CardTitle>
+                <CardDescription>
+                  {isOwner 
+                    ? "Manage items you'd like your fans to gift you"
+                    : `Browse items that ${influencerName || "this influencer"} would like to receive`}
+                </CardDescription>
+              </div>
+              
+              {!isOwner && userId && (
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2 border-funky-purple/20 hover:bg-funky-purple/10"
+                  onClick={() => window.location.href = `/profile/${userId}`}
+                >
+                  <User size={16} />
+                  View Profile
+                </Button>
+              )}
+            </CardHeader>
+          </Card>
 
-        <WishlistGrid 
-          wishlist={wishlist}
-          isLoading={isLoading || isLoadingWishlist}
-          isOwner={isOwner}
-          onAddItem={isOwner ? handleAddWishlistItem : undefined}
-          onRemoveItem={isOwner ? removeWishlistItem : undefined}
-          onRequestGift={!isOwner ? handleRequestGift : undefined}
-        />
+          <WishlistGrid 
+            wishlist={wishlist}
+            isLoading={isLoading || isLoadingWishlist}
+            isOwner={isOwner}
+            onAddItem={isOwner ? handleAddWishlistItem : undefined}
+            onRemoveItem={isOwner ? removeWishlistItem : undefined}
+            onRequestGift={!isOwner ? handleRequestGift : undefined}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

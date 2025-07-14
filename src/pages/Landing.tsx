@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import Header from '@/components/landing/Header';
+import FloatingHeader from '@/components/ui/floating-header';
+import Navbar from '@/components/navigation/Navbar';
 import Hero from '@/components/landing/Hero';
 import LeaderboardSection from '@/components/landing/LeaderboardSection';
 import InfluencerSection from '@/components/landing/InfluencerSection';
@@ -15,17 +16,20 @@ export default function Landing() {
   const [navOpen, setNavOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header setNavOpen={setNavOpen} />
-      <Hero />
-      <LeaderboardSection />
-      <InfluencerSection />
-      <GiftSection />
-      <HowItWorks />
-      <WhyUs />
-      <Testimonials />
-      <FAQ />
-      <Footer />
-    </div>
+    <>
+      <FloatingHeader setNavOpen={setNavOpen} />
+      <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+      <div className="min-h-screen bg-background">
+        <Hero />
+        <LeaderboardSection />
+        <InfluencerSection />
+        <GiftSection />
+        <HowItWorks />
+        <WhyUs />
+        <Testimonials />
+        <FAQ />
+        <Footer />
+      </div>
+    </>
   );
 }
