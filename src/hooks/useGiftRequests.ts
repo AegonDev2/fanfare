@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/hooks/useUser';
@@ -40,6 +39,8 @@ export const useGiftRequests = () => {
       setLoading(true);
       setError(null);
       
+      console.log("Fetching gift requests for influencer:", user.id);
+      
       const { data, error: fetchError } = await supabase
         .from('gift_requests')
         .select(`
@@ -50,11 +51,14 @@ export const useGiftRequests = () => {
         .order('created_at', { ascending: false });
 
       if (fetchError) {
+        console.error("Error fetching gift requests:", fetchError);
         throw fetchError;
       }
 
+      console.log("Fetched gift requests:", data?.length);
       setRequests(data || []);
     } catch (err) {
+      console.error("Gift requests fetch error:", err);
       setError(err as Error);
     } finally {
       setLoading(false);
@@ -66,11 +70,17 @@ export const useGiftRequests = () => {
   }, [user]);
 
   const getPendingRequests = () => {
-    return requests.filter(request => request.status === 'pending');
+    return requests.filter(request => 
+      request.admin_approved && request.status === 'pending' && !request.influencer_response
+    );
   };
 
   const getAcceptedRequests = () => {
-    return requests.filter(request => request.status === 'accepted');
+    return requests.filter(request => 
+      request.status === 'accepted' || 
+      request.status === 'under process' || 
+      request.status === 'completed'
+    );
   };
 
   const getRejectedRequests = () => {

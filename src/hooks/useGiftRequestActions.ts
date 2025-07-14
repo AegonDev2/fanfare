@@ -111,8 +111,8 @@ export const useGiftRequestActions = (
             .from('gift_requests')
             .update({ 
               status: 'under process',
-              platform_fee: orderData.platform_fee,
-              total_amount: orderData.total_amount
+              influencer_response: 'accepted',
+              influencer_response_at: new Date().toISOString()
             })
             .eq('id', id);
             
@@ -123,7 +123,12 @@ export const useGiftRequestActions = (
           // Update the local state to reflect the status change
           setRequests(prev =>
             prev.map(req =>
-              req.id === id ? { ...req, status: 'under process', platform_fee: orderData.platform_fee, total_amount: orderData.total_amount } : req
+              req.id === id ? { 
+                ...req, 
+                status: 'under process',
+                influencer_response: 'accepted',
+                influencer_response_at: new Date().toISOString()
+              } : req
             )
           );
 

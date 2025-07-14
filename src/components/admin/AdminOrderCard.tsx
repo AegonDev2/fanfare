@@ -83,12 +83,40 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
 
   const handleApprove = async () => {
     try {
+      console.log("Approving order:", order.id);
+      
+      // Check if order exists in orders_under_process first
+      const { data: existingOrder, error: checkError } = await supabase
+        .from('orders_under_process')
+        .select('id')
+        .eq('id', order.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking order:", checkError);
+        throw checkError;
+      }
+
+      if (!existingOrder) {
+        // Order already processed or doesn't exist
+        toast({
+          title: "Order Already Processed",
+          description: "This order has already been processed or moved to gift requests",
+          variant: "default"
+        });
+        onStatusChange(order.id, 'already_processed');
+        return;
+      }
+
       // Move order to gift_requests for influencer approval
       const { error } = await supabase.rpc('move_order_to_gift_request', {
         order_id: order.id
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("RPC error:", error);
+        throw error;
+      }
 
       toast({
         title: "Order Approved",

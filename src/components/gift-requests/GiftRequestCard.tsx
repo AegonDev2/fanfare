@@ -135,6 +135,8 @@ export default function GiftRequestCard({
         return <Badge variant="default" className="bg-green-100 text-green-800">Accepted</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejected</Badge>;
+      case 'under process':
+        return <Badge variant="default" className="bg-purple-100 text-purple-800">Processing</Badge>;
       case 'completed':
         return <Badge variant="default" className="bg-blue-100 text-blue-800">Completed</Badge>;
       default:

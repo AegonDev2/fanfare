@@ -17,7 +17,10 @@ export const useAdminOrders = () => {
       // Fetch orders from under_process table
       const { data: underProcessOrders, error: underProcessError } = await supabase
         .from('orders_under_process')
-        .select('*, influencer:influencer_id(*)')
+        .select(`
+          *,
+          influencer:influencer_profiles!orders_under_process_influencer_id_fkey(id, name)
+        `)
         .order('created_at', { ascending: false });
 
       if (underProcessError) {
@@ -30,7 +33,10 @@ export const useAdminOrders = () => {
       // Fetch orders from completed table
       const { data: completedOrders, error: completedError } = await supabase
         .from('orders_completed')
-        .select('*, influencer:influencer_id(*)')
+        .select(`
+          *,
+          influencer:influencer_profiles!orders_completed_influencer_id_fkey(id, name)
+        `)
         .order('created_at', { ascending: false });
 
       if (completedError) {
