@@ -44,12 +44,12 @@ export const useLeaderboard = () => {
         throw error;
       }
 
-      // Transform the data to ensure all types are correct, handling bigint properly
+      // Transform the data to ensure all types are correct
       const transformedData = data.map((entry: any) => ({
         fan_id: entry.fan_id,
         fan_name: entry.fan_name,
         fan_email: entry.fan_email,
-        total_gifts: typeof entry.total_gifts === 'bigint' ? Number(entry.total_gifts) : Number(entry.total_gifts), // Handle both bigint and regular numbers
+        total_gifts: Number(entry.total_gifts), // Convert to number
         favorite_influencer_id: entry.favorite_influencer_id,
         favorite_influencer_name: entry.favorite_influencer_name,
         month: entry.month?.trim(), // Trim whitespace from month name
