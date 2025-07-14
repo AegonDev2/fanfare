@@ -54,7 +54,7 @@ const InfluencerCard = memo(({
         <div className="mt-1 relative">
           <h3 className="text-xs lg:text-sm font-semibold truncate font-display text-zinc-950">{influencer.name}</h3>
           <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mt-0.5 space-x-1">
-            <span className="font-medium text-funky-purple text-[10px] lg:text-xs">{influencer.platform}</span>
+            
             {influencer.category && <>
                 <span>•</span>
                 <span className="text-[10px] lg:text-xs text-slate-600 capitalize">{influencer.category}</span>
