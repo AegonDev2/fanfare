@@ -1,9 +1,8 @@
 
 import { useEffect, useState } from "react";
 import LeaderboardHeader from "@/components/leaderboard/LeaderboardHeader";
-import LeaderboardList from "@/components/leaderboard/LeaderboardList";
+import LeaderboardShowcase from "@/components/leaderboard/LeaderboardShowcase";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { Separator } from "@/components/ui/separator";
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 
@@ -29,26 +28,26 @@ const Leaderboard = () => {
     <>
       <FloatingHeader setNavOpen={setNavOpen} />
       <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
-      <div className="min-h-screen w-full bg-[var(--background)] pt-20">
-        <div className="container mx-auto py-6 px-4 bg-rose-100">
+      <div className="min-h-screen w-full bg-gradient-to-br from-funky-purple via-funky-pink to-funky-blue pt-20 relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-funky-yellow rounded-full animate-bounce-subtle"></div>
+          <div className="absolute top-40 right-20 w-24 h-24 bg-funky-green rounded-full animate-float"></div>
+          <div className="absolute bottom-40 left-20 w-20 h-20 bg-funky-orange rounded-full animate-pulse-glow"></div>
+          <div className="absolute bottom-20 right-10 w-28 h-28 bg-funky-pink rounded-full animate-rotate-slow"></div>
+        </div>
+
+        <div className="container mx-auto py-6 px-4 relative z-10">
           <div className="max-w-7xl mx-auto">
             <LeaderboardHeader month={currentMonth} year={currentYear} />
             
-            <div className="grid grid-cols-1 gap-8">
-              <div>
-                <h2 className="text-2xl mb-3 text-center sm:text-left font-bold text-gray-900">
-                  Top Fans Leaderboard
-                </h2>
-                <Separator className="mb-6" />
-                <LeaderboardList 
-                  leaderboard={leaderboard} 
-                  isLoading={isLoading} 
-                  currentMonth={currentMonth} 
-                  currentYear={currentYear} 
-                  onMonthYearChange={handleMonthYearChange} 
-                />
-              </div>
-            </div>
+            <LeaderboardShowcase 
+              leaderboard={leaderboard} 
+              isLoading={isLoading} 
+              currentMonth={currentMonth} 
+              currentYear={currentYear} 
+              onMonthYearChange={handleMonthYearChange} 
+            />
           </div>
         </div>
       </div>
