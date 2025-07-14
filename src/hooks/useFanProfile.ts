@@ -51,6 +51,8 @@ export const useFanProfile = (userId: string) => {
         return;
       }
 
+      console.log('Fetching fan profile for user:', userId);
+
       // Get basic profile info
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -60,12 +62,16 @@ export const useFanProfile = (userId: string) => {
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
-        throw new Error(`Failed to fetch profile: ${profileError.message}`);
+        setError(`Failed to fetch profile: ${profileError.message}`);
+        return;
       }
 
       if (!profile) {
-        throw new Error('Profile not found');
+        setError('Profile not found');
+        return;
       }
+
+      console.log('Base profile fetched:', profile);
 
       // Get fan profile data
       const { data: fanProfileData, error: fanProfileError } = await supabase
@@ -76,8 +82,11 @@ export const useFanProfile = (userId: string) => {
 
       if (fanProfileError) {
         console.error('Fan profile fetch error:', fanProfileError);
-        throw new Error(`Failed to fetch fan profile: ${fanProfileError.message}`);
+        setError(`Failed to fetch fan profile: ${fanProfileError.message}`);
+        return;
       }
+
+      console.log('Fan profile data fetched:', fanProfileData);
 
       // Get fan stats from gift requests
       const { data: giftRequestsData, error: giftRequestsError } = await supabase
@@ -95,8 +104,10 @@ export const useFanProfile = (userId: string) => {
 
       if (giftRequestsError) {
         console.error('Gift requests fetch error:', giftRequestsError);
-        // Don't throw error here, just use empty array
+        // Don't set error here, just use empty array for gift requests
       }
+
+      console.log('Gift requests data fetched:', giftRequestsData);
 
       // Calculate stats
       const completedGifts = giftRequestsData?.filter(g => g.status === 'completed') || [];
@@ -121,7 +132,7 @@ export const useFanProfile = (userId: string) => {
         completed_at: gift.completed_at
       }));
 
-      setFanProfile({
+      const finalProfile: FanProfileData = {
         ...profile,
         bio: fanProfileData?.bio,
         profile_name: fanProfileData?.profile_name,
@@ -131,14 +142,18 @@ export const useFanProfile = (userId: string) => {
         total_amount_spent: fanProfileData?.total_amount_spent || 0,
         stats,
         giftHistory: giftHistory.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      });
+      };
+
+      console.log('Final fan profile assembled:', finalProfile);
+      setFanProfile(finalProfile);
 
     } catch (error: any) {
       console.error('Error fetching fan profile:', error);
-      setError(error.message || 'Failed to load fan profile');
+      const errorMessage = error?.message || 'Failed to load fan profile';
+      setError(errorMessage);
       toast({
         title: "Error loading profile",
-        description: error.message || "Failed to load fan profile data",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -206,9 +221,10 @@ export const useFanProfile = (userId: string) => {
       return publicUrl;
     } catch (error: any) {
       console.error('Error uploading profile image:', error);
+      const errorMessage = error?.message || 'Failed to upload profile image';
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload profile image",
+        description: errorMessage,
         variant: "destructive",
       });
       throw error;

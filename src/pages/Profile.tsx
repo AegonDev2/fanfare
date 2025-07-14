@@ -44,6 +44,28 @@ export default function Profile() {
     error: fanError 
   } = useFanProfile(profileId || '');
 
+  // Helper function to safely convert error to string
+  const getErrorMessage = (error: unknown): string => {
+    if (!error) return '';
+    
+    if (typeof error === 'string') return error;
+    
+    if (error && typeof error === 'object') {
+      // Handle Supabase error objects
+      if ('message' in error && typeof error.message === 'string') {
+        return error.message;
+      }
+      // Handle other error objects
+      if ('toString' in error && typeof error.toString === 'function') {
+        return error.toString();
+      }
+      // Fallback for any object
+      return JSON.stringify(error);
+    }
+    
+    return 'Unknown error occurred';
+  };
+
   useEffect(() => {
     const checkUserType = async () => {
       if (!profileId) {
@@ -63,7 +85,7 @@ export default function Profile() {
 
         if (error) {
           console.error('Error fetching profile:', error);
-          setProfileCheckError(`Failed to load profile: ${error.message}`);
+          setProfileCheckError(`Failed to load profile: ${getErrorMessage(error)}`);
           return;
         }
 
@@ -77,7 +99,7 @@ export default function Profile() {
         setProfileCheckError(null);
       } catch (error: any) {
         console.error('Error checking user type:', error);
-        setProfileCheckError(`Error loading profile: ${error.message}`);
+        setProfileCheckError(`Error loading profile: ${getErrorMessage(error)}`);
       }
     };
 
@@ -149,7 +171,9 @@ export default function Profile() {
   }
 
   // Handle error states
-  if (profileCheckError || influencerError || fanError) {
+  const errorMessage = profileCheckError || getErrorMessage(influencerError) || getErrorMessage(fanError);
+  
+  if (errorMessage) {
     return (
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
@@ -160,10 +184,7 @@ export default function Profile() {
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Error</h2>
             <p className="text-gray-600 mb-4">
-              {profileCheckError || 
-               (influencerError ? String(influencerError) : null) || 
-               (fanError ? String(fanError) : null) || 
-               "Unable to load profile information"}
+              {errorMessage || "Unable to load profile information"}
             </p>
             <div className="space-x-2">
               <Button 
