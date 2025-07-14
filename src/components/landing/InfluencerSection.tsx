@@ -126,12 +126,12 @@ const CreatorCarousel = ({
           </div>)}
       </div>
 
-      {/* Navigation Buttons */}
-      <button onClick={prevSlide} className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110">
+      {/* Navigation Buttons - Hidden on Android */}
+      <button onClick={prevSlide} className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden android:hidden md:flex">
         <ArrowRight className="h-4 w-4 rotate-180" />
       </button>
       
-      <button onClick={nextSlide} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110">
+      <button onClick={nextSlide} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden android:hidden md:flex">
         <ArrowRight className="h-4 w-4" />
       </button>
 

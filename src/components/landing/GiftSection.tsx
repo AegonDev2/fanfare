@@ -121,21 +121,6 @@ const GiftCarousel = ({ products }: { products: any[] }) => {
         ))}
       </div>
 
-      {/* Floating Navigation */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center space-x-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-funky-purple/20">
-        {Array.from({ length: totalSlides }).map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={cn(
-              "w-2.5 h-2.5 rounded-full transition-all duration-300 hover:scale-125",
-              currentIndex === index 
-                ? "bg-gradient-to-r from-funky-pink to-funky-purple w-8 shadow-lg" 
-                : "bg-gray-300 hover:bg-gray-400"
-            )}
-          />
-        ))}
-      </div>
 
       {/* Decorative Elements */}
       <div className="absolute top-4 left-4 w-6 h-6 bg-funky-pink/20 rounded-full animate-pulse"></div>
