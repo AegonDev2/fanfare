@@ -144,7 +144,7 @@ const InfluencerSection = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2 mx-1">
           <div className="flex items-center gap-4">
-            <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-gray-900 text-lg lg:text-xl font-semibold">Discover Influencers</h2>
+            <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-gray-900 text-lg lg:text-xl font-semibold">Creators</h2>
             <Button variant="outline" size="sm" onClick={handleViewAllClick} className="text-funky-purple border-funky-purple/30 hover:bg-funky-purple/10">
               View All
             </Button>
