@@ -44,16 +44,16 @@ export const useLeaderboard = () => {
         throw error;
       }
 
-      // Transform the data to ensure all types are correct
+      // Transform the data to ensure all types are correct, handling bigint properly
       const transformedData = data.map((entry: any) => ({
         fan_id: entry.fan_id,
         fan_name: entry.fan_name,
         fan_email: entry.fan_email,
-        total_gifts: Number(entry.total_gifts), // Ensure total_gifts is a number
+        total_gifts: typeof entry.total_gifts === 'bigint' ? Number(entry.total_gifts) : Number(entry.total_gifts), // Handle both bigint and regular numbers
         favorite_influencer_id: entry.favorite_influencer_id,
         favorite_influencer_name: entry.favorite_influencer_name,
-        month: entry.month,
-        year: Number(entry.year) // Ensure year is a number
+        month: entry.month?.trim(), // Trim whitespace from month name
+        year: Number(entry.year)
       }));
 
       setLeaderboard(transformedData || []);
