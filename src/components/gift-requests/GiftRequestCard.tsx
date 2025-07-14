@@ -4,18 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
-  Gift,
-  Calendar,
-  DollarSign,
-  User,
-  ExternalLink,
-  Clock
-} from "lucide-react";
+import { Gift, Calendar, DollarSign, User, ExternalLink, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
 interface GiftRequest {
   id: string;
   sender_id: string;
@@ -34,40 +26,40 @@ interface GiftRequest {
   sender_name?: string;
   sender_email?: string;
 }
-
 interface GiftRequestCardProps {
   request: GiftRequest;
   onStatusChange: () => void;
 }
-
-export default function GiftRequestCard({ request, onStatusChange }: GiftRequestCardProps) {
+export default function GiftRequestCard({
+  request,
+  onStatusChange
+}: GiftRequestCardProps) {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleAccept = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.rpc('process_influencer_acceptance', {
+      const {
+        error
+      } = await supabase.rpc('process_influencer_acceptance', {
         gift_request_id: request.id
       });
-
       if (error) {
         // If wallet deduction fails, still allow acceptance but notify
         if (error.message.includes('Insufficient wallet balance')) {
           // Update gift request as accepted but note payment pending
-          const { error: updateError } = await supabase
-            .from('gift_requests')
-            .update({
-              status: 'accepted',
-              influencer_response: 'accepted',
-              influencer_response_at: new Date().toISOString()
-            })
-            .eq('id', request.id);
-
+          const {
+            error: updateError
+          } = await supabase.from('gift_requests').update({
+            status: 'accepted',
+            influencer_response: 'accepted',
+            influencer_response_at: new Date().toISOString()
+          }).eq('id', request.id);
           if (updateError) throw updateError;
-
           toast({
             title: "Request Accepted",
             description: "Gift request accepted. Payment will be processed when user has sufficient wallet balance.",
@@ -79,10 +71,9 @@ export default function GiftRequestCard({ request, onStatusChange }: GiftRequest
       } else {
         toast({
           title: "Request Accepted",
-          description: "Gift request accepted and payment processed!",
+          description: "Gift request accepted and payment processed!"
         });
       }
-
       onStatusChange();
     } catch (error: any) {
       console.error("Error accepting request:", error);
@@ -95,7 +86,6 @@ export default function GiftRequestCard({ request, onStatusChange }: GiftRequest
       setLoading(false);
     }
   };
-
   const handleReject = async () => {
     if (!rejectionReason.trim()) {
       toast({
@@ -105,26 +95,21 @@ export default function GiftRequestCard({ request, onStatusChange }: GiftRequest
       });
       return;
     }
-
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('gift_requests')
-        .update({
-          status: 'rejected',
-          influencer_response: 'rejected',
-          influencer_response_at: new Date().toISOString()
-          // Store rejection reason in message or create separate field
-        })
-        .eq('id', request.id);
-
+      const {
+        error
+      } = await supabase.from('gift_requests').update({
+        status: 'rejected',
+        influencer_response: 'rejected',
+        influencer_response_at: new Date().toISOString()
+        // Store rejection reason in message or create separate field
+      }).eq('id', request.id);
       if (error) throw error;
-
       toast({
         title: "Request Rejected",
-        description: "Gift request has been rejected",
+        description: "Gift request has been rejected"
       });
-
       setShowRejectDialog(false);
       setRejectionReason("");
       onStatusChange();
@@ -139,12 +124,10 @@ export default function GiftRequestCard({ request, onStatusChange }: GiftRequest
       setLoading(false);
     }
   };
-
   const getStatusBadge = () => {
     if (!request.admin_approved) {
       return <Badge variant="outline" className="bg-gray-100 text-gray-600">Pending Admin</Badge>;
     }
-    
     switch (request.status) {
       case 'pending':
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Awaiting Response</Badge>;
@@ -158,13 +141,8 @@ export default function GiftRequestCard({ request, onStatusChange }: GiftRequest
         return <Badge variant="secondary">{request.status}</Badge>;
     }
   };
-
-  const showActionButtons = request.admin_approved && 
-                            request.status === 'pending' && 
-                            !request.influencer_response;
-
-  return (
-    <Card className="hover:shadow-lg transition-shadow">
+  const showActionButtons = request.admin_approved && request.status === 'pending' && !request.influencer_response;
+  return <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
         <div className="flex items-start justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -176,21 +154,14 @@ export default function GiftRequestCard({ request, onStatusChange }: GiftRequest
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {request.message && (
-            <div className="text-sm">
+          {request.message && <div className="text-sm">
               <span className="font-medium">Message from fan:</span>
               <p className="text-gray-600 mt-1">{request.message}</p>
-            </div>
-          )}
+            </div>}
           
           <div className="flex items-center gap-2 text-sm">
             <ExternalLink className="h-4 w-4 text-gray-400" />
-            <a 
-              href={request.product_url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-blue-600 hover:underline truncate"
-            >
+            <a href={request.product_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate">
               View Product
             </a>
           </div>
@@ -201,44 +172,30 @@ export default function GiftRequestCard({ request, onStatusChange }: GiftRequest
               {format(new Date(request.created_at), 'MMM dd, yyyy')}
             </div>
             
-            {request.product_price && (
-              <div className="flex items-center gap-1">
-                <DollarSign className="h-4 w-4" />
+            {request.product_price && <div className="flex items-center gap-1">
+                
                 <span className="font-medium">₹{request.product_price}</span>
-              </div>
-            )}
+              </div>}
           </div>
 
-          {request.sender_name && (
-            <div className="flex items-center gap-2 text-sm">
+          {request.sender_name && <div className="flex items-center gap-2 text-sm">
               <User className="h-4 w-4 text-gray-400" />
               <span>From: {request.sender_name}</span>
-            </div>
-          )}
+            </div>}
 
-          {request.admin_approved && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
+          {request.admin_approved && <div className="flex items-center gap-2 text-sm text-green-600">
               <Clock className="h-4 w-4" />
               <span>Admin approved on {format(new Date(request.admin_approved_at!), 'MMM dd, yyyy')}</span>
-            </div>
-          )}
+            </div>}
 
-          {showActionButtons && (
-            <div className="flex gap-2 pt-3 border-t">
-              <Button
-                onClick={handleAccept}
-                disabled={loading}
-                className="flex-1"
-              >
+          {showActionButtons && <div className="flex gap-2 pt-3 border-t">
+              <Button onClick={handleAccept} disabled={loading} className="flex-1">
                 {loading ? "Processing..." : "Accept Gift"}
               </Button>
               
               <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
                 <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    disabled={loading}
-                  >
+                  <Button variant="outline" disabled={loading}>
                     Reject
                   </Button>
                 </DialogTrigger>
@@ -250,33 +207,20 @@ export default function GiftRequestCard({ request, onStatusChange }: GiftRequest
                     <p className="text-sm text-gray-600">
                       Please provide a reason for rejecting this gift request:
                     </p>
-                    <Textarea
-                      placeholder="Enter rejection reason..."
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                    />
+                    <Textarea placeholder="Enter rejection reason..." value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} />
                     <div className="flex gap-2">
-                      <Button
-                        onClick={handleReject}
-                        variant="destructive"
-                        disabled={!rejectionReason.trim() || loading}
-                      >
+                      <Button onClick={handleReject} variant="destructive" disabled={!rejectionReason.trim() || loading}>
                         {loading ? "Processing..." : "Reject Request"}
                       </Button>
-                      <Button
-                        onClick={() => setShowRejectDialog(false)}
-                        variant="outline"
-                      >
+                      <Button onClick={() => setShowRejectDialog(false)} variant="outline">
                         Cancel
                       </Button>
                     </div>
                   </div>
                 </DialogContent>
               </Dialog>
-            </div>
-          )}
+            </div>}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
