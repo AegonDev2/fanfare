@@ -959,6 +959,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consolidate_user_wallets: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_monthly_leaderboard: {
         Args: { target_month: number; target_year: number }
         Returns: {
