@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
+import { useMobileFeatures } from "@/hooks/useMobileFeatures";
+import { ExitConfirmDialog } from "@/components/mobile/ExitConfirmDialog";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
@@ -33,12 +35,20 @@ const queryClient = new QueryClient();
 
 function App() {
   const [navOpen, setNavOpen] = useState(false);
+  const { showExitPrompt, dismissExitPrompt } = useMobileFeatures({
+    enablePullToRefresh: true,
+    enableBackButton: true
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <ExitConfirmDialog 
+          open={showExitPrompt} 
+          onOpenChange={dismissExitPrompt} 
+        />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
