@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import { CarouselNext, CarouselPrevious, Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
@@ -103,11 +104,11 @@ const HeroCarousel = () => {
           <>
             <CarouselPrevious 
               onClick={previousSlide}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-white/80 hover:bg-white text-black border-0 h-8 w-8 rounded-full shadow-lg"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-white/80 hover:bg-white text-black border-0 h-8 w-8 rounded-md shadow-lg"
             />
             <CarouselNext 
               onClick={nextSlide}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-white/80 hover:bg-white text-black border-0 h-8 w-8 rounded-full shadow-lg"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-white/80 hover:bg-white text-black border-0 h-8 w-8 rounded-md shadow-lg"
             />
           </>
         )}
