@@ -12,14 +12,14 @@ export const useAdminOrders = () => {
   const fetchAllOrders = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log("Fetching admin orders...");
+      console.log("🔄 Fetching admin orders...");
       
       // Fetch orders from under_process table
       const { data: underProcessOrders, error: underProcessError } = await supabase
         .from('orders_under_process')
         .select(`
           *,
-          influencer:influencer_profiles!orders_under_process_influencer_id_fkey(id, name)
+          influencer:influencer_profiles(id, name)
         `)
         .order('created_at', { ascending: false });
 
@@ -28,14 +28,14 @@ export const useAdminOrders = () => {
         throw underProcessError;
       }
       
-      console.log("Under process orders:", underProcessOrders?.length);
+      console.log("📋 Under process orders found:", underProcessOrders?.length || 0);
       
       // Fetch orders from completed table
       const { data: completedOrders, error: completedError } = await supabase
         .from('orders_completed')
         .select(`
           *,
-          influencer:influencer_profiles!orders_completed_influencer_id_fkey(id, name)
+          influencer:influencer_profiles(id, name)
         `)
         .order('created_at', { ascending: false });
 
@@ -44,7 +44,7 @@ export const useAdminOrders = () => {
         throw completedError;
       }
       
-      console.log("Completed orders:", completedOrders?.length);
+      console.log("✅ Completed orders found:", completedOrders?.length || 0);
 
       // If no orders are found, set empty array and return early
       if ((!underProcessOrders || underProcessOrders.length === 0) && 
@@ -127,7 +127,13 @@ export const useAdminOrders = () => {
         }))
       ]);
 
-      console.log('Fetched and enriched admin orders successfully:', enrichedOrders.length);
+      console.log('🎯 Successfully fetched and enriched admin orders:', enrichedOrders.length);
+      console.log('📊 Order details:', enrichedOrders.map(o => ({ 
+        id: o.id, 
+        status: o.status, 
+        product_title: o.product_title,
+        fan_name: o.fan_name 
+      })));
       setOrders(enrichedOrders);
     } catch (error: any) {
       console.error("Error fetching orders:", error);

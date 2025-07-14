@@ -169,8 +169,58 @@ export const useOrderActions = (
     }
   };
 
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    console.log(`Admin action: Changing order ${orderId} status to ${newStatus}`);
+    
+    try {
+      if (newStatus === 'approved') {
+        console.log("Moving order to gift_request for influencer approval...");
+        
+        // Move order to gift_requests for influencer approval
+        const { error } = await supabase.rpc('move_order_to_gift_request', {
+          order_id: orderId
+        });
+
+        if (error) {
+          console.error("Error moving order to gift_request:", error);
+          throw error;
+        }
+        
+        console.log("Successfully moved order to gift_request");
+
+      } else if (newStatus === 'rejected') {
+        console.log("Order rejection is handled by AdminOrderCard component");
+        
+      } else if (newStatus === 'completed') {
+        console.log("Moving order to completed status...");
+        
+        await handleOrderComplete(orderId);
+        return; // handleOrderComplete already handles notifications and refresh
+      }
+
+      toast({
+        title: "Success",
+        description: `Order status updated to ${newStatus}`,
+      });
+
+      // Trigger a refresh of the admin orders
+      console.log("Order action completed successfully");
+      await fetchAllOrders();
+
+    } catch (error: any) {
+      console.error("Error in handleStatusChange:", error);
+      
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update order status",
+        variant: "destructive"
+      });
+    }
+  };
+
   return { 
     handleOrderComplete,
-    handleGiftOrderItemStatusChange
+    handleGiftOrderItemStatusChange,
+    handleStatusChange
   };
 };

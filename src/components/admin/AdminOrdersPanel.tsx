@@ -1,13 +1,23 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useOrdersData } from "@/hooks/useOrdersData";
+import { useAdminOrders } from "@/hooks/useAdminOrders";
+import { useOrderActions } from "@/hooks/useOrderActions";
 import OrderStatsCards from "./OrderStatsCards";
 import OrderTabsContent from "./OrderTabsContent";
+import { useEffect } from "react";
 
 export default function AdminOrdersPanel() {
-  const { orders, loading, handleStatusChange } = useOrdersData();
+  const { orders, isLoading, fetchAllOrders } = useAdminOrders();
+  const { handleStatusChange } = useOrderActions(orders, fetchAllOrders);
 
-  if (loading) {
+  useEffect(() => {
+    console.log("AdminOrdersPanel mounted, fetching orders...");
+    fetchAllOrders();
+  }, [fetchAllOrders]);
+
+  console.log("AdminOrdersPanel render - orders:", orders?.length, "loading:", isLoading);
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-funky-purple"></div>
@@ -15,10 +25,18 @@ export default function AdminOrdersPanel() {
     );
   }
 
-  const pendingOrders = orders.filter(o => o.status === 'pending');
-  const underProcessOrders = orders.filter(o => o.status === 'under process');
+  const pendingOrders = orders.filter(o => o.status === 'under_process');
+  const underProcessOrders = orders.filter(o => o.status === 'under_process'); // Same as pending for now
   const completedOrders = orders.filter(o => o.status === 'completed');
-  const acceptedOrders = orders.filter(o => o.status === 'accepted');
+  const acceptedOrders = []; // We don't have accepted status in our current flow
+
+  console.log("Order counts:", {
+    pending: pendingOrders.length,
+    processing: underProcessOrders.length,
+    completed: completedOrders.length,
+    accepted: acceptedOrders.length,
+    total: orders.length
+  });
 
   return (
     <div className="space-y-6">
