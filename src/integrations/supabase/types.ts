@@ -50,6 +50,50 @@ export type Database = {
         }
         Relationships: []
       }
+      fan_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string
+          favorite_categories: string[] | null
+          id: string
+          profile_image_url: string | null
+          total_amount_spent: number | null
+          total_gifts_sent: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          favorite_categories?: string[] | null
+          id?: string
+          profile_image_url?: string | null
+          total_amount_spent?: number | null
+          total_gifts_sent?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          favorite_categories?: string[] | null
+          id?: string
+          profile_image_url?: string | null
+          total_amount_spent?: number | null
+          total_gifts_sent?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fan_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gift_order_items: {
         Row: {
           created_at: string

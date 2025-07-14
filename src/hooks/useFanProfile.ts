@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +25,11 @@ export interface FanProfileData {
   name: string | null;
   email: string;
   user_type: string;
+  bio?: string;
   profile_image_url?: string;
+  favorite_categories?: string[];
+  total_gifts_sent: number;
+  total_amount_spent: number;
   stats: FanStats;
   giftHistory: GiftHistory[];
 }
@@ -49,7 +54,14 @@ export const useFanProfile = (userId: string) => {
 
       if (profileError) throw profileError;
 
-      // Get fan stats
+      // Get fan profile data
+      const { data: fanProfileData, error: fanProfileError } = await supabase
+        .from('fan_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      // Get fan stats from gift requests
       const { data: giftRequestsData, error: giftRequestsError } = await supabase
         .from('gift_requests')
         .select(`
@@ -89,26 +101,13 @@ export const useFanProfile = (userId: string) => {
         completed_at: gift.completed_at
       }));
 
-      // Check for profile image in storage
-      let profileImageUrl: string | undefined;
-      try {
-        const { data: storageData } = await supabase.storage
-          .from('profile_images')
-          .list(`${userId}/`);
-        
-        if (storageData && storageData.length > 0) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('profile_images')
-            .getPublicUrl(`${userId}/${storageData[0].name}`);
-          profileImageUrl = publicUrl;
-        }
-      } catch (storageError) {
-        console.log('No profile image found:', storageError);
-      }
-
       setFanProfile({
         ...profile,
-        profile_image_url: profileImageUrl,
+        bio: fanProfileData?.bio,
+        profile_image_url: fanProfileData?.profile_image_url,
+        favorite_categories: fanProfileData?.favorite_categories,
+        total_gifts_sent: fanProfileData?.total_gifts_sent || 0,
+        total_amount_spent: fanProfileData?.total_amount_spent || 0,
         stats,
         giftHistory: giftHistory.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       });
@@ -128,6 +127,8 @@ export const useFanProfile = (userId: string) => {
 
   const uploadProfileImage = async (file: File) => {
     try {
+      if (!userId) throw new Error('User ID is required');
+
       // Delete existing image first
       const { data: existingFiles } = await supabase.storage
         .from('profile_images')
@@ -157,6 +158,16 @@ export const useFanProfile = (userId: string) => {
       const { data: { publicUrl } } = supabase.storage
         .from('profile_images')
         .getPublicUrl(filePath);
+
+      // Update fan profile with new image URL
+      const { error: updateError } = await supabase
+        .from('fan_profiles')
+        .upsert({
+          user_id: userId,
+          profile_image_url: publicUrl
+        }, { onConflict: 'user_id' });
+
+      if (updateError) throw updateError;
 
       // Update local state
       if (fanProfile) {

@@ -8,16 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Edit, Gift, Star, Camera, Calendar, TrendingUp, Heart, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useFanProfile } from "@/hooks/useFanProfile";
+import { useFanProfile, FanProfileData } from "@/hooks/useFanProfile";
 import { format } from "date-fns";
 
 interface FanProfileProps {
-  profile: {
-    id: string;
-    name: string | null;
-    email: string;
-    user_type: string;
-  };
+  profile: FanProfileData;
   isCurrentUserProfile: boolean;
 }
 
@@ -26,7 +21,7 @@ const FanProfile = ({ profile, isCurrentUserProfile }: FanProfileProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   
-  const { fanProfile, isLoading, uploadProfileImage } = useFanProfile(profile.id);
+  const { uploadProfileImage } = useFanProfile(profile.id);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -67,20 +62,6 @@ const FanProfile = ({ profile, isCurrentUserProfile }: FanProfileProps) => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pb-24 py-0">
-        <main className="container mx-auto px-4 py-6">
-          <div className="space-y-6">
-            <Skeleton className="h-48 w-full rounded-3xl" />
-            <Skeleton className="h-32 w-full rounded-lg" />
-            <Skeleton className="h-96 w-full rounded-lg" />
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pb-24 py-0">
       <main className="container mx-auto px-4 py-6">
@@ -95,7 +76,7 @@ const FanProfile = ({ profile, isCurrentUserProfile }: FanProfileProps) => {
             <div className="relative">
               <Avatar className="w-32 h-32 border-4 border-funky-purple/20">
                 <AvatarImage 
-                  src={fanProfile?.profile_image_url} 
+                  src={profile.profile_image_url} 
                   alt={`${profile.name}'s profile picture`} 
                 />
                 <AvatarFallback className="bg-gradient-to-r from-funky-purple to-funky-pink text-white font-semibold text-2xl">
@@ -130,7 +111,10 @@ const FanProfile = ({ profile, isCurrentUserProfile }: FanProfileProps) => {
                   <h2 className="text-3xl font-bold text-gray-800 mb-2">
                     {profile.name || "Fan User"}
                   </h2>
-                  <p className="text-gray-600 mb-3">{profile.email}</p>
+                  <p className="text-gray-600 mb-2">{profile.email}</p>
+                  {profile.bio && (
+                    <p className="text-gray-700 mb-3 max-w-md">{profile.bio}</p>
+                  )}
                   <Badge variant="secondary" className="bg-gradient-to-r from-funky-purple/10 to-funky-pink/10 text-funky-purple border border-funky-purple/20">
                     <Star className="h-3 w-3 mr-1" />
                     Fan
@@ -172,7 +156,7 @@ const FanProfile = ({ profile, isCurrentUserProfile }: FanProfileProps) => {
                   <div className="p-6 rounded-xl bg-gradient-to-br from-funky-purple/5 to-funky-purple/10 border border-funky-purple/20 text-center hover-scale transition-all duration-200">
                     <Gift className="h-10 w-10 text-funky-purple mx-auto mb-3" />
                     <p className="text-3xl font-bold text-funky-purple mb-1">
-                      {fanProfile?.stats.giftsSent || 0}
+                      {profile.stats.giftsSent}
                     </p>
                     <p className="text-sm text-gray-600 font-medium">Gifts Sent</p>
                   </div>
@@ -180,7 +164,7 @@ const FanProfile = ({ profile, isCurrentUserProfile }: FanProfileProps) => {
                   <div className="p-6 rounded-xl bg-gradient-to-br from-funky-pink/5 to-funky-pink/10 border border-funky-pink/20 text-center hover-scale transition-all duration-200">
                     <Heart className="h-10 w-10 text-funky-pink mx-auto mb-3" />
                     <p className="text-3xl font-bold text-funky-pink mb-1">
-                      {fanProfile?.stats.favoriteInfluencers || 0}
+                      {profile.stats.favoriteInfluencers}
                     </p>
                     <p className="text-sm text-gray-600 font-medium">Favorite Influencers</p>
                   </div>
@@ -190,7 +174,7 @@ const FanProfile = ({ profile, isCurrentUserProfile }: FanProfileProps) => {
                       <span className="text-green-600 font-bold text-lg">₹</span>
                     </div>
                     <p className="text-3xl font-bold text-green-600 mb-1">
-                      ₹{(fanProfile?.stats.totalSpent || 0).toLocaleString('en-IN')}
+                      ₹{profile.stats.totalSpent.toLocaleString('en-IN')}
                     </p>
                     <p className="text-sm text-gray-600 font-medium">Total Spent</p>
                   </div>
@@ -214,9 +198,9 @@ const FanProfile = ({ profile, isCurrentUserProfile }: FanProfileProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {fanProfile?.giftHistory && fanProfile.giftHistory.length > 0 ? (
+                {profile.giftHistory && profile.giftHistory.length > 0 ? (
                   <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {fanProfile.giftHistory.map((gift) => (
+                    {profile.giftHistory.map((gift) => (
                       <div
                         key={gift.id}
                         className="p-4 rounded-lg border border-gray-200 hover:border-funky-purple/30 transition-all duration-200 hover:shadow-md"

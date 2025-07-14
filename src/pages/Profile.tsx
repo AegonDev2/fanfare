@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '@/hooks/useUser';
 import { useInfluencerProfile } from '@/hooks/useInfluencerProfile';
+import { useFanProfile } from '@/hooks/useFanProfile';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import FloatingHeader from '@/components/ui/floating-header';
@@ -15,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, List, Star, User } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Profile() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +25,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [userType, setUserType] = useState<string | null>(null);
 
   // Determine the profile ID to load
   const profileId = id || user?.id;
@@ -33,6 +36,36 @@ export default function Profile() {
     isLoading: influencerLoading, 
     error: influencerError 
   } = useInfluencerProfile(profileId || '');
+
+  const { 
+    fanProfile, 
+    isLoading: fanLoading, 
+    error: fanError 
+  } = useFanProfile(profileId || '');
+
+  useEffect(() => {
+    const checkUserType = async () => {
+      if (!profileId) return;
+
+      try {
+        // Get user type from profiles table
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', profileId)
+          .single();
+
+        if (error) throw error;
+        setUserType(profile.user_type);
+      } catch (error) {
+        console.error('Error checking user type:', error);
+      }
+    };
+
+    if (profileId) {
+      checkUserType();
+    }
+  }, [profileId]);
 
   useEffect(() => {
     if (!user && !profileLoaded) return;
@@ -49,14 +82,12 @@ export default function Profile() {
           return;
         }
 
-        if (isCurrentUserProfile && user && !influencer && !influencerLoading) {
-          // Check if current user needs to create a profile
-          const userType = user.user_type || 'fan';
-          
-          if (userType === 'influencer') {
+        // For current user, check if they need to create a profile
+        if (isCurrentUserProfile && user && userType) {
+          if (userType === 'influencer' && !influencer && !influencerLoading) {
             navigate('/create-influencer-profile');
             return;
-          } else if (userType === 'fan') {
+          } else if (userType === 'fan' && !fanProfile && !fanLoading) {
             navigate('/create-fan-profile');
             return;
           }
@@ -73,11 +104,13 @@ export default function Profile() {
       }
     };
 
-    handleProfileLoad();
-  }, [user, profileId, isCurrentUserProfile, influencer, influencerLoading, navigate, toast, profileLoaded]);
+    if (userType !== null) {
+      handleProfileLoad();
+    }
+  }, [user, profileId, isCurrentUserProfile, influencer, influencerLoading, fanProfile, fanLoading, navigate, toast, profileLoaded, userType]);
 
   // Show loading state
-  if (influencerLoading || !profileLoaded) {
+  if (influencerLoading || fanLoading || !profileLoaded || userType === null) {
     return (
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
@@ -95,7 +128,7 @@ export default function Profile() {
   }
 
   // Handle error states
-  if (influencerError) {
+  if (influencerError || fanError) {
     return (
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
@@ -117,8 +150,8 @@ export default function Profile() {
     );
   }
 
-  // Show influencer profile if found  
-  if (influencer) {
+  // Show influencer profile if user type is influencer
+  if (userType === 'influencer' && influencer) {
     return (
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
@@ -256,27 +289,23 @@ export default function Profile() {
     );
   }
 
-  // Show fan profile or redirect to create profile
-  if (isCurrentUserProfile && user) {
-    const userType = user.user_type || 'fan';
-    
-    if (userType === 'fan') {
-      return (
-        <>
-          <FloatingHeader setNavOpen={setNavOpen} />
-          <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
-          
-          <div className="min-h-screen bg-background pt-20">
-            <div className="max-w-4xl mx-auto p-4 space-y-6">
-              <FanProfile 
-                profile={user}
-                isCurrentUserProfile={isCurrentUserProfile}
-              />
-            </div>
+  // Show fan profile if user type is fan
+  if (userType === 'fan' && fanProfile) {
+    return (
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        
+        <div className="min-h-screen bg-background pt-20">
+          <div className="max-w-4xl mx-auto p-4 space-y-6">
+            <FanProfile 
+              profile={fanProfile}
+              isCurrentUserProfile={isCurrentUserProfile}
+            />
           </div>
-        </>
-      );
-    }
+        </div>
+      </>
+    );
   }
 
   // Fallback - profile not found
