@@ -1,11 +1,13 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Home, Gift, User, Search, Settings, Wallet, Trophy, Bell, Heart } from "lucide-react";
+import { X, Home, Gift, User, Search, Settings, Wallet, Trophy, Bell, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/useUser";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface NavbarProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface NavbarProps {
 const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const navigate = useNavigate();
   const { user } = useUser();
+  const { toast } = useToast();
 
   // Close navbar when clicking outside
   useEffect(() => {
@@ -34,6 +37,27 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const handleNavigation = (path: string) => {
     navigate(path);
     setIsOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+      
+      navigate("/");
+      setIsOpen(false);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error signing out",
+        description: error.message,
+      });
+    }
   };
 
   const navItems = [
@@ -152,7 +176,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           <Separator className="my-6" />
 
           {/* Additional Actions */}
-          {!user && (
+          {!user ? (
             <div className="space-y-2">
               <Button
                 variant="outline"
@@ -168,6 +192,15 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
                 Join Now
               </Button>
             </div>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left p-3 h-auto hover:bg-red-50 hover:text-red-600 border-red-200"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              <span>Sign Out</span>
+            </Button>
           )}
         </div>
       </nav>

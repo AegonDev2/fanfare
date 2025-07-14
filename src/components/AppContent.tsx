@@ -6,6 +6,7 @@ import { ExitConfirmDialog } from "@/components/mobile/ExitConfirmDialog";
 import Index from "@/pages/Index";
 import Landing from "@/pages/Landing";
 import Auth from "@/pages/Auth";
+import ForgotPassword from "@/pages/ForgotPassword";
 import PlaceOrder from "@/pages/PlaceOrder";
 import Profile from "@/pages/Profile";
 import EditProfile from "@/pages/EditProfile";
@@ -44,6 +45,7 @@ export function AppContent() {
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/place-order" element={<PlaceOrder />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:id" element={<Profile />} />

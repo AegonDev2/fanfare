@@ -90,11 +90,14 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
       </Button>
       
       <div className="text-center mt-4">
-        {onForgotPassword && (
-          <Button variant="link" className="text-sm text-primary hover:text-primary/80 p-0" onClick={onForgotPassword}>
-            Forgot your password?
-          </Button>
-        )}
+        <Button 
+          variant="link" 
+          type="button"
+          className="text-sm text-primary hover:text-primary/80 p-0" 
+          onClick={() => navigate("/forgot-password")}
+        >
+          Forgot your password?
+        </Button>
       </div>
     </form>
   );

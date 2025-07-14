@@ -24,7 +24,7 @@ const PasswordResetForm = () => {
     try {
       // Use the current window location to build a proper redirect URL
       const currentOrigin = window.location.origin;
-      const redirectTo = `${currentOrigin}/auth#type=recovery`;
+      const redirectTo = `${currentOrigin}/forgot-password?type=recovery`;
       
       console.log("Reset password redirect URL:", redirectTo);
       
