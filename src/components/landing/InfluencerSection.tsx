@@ -247,7 +247,7 @@ const InfluencerSection = () => {
           </div>
         </div>
         
-        <div className="relative px-1">
+        <div className="relative px-0">
           {influencers && influencers.length > 0 ? <CreatorCarousel influencers={influencers.slice(0, 12)} onProfileClick={handleProfileClick} isMobile={isMobile} /> : <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 rounded-xl shadow-md text-center border border-funky-purple/10">
               <Users className="h-8 w-8 text-funky-purple/50 mb-4 mx-auto" />
               <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300">No influencers found matching your search.</p>
