@@ -57,11 +57,14 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
     setWalletLoading(true);
     try {
       const userId = order.user_id || order.sender_id;
+      console.log("Fetching wallet for user:", userId);
+      
+      // Use maybeSingle instead of single to handle cases where wallet doesn't exist
       const { data, error } = await supabase
         .from('wallets')
         .select('balance, user_id')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching wallet:", error);
@@ -73,9 +76,43 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
         return;
       }
 
-      setWalletData(data);
+      if (!data) {
+        // Wallet doesn't exist, create one with 0 balance
+        console.log("No wallet found, creating wallet for user:", userId);
+        const { data: newWallet, error: createError } = await supabase
+          .from('wallets')
+          .insert({
+            user_id: userId,
+            balance: 0
+          })
+          .select('balance, user_id')
+          .single();
+
+        if (createError) {
+          console.error("Error creating wallet:", createError);
+          toast({
+            title: "Error",
+            description: "Could not create wallet",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        setWalletData(newWallet);
+        toast({
+          title: "Wallet Created",
+          description: "New wallet created with ₹0 balance",
+        });
+      } else {
+        setWalletData(data);
+      }
     } catch (error) {
       console.error("Error:", error);
+      toast({
+        title: "Error",
+        description: "Could not fetch wallet balance",
+        variant: "destructive"
+      });
     } finally {
       setWalletLoading(false);
     }
