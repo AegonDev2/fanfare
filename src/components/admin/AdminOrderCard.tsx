@@ -272,7 +272,7 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
         </div>
 
         <div className="flex gap-2 pt-2">
-          {order.status === 'pending' && (
+          {(order.status === 'pending' || order.status === 'under_process') && (
             <>
               <Button
                 size="sm"

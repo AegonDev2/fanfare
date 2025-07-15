@@ -40,5 +40,12 @@ export interface EnrichedOrderFields {
   influencer_name: string;
 }
 
-// Combined type for orders in the admin panel
-export type OrderDetails = (UnderProcessOrder | CompletedOrder) & Partial<EnrichedOrderFields>;
+// Combined type for orders in the admin panel with all possible statuses
+export interface OrderDetails extends BaseOrder {
+  status: 'under_process' | 'completed' | 'processing' | 'accepted' | 'pending';
+  fan_email: string;
+  fan_name: string;
+  influencer_name: string;
+  completed_at?: string | null;
+  delivery_estimate?: string | null;
+}

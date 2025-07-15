@@ -25,18 +25,21 @@ export default function AdminOrdersPanel() {
     );
   }
 
+  // Fix status mapping - orders from orders_under_process should be treated as "pending" for admin approval
   const pendingOrders = orders.filter(o => o.status === 'under_process');
-  const underProcessOrders = orders.filter(o => o.status === 'under_process'); // Same as pending for now
+  const underProcessOrders = orders.filter(o => o.status === 'processing'); // Actually processing orders  
   const completedOrders = orders.filter(o => o.status === 'completed');
-  const acceptedOrders = []; // We don't have accepted status in our current flow
+  const acceptedOrders = orders.filter(o => o.status === 'accepted');
 
-  console.log("Order counts:", {
+  console.log("Order counts (fixed mapping):", {
     pending: pendingOrders.length,
     processing: underProcessOrders.length,
     completed: completedOrders.length,
     accepted: acceptedOrders.length,
     total: orders.length
   });
+
+  console.log("Order statuses in detail:", orders.map(o => ({ id: o.id, status: o.status, product_title: o.product_title })));
 
   return (
     <div className="space-y-6">

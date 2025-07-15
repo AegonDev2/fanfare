@@ -32,10 +32,19 @@ interface OrderTabsContentProps {
 }
 
 export default function OrderTabsContent({ orders, onStatusChange }: OrderTabsContentProps) {
-  const pendingOrders = orders.filter(o => o.status === 'pending');
-  const underProcessOrders = orders.filter(o => o.status === 'under process');
+  // Fix status mapping - orders from orders_under_process should be treated as "pending" for admin approval  
+  const pendingOrders = orders.filter(o => o.status === 'under_process');
+  const underProcessOrders = orders.filter(o => o.status === 'processing');
   const completedOrders = orders.filter(o => o.status === 'completed');
   const acceptedOrders = orders.filter(o => o.status === 'accepted');
+
+  console.log("OrderTabsContent - Filtering orders:", {
+    total: orders.length,
+    pending: pendingOrders.length,
+    processing: underProcessOrders.length,
+    completed: completedOrders.length,
+    accepted: acceptedOrders.length
+  });
 
   const EmptyState = ({ icon: Icon, message }: { icon: any, message: string }) => (
     <Card>
