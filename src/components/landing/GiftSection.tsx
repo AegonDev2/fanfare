@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo, memo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, memo, useRef } from 'react';
 import { Search, ShoppingBag, Sparkles, Gift, Heart, ArrowRight, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import useEmblaCarousel from 'embla-carousel-react';
+// Removed embla-carousel import as it's causing issues - using custom implementation
 
 const ProductCard = memo(({ product }: { product: any }) => {
   const navigate = useNavigate();
@@ -85,40 +85,99 @@ ProductCard.displayName = "ProductCard";
 
 const GiftCarousel = ({ products }: { products: any[] }) => {
   const isMobile = useIsMobile();
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: 'start',
-    dragFree: true,
-    containScroll: 'trimSnaps'
-  });
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [startX, setStartX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
   
   const itemsPerView = isMobile ? 2 : 4;
+  const totalSlides = Math.ceil(products.length / itemsPerView);
 
   const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
+    setCurrentIndex(prev => (prev - 1 + totalSlides) % totalSlides);
+  }, [totalSlides]);
 
   const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
+    setCurrentIndex(prev => (prev + 1) % totalSlides);
+  }, [totalSlides]);
+
+  // Touch/Mouse event handlers for swipe support
+  const handleStart = (clientX: number) => {
+    setStartX(clientX);
+    setIsDragging(true);
+  };
+
+  const handleMove = (clientX: number) => {
+    if (!isDragging) return;
+  };
+
+  const handleEnd = (clientX: number) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    const deltaX = startX - clientX;
+    const threshold = 50;
+    
+    if (deltaX > threshold) {
+      scrollNext();
+    } else if (deltaX < -threshold) {
+      scrollPrev();
+    }
+  };
+
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    handleStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    handleMove(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    handleEnd(e.changedTouches[0].clientX);
+  };
+
+  // Mouse events
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleStart(e.clientX);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    handleMove(e.clientX);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    handleEnd(e.clientX);
+  };
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-funky-pink/5 to-funky-purple/5 border-2 border-gradient-to-r from-funky-pink/20 to-funky-purple/20 shadow-xl">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,105,180,0.1),transparent_50%)]"></div>
       
-      <div ref={emblaRef} className="overflow-hidden relative z-10">
-        <div className="flex">
-          {Array.from({ length: Math.ceil(products.length / itemsPerView) }).map((_, slideIndex) => (
-            <div key={slideIndex} className="flex-[0_0_100%] min-w-0">
-              <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-3 p-6`}>
-                {products
-                  .slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView)
-                  .map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-              </div>
+      <div 
+        ref={carouselRef}
+        className="flex transition-transform duration-300 ease-out relative z-10 cursor-grab active:cursor-grabbing"
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={isDragging ? handleMouseMove : undefined}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        {Array.from({ length: totalSlides }).map((_, slideIndex) => (
+          <div key={slideIndex} className="w-full flex-shrink-0">
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-3 p-6`}>
+              {products
+                .slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView)
+                .map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       {/* Navigation Buttons - Only visible on desktop/laptop */}
