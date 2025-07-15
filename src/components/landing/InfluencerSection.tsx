@@ -1,12 +1,17 @@
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Gift, User, Users, ArrowRight } from "lucide-react";
-import { memo, useState, useMemo, useRef, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useInfluencers, DatabaseInfluencer } from "@/hooks/useInfluencers";
-import { Skeleton } from "@/components/ui/skeleton";
+import React, { useState, useMemo, memo, useCallback, useRef, useEffect } from 'react';
+import { Search, ArrowRight, Gift, User, Sparkles, Users } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useInfluencers, DatabaseInfluencer } from '@/hooks/useInfluencers';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import useEmblaCarousel from 'embla-carousel-react';
+
 const InfluencerCard = memo(({
   influencer,
   onProfileClick,
@@ -18,11 +23,13 @@ const InfluencerCard = memo(({
 }) => {
   const navigate = useNavigate();
   const [isHovering, setIsHovering] = useState(false);
+
   const handleGiftClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log("Gift click for influencer:", influencer.id);
     navigate(`/place-order?influencer=${influencer.id}`);
   };
+
   const formatFollowers = (count: number) => {
     if (count >= 1000000) {
       return (count / 1000000).toFixed(1) + 'M';
@@ -31,10 +38,19 @@ const InfluencerCard = memo(({
     }
     return count.toString();
   };
-  return <div className={cn("p-1 lg:p-2 h-full relative group cursor-pointer transition-all duration-300 transform hover:translate-y-[-5px]")} onClick={() => {
-    console.log("Profile click for influencer:", influencer.id);
-    onProfileClick(influencer.id);
-  }} onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
+
+  return (
+    <div 
+      className={cn(
+        "p-1 lg:p-2 h-full relative group cursor-pointer transition-all duration-300 transform hover:translate-y-[-5px]"
+      )}
+      onClick={() => {
+        console.log("Profile click for influencer:", influencer.id);
+        onProfileClick(influencer.id);
+      }}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
       <div className="absolute inset-0 bg-gradient-to-tr from-funky-purple/5 to-funky-pink/5 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg transition-all duration-500 z-0 group-hover:bg-gradient-to-tr group-hover:from-funky-purple/10 group-hover:to-funky-pink/10 my-[2px] py-0 px-0 mx-0 bg-slate-50"></div>
       
       <div className="absolute right-2 top-2 z-20 transform transition-all duration-300 scale-0 group-hover:scale-100 origin-top-right" onClick={handleGiftClick}>
@@ -46,7 +62,12 @@ const InfluencerCard = memo(({
       <div className="relative z-10">
         <div className={cn("w-full aspect-square mb-2 overflow-hidden rounded-xl transition-all duration-500", isHovering ? "shadow-lg shadow-funky-purple/20" : "")}>
           <div className="w-full h-full relative">
-            <img src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'} alt={`${influencer.name}'s profile`} className={cn("w-full h-full object-cover transition-all duration-500", isHovering ? "scale-110" : "scale-100")} loading="lazy" />
+            <img 
+              src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'} 
+              alt={`${influencer.name}'s profile`} 
+              className={cn("w-full h-full object-cover transition-all duration-500", isHovering ? "scale-110" : "scale-100")} 
+              loading="lazy" 
+            />
             <div className={cn("absolute inset-0 bg-gradient-to-t from-funky-purple/40 to-transparent opacity-0 transition-opacity duration-300", isHovering ? "opacity-100" : "opacity-0")}></div>
           </div>
         </div>
@@ -54,29 +75,38 @@ const InfluencerCard = memo(({
         <div className="mt-1 relative">
           <h3 className="text-xs lg:text-sm font-semibold truncate font-display text-zinc-950">{influencer.name}</h3>
           <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mt-0.5 space-x-1">
-            
-            {influencer.category && <>
+            {influencer.category && (
+              <>
                 <span>•</span>
                 <span className="text-[10px] lg:text-xs text-slate-600 capitalize">{influencer.category}</span>
-              </>}
+              </>
+            )}
             <span>•</span>
             <div className="flex items-center">
               <Users className="h-2.5 w-2.5 mr-0.5 text-funky-pink" />
               <span className="text-[10px] lg:text-xs text-slate-950">{formatFollowers(influencer.followers)}</span>
             </div>
           </div>
-          <Button size="sm" variant="secondary" onClick={e => {
-          e.stopPropagation();
-          onProfileClick(influencer.id);
-        }} className="mt-1 w-full text-[10px] lg:text-xs py-1 px-2 transition-all duration-300 border border-funky-purple/20 text-stone-50 bg-funky-purple">
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onProfileClick(influencer.id);
+            }} 
+            className="mt-1 w-full text-[10px] lg:text-xs py-1 px-2 transition-all duration-300 border border-funky-purple/20 text-stone-50 bg-funky-purple"
+          >
             <User className="h-3 w-3 mr-1" />
             View Profile
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 });
+
 InfluencerCard.displayName = "InfluencerCard";
+
 const CreatorCarousel = ({
   influencers,
   onProfileClick,
@@ -86,99 +116,108 @@ const CreatorCarousel = ({
   onProfileClick: (id: string) => void;
   isMobile: boolean;
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const carouselRef = useRef<HTMLDivElement>(null);
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: 'start',
+    dragFree: true,
+    containScroll: 'trimSnaps'
+  });
+
   const itemsPerView = isMobile ? 2 : 4;
-  const totalSlides = Math.ceil(influencers.length / itemsPerView);
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-    const interval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % totalSlides);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [totalSlides, isAutoPlaying]);
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 5000);
-  };
-  const nextSlide = () => {
-    setCurrentIndex(prev => (prev + 1) % totalSlides);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 5000);
-  };
-  const prevSlide = () => {
-    setCurrentIndex(prev => (prev - 1 + totalSlides) % totalSlides);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 5000);
-  };
-  return <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-funky-purple/10">
-      <div ref={carouselRef} className="flex transition-transform duration-700 ease-in-out" style={{
-      transform: `translateX(-${currentIndex * 100}%)`
-    }}>
-        {Array.from({
-        length: totalSlides
-      }).map((_, slideIndex) => <div key={slideIndex} className="w-full flex-shrink-0">
-            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`}>
-              {influencers.slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView).map(influencer => <InfluencerCard key={influencer.id} influencer={influencer} onProfileClick={onProfileClick} isMobile={isMobile} />)}
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-funky-purple/10">
+      <div ref={emblaRef} className="overflow-hidden">
+        <div className="flex">
+          {Array.from({ length: Math.ceil(influencers.length / itemsPerView) }).map((_, slideIndex) => (
+            <div key={slideIndex} className="flex-[0_0_100%] min-w-0">
+              <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`}>
+                {influencers
+                  .slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView)
+                  .map(influencer => (
+                    <InfluencerCard 
+                      key={influencer.id} 
+                      influencer={influencer} 
+                      onProfileClick={onProfileClick} 
+                      isMobile={isMobile} 
+                    />
+                  ))}
+              </div>
             </div>
-          </div>)}
+          ))}
+        </div>
       </div>
 
-      {/* Navigation Buttons - Hidden on Android */}
-      <button onClick={prevSlide} className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden android:hidden md:flex">
+      {/* Navigation Buttons - Only visible on desktop/laptop */}
+      <button 
+        onClick={scrollPrev} 
+        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex"
+      >
         <ArrowRight className="h-4 w-4 rotate-180" />
       </button>
       
-      <button onClick={nextSlide} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden android:hidden md:flex">
+      <button 
+        onClick={scrollNext} 
+        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex"
+      >
         <ArrowRight className="h-4 w-4" />
       </button>
-
-      {/* Dot Indicators */}
-      
-    </div>;
+    </div>
+  );
 };
+
 const InfluencerSection = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchInputRef = useRef<HTMLDivElement>(null);
-  const {
-    data: influencers = [],
-    isLoading
-  } = useInfluencers(searchQuery);
+
+  const { data: influencers = [], isLoading } = useInfluencers(searchQuery);
+
   const handleProfileClick = (id: string) => {
     console.log("Navigating to profile from InfluencerSection:", id);
     navigate(`/profile/${id}`);
     setShowSuggestions(false);
   };
+
   const searchSuggestions = useMemo(() => {
     if (!searchQuery.trim()) return [];
     return influencers.slice(0, 5);
   }, [influencers, searchQuery]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
   const handleSearchFocus = () => {
     if (searchQuery.trim().length > 0) {
       setShowSuggestions(true);
     }
   };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
     setShowSuggestions(value.trim().length > 0);
   };
+
   const handleSuggestionClick = (id: string) => {
     const influencer = influencers.find(inf => inf.id === id);
     if (influencer) {
@@ -186,22 +225,30 @@ const InfluencerSection = () => {
       handleProfileClick(id);
     }
   };
+
   const handleViewAllClick = () => {
     navigate('/influencers');
   };
+
   if (isLoading) {
-    return <section className="mb-4 relative py-[3px] my-0 px-4">
+    return (
+      <section className="mb-4 relative py-[3px] my-0 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2 mx-1">
             <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink text-gray-900 text-lg lg:text-xl font-semibold">Discover Influencers</h2>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="aspect-square rounded-xl" />
+            ))}
           </div>
         </div>
-      </section>;
+      </section>
+    );
   }
-  return <section className="mb-4 relative py-[3px] my-0 px-4">
+
+  return (
+    <section className="mb-4 relative py-[3px] my-0 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2 mx-1">
           <div className="flex items-center justify-between w-full md:w-auto">
@@ -209,7 +256,12 @@ const InfluencerSection = () => {
               Creators
             </h2>
             
-            <Button variant="ghost" size="sm" onClick={handleViewAllClick} className="text-funky-purple hover:text-funky-pink hover:bg-funky-purple/10 flex items-center gap-1 md:hidden">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleViewAllClick} 
+              className="text-funky-purple hover:text-funky-pink hover:bg-funky-purple/10 flex items-center gap-1 md:hidden"
+            >
               View All
               <ArrowRight className="h-3 w-3" />
             </Button>
@@ -217,16 +269,33 @@ const InfluencerSection = () => {
           
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div ref={searchInputRef} className="relative flex-1 md:flex-none py-[6px]">
-              <Input placeholder="Search Influencers" type="text" value={searchQuery} onChange={handleSearchChange} onFocus={handleSearchFocus} className="w-full md:w-64 lg:w-72 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs lg:text-sm shadow-sm bg-white" />
+              <Input 
+                placeholder="Search Influencers" 
+                type="text" 
+                value={searchQuery} 
+                onChange={handleSearchChange} 
+                onFocus={handleSearchFocus} 
+                className="w-full md:w-64 lg:w-72 rounded-full backdrop-blur-sm border border-funky-purple/20 focus:border-funky-purple/50 pl-8 pr-3 py-1 text-xs lg:text-sm shadow-sm bg-white" 
+              />
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 lg:h-4 lg:w-4 text-funky-purple/60" />
               
-              {showSuggestions && searchSuggestions.length > 0 && <div className="absolute z-40 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-xl border border-funky-purple/10 backdrop-blur-md animate-expand">
+              {showSuggestions && searchSuggestions.length > 0 && (
+                <div className="absolute z-40 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-xl border border-funky-purple/10 backdrop-blur-md animate-expand">
                   <ul className="max-h-48 overflow-auto py-1">
-                    {searchSuggestions.map(influencer => <li key={influencer.id} className="px-2 py-1.5 hover:bg-funky-purple/10 cursor-pointer flex items-center gap-2 transition-colors duration-200" onClick={() => handleSuggestionClick(influencer.id)}>
+                    {searchSuggestions.map(influencer => (
+                      <li 
+                        key={influencer.id} 
+                        className="px-2 py-1.5 hover:bg-funky-purple/10 cursor-pointer flex items-center gap-2 transition-colors duration-200" 
+                        onClick={() => handleSuggestionClick(influencer.id)}
+                      >
                         <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border border-funky-purple/20">
-                          {influencer.profile_image ? <img src={influencer.profile_image} alt={influencer.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          {influencer.profile_image ? (
+                            <img src={influencer.profile_image} alt={influencer.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
                               <User className="h-3 w-3 text-gray-500" />
-                            </div>}
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">{influencer.name}</p>
@@ -235,12 +304,19 @@ const InfluencerSection = () => {
                             {influencer.category && ` • ${influencer.category}`}
                           </p>
                         </div>
-                      </li>)}
+                      </li>
+                    ))}
                   </ul>
-                </div>}
+                </div>
+              )}
             </div>
             
-            <Button variant="outline" size="sm" onClick={handleViewAllClick} className="hidden md:flex items-center gap-2 border-funky-purple/30 text-funky-purple hover:bg-funky-purple/10 hover:border-funky-purple/50">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleViewAllClick} 
+              className="hidden md:flex items-center gap-2 border-funky-purple/30 text-funky-purple hover:bg-funky-purple/10 hover:border-funky-purple/50"
+            >
               View All
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -248,12 +324,22 @@ const InfluencerSection = () => {
         </div>
         
         <div className="relative px-0">
-          {influencers && influencers.length > 0 ? <CreatorCarousel influencers={influencers.slice(0, 12)} onProfileClick={handleProfileClick} isMobile={isMobile} /> : <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 rounded-xl shadow-md text-center border border-funky-purple/10">
+          {influencers && influencers.length > 0 ? (
+            <CreatorCarousel 
+              influencers={influencers.slice(0, 12)} 
+              onProfileClick={handleProfileClick} 
+              isMobile={isMobile} 
+            />
+          ) : (
+            <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-8 rounded-xl shadow-md text-center border border-funky-purple/10">
               <Users className="h-8 w-8 text-funky-purple/50 mb-4 mx-auto" />
               <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300">No influencers found matching your search.</p>
-            </div>}
+            </div>
+          )}
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default memo(InfluencerSection);
