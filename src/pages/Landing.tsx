@@ -22,8 +22,8 @@ export default function Landing() {
       <div className="min-h-screen bg-background">
         <Hero />
         {/* Primary Content - Creators & Gifts Front and Center */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid lg:grid-cols-2 gap-8 mb-8">
+        <div className="container mx-auto px-4 py-4">
+          <div className="grid lg:grid-cols-2 gap-4 mb-4">
             <div className="lg:order-1">
               <InfluencerSection />
             </div>
@@ -33,7 +33,9 @@ export default function Landing() {
           </div>
         </div>
         {/* Secondary Content */}
-        <LeaderboardSection />
+        <div className="mb-4">
+          <LeaderboardSection />
+        </div>
         <HowItWorks />
         <WhyUs />
         <Testimonials />
