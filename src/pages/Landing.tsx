@@ -21,9 +21,19 @@ export default function Landing() {
       <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
       <div className="min-h-screen bg-background">
         <Hero />
+        {/* Primary Content - Creators & Gifts Front and Center */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid lg:grid-cols-2 gap-8 mb-8">
+            <div className="lg:order-1">
+              <InfluencerSection />
+            </div>
+            <div className="lg:order-2">
+              <GiftSection />
+            </div>
+          </div>
+        </div>
+        {/* Secondary Content */}
         <LeaderboardSection />
-        <InfluencerSection />
-        <GiftSection />
         <HowItWorks />
         <WhyUs />
         <Testimonials />
