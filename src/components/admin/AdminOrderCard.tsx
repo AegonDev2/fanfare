@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   ExternalLink,
@@ -10,7 +12,8 @@ import {
   DollarSign,
   Wallet,
   User,
-  AlertCircle
+  AlertCircle,
+  Truck
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +52,8 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
   const [walletLoading, setWalletLoading] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [deliveryDate, setDeliveryDate] = useState("");
   const { toast } = useToast();
 
   const fetchWalletBalance = async () => {
@@ -119,8 +124,17 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
   };
 
   const handleApprove = async () => {
+    if (!deliveryDate) {
+      toast({
+        title: "Error",
+        description: "Please select an estimated delivery date",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      console.log("Approving order:", order.id);
+      console.log("Approving order:", order.id, "with delivery date:", deliveryDate);
       
       // Check if order exists in orders_under_process first
       const { data: existingOrder, error: checkError } = await supabase
@@ -145,9 +159,10 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
         return;
       }
 
-      // Move order to gift_requests for influencer approval
+      // Move order to gift_requests for influencer approval with delivery estimate
       const { error } = await supabase.rpc('move_order_to_gift_request', {
-        order_id: order.id
+        order_id: order.id,
+        delivery_estimate: deliveryDate
       });
 
       if (error) {
@@ -157,9 +172,11 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
 
       toast({
         title: "Order Approved",
-        description: "Order sent to influencer for approval",
+        description: `Order sent to influencer for approval with delivery date: ${format(new Date(deliveryDate), 'MMM dd, yyyy')}`,
       });
 
+      setShowApproveDialog(false);
+      setDeliveryDate("");
       onStatusChange(order.id, 'approved');
     } catch (error: any) {
       console.error("Error approving order:", error);
@@ -311,13 +328,51 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
         <div className="flex gap-2 pt-2">
           {(order.status === 'pending' || order.status === 'under_process') && (
             <>
-              <Button
-                size="sm"
-                onClick={handleApprove}
-                className="flex-1"
-              >
-                Approve Order
-              </Button>
+              <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Truck className="h-4 w-4 mr-1" />
+                    Approve Order
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Approve Order</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Set an estimated delivery date for this order:
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="delivery-date">Estimated Delivery Date</Label>
+                      <Input
+                        id="delivery-date"
+                        type="date"
+                        value={deliveryDate}
+                        onChange={(e) => setDeliveryDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleApprove}
+                        disabled={!deliveryDate}
+                      >
+                        Approve Order
+                      </Button>
+                      <Button
+                        onClick={() => setShowApproveDialog(false)}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
               
               <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
                 <DialogTrigger asChild>

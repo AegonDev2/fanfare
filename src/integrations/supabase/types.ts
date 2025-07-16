@@ -186,6 +186,7 @@ export type Database = {
           admin_approved_at: string | null
           completed_at: string | null
           created_at: string | null
+          delivery_estimate: string | null
           id: string
           influencer_id: string
           influencer_response: string | null
@@ -203,6 +204,7 @@ export type Database = {
           admin_approved_at?: string | null
           completed_at?: string | null
           created_at?: string | null
+          delivery_estimate?: string | null
           id?: string
           influencer_id: string
           influencer_response?: string | null
@@ -220,6 +222,7 @@ export type Database = {
           admin_approved_at?: string | null
           completed_at?: string | null
           created_at?: string | null
+          delivery_estimate?: string | null
           id?: string
           influencer_id?: string
           influencer_response?: string | null
@@ -1055,7 +1058,9 @@ export type Database = {
         Returns: boolean
       }
       move_order_to_gift_request: {
-        Args: { order_id: string }
+        Args:
+          | { order_id: string }
+          | { order_id: string; delivery_estimate?: string }
         Returns: boolean
       }
       process_gift_payment: {

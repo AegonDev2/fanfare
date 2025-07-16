@@ -89,7 +89,7 @@ export const useGiftsSent = () => {
           platform_fee: null,
           total_amount: request.product_price ? request.product_price + 5 : null,
           completed_at: request.completed_at,
-          delivery_estimate: null
+          delivery_estimate: request.delivery_estimate
         }));
         allRequests.push(...mappedRequests);
       }

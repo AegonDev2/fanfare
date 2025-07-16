@@ -100,6 +100,7 @@ export const useOrderTracking = () => {
           product_price: request.product_price,
           total_amount: request.product_price ? request.product_price + 5 : null,
           message: request.message,
+          delivery_estimate: request.delivery_estimate,
           completed_at: request.completed_at,
           rejection_reason: request.influencer_response === 'rejected' ? 'Rejected by influencer' : null,
           user_id: request.sender_id,
