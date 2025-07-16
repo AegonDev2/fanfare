@@ -1058,9 +1058,7 @@ export type Database = {
         Returns: boolean
       }
       move_order_to_gift_request: {
-        Args:
-          | { order_id: string }
-          | { order_id: string; delivery_estimate?: string }
+        Args: { order_id: string; delivery_estimate?: string }
         Returns: boolean
       }
       process_gift_payment: {
