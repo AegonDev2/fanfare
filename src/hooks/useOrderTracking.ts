@@ -63,8 +63,7 @@ export const useOrderTracking = () => {
         .from('orders_under_process')
         .select(`
           *,
-          influencer:influencer_profiles(id, name),
-          profiles(email, name)
+          influencer:influencer_profiles(id, name)
         `)
         .eq(userRole === 'fan' ? 'user_id' : 'influencer_id', user.id)
         .order('created_at', { ascending: false });
@@ -86,8 +85,7 @@ export const useOrderTracking = () => {
         .from('gift_requests')
         .select(`
           *,
-          influencer:influencer_profiles(id, name),
-          profiles(email, name)
+          influencer:influencer_profiles(id, name)
         `)
         .eq(userRole === 'fan' ? 'sender_id' : 'influencer_id', user.id)
         .order('created_at', { ascending: false });
@@ -107,7 +105,6 @@ export const useOrderTracking = () => {
           user_id: request.sender_id,
           influencer_id: request.influencer_id,
           influencer: request.influencer,
-          profiles: request.profiles,
           can_cancel: determineCanCancel({
             id: request.id,
             status: mapDatabaseStatusToTrackingStatus('gift_requests', request),
@@ -122,9 +119,7 @@ export const useOrderTracking = () => {
       const { data: completedOrders, error: completedError } = await supabase
         .from('orders_completed')
         .select(`
-          *,
-          influencer:influencer_profiles(id, name),
-          profiles(email, name)
+          *
         `)
         .eq(userRole === 'fan' ? 'user_id' : 'influencer_id', user.id)
         .order('created_at', { ascending: false });
@@ -142,9 +137,7 @@ export const useOrderTracking = () => {
       const { data: rejectedOrders, error: rejectedError } = await supabase
         .from('orders_rejected')
         .select(`
-          *,
-          influencer:influencer_profiles(id, name),
-          profiles(email, name)
+          *
         `)
         .eq(userRole === 'fan' ? 'user_id' : 'influencer_id', user.id)
         .order('created_at', { ascending: false });
@@ -163,8 +156,6 @@ export const useOrderTracking = () => {
           rejection_reason: order.rejection_reason,
           user_id: order.user_id,
           influencer_id: order.influencer_id,
-          influencer: order.influencer,
-          profiles: order.profiles,
           can_cancel: false
         }));
         allOrders.push(...mappedRejected);
