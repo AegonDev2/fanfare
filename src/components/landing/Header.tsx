@@ -34,13 +34,15 @@ export default function Header({ setNavOpen }: HeaderProps) {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-funky-purple/10 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-funky-purple to-funky-pink rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">F</span>
-              </div>
-              <span className="font-display text-xl font-bold bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent">
-                FanFare
-              </span>
+            <div 
+              className="flex items-center space-x-2 cursor-pointer hover-scale transition-all duration-200"
+              onClick={() => navigate('/')}
+            >
+              <img 
+                src="/lovable-uploads/8f181bc3-b317-49b4-8117-1c20245ec9b0.png" 
+                alt="FanFare Logo" 
+                className="h-8 w-auto"
+              />
             </div>
 
             <nav className="hidden md:flex items-center space-x-6">
