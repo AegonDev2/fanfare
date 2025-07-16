@@ -30,7 +30,7 @@ const ProductCard = memo(({ product }: { product: any }) => {
     <Card className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white to-funky-pink/5 border-2 border-funky-pink/20 hover:border-funky-purple/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-funky-purple/25 cursor-pointer">
       <div className="absolute inset-0 bg-gradient-to-t from-funky-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       
-      <CardContent className="p-3 relative z-10">
+      <CardContent className="p-1 lg:p-2 relative z-10">
         <div className="aspect-square mb-2 overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 relative">
           <img
             src={product.image_url || '/placeholder.svg'}
@@ -169,7 +169,7 @@ const GiftCarousel = ({ products }: { products: any[] }) => {
       >
         {Array.from({ length: totalSlides }).map((_, slideIndex) => (
           <div key={slideIndex} className="w-full flex-shrink-0">
-            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-3 p-6`}>
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`}>
               {products
                 .slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView)
                 .map((product) => (
