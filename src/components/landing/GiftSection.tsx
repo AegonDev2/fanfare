@@ -220,6 +220,9 @@ const GiftSection = () => {
           .from('shop_products')
           .select('*')
           .eq('is_available', true)
+          .order('is_featured', { ascending: false })
+          .order('ranking', { ascending: true })
+          .order('created_at', { ascending: false })
           .limit(20);
         
         if (error) throw error;

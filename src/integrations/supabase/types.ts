@@ -796,9 +796,11 @@ export type Database = {
           id: string
           image_url: string | null
           is_available: boolean
+          is_featured: boolean | null
           name: string
           price: number
           product_url: string | null
+          ranking: number | null
           shop_id: string
           updated_at: string
         }
@@ -809,9 +811,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean
+          is_featured?: boolean | null
           name: string
           price: number
           product_url?: string | null
+          ranking?: number | null
           shop_id: string
           updated_at?: string
         }
@@ -822,9 +826,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean
+          is_featured?: boolean | null
           name?: string
           price?: number
           product_url?: string | null
+          ranking?: number | null
           shop_id?: string
           updated_at?: string
         }
@@ -844,8 +850,10 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          is_featured: boolean | null
           logo_image_url: string | null
           name: string
+          ranking: number | null
           updated_at: string
           website_url: string | null
         }
@@ -854,8 +862,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_featured?: boolean | null
           logo_image_url?: string | null
           name: string
+          ranking?: number | null
           updated_at?: string
           website_url?: string | null
         }
@@ -864,8 +874,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_featured?: boolean | null
           logo_image_url?: string | null
           name?: string
+          ranking?: number | null
           updated_at?: string
           website_url?: string | null
         }

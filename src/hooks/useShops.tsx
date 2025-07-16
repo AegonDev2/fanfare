@@ -9,6 +9,8 @@ export interface Shop {
   website_url: string | null;
   logo_image_url: string | null;
   is_active: boolean;
+  is_featured: boolean;
+  ranking: number;
   created_at: string;
   updated_at: string;
 }
@@ -21,6 +23,8 @@ export const useShops = () => {
         .from('shops')
         .select('*')
         .eq('is_active', true)
+        .order('is_featured', { ascending: false })
+        .order('ranking', { ascending: true })
         .order('name');
 
       if (error) {

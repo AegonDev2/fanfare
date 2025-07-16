@@ -12,6 +12,8 @@ export interface ShopProduct {
   product_url: string | null;
   category: string | null;
   is_available: boolean;
+  is_featured: boolean;
+  ranking: number;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +29,8 @@ export const useShopProducts = (shopId: string | null) => {
         .select('*')
         .eq('shop_id', shopId)
         .eq('is_available', true)
+        .order('is_featured', { ascending: false })
+        .order('ranking', { ascending: true })
         .order('name');
 
       if (error) {
