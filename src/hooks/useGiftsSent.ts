@@ -22,8 +22,6 @@ export const useGiftsSent = () => {
   const { toast } = useToast();
   const [requests, setRequests] = useState<GiftRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState<GiftRequest | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchSentGiftRequests = useCallback(async () => {
@@ -38,54 +36,95 @@ export const useGiftsSent = () => {
         return;
       }
       
-      // Use explicit column selection with alias for the joined influencer name
-      const { data, error } = await supabase
-        .from("gift_requests")
+      let allRequests: GiftRequest[] = [];
+
+      // Fetch from orders_under_process (waiting admin approval)
+      const { data: underProcessOrders, error: underProcessError } = await supabase
+        .from('orders_under_process')
         .select(`
-          id,
-          product_url,
-          product_title,
-          product_price,
-          message,
-          created_at,
-          status,
-          influencer_id,
-          profiles!gift_requests_influencer_id_fkey (name)
+          *,
+          influencer:influencer_profiles(id, name)
         `)
-        .eq("sender_id", user.id)
-        .order("created_at", { ascending: false });
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Error fetching gift requests:", error);
-        throw error;
+      if (!underProcessError && underProcessOrders) {
+        const mappedOrders = underProcessOrders.map((order: any) => ({
+          id: order.id,
+          product_url: order.product_url,
+          product_title: order.product_title,
+          product_price: order.product_price,
+          message: order.message,
+          created_at: order.created_at,
+          status: 'under process' as const,
+          influencer_name: order.influencer?.name || 'Unknown Influencer',
+          platform_fee: order.platform_fee,
+          total_amount: order.total_amount,
+          completed_at: null,
+          delivery_estimate: null
+        }));
+        allRequests.push(...mappedOrders);
+      }
+      
+      // Fetch from gift_requests (various statuses)
+      const { data: giftRequests, error: giftRequestsError } = await supabase
+        .from('gift_requests')
+        .select(`
+          *,
+          influencer:influencer_profiles(id, name)
+        `)
+        .eq('sender_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (!giftRequestsError && giftRequests) {
+        const mappedRequests = giftRequests.map((request: any) => ({
+          id: request.id,
+          product_url: request.product_url,
+          product_title: request.product_title,
+          product_price: request.product_price,
+          message: request.message,
+          created_at: request.created_at,
+          status: request.status,
+          influencer_name: request.influencer?.name || 'Unknown Influencer',
+          platform_fee: null,
+          total_amount: request.product_price ? request.product_price + 5 : null,
+          completed_at: request.completed_at,
+          delivery_estimate: null
+        }));
+        allRequests.push(...mappedRequests);
       }
 
-      // Format data
-      if (data) {
-        const formattedRequests: GiftRequest[] = data.map(item => {
-          // Safely access the name using proper typescript handling
-          const influencerProfile = item.profiles as { name: string | null } | null;
-          const influencerName = influencerProfile?.name || "Unknown Influencer";
-          
-          return {
-            id: item.id,
-            product_url: item.product_url,
-            product_title: item.product_title,
-            product_price: item.product_price,
-            message: item.message,
-            created_at: item.created_at,
-            status: item.status,
-            influencer_name: influencerName,
-            // Set optional fields to null as they may not be in the gift_requests table
-            platform_fee: null,
-            total_amount: null,
-            completed_at: null,
-            delivery_estimate: null
-          };
-        });
-        
-        setRequests(formattedRequests);
+      // Fetch from orders_completed
+      const { data: completedOrders, error: completedError } = await supabase
+        .from('orders_completed')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (!completedError && completedOrders) {
+        const mappedCompleted = completedOrders.map((order: any) => ({
+          id: order.id,
+          product_url: order.product_url,
+          product_title: order.product_title,
+          product_price: order.product_price,
+          message: order.message,
+          created_at: order.created_at,
+          status: 'completed' as const,
+          influencer_name: 'Influencer', // We'll need to join this properly later
+          platform_fee: order.platform_fee,
+          total_amount: order.total_amount,
+          completed_at: order.completed_at,
+          delivery_estimate: order.delivery_estimate
+        }));
+        allRequests.push(...mappedCompleted);
       }
+
+      // Remove duplicates and sort by creation date
+      const uniqueRequests = allRequests.filter((request, index, self) => 
+        index === self.findIndex(r => r.id === request.id)
+      ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setRequests(uniqueRequests);
     } catch (error: any) {
       setError(error.message || "Failed to load gifts");
       toast({
@@ -99,20 +138,10 @@ export const useGiftsSent = () => {
     }
   }, [toast]);
 
-  const handleDetailsClick = (request: GiftRequest) => {
-    setSelectedRequest(request);
-    setDialogOpen(true);
-  };
-
   return {
     requests,
     loading,
     error,
-    fetchSentGiftRequests,
-    selectedRequest,
-    setSelectedRequest,
-    dialogOpen,
-    setDialogOpen,
-    handleDetailsClick
+    fetchSentGiftRequests
   };
 };

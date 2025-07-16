@@ -1,25 +1,26 @@
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useGiftsSent } from "@/hooks/useGiftsSent";
 import { GiftRequestCard } from "@/components/gifts/GiftRequestCard";
-import { GiftDetailsDialog } from "@/components/gifts/GiftDetailsDialog";
 import { EmptyGiftsState } from "@/components/gifts/EmptyGiftsState";
 import { LoadingGiftsState } from "@/components/gifts/LoadingGiftsState";
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 
 const GiftsSent = () => {
+  const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
   const {
     requests,
     loading,
-    fetchSentGiftRequests,
-    selectedRequest,
-    dialogOpen,
-    setDialogOpen,
-    handleDetailsClick
+    fetchSentGiftRequests
   } = useGiftsSent();
+
+  const handleDetailsClick = () => {
+    navigate('/track-order');
+  };
 
   useEffect(() => {
     fetchSentGiftRequests();
@@ -61,12 +62,6 @@ const GiftsSent = () => {
                 ))}
               </div>
             )}
-
-            <GiftDetailsDialog 
-              open={dialogOpen} 
-              onOpenChange={setDialogOpen} 
-              request={selectedRequest} 
-            />
           </div>
         </div>
       </div>
