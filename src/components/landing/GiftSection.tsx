@@ -17,10 +17,12 @@ const ProductCard = memo(({ product }: { product: any }) => {
 
   const handleGiftClick = () => {
     const params = new URLSearchParams({
-      productUrl: product.url || product.product_url || '#',
-      productName: product.name,
-      productPrice: product.price.toString(),
-      productImage: product.image_url || '/placeholder.svg'
+      giftName: encodeURIComponent(product.name),
+      giftPrice: product.price.toString(),
+      giftImage: encodeURIComponent(product.image_url || ''),
+      giftId: product.id,
+      gift: product.url || product.product_url || '',
+      shopProduct: 'true' // Flag to indicate this is a shop product
     });
     
     navigate(`/place-order?${params.toString()}`);
