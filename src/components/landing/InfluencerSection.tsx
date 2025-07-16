@@ -183,7 +183,7 @@ const CreatorCarousel = ({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-funky-purple/10">
+    <div className="relative rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-funky-purple/10 overflow-hidden">
       <div 
         ref={carouselRef}
         className="overflow-hidden"
@@ -198,14 +198,25 @@ const CreatorCarousel = ({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`} style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}>
+          <div 
+            className={`flex p-4 gap-4`} 
+            style={{ 
+              transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
+              width: `${(influencers.length / itemsPerView) * 100}%`
+            }}
+          >
             {influencers.map(influencer => (
-              <InfluencerCard 
+              <div 
                 key={influencer.id} 
-                influencer={influencer} 
-                onProfileClick={onProfileClick} 
-                isMobile={isMobile} 
-              />
+                className={`flex-shrink-0 ${isMobile ? 'w-1/2' : 'w-1/4'}`}
+                style={{ width: `${100 / itemsPerView}%` }}
+              >
+                <InfluencerCard 
+                  influencer={influencer} 
+                  onProfileClick={onProfileClick} 
+                  isMobile={isMobile} 
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -214,14 +225,16 @@ const CreatorCarousel = ({
       {/* Navigation Buttons - Only visible on desktop/laptop */}
       <button 
         onClick={scrollPrev} 
-        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex"
+        disabled={currentIndex === 0}
+        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <ArrowRight className="h-4 w-4 rotate-180" />
       </button>
       
       <button 
         onClick={scrollNext} 
-        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex"
+        disabled={currentIndex >= totalSlides - 1}
+        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <ArrowRight className="h-4 w-4" />
       </button>
