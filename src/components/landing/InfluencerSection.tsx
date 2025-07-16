@@ -122,14 +122,14 @@ const CreatorCarousel = ({
   const carouselRef = useRef<HTMLDivElement>(null);
 
   const itemsPerView = isMobile ? 2 : 4;
-  const totalSlides = Math.ceil(influencers.length / itemsPerView);
+  const totalSlides = Math.max(0, influencers.length - itemsPerView + 1);
 
   const scrollPrev = useCallback(() => {
-    setCurrentIndex(prev => (prev - 1 + totalSlides) % totalSlides);
-  }, [totalSlides]);
+    setCurrentIndex(prev => Math.max(0, prev - 1));
+  }, []);
 
   const scrollNext = useCallback(() => {
-    setCurrentIndex(prev => (prev + 1) % totalSlides);
+    setCurrentIndex(prev => Math.min(totalSlides - 1, prev + 1));
   }, [totalSlides]);
 
   // Touch/Mouse event handlers for swipe support
@@ -186,32 +186,29 @@ const CreatorCarousel = ({
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-funky-purple/10">
       <div 
         ref={carouselRef}
-        className="flex transition-transform duration-300 ease-out cursor-grab active:cursor-grabbing"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={isDragging ? handleMouseMove : undefined}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        className="overflow-hidden"
       >
-        {Array.from({ length: totalSlides }).map((_, slideIndex) => (
-          <div key={slideIndex} className="w-full flex-shrink-0">
-            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`}>
-              {influencers
-                .slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView)
-                .map(influencer => (
-                  <InfluencerCard 
-                    key={influencer.id} 
-                    influencer={influencer} 
-                    onProfileClick={onProfileClick} 
-                    isMobile={isMobile} 
-                  />
-                ))}
-            </div>
+        <div 
+          className="transition-transform duration-300 ease-out cursor-grab active:cursor-grabbing"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseMove={isDragging ? handleMouseMove : undefined}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`} style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}>
+            {influencers.map(influencer => (
+              <InfluencerCard 
+                key={influencer.id} 
+                influencer={influencer} 
+                onProfileClick={onProfileClick} 
+                isMobile={isMobile} 
+              />
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Navigation Buttons - Only visible on desktop/laptop */}

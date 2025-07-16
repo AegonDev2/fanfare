@@ -21,28 +21,38 @@ export const useInfluencers = (searchQuery?: string, categoryFilter?: string) =>
   return useQuery({
     queryKey: ['influencers', searchQuery, categoryFilter],
     queryFn: async () => {
-      let query = supabase
-        .from('influencer_profiles')
-        .select('*')
-        .order('followers', { ascending: false });
+      try {
+        let query = supabase
+          .from('influencer_profiles')
+          .select('*')
+          .order('followers', { ascending: false });
 
-      if (searchQuery && searchQuery.trim()) {
-        query = query.or(`name.ilike.%${searchQuery.trim()}%,platform.ilike.%${searchQuery.trim()}%`);
+        if (searchQuery && searchQuery.trim()) {
+          query = query.or(`name.ilike.%${searchQuery.trim()}%,platform.ilike.%${searchQuery.trim()}%`);
+        }
+
+        if (categoryFilter && categoryFilter !== 'all') {
+          query = query.eq('category', categoryFilter);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('Error fetching influencers:', error);
+          // Return empty array instead of throwing error to prevent blocking UI for unauthenticated users
+          return [];
+        }
+
+        return data || [];
+      } catch (error) {
+        console.error('Network error fetching influencers:', error);
+        // Return empty array to gracefully handle network/auth errors
+        return [];
       }
-
-      if (categoryFilter && categoryFilter !== 'all') {
-        query = query.eq('category', categoryFilter);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching influencers:', error);
-        throw error;
-      }
-
-      return data || [];
     },
+    // Add retry and error handling
+    retry: 1,
+    retryDelay: 1000,
   });
 };
 
