@@ -17,11 +17,7 @@ export const useAdminOrders = () => {
       // Fetch all orders from the unified orders table
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select(`
-          *,
-          influencer:influencer_profiles(id, name),
-          user:profiles!orders_user_id_fkey(id, name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (ordersError) {
@@ -32,6 +28,32 @@ export const useAdminOrders = () => {
       console.log("useAdminOrders - Fetched orders:", ordersData?.length || 0);
 
       if (ordersData) {
+        // Get unique user and influencer IDs to fetch their data
+        const userIds = [...new Set(ordersData.map(order => order.user_id).filter(Boolean))];
+        const influencerIds = [...new Set(ordersData.map(order => order.influencer_id).filter(Boolean))];
+        
+        // Fetch user data separately
+        let userData: any[] = [];
+        if (userIds.length > 0) {
+          const { data: users } = await supabase
+            .from('profiles')
+            .select('id, name, email')
+            .in('id', userIds);
+          
+          userData = users || [];
+        }
+
+        // Fetch influencer data separately
+        let influencerData: any[] = [];
+        if (influencerIds.length > 0) {
+          const { data: influencers } = await supabase
+            .from('influencer_profiles')
+            .select('id, name')
+            .in('id', influencerIds);
+          
+          influencerData = influencers || [];
+        }
+
         const mappedOrders: OrderDetails[] = ordersData.map((order: any) => {
           // Map the unified status to admin status for display
           let adminStatus = order.status;
@@ -40,6 +62,9 @@ export const useAdminOrders = () => {
           } else if (order.status === 'approved_waiting_influencer') {
             adminStatus = 'processing'; // For admin panel display
           }
+
+          const user = userData.find(u => u.id === order.user_id);
+          const influencer = influencerData.find(inf => inf.id === order.influencer_id);
 
           return {
             id: order.id,
@@ -64,12 +89,12 @@ export const useAdminOrders = () => {
             rejection_reason: order.rejection_reason,
             influencer_response: order.influencer_response,
             rejected_by: order.rejected_by,
-            influencer: order.influencer,
-            user: order.user,
+            influencer: influencer ? { id: influencer.id, name: influencer.name } : null,
+            user: user ? { id: user.id, name: user.name, email: user.email } : null,
             // Map the required fields from the joined data
-            fan_email: order.user?.email || '',
-            fan_name: order.user?.name || '',
-            influencer_name: order.influencer?.name || ''
+            fan_email: user?.email || '',
+            fan_name: user?.name || '',
+            influencer_name: influencer?.name || ''
           };
         });
         
