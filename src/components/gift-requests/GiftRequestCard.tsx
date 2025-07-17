@@ -133,7 +133,7 @@ export default function GiftRequestCard({
     }
   };
   const showActionButtons = request.admin_approved && request.status === 'approved_waiting_influencer' && !request.influencer_response;
-  const showTrackingButton = ['completed'].includes(request.status);
+  const showTrackingButton = true; // Always show tracking button to see progress
 
   const handleTrackOrder = () => {
     navigate(`/track-order?order=${request.id}`);
