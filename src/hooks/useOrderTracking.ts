@@ -52,10 +52,7 @@ export const useOrderTracking = () => {
       // Fetch from the unified orders table
       const { data: allOrders, error } = await supabase
         .from('orders')
-        .select(`
-          *,
-          influencer:influencer_profiles(id, name)
-        `)
+        .select('*')
         .eq(userRole === 'fan' ? 'user_id' : 'influencer_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -67,24 +64,42 @@ export const useOrderTracking = () => {
       console.log("Fetched orders:", allOrders);
 
       if (allOrders) {
-        const mappedOrders: TrackingOrder[] = allOrders.map((order: any) => ({
-          id: order.id,
-          status: mapDatabaseStatusToTrackingStatus(order.status),
-          created_at: order.created_at,
-          product_url: order.product_url,
-          product_title: order.product_title,
-          product_price: order.product_price,
-          total_amount: order.total_amount,
-          message: order.message,
-          delivery_estimate: order.delivery_estimate,
-          completed_at: order.completed_at,
-          rejected_at: order.cancelled_at, // Map cancelled_at to rejected_at for cancelled orders
-          rejection_reason: order.rejection_reason,
-          user_id: order.user_id,
-          influencer_id: order.influencer_id,
-          influencer: order.influencer,
-          can_cancel: false // Will be set below
-        }));
+        // Get unique influencer IDs to fetch their data
+        const influencerIds = [...new Set(allOrders.map(order => order.influencer_id).filter(Boolean))];
+        
+        // Fetch influencer data separately
+        let influencerData: any[] = [];
+        if (influencerIds.length > 0) {
+          const { data: influencers } = await supabase
+            .from('influencer_profiles')
+            .select('id, name')
+            .in('id', influencerIds);
+          
+          influencerData = influencers || [];
+        }
+
+        const mappedOrders: TrackingOrder[] = allOrders.map((order: any) => {
+          const influencer = influencerData.find(inf => inf.id === order.influencer_id);
+          
+          return {
+            id: order.id,
+            status: mapDatabaseStatusToTrackingStatus(order.status),
+            created_at: order.created_at,
+            product_url: order.product_url,
+            product_title: order.product_title,
+            product_price: order.product_price,
+            total_amount: order.total_amount,
+            message: order.message,
+            delivery_estimate: order.delivery_estimate,
+            completed_at: order.completed_at,
+            rejected_at: order.cancelled_at, // Map cancelled_at to rejected_at for cancelled orders
+            rejection_reason: order.rejection_reason,
+            user_id: order.user_id,
+            influencer_id: order.influencer_id,
+            influencer: influencer ? { id: influencer.id, name: influencer.name } : null,
+            can_cancel: false // Will be set below
+          };
+        });
 
         // Set can_cancel property for each order
         mappedOrders.forEach(order => {
