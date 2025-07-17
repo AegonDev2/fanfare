@@ -25,13 +25,13 @@ export default function AdminOrdersPanel() {
     );
   }
 
-  // Fix status mapping - orders from orders_under_process should be treated as "pending" for admin approval
+  // Filter orders by status using the mapped admin status
   const pendingOrders = orders.filter(o => o.status === 'under_process');
-  const underProcessOrders = orders.filter(o => o.status === 'processing'); // Actually processing orders  
+  const underProcessOrders = orders.filter(o => o.status === 'processing'); 
   const completedOrders = orders.filter(o => o.status === 'completed');
   const acceptedOrders = orders.filter(o => o.status === 'accepted');
 
-  console.log("Order counts (fixed mapping):", {
+  console.log("Order counts:", {
     pending: pendingOrders.length,
     processing: underProcessOrders.length,
     completed: completedOrders.length,
@@ -39,7 +39,12 @@ export default function AdminOrdersPanel() {
     total: orders.length
   });
 
-  console.log("Order statuses in detail:", orders.map(o => ({ id: o.id, status: o.status, product_title: o.product_title })));
+  console.log("Order statuses in detail:", orders.map(o => ({ 
+    id: o.id, 
+    status: o.status, 
+    original_status: o.original_status, 
+    product_title: o.product_title 
+  })));
 
   return (
     <div className="space-y-6">

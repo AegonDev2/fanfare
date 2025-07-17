@@ -25,7 +25,7 @@ export const useGiftsSent = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchSentGiftRequests = useCallback(async () => {
-    console.log("useGiftsSent - Starting fetch");
+    console.log("useGiftsSent - Starting fetch from unified orders table");
     setLoading(true);
     setError(null);
     

@@ -60,8 +60,9 @@ export function useOrderSubmission() {
         hasSufficientBalance 
       });
 
+      // Insert into the unified orders table with pending_admin_approval status
       const { data: order, error } = await supabase
-        .from('orders_under_process')
+        .from('orders')
         .insert({
           user_id: user.id,
           influencer_id: influencerId,
@@ -71,6 +72,7 @@ export function useOrderSubmission() {
           platform_fee: platformFee,
           total_amount: totalAmount,
           message: message,
+          status: 'pending_admin_approval',
           shipping_address: {
             name: influencerAddress.name,
             street_address: influencerAddress.street_address,
@@ -89,7 +91,7 @@ export function useOrderSubmission() {
         throw error;
       }
 
-      console.log("Order created successfully:", order);
+      console.log("Order created successfully in orders table:", order);
       
       setPaymentStep('complete');
       

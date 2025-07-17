@@ -1,154 +1,97 @@
 
-import { useCallback, useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import type { OrderDetails, UnderProcessOrder, CompletedOrder } from "@/types/admin";
+import type { OrderDetails } from "@/types/admin";
 
 export const useAdminOrders = () => {
+  const { toast } = useToast();
   const [orders, setOrders] = useState<OrderDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   const fetchAllOrders = useCallback(async () => {
+    console.log("useAdminOrders - Starting fetch from unified orders table");
     setIsLoading(true);
+    
     try {
-      console.log("🔄 Fetching admin orders...");
-      
-      // Fetch orders from under_process table
-      const { data: underProcessOrders, error: underProcessError } = await supabase
-        .from('orders_under_process')
+      // Fetch all orders from the unified orders table
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
         .select(`
           *,
-          influencer:influencer_profiles(id, name)
+          influencer:influencer_profiles(id, name),
+          user:profiles!orders_user_id_fkey(id, name, email)
         `)
         .order('created_at', { ascending: false });
 
-      if (underProcessError) {
-        console.error("Error fetching under_process orders:", underProcessError);
-        throw underProcessError;
+      if (ordersError) {
+        console.error("useAdminOrders - Orders fetch error:", ordersError);
+        throw ordersError;
       }
-      
-      console.log("📋 Under process orders found:", underProcessOrders?.length || 0);
-      
-      // Fetch orders from completed table
-      const { data: completedOrders, error: completedError } = await supabase
-        .from('orders_completed')
-        .select(`
-          *,
-          influencer:influencer_profiles(id, name)
-        `)
-        .order('created_at', { ascending: false });
 
-      if (completedError) {
-        console.error("Error fetching completed orders:", completedError);
-        throw completedError;
-      }
-      
-      console.log("✅ Completed orders found:", completedOrders?.length || 0);
+      console.log("useAdminOrders - Fetched orders:", ordersData?.length || 0);
 
-      // If no orders are found, set empty array and return early
-      if ((!underProcessOrders || underProcessOrders.length === 0) && 
-          (!completedOrders || completedOrders.length === 0)) {
-        console.log("No orders found");
+      if (ordersData) {
+        const mappedOrders: OrderDetails[] = ordersData.map((order: any) => {
+          // Map the unified status to admin status for display
+          let adminStatus = order.status;
+          if (order.status === 'pending_admin_approval') {
+            adminStatus = 'under_process'; // For admin panel display
+          } else if (order.status === 'approved_waiting_influencer') {
+            adminStatus = 'processing'; // For admin panel display
+          }
+
+          return {
+            id: order.id,
+            user_id: order.user_id,
+            influencer_id: order.influencer_id,
+            product_url: order.product_url,
+            product_title: order.product_title,
+            product_price: order.product_price,
+            platform_fee: order.platform_fee,
+            total_amount: order.total_amount,
+            message: order.message,
+            shipping_address: order.shipping_address,
+            status: adminStatus,
+            original_status: order.status, // Keep original for updates
+            created_at: order.created_at,
+            updated_at: order.updated_at,
+            admin_approved_at: order.admin_approved_at,
+            influencer_response_at: order.influencer_response_at,
+            completed_at: order.completed_at,
+            cancelled_at: order.cancelled_at,
+            delivery_estimate: order.delivery_estimate,
+            rejection_reason: order.rejection_reason,
+            influencer_response: order.influencer_response,
+            rejected_by: order.rejected_by,
+            influencer: order.influencer,
+            user: order.user
+          };
+        });
+        
+        console.log("useAdminOrders - Mapped orders:", mappedOrders.length);
+        setOrders(mappedOrders);
+      } else {
+        console.log("useAdminOrders - No orders found");
         setOrders([]);
-        setIsLoading(false);
-        return;
       }
-      
-      // Enrich orders with additional data
-      const enrichedOrders: OrderDetails[] = await Promise.all([
-        ...((underProcessOrders || []).map(async (order) => {
-          try {
-            // Get fan's email and name
-            const { data: fanData, error: fanError } = await supabase
-              .from('profiles')
-              .select('email, name')
-              .eq('id', order.user_id)
-              .maybeSingle();
-
-            if (fanError) {
-              console.warn(`Error fetching fan data for order ${order.id}:`, fanError);
-            }
-
-            // Handle potential null influencer data safely
-            const influencerName = order.influencer?.name || "Unknown";
-            
-            return {
-              ...order,
-              status: 'under_process' as const,
-              fan_email: fanData?.email || "Unknown",
-              fan_name: fanData?.name || "Unknown",
-              influencer_name: influencerName,
-            } as OrderDetails;
-          } catch (err) {
-            console.error(`Error enriching order ${order.id}:`, err);
-            return {
-              ...order,
-              status: 'under_process' as const,
-              fan_email: "Unknown",
-              fan_name: "Unknown",
-              influencer_name: "Unknown",
-            } as OrderDetails;
-          }
-        })),
-        ...((completedOrders || []).map(async (order) => {
-          try {
-            // Get fan's email and name
-            const { data: fanData, error: fanError } = await supabase
-              .from('profiles')
-              .select('email, name')
-              .eq('id', order.user_id)
-              .maybeSingle();
-
-            if (fanError) {
-              console.warn(`Error fetching fan data for order ${order.id}:`, fanError);
-            }
-
-            // Handle potential null influencer data safely
-            const influencerName = order.influencer?.name || "Unknown";
-            
-            return {
-              ...order,
-              status: 'completed' as const,
-              fan_email: fanData?.email || "Unknown",
-              fan_name: fanData?.name || "Unknown",
-              influencer_name: influencerName,
-            } as OrderDetails;
-          } catch (err) {
-            console.error(`Error enriching order ${order.id}:`, err);
-            return {
-              ...order,
-              status: 'completed' as const,
-              fan_email: "Unknown",
-              fan_name: "Unknown",
-              influencer_name: "Unknown",
-            } as OrderDetails;
-          }
-        }))
-      ]);
-
-      console.log('🎯 Successfully fetched and enriched admin orders:', enrichedOrders.length);
-      console.log('📊 Order details:', enrichedOrders.map(o => ({ 
-        id: o.id, 
-        status: o.status, 
-        product_title: o.product_title,
-        fan_name: o.fan_name 
-      })));
-      setOrders(enrichedOrders);
     } catch (error: any) {
-      console.error("Error fetching orders:", error);
-      
+      console.error("useAdminOrders - Error:", error);
+      const errorMessage = error.message || "Failed to load orders";
       toast({
-        title: "Error",
-        description: error.message || "Failed to load orders",
-        variant: "destructive"
+        title: "Error loading orders",
+        description: errorMessage,
+        variant: "destructive",
       });
-      
       setOrders([]);
     } finally {
       setIsLoading(false);
     }
   }, [toast]);
 
-  return { orders, isLoading, fetchAllOrders, setOrders };
+  return {
+    orders,
+    isLoading,
+    fetchAllOrders
+  };
 };

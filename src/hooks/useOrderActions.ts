@@ -17,58 +17,28 @@ export const useOrderActions = (
       // Get delivery estimate (7 days from now)
       const deliveryEstimate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // Use the updated database function to move order to completed
-      const { data, error } = await supabase.rpc('move_order_to_completed', {
-        order_id: orderId,
-        p_delivery_estimate: deliveryEstimate
-      });
+      // Update order status to completed in the unified orders table
+      const { data, error } = await supabase
+        .from('orders')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          delivery_estimate: deliveryEstimate
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
       
       if (error) {
         console.error("Failed to complete order:", error);
         throw error;
       }
       
-      console.log("Successfully moved order to completed");
+      console.log("Successfully updated order to completed");
 
       // Get order details for notifications
       const order = orders.find(o => o.id === orderId);
       if (!order) throw new Error("Order not found in local state");
-
-      // Update the gift_order_items status if it exists
-      const { data: orderItems, error: itemsError } = await supabase
-        .from('gift_order_items')
-        .select('id')
-        .eq('order_id', orderId);
-
-      if (!itemsError && orderItems && orderItems.length > 0) {
-        console.log("Updating gift order items status to completed");
-        await supabase
-          .from('gift_order_items')
-          .update({ 
-            status: 'completed',
-          })
-          .eq('order_id', orderId);
-      }
-
-      // Also update the gift_request status to completed if it exists
-      const { data: giftRequests, error: giftReqError } = await supabase
-        .from('gift_requests')
-        .select('id')
-        .eq('product_url', order.product_url)
-        .eq('sender_id', order.user_id)
-        .eq('influencer_id', order.influencer_id);
-
-      if (!giftReqError && giftRequests && giftRequests.length > 0) {
-        console.log("Updating gift request status to completed:", giftRequests[0].id);
-        await supabase
-          .from('gift_requests')
-          .update({ 
-            status: 'completed',
-            delivery_estimate: deliveryEstimate,
-            completed_at: new Date().toISOString()
-          })
-          .eq('id', giftRequests[0].id);
-      }
 
       // Send notification to influencer
       if (order.influencer_id) {
@@ -109,93 +79,42 @@ export const useOrderActions = (
     }
   };
 
-  // Add a function to handle individual gift order item status changes
-  const handleGiftOrderItemStatusChange = async (
-    itemId: string, 
-    newStatus: 'accepted' | 'rejected' | 'processing' | 'completed',
-    orderId?: string
-  ) => {
-    try {
-      console.log(`Changing gift order item ${itemId} status to ${newStatus}`);
-      
-      // Update the gift order item status
-      const { error } = await supabase
-        .from('gift_order_items')
-        .update({ status: newStatus })
-        .eq('id', itemId);
-        
-      if (error) throw error;
-      
-      toast({
-        title: "Status Updated",
-        description: `Item status has been updated to ${newStatus}`,
-      });
-      
-      // If order ID was provided, check if all items in the order are in the same status
-      if (orderId) {
-        const { data: items, error: itemsError } = await supabase
-          .from('gift_order_items')
-          .select('status')
-          .eq('order_id', orderId);
-          
-        if (!itemsError && items) {
-          const allSameStatus = items.every(i => i.status === newStatus);
-          
-          if (allSameStatus && items.length > 0) {
-            // If all items have the same status, update the order status
-            const { error: orderError } = await supabase
-              .from('gift_orders')
-              .update({ status: newStatus })
-              .eq('id', orderId);
-              
-            if (orderError) {
-              console.error("Error updating order status:", orderError);
-            }
-          }
-        }
-      }
-      
-      // Refresh orders list if necessary
-      if (fetchAllOrders) {
-        await fetchAllOrders();
-      }
-    } catch (error: any) {
-      console.error("Error updating item status:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update the item status",
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     console.log(`Admin action: Changing order ${orderId} status to ${newStatus}`);
     
     try {
+      let updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+
+      // Map admin actions to database status
       if (newStatus === 'approved') {
-        console.log("Moving order to gift_request for influencer approval...");
+        updateData.status = 'approved_waiting_influencer';
+        updateData.admin_approved_at = new Date().toISOString();
         
-        // Move order to gift_requests for influencer approval
-        const { error } = await supabase.rpc('move_order_to_gift_request', {
-          order_id: orderId
-        });
-
-        if (error) {
-          console.error("Error moving order to gift_request:", error);
-          throw error;
-        }
-        
-        console.log("Successfully moved order to gift_request");
-
       } else if (newStatus === 'rejected') {
-        console.log("Order rejection is handled by AdminOrderCard component");
+        updateData.status = 'rejected_by_admin';
+        updateData.rejected_by = 'admin';
+        updateData.cancelled_at = new Date().toISOString();
         
       } else if (newStatus === 'completed') {
-        console.log("Moving order to completed status...");
-        
         await handleOrderComplete(orderId);
         return; // handleOrderComplete already handles notifications and refresh
+      } else {
+        // Direct status update
+        updateData.status = newStatus;
+      }
+
+      console.log("Updating order with data:", updateData);
+
+      const { error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', orderId);
+
+      if (error) {
+        console.error("Error updating order status:", error);
+        throw error;
       }
 
       toast({
@@ -213,6 +132,34 @@ export const useOrderActions = (
       toast({
         title: "Error",
         description: error.message || "Failed to update order status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleGiftOrderItemStatusChange = async (
+    itemId: string, 
+    newStatus: 'accepted' | 'rejected' | 'processing' | 'completed',
+    orderId?: string
+  ) => {
+    // This function is kept for compatibility but may not be needed with unified orders table
+    try {
+      console.log(`Changing gift order item ${itemId} status to ${newStatus}`);
+      
+      toast({
+        title: "Status Updated",
+        description: `Item status has been updated to ${newStatus}`,
+      });
+      
+      // Refresh orders list if necessary
+      if (fetchAllOrders) {
+        await fetchAllOrders();
+      }
+    } catch (error: any) {
+      console.error("Error updating item status:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update the item status",
         variant: "destructive"
       });
     }
