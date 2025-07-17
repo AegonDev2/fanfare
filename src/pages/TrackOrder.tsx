@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useNavigation } from "@/components/navigation/useNavigation";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import OrderCard from "@/components/tracking/OrderCard";
@@ -9,8 +10,13 @@ import Navbar from '@/components/navigation/Navbar';
 
 const TrackOrder = () => {
   const [navOpen, setNavOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get('order');
   const { userRole } = useNavigation();
   const { orders, loading, cancelOrder } = useOrderTracking();
+
+  // Filter orders to show only the specific order if orderId is provided
+  const filteredOrders = orderId ? orders.filter(order => order.id === orderId) : orders;
 
   return (
     <>
@@ -24,9 +30,13 @@ const TrackOrder = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
               <Package className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Track Your Orders</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {orderId ? 'Track Gift Request' : 'Track Your Orders'}
+            </h1>
             <p className="text-gray-600 max-w-md mx-auto">
-              {userRole === "fan"
+              {orderId 
+                ? "Monitor this specific gift request and its delivery status."
+                : userRole === "fan"
                 ? "Monitor your gift orders and their delivery status."
                 : userRole === "influencer"
                 ? "View and track all the gift requests you've received."
@@ -43,14 +53,18 @@ const TrackOrder = () => {
               </div>
               <p className="text-gray-500 font-medium">Loading your orders...</p>
             </div>
-          ) : orders.length === 0 ? (
+          ) : filteredOrders.length === 0 ? (
             <div className="text-center py-16">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
                 <Clock className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {orderId ? 'Gift request not found' : 'No orders found'}
+              </h3>
               <p className="text-gray-500 mb-8 max-w-sm mx-auto">
-                {userRole === "fan" 
+                {orderId 
+                  ? "The requested gift order could not be found or you don't have permission to view it."
+                  : userRole === "fan" 
                   ? "When you place gift orders, they will appear here for tracking."
                   : "When fans send you gift requests, they will appear here."
                 }
@@ -58,7 +72,7 @@ const TrackOrder = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <OrderCard
                   key={order.id}
                   order={order}
