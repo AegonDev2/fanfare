@@ -32,3 +32,18 @@ export interface OrderFormData {
   productDetails: ProductDetails;
   shippingAddress: InfluencerAddress;
 }
+
+// Gift-specific interface to clarify the purpose
+export interface GiftRequest {
+  id: string;
+  sender_id: string;
+  influencer_id: string;
+  product_url: string;
+  product_title?: string;
+  product_price?: number;
+  message?: string;
+  status: string;
+  created_at: string;
+  admin_approved?: boolean;
+  influencer_response?: string;
+}

@@ -40,6 +40,17 @@ export function useOrderSubmission() {
 
     console.log("Submitting order with product preview:", productPreview);
 
+    // Prevent self-gifting
+    if (user.id === influencerId) {
+      setOrderError("You cannot send gifts to yourself");
+      toast({
+        title: "Invalid Selection",
+        description: "You cannot send gifts to yourself",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     setPaymentStep('processing');
     setOrderError(null);
@@ -65,6 +76,7 @@ export function useOrderSubmission() {
         .from('orders')
         .insert({
           user_id: user.id,
+          sender_id: user.id, // Ensure sender_id is set
           influencer_id: influencerId,
           product_url: giftUrl,
           product_title: productPreview.name,
@@ -73,6 +85,7 @@ export function useOrderSubmission() {
           total_amount: totalAmount,
           message: message,
           status: 'pending_admin_approval',
+          gift_type: true, // Ensure all orders are gifts
           shipping_address: {
             name: influencerAddress.name,
             street_address: influencerAddress.street_address,

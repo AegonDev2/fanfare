@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Image, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ImageViewer from "@/components/common/ImageViewer";
+import { useUser } from "@/hooks/useUser";
 
 const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, onSubmit?: () => void }) => {
   const [productUrl, setProductUrl] = useState("");
@@ -19,6 +20,7 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useUser();
 
   // Generate website preview when URL changes
   useEffect(() => {
@@ -76,6 +78,11 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("You must be logged in.");
+      
+      // Prevent self-gifting
+      if (user.id === influencerId) {
+        throw new Error("You cannot send gifts to yourself.");
+      }
       
       console.log("Creating gift request with:", {
         product_url: productUrl,

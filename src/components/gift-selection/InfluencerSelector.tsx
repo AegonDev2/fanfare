@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useInfluencers, DatabaseInfluencer } from '@/hooks/useInfluencers';
+import { useUser } from '@/hooks/useUser';
 
 interface InfluencerSelectorProps {
   onSelect: (influencerId: string) => void;
@@ -15,6 +16,10 @@ interface InfluencerSelectorProps {
 export default function InfluencerSelector({ onSelect, selectedInfluencerId }: InfluencerSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: influencers = [], isLoading } = useInfluencers(searchQuery);
+  const { user } = useUser();
+
+  // Filter out the current user to prevent self-gifting
+  const filteredInfluencers = influencers.filter(influencer => influencer.id !== user?.id);
 
   if (isLoading) {
     return (
@@ -37,13 +42,13 @@ export default function InfluencerSelector({ onSelect, selectedInfluencerId }: I
         />
       </div>
 
-      {influencers.length === 0 ? (
+      {filteredInfluencers.length === 0 ? (
         <div className="text-center py-8 border rounded-md border-dashed border-gray-300">
           <p className="text-gray-500">No influencers found</p>
         </div>
       ) : (
         <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-          {influencers.map((influencer) => (
+          {filteredInfluencers.map((influencer) => (
             <div
               key={influencer.id}
               className={cn(
