@@ -538,6 +538,81 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          admin_approved_at: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string | null
+          delivery_estimate: string | null
+          id: string
+          influencer_id: string | null
+          influencer_response: string | null
+          influencer_response_at: string | null
+          message: string | null
+          platform_fee: number | null
+          product_price: number | null
+          product_title: string | null
+          product_url: string
+          rejected_by: string | null
+          rejection_reason: string | null
+          shipping_address: Json | null
+          status: string
+          status_history: Json | null
+          total_amount: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_approved_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          delivery_estimate?: string | null
+          id?: string
+          influencer_id?: string | null
+          influencer_response?: string | null
+          influencer_response_at?: string | null
+          message?: string | null
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url: string
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          shipping_address?: Json | null
+          status?: string
+          status_history?: Json | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_approved_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          delivery_estimate?: string | null
+          id?: string
+          influencer_id?: string | null
+          influencer_response?: string | null
+          influencer_response_at?: string | null
+          message?: string | null
+          platform_fee?: number | null
+          product_price?: number | null
+          product_title?: string | null
+          product_url?: string
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          shipping_address?: Json | null
+          status?: string
+          status_history?: Json | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders_completed: {
         Row: {
           completed_at: string
@@ -1021,6 +1096,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_order_by_influencer: {
+        Args: { order_id: string; response?: string }
+        Returns: boolean
+      }
+      approve_order_for_influencer: {
+        Args: { order_id: string; delivery_estimate?: string }
+        Returns: boolean
+      }
+      cancel_order_by_user: {
+        Args: { order_id: string }
+        Returns: boolean
+      }
+      complete_order: {
+        Args: { order_id: string; delivery_estimate?: string }
+        Returns: boolean
+      }
       consolidate_user_wallets: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1078,6 +1169,14 @@ export type Database = {
         Args: { query: string }
         Returns: Json
       }
+      reject_order: {
+        Args: {
+          order_id: string
+          rejection_reason: string
+          rejected_by?: string
+        }
+        Returns: boolean
+      }
       reject_order_with_reason: {
         Args: {
           order_id: string
@@ -1088,6 +1187,16 @@ export type Database = {
       }
       top_up_wallet: {
         Args: { p_user_id: string; p_amount: number; p_description: string }
+        Returns: boolean
+      }
+      update_order_status: {
+        Args: {
+          order_id: string
+          new_status: string
+          delivery_estimate?: string
+          rejection_reason?: string
+          influencer_response?: string
+        }
         Returns: boolean
       }
     }

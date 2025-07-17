@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,15 +22,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface OrderData {
   id: string;
-  user_id?: string;
-  sender_id?: string;
+  user_id: string;
   product_title: string;
   product_url: string;
   product_price: number;
   platform_fee?: number;
   total_amount?: number;
   created_at: string;
-  status?: string;
+  status: string;
   influencer_id?: string;
   message?: string;
   fan_email?: string;
@@ -57,18 +57,16 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
   const { toast } = useToast();
 
   const fetchWalletBalance = async () => {
-    if (!order.user_id && !order.sender_id) return;
+    if (!order.user_id) return;
     
     setWalletLoading(true);
     try {
-      const userId = order.user_id || order.sender_id;
-      console.log("Fetching wallet for user:", userId);
+      console.log("Fetching wallet for user:", order.user_id);
       
-      // Use maybeSingle instead of single to handle cases where wallet doesn't exist
       const { data, error } = await supabase
         .from('wallets')
         .select('balance, user_id')
-        .eq('user_id', userId)
+        .eq('user_id', order.user_id)
         .maybeSingle();
 
       if (error) {
@@ -82,12 +80,11 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
       }
 
       if (!data) {
-        // Wallet doesn't exist, create one with 0 balance
-        console.log("No wallet found, creating wallet for user:", userId);
+        console.log("No wallet found, creating wallet for user:", order.user_id);
         const { data: newWallet, error: createError } = await supabase
           .from('wallets')
           .insert({
-            user_id: userId,
+            user_id: order.user_id,
             balance: 0
           })
           .select('balance, user_id')
@@ -136,37 +133,18 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
     try {
       console.log("Approving order:", order.id, "with delivery date:", deliveryDate);
       
-      // Check if order exists in orders_under_process first
-      const { data: existingOrder, error: checkError } = await supabase
-        .from('orders_under_process')
-        .select('id')
-        .eq('id', order.id)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error("Error checking order:", checkError);
-        throw checkError;
-      }
-
-      if (!existingOrder) {
-        // Order already processed or doesn't exist
-        toast({
-          title: "Order Already Processed",
-          description: "This order has already been processed or moved to gift requests",
-          variant: "default"
-        });
-        onStatusChange(order.id, 'already_processed');
-        return;
-      }
-
-      // Move order to gift_requests for influencer approval with delivery estimate
-      const { error } = await supabase.rpc('move_order_to_gift_request', {
-        order_id: order.id,
-        delivery_estimate: deliveryDate
-      });
+      // Update order status to approved_waiting_influencer
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: 'approved_waiting_influencer',
+          admin_approved_at: new Date().toISOString(),
+          delivery_estimate: deliveryDate
+        })
+        .eq('id', order.id);
 
       if (error) {
-        console.error("RPC error:", error);
+        console.error("Error approving order:", error);
         throw error;
       }
 
@@ -199,11 +177,14 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
     }
 
     try {
-      const { error } = await supabase.rpc('reject_order_with_reason', {
-        order_id: order.id,
-        rejection_reason: rejectionReason,
-        rejected_by: 'admin'
-      });
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: 'rejected_by_admin',
+          rejection_reason: rejectionReason,
+          rejected_by: 'admin'
+        })
+        .eq('id', order.id);
 
       if (error) throw error;
 
@@ -228,6 +209,42 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
   const totalAmount = order.total_amount || (order.product_price + (order.platform_fee || 5));
   const hasSufficientBalance = walletData ? walletData.balance >= totalAmount : false;
 
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'pending_admin_approval':
+        return 'Pending';
+      case 'approved_waiting_influencer':
+        return 'Processing';
+      case 'accepted':
+        return 'Accepted';
+      case 'completed':
+        return 'Completed';
+      case 'rejected_by_admin':
+      case 'rejected_by_influencer':
+        return 'Rejected';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending_admin_approval':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approved_waiting_influencer':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'accepted':
+        return 'bg-green-100 text-green-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'rejected_by_admin':
+      case 'rejected_by_influencer':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow">
       <CardHeader>
@@ -236,19 +253,10 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
             {order.product_title}
           </CardTitle>
           <Badge 
-            variant={
-              order.status === 'pending' ? 'secondary' :
-              order.status === 'under process' ? 'outline' :
-              order.status === 'completed' ? 'secondary' : 'secondary'
-            }
-            className={
-              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-              order.status === 'under process' ? 'bg-blue-100 text-blue-800 border-blue-300' :
-              order.status === 'completed' ? 'bg-green-100 text-green-800' : ''
-            }
+            variant="outline"
+            className={getStatusColor(order.status)}
           >
-            {order.status === 'under process' ? 'Processing' : 
-             order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
+            {getStatusDisplay(order.status)}
           </Badge>
         </div>
         <p className="text-sm text-gray-500">Order ID: {order.id}</p>
@@ -326,7 +334,7 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
         </div>
 
         <div className="flex gap-2 pt-2">
-          {(order.status === 'pending' || order.status === 'under_process') && (
+          {order.status === 'pending_admin_approval' && (
             <>
               <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
                 <DialogTrigger asChild>

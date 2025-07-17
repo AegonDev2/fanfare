@@ -12,6 +12,26 @@ interface GiftRequestCardProps {
 }
 
 export const GiftRequestCard = ({ request, onDetailsClick }: GiftRequestCardProps) => {
+  const getDisplayStatus = (status: string) => {
+    switch (status) {
+      case 'pending_admin_approval':
+        return 'pending';
+      case 'approved_waiting_influencer':
+        return 'under process';
+      case 'accepted':
+        return 'accepted';
+      case 'rejected_by_admin':
+      case 'rejected_by_influencer':
+        return 'rejected';
+      case 'completed':
+        return 'completed';
+      case 'cancelled_by_user':
+        return 'cancelled';
+      default:
+        return status;
+    }
+  };
+
   return (
     <Card key={request.id} className="overflow-hidden bg-white shadow-sm transition-all hover:shadow">
       <CardContent className="p-0">
@@ -22,7 +42,7 @@ export const GiftRequestCard = ({ request, onDetailsClick }: GiftRequestCardProp
                 {request.product_title || "Gift Request"}
               </h3>
               <div className="ml-4 flex-shrink-0">
-                <GiftStatusBadge status={request.status} />
+                <GiftStatusBadge status={getDisplayStatus(request.status)} />
               </div>
             </div>
             <div className="text-sm text-gray-500 mt-1">
