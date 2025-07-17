@@ -15,9 +15,9 @@ interface OrderTabsContentProps {
 }
 
 export default function OrderTabsContent({ orders, onStatusChange }: OrderTabsContentProps) {
-  // Filter orders by status using the new unified status system
-  const pendingOrders = orders.filter(o => o.status === 'pending_admin_approval');
-  const underProcessOrders = orders.filter(o => o.status === 'approved_waiting_influencer');
+  // Filter orders by status using the correct unified status system
+  const pendingOrders = orders.filter(o => o.status === 'under_process');
+  const underProcessOrders = orders.filter(o => o.status === 'processing');
   const acceptedOrders = orders.filter(o => o.status === 'accepted');
   const completedOrders = orders.filter(o => o.status === 'completed');
 
