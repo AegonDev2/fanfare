@@ -7,43 +7,26 @@ import {
   CheckCircle2
 } from "lucide-react";
 import AdminOrderCard from "./AdminOrderCard";
-
-interface OrderData {
-  id: string;
-  user_id?: string;
-  sender_id?: string;
-  product_title: string;
-  product_url: string;
-  product_price: number;
-  platform_fee?: number;
-  total_amount?: number;
-  created_at: string;
-  status?: string;
-  influencer_id?: string;
-  message?: string;
-  fan_email?: string;
-  fan_name?: string;
-  influencer_name?: string;
-}
+import type { OrderDetails } from "@/types/admin";
 
 interface OrderTabsContentProps {
-  orders: OrderData[];
+  orders: OrderDetails[];
   onStatusChange: (orderId: string, newStatus: string) => void;
 }
 
 export default function OrderTabsContent({ orders, onStatusChange }: OrderTabsContentProps) {
-  // Fix status mapping - orders from orders_under_process should be treated as "pending" for admin approval  
-  const pendingOrders = orders.filter(o => o.status === 'under_process');
-  const underProcessOrders = orders.filter(o => o.status === 'processing');
-  const completedOrders = orders.filter(o => o.status === 'completed');
+  // Filter orders by status using the new unified status system
+  const pendingOrders = orders.filter(o => o.status === 'pending_admin_approval');
+  const underProcessOrders = orders.filter(o => o.status === 'approved_waiting_influencer');
   const acceptedOrders = orders.filter(o => o.status === 'accepted');
+  const completedOrders = orders.filter(o => o.status === 'completed');
 
   console.log("OrderTabsContent - Filtering orders:", {
     total: orders.length,
     pending: pendingOrders.length,
     processing: underProcessOrders.length,
-    completed: completedOrders.length,
-    accepted: acceptedOrders.length
+    accepted: acceptedOrders.length,
+    completed: completedOrders.length
   });
 
   const EmptyState = ({ icon: Icon, message }: { icon: any, message: string }) => (
@@ -55,7 +38,7 @@ export default function OrderTabsContent({ orders, onStatusChange }: OrderTabsCo
     </Card>
   );
 
-  const OrderGrid = ({ orders }: { orders: OrderData[] }) => (
+  const OrderGrid = ({ orders }: { orders: OrderDetails[] }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {orders.map(order => (
         <AdminOrderCard key={order.id} order={order} onStatusChange={onStatusChange} />
@@ -81,19 +64,19 @@ export default function OrderTabsContent({ orders, onStatusChange }: OrderTabsCo
         )}
       </TabsContent>
 
-      <TabsContent value="completed" className="mt-6">
-        {completedOrders.length > 0 ? (
-          <OrderGrid orders={completedOrders} />
-        ) : (
-          <EmptyState icon={CheckCircle2} message="No completed orders" />
-        )}
-      </TabsContent>
-
       <TabsContent value="accepted" className="mt-6">
         {acceptedOrders.length > 0 ? (
           <OrderGrid orders={acceptedOrders} />
         ) : (
           <EmptyState icon={CheckCircle2} message="No accepted orders" />
+        )}
+      </TabsContent>
+
+      <TabsContent value="completed" className="mt-6">
+        {completedOrders.length > 0 ? (
+          <OrderGrid orders={completedOrders} />
+        ) : (
+          <EmptyState icon={CheckCircle2} message="No completed orders" />
         )}
       </TabsContent>
     </>

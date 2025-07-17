@@ -25,16 +25,25 @@ export const useGiftsSent = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchSentGiftRequests = useCallback(async () => {
+    console.log("useGiftsSent - Starting fetch");
     setLoading(true);
     setError(null);
+    
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      if (userError) {
+        console.error("useGiftsSent - User auth error:", userError);
+        throw userError;
+      }
+      
       if (!user) {
+        console.log("useGiftsSent - No authenticated user");
         setRequests([]);
         setLoading(false);
         return;
       }
+      
+      console.log("useGiftsSent - Fetching orders for user:", user.id);
       
       // Fetch all orders sent by this user from the unified orders table
       const { data: orders, error: ordersError } = await supabase
@@ -46,32 +55,51 @@ export const useGiftsSent = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error("useGiftsSent - Orders fetch error:", ordersError);
+        throw ordersError;
+      }
 
-      if (orders) {
-        const mappedRequests = orders.map((order: any) => ({
-          id: order.id,
-          product_url: order.product_url,
-          product_title: order.product_title,
-          product_price: order.product_price,
-          message: order.message,
-          created_at: order.created_at,
-          status: order.status,
-          influencer_name: order.influencer?.name || 'Unknown Influencer',
-          platform_fee: order.platform_fee,
-          total_amount: order.total_amount,
-          completed_at: order.completed_at,
-          delivery_estimate: order.delivery_estimate
-        }));
+      console.log("useGiftsSent - Raw orders data:", orders);
+
+      if (orders && orders.length > 0) {
+        const mappedRequests = orders.map((order: any) => {
+          console.log("useGiftsSent - Mapping order:", { 
+            id: order.id, 
+            status: order.status, 
+            influencer: order.influencer,
+            product_title: order.product_title 
+          });
+          
+          return {
+            id: order.id,
+            product_url: order.product_url,
+            product_title: order.product_title,
+            product_price: order.product_price,
+            message: order.message,
+            created_at: order.created_at,
+            status: order.status,
+            influencer_name: order.influencer?.name || 'Unknown Influencer',
+            platform_fee: order.platform_fee,
+            total_amount: order.total_amount,
+            completed_at: order.completed_at,
+            delivery_estimate: order.delivery_estimate
+          };
+        });
+        
+        console.log("useGiftsSent - Mapped requests:", mappedRequests);
         setRequests(mappedRequests);
       } else {
+        console.log("useGiftsSent - No orders found");
         setRequests([]);
       }
     } catch (error: any) {
-      setError(error.message || "Failed to load gifts");
+      console.error("useGiftsSent - Error:", error);
+      const errorMessage = error.message || "Failed to load gifts";
+      setError(errorMessage);
       toast({
         title: "Error loading gifts",
-        description: error.message || "An error occurred while loading your gifts",
+        description: errorMessage,
         variant: "destructive",
       });
       setRequests([]);

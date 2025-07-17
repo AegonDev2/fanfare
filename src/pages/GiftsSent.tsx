@@ -15,16 +15,25 @@ const GiftsSent = () => {
   const {
     requests,
     loading,
+    error,
     fetchSentGiftRequests
   } = useGiftsSent();
 
-  const handleDetailsClick = () => {
-    navigate('/track-order');
+  const handleDetailsClick = (request: any) => {
+    navigate('/track-order', { state: { orderId: request.id } });
   };
 
   useEffect(() => {
+    console.log("GiftsSent - Component mounted, fetching sent gift requests");
     fetchSentGiftRequests();
   }, [fetchSentGiftRequests]);
+
+  console.log("GiftsSent - Current state:", { 
+    loading, 
+    error, 
+    requestsCount: requests.length,
+    requests: requests.map(r => ({ id: r.id, status: r.status, title: r.product_title }))
+  });
 
   return (
     <>
@@ -46,6 +55,22 @@ const GiftsSent = () => {
                 </Button>
               </div>
             </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-red-800 text-sm">
+                  Error loading gifts: {error}
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => fetchSentGiftRequests()} 
+                  className="mt-2"
+                >
+                  Try Again
+                </Button>
+              </div>
+            )}
 
             {loading ? (
               <LoadingGiftsState />
