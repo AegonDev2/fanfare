@@ -1,6 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@/hooks/useUser";
+import { supabase } from "@/integrations/supabase/client";
+import FloatingHeader from '@/components/ui/floating-header';
+import Navbar from '@/components/navigation/Navbar';
+import FanEditProfile from '@/components/profile/FanEditProfile';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/hooks/useUser";
 import { User, MapPin, Shirt, Plus, X } from "lucide-react";
-import FloatingHeader from '@/components/ui/floating-header';
-import Navbar from '@/components/navigation/Navbar';
 import { useInfluencerProfile } from "@/hooks/useInfluencerProfile";
 import { useInfluencerWishlist } from "@/hooks/useInfluencerWishlist";
 import WishlistGrid from "@/components/wishlist/WishlistGrid";
@@ -53,7 +54,78 @@ export default function EditProfile() {
   const { user } = useUser();
   const { toast } = useToast();
   const [navOpen, setNavOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [userType, setUserType] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  // Check user type first
+  useEffect(() => {
+    const checkUserType = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        setUserType(profile?.user_type || null);
+      } catch (error: any) {
+        console.error('Error checking user type:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load user information.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUserType();
+  }, [user?.id]);
+
+  // Redirect if not authenticated
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
+
+  // Show loading while checking user type
+  if (loading) {
+    return (
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        <div className="min-h-screen bg-background pt-20 p-4 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold">Loading...</h2>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Render fan edit profile if user is a fan
+  if (userType === 'fan') {
+    return (
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        <div className="min-h-screen bg-background pt-20 p-4">
+          <div className="max-w-2xl mx-auto">
+            <FanEditProfile />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Continue with influencer edit profile implementation
   const [activeTab, setActiveTab] = useState<'profile' | 'sizes' | 'addresses' | 'wishlist'>('profile');
   const [newHobby, setNewHobby] = useState('');
   const [newFoodPref, setNewFoodPref] = useState('');
