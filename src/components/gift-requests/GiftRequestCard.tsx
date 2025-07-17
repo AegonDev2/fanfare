@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Gift, Calendar, DollarSign, User, ExternalLink, Clock } from "lucide-react";
+import { Gift, Calendar, DollarSign, User, ExternalLink, Clock, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 interface GiftRequest {
   id: string;
   sender_id: string;
@@ -37,9 +38,8 @@ export default function GiftRequestCard({
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [loading, setLoading] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const handleAccept = async () => {
     setLoading(true);
     try {
@@ -133,6 +133,11 @@ export default function GiftRequestCard({
     }
   };
   const showActionButtons = request.admin_approved && request.status === 'approved_waiting_influencer' && !request.influencer_response;
+  const showTrackingButton = ['accepted', 'completed'].includes(request.status);
+
+  const handleTrackOrder = () => {
+    navigate(`/track-order?order=${request.id}`);
+  };
   return <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
         <div className="flex items-start justify-between">
@@ -210,6 +215,13 @@ export default function GiftRequestCard({
                   </div>
                 </DialogContent>
               </Dialog>
+            </div>}
+
+          {showTrackingButton && <div className="pt-3 border-t">
+              <Button onClick={handleTrackOrder} variant="outline" className="w-full flex items-center gap-2">
+                <Truck className="h-4 w-4" />
+                Track Order
+              </Button>
             </div>}
         </div>
       </CardContent>

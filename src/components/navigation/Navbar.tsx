@@ -86,12 +86,6 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       action: () => handleNavigation("/gift-requests")
     }] : []),
     {
-      icon: Package,
-      label: "Track Orders",
-      path: "/track-order",
-      action: () => handleNavigation("/track-order")
-    },
-    {
       icon: Trophy,
       label: "Leaderboard",
       path: "/leaderboard",
