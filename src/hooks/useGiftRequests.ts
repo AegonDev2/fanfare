@@ -4,13 +4,14 @@ import { useUser } from '@/hooks/useUser';
 
 export interface GiftRequest {
   id: string;
-  sender_id: string;
-  influencer_id: string;
+  sender_id: string | null;
+  user_id: string;
+  influencer_id: string | null;
   product_title: string | null;
   product_url: string;
   product_price: number | null;
   message: string | null;
-  status: 'pending' | 'accepted' | 'rejected' | 'under process' | 'completed';
+  status: string;
   created_at: string;
   updated_at: string;
   completed_at?: string | null;
@@ -19,6 +20,9 @@ export interface GiftRequest {
   influencer_response: string | null;
   influencer_response_at: string | null;
   delivery_estimate?: string | null;
+  gift_type: boolean;
+  total_amount: number | null;
+  platform_fee: number | null;
   sender?: {
     name: string;
     email: string;
@@ -42,11 +46,12 @@ export const useGiftRequests = () => {
       
       console.log("Fetching gift requests for influencer:", user.id);
       
-      // First fetch the gift requests
+      // Fetch gift orders from unified orders table
       const { data: ordersData, error: fetchError } = await supabase
-        .from('gift_requests')
+        .from('orders')
         .select('*')
         .eq('influencer_id', user.id)
+        .eq('gift_type', true)
         .order('created_at', { ascending: false });
 
       if (fetchError) {
@@ -56,8 +61,8 @@ export const useGiftRequests = () => {
 
       console.log("Fetched gift requests:", ordersData?.length);
       
-      // Fetch profiles for all sender_ids
-      const senderIds = ordersData?.map(order => order.sender_id).filter(Boolean) || [];
+      // Fetch profiles for all sender_ids (user_id for gifts)
+      const senderIds = ordersData?.map(order => order.sender_id || order.user_id).filter(Boolean) || [];
       let profilesData: any[] = [];
       
       if (senderIds.length > 0) {
@@ -69,11 +74,13 @@ export const useGiftRequests = () => {
       }
 
       // Transform the data to match GiftRequest interface
-      const transformedData = (ordersData || []).map(request => {
-        const senderProfile = profilesData.find(p => p.id === request.sender_id);
+      const transformedData = (ordersData || []).map(order => {
+        const senderId = order.sender_id || order.user_id;
+        const senderProfile = profilesData.find(p => p.id === senderId);
         return {
-          ...request,
-          status: request.status as GiftRequest['status'],
+          ...order,
+          sender_id: senderId,
+          status: order.status,
           sender_name: senderProfile?.name,
           sender_email: senderProfile?.email,
           sender: senderProfile ? { name: senderProfile.name, email: senderProfile.email } : undefined
@@ -94,7 +101,7 @@ export const useGiftRequests = () => {
 
   const getPendingRequests = () => {
     return requests.filter(request => 
-      request.admin_approved && request.status === 'pending' && !request.influencer_response
+      request.admin_approved && request.status === 'approved_waiting_influencer' && !request.influencer_response
     );
   };
 
@@ -107,7 +114,7 @@ export const useGiftRequests = () => {
 
   const getRejectedRequests = () => {
     return requests.filter(request => 
-      request.status === 'rejected'
+      request.status === 'rejected_by_influencer' || request.status === 'rejected_by_admin'
     );
   };
 

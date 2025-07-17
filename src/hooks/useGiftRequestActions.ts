@@ -38,11 +38,11 @@ export const useGiftRequestActions = (
 
   const updateRequestStatus = async (id: string, status: 'accepted' | 'rejected') => {
     try {
-      const newStatus = status === 'accepted' ? 'accepted' : 'rejected';
+      const newStatus = status === 'accepted' ? 'accepted' : 'rejected_by_influencer';
       
-      // Update gift_requests table
+      // Update orders table
       const { error } = await supabase
-        .from('gift_requests')
+        .from('orders')
         .update({ 
           status: newStatus,
           influencer_response: status,
@@ -95,9 +95,17 @@ export const useGiftRequestActions = (
 
           console.log("Updating order with shipping address:", shippingAddress);
 
-          // Note: gift_requests table doesn't have shipping_address field
-          // If needed, we could add it or handle it differently
-          console.log("Shipping address prepared:", shippingAddress);
+          // Update the order with shipping address
+          const { error: updateAddressError } = await supabase
+            .from('orders')
+            .update({ 
+              shipping_address: shippingAddress
+            })
+            .eq('id', id);
+
+          if (updateAddressError) {
+            console.error("Failed to update shipping address:", updateAddressError);
+          }
 
           // Send notification to admin about new approved gift
           await sendAdminNotification(
