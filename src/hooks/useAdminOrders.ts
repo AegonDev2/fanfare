@@ -59,8 +59,10 @@ export const useAdminOrders = () => {
           let adminStatus = order.status;
           if (order.status === 'pending_admin_approval') {
             adminStatus = 'under_process'; // For admin panel display
-          } else if (order.status === 'approved_waiting_influencer') {
-            adminStatus = 'processing'; // For admin panel display
+          } else if (order.status === 'approved_waiting_influencer' || order.status === 'accepted') {
+            adminStatus = 'processing'; // For admin panel display - both waiting for influencer and accepted by influencer
+          } else if (order.status === 'rejected_by_admin' || order.status === 'rejected_by_influencer' || order.status === 'completed') {
+            adminStatus = 'completed'; // For admin panel display - all final states
           }
 
           const user = userData.find(u => u.id === order.user_id);

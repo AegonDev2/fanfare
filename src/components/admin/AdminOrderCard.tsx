@@ -30,6 +30,7 @@ interface OrderData {
   total_amount?: number;
   created_at: string;
   status: string;
+  original_status: string;
   influencer_id?: string;
   message?: string;
   fan_email?: string;
@@ -206,29 +207,58 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
     }
   };
 
-  const totalAmount = order.total_amount || (order.product_price + (order.platform_fee || 5));
-  const hasSufficientBalance = walletData ? walletData.balance >= totalAmount : false;
+  const handleComplete = async () => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', order.id);
 
-  const getStatusDisplay = (status: string) => {
-    switch (status) {
-      case 'pending_admin_approval':
-        return 'Pending';
-      case 'approved_waiting_influencer':
-        return 'Processing';
-      case 'accepted':
-        return 'Accepted';
-      case 'completed':
-        return 'Completed';
-      case 'rejected_by_admin':
-      case 'rejected_by_influencer':
-        return 'Rejected';
-      default:
-        return status.charAt(0).toUpperCase() + status.slice(1);
+      if (error) throw error;
+
+      toast({
+        title: "Order Completed",
+        description: "Order has been marked as completed",
+      });
+
+      onStatusChange(order.id, 'completed');
+    } catch (error: any) {
+      console.error("Error completing order:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to complete order", 
+        variant: "destructive"
+      });
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const totalAmount = order.total_amount || (order.product_price + (order.platform_fee || 5));
+  const hasSufficientBalance = walletData ? walletData.balance >= totalAmount : false;
+
+  const getStatusDisplay = (originalStatus: string) => {
+    switch (originalStatus) {
+      case 'pending_admin_approval':
+        return 'Pending Admin Approval';
+      case 'approved_waiting_influencer':
+        return 'Waiting for Influencer';
+      case 'accepted':
+        return 'Accepted by Influencer';
+      case 'completed':
+        return 'Completed';
+      case 'rejected_by_admin':
+        return 'Rejected by Admin';
+      case 'rejected_by_influencer':
+        return 'Rejected by Influencer';
+      default:
+        return originalStatus.charAt(0).toUpperCase() + originalStatus.slice(1);
+    }
+  };
+
+  const getStatusColor = (originalStatus: string) => {
+    switch (originalStatus) {
       case 'pending_admin_approval':
         return 'bg-yellow-100 text-yellow-800';
       case 'approved_waiting_influencer':
@@ -254,9 +284,9 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
           </CardTitle>
           <Badge 
             variant="outline"
-            className={getStatusColor(order.status)}
+            className={getStatusColor(order.original_status)}
           >
-            {getStatusDisplay(order.status)}
+            {getStatusDisplay(order.original_status)}
           </Badge>
         </div>
         <p className="text-sm text-gray-500">Order ID: {order.id}</p>
@@ -334,7 +364,7 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
         </div>
 
         <div className="flex gap-2 pt-2">
-          {order.status === 'pending_admin_approval' && (
+          {order.original_status === 'pending_admin_approval' && (
             <>
               <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
                 <DialogTrigger asChild>
@@ -423,6 +453,17 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
                 </DialogContent>
               </Dialog>
             </>
+          )}
+
+          {(order.original_status === 'approved_waiting_influencer' || order.original_status === 'accepted') && (
+            <Button
+              size="sm"
+              className="flex-1"
+              onClick={() => handleComplete()}
+            >
+              <Truck className="h-4 w-4 mr-1" />
+              Mark Complete
+            </Button>
           )}
 
           <Button
