@@ -132,7 +132,9 @@ export default function GiftRequestCard({
         return <Badge variant="secondary">{request.status}</Badge>;
     }
   };
-  const showActionButtons = request.admin_approved && request.status === 'approved_waiting_influencer' && !request.influencer_response;
+  const showActionButtons = (request.status === 'approved_waiting_influencer' || 
+                            (request.admin_approved && request.status === 'pending_admin_approval')) && 
+                           !request.influencer_response;
   const showTrackingButton = true; // Always show tracking button to see progress
 
   const handleTrackOrder = () => {

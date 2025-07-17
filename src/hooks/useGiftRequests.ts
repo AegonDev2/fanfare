@@ -101,7 +101,8 @@ export const useGiftRequests = () => {
 
   const getPendingRequests = () => {
     return requests.filter(request => 
-      request.status === 'approved_waiting_influencer' && 
+      (request.status === 'approved_waiting_influencer' || 
+       (request.admin_approved && request.status === 'pending_admin_approval')) && 
       !request.influencer_response
     );
   };
