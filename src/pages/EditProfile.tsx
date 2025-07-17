@@ -59,21 +59,29 @@ export default function EditProfile() {
   // Check user type first
   useEffect(() => {
     const checkUserType = async () => {
+      console.log('EditProfile: Checking user type for user:', user?.id);
       if (!user?.id) {
+        console.log('EditProfile: No user ID, setting loading to false');
         setLoading(false);
         return;
       }
 
       try {
+        console.log('EditProfile: Fetching user type from profiles table');
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('user_type')
           .eq('id', user.id)
           .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('EditProfile: Error fetching user type:', error);
+          throw error;
+        }
 
+        console.log('EditProfile: Profile data received:', profile);
         setUserType(profile?.user_type || null);
+        console.log('EditProfile: User type set to:', profile?.user_type);
       } catch (error: any) {
         console.error('Error checking user type:', error);
         toast({

@@ -23,6 +23,9 @@ export default function FanEditProfile() {
   const { toast } = useToast();
   const { fanProfile, refetch } = useFanProfile(user?.id || '');
   
+  console.log('FanEditProfile: Component rendered with user:', user?.id);
+  console.log('FanEditProfile: Fan profile data:', fanProfile);
+  
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState<string>("");
@@ -34,7 +37,9 @@ export default function FanEditProfile() {
   });
 
   useEffect(() => {
+    console.log('FanEditProfile: useEffect triggered with fanProfile:', fanProfile);
     if (fanProfile) {
+      console.log('FanEditProfile: Setting form data from fan profile');
       setFormData({
         profile_name: fanProfile.profile_name || "",
         bio: fanProfile.bio || "",
