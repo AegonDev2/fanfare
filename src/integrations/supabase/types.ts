@@ -540,11 +540,13 @@ export type Database = {
       }
       orders: {
         Row: {
+          admin_approved: boolean | null
           admin_approved_at: string | null
           cancelled_at: string | null
           completed_at: string | null
           created_at: string | null
           delivery_estimate: string | null
+          gift_type: boolean | null
           id: string
           influencer_id: string | null
           influencer_response: string | null
@@ -556,6 +558,7 @@ export type Database = {
           product_url: string
           rejected_by: string | null
           rejection_reason: string | null
+          sender_id: string | null
           shipping_address: Json | null
           status: string
           status_history: Json | null
@@ -564,11 +567,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_approved?: boolean | null
           admin_approved_at?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
           created_at?: string | null
           delivery_estimate?: string | null
+          gift_type?: boolean | null
           id?: string
           influencer_id?: string | null
           influencer_response?: string | null
@@ -580,6 +585,7 @@ export type Database = {
           product_url: string
           rejected_by?: string | null
           rejection_reason?: string | null
+          sender_id?: string | null
           shipping_address?: Json | null
           status?: string
           status_history?: Json | null
@@ -588,11 +594,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_approved?: boolean | null
           admin_approved_at?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
           created_at?: string | null
           delivery_estimate?: string | null
+          gift_type?: boolean | null
           id?: string
           influencer_id?: string | null
           influencer_response?: string | null
@@ -604,6 +612,7 @@ export type Database = {
           product_url?: string
           rejected_by?: string | null
           rejection_reason?: string | null
+          sender_id?: string | null
           shipping_address?: Json | null
           status?: string
           status_history?: Json | null
@@ -1139,6 +1148,10 @@ export type Database = {
       is_admin: {
         Args: { user_uuid: string }
         Returns: boolean
+      }
+      migrate_gift_requests_to_orders: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       move_order_to_accepted: {
         Args: { order_id: string }

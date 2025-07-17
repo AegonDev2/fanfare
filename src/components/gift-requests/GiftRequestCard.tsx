@@ -43,37 +43,23 @@ export default function GiftRequestCard({
   const handleAccept = async () => {
     setLoading(true);
     try {
-      const {
-        error
-      } = await supabase.rpc('process_influencer_acceptance', {
-        gift_request_id: request.id
+      // Update order status directly using the unified orders table
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: 'accepted',
+          influencer_response: 'accepted',
+          influencer_response_at: new Date().toISOString()
+        })
+        .eq('id', request.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Request Accepted",
+        description: "Gift request accepted successfully!"
       });
-      if (error) {
-        // If wallet deduction fails, still allow acceptance but notify
-        if (error.message.includes('Insufficient wallet balance')) {
-          // Update gift request as accepted but note payment pending
-          const {
-            error: updateError
-          } = await supabase.from('gift_requests').update({
-            status: 'accepted',
-            influencer_response: 'accepted',
-            influencer_response_at: new Date().toISOString()
-          }).eq('id', request.id);
-          if (updateError) throw updateError;
-          toast({
-            title: "Request Accepted",
-            description: "Gift request accepted. Payment will be processed when user has sufficient wallet balance.",
-            variant: "default"
-          });
-        } else {
-          throw error;
-        }
-      } else {
-        toast({
-          title: "Request Accepted",
-          description: "Gift request accepted and payment processed!"
-        });
-      }
+      
       onStatusChange();
     } catch (error: any) {
       console.error("Error accepting request:", error);
@@ -97,14 +83,16 @@ export default function GiftRequestCard({
     }
     setLoading(true);
     try {
-      const {
-        error
-      } = await supabase.from('gift_requests').update({
-        status: 'rejected',
-        influencer_response: 'rejected',
-        influencer_response_at: new Date().toISOString()
-        // Store rejection reason in message or create separate field
-      }).eq('id', request.id);
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: 'rejected_by_influencer',
+          influencer_response: 'rejected',
+          influencer_response_at: new Date().toISOString(),
+          rejection_reason: rejectionReason
+        })
+        .eq('id', request.id);
+        
       if (error) throw error;
       toast({
         title: "Request Rejected",
@@ -129,21 +117,22 @@ export default function GiftRequestCard({
       return <Badge variant="outline" className="bg-gray-100 text-gray-600">Pending Admin</Badge>;
     }
     switch (request.status) {
-      case 'pending':
+      case 'pending_admin_approval':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-600">Pending Admin</Badge>;
+      case 'approved_waiting_influencer':
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Awaiting Response</Badge>;
       case 'accepted':
         return <Badge variant="default" className="bg-green-100 text-green-800">Accepted</Badge>;
-      case 'rejected':
+      case 'rejected_by_influencer':
+      case 'rejected_by_admin':
         return <Badge variant="destructive">Rejected</Badge>;
-      case 'under process':
-        return <Badge variant="default" className="bg-purple-100 text-purple-800">Processing</Badge>;
       case 'completed':
         return <Badge variant="default" className="bg-blue-100 text-blue-800">Completed</Badge>;
       default:
         return <Badge variant="secondary">{request.status}</Badge>;
     }
   };
-  const showActionButtons = request.admin_approved && request.status === 'pending' && !request.influencer_response;
+  const showActionButtons = request.admin_approved && request.status === 'approved_waiting_influencer' && !request.influencer_response;
   return <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
         <div className="flex items-start justify-between">

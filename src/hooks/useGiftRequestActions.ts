@@ -38,22 +38,33 @@ export const useGiftRequestActions = (
 
   const updateRequestStatus = async (id: string, status: 'accepted' | 'rejected') => {
     try {
-      // Update gift_request row status, and create order for accepted
+      const newStatus = status === 'accepted' ? 'accepted' : 'rejected_by_influencer';
+      
+      // Update orders table instead of gift_requests
       const { error } = await supabase
-        .from('gift_requests')
-        .update({ status })
+        .from('orders')
+        .update({ 
+          status: newStatus,
+          influencer_response: status,
+          influencer_response_at: new Date().toISOString()
+        })
         .eq('id', id);
 
       if (error) throw error;
 
       setRequests(prev =>
         prev.map(request =>
-          request.id === id ? { ...request, status } : request
+          request.id === id ? { 
+            ...request, 
+            status: newStatus,
+            influencer_response: status,
+            influencer_response_at: new Date().toISOString()
+          } : request
         )
       );
 
       if (status === 'accepted') {
-        // Influencer accepted: create order with status "under process"
+        // Influencer accepted: update shipping address and notify admin
         const request = requests.find(r => r.id === id);
         if (request) {
           console.log("Processing accepted gift request:", request);
@@ -82,61 +93,25 @@ export const useGiftRequestActions = (
             phone: influencerAddress.phone || "Not provided"
           };
 
-          console.log("Creating order with shipping address:", shippingAddress);
+          console.log("Updating order with shipping address:", shippingAddress);
 
-          // Create an order entry in orders_under_process table
-          const { data: orderData, error: orderError } = await supabase
-            .from('orders_under_process')
-            .insert({
-              influencer_id: request.influencer_id,
-              user_id: request.sender_id,
-              product_url: request.product_url,
-              product_title: request.product_title || "Gift from fan",
-              product_price: request.product_price,
-              shipping_address: shippingAddress,
-              message: request.message
-            })
-            .select()
-            .single();
-
-          if (orderError) {
-            console.error("Failed to create order in orders_under_process:", orderError);
-            throw new Error('Could not create order for admin processing');
-          }
-
-          console.log("Order created successfully:", orderData);
-
-          // Update the gift_request status to under process
-          const { error: updateStatusError } = await supabase
-            .from('gift_requests')
+          // Update the order with shipping address
+          const { error: updateAddressError } = await supabase
+            .from('orders')
             .update({ 
-              status: 'under process',
-              influencer_response: 'accepted',
-              influencer_response_at: new Date().toISOString()
+              shipping_address: shippingAddress
             })
             .eq('id', id);
-            
-          if (updateStatusError) {
-            console.error("Failed to update gift request status to under process:", updateStatusError);
-          }
 
-          // Update the local state to reflect the status change
-          setRequests(prev =>
-            prev.map(req =>
-              req.id === id ? { 
-                ...req, 
-                status: 'under process',
-                influencer_response: 'accepted',
-                influencer_response_at: new Date().toISOString()
-              } : req
-            )
-          );
+          if (updateAddressError) {
+            console.error("Failed to update shipping address:", updateAddressError);
+          }
 
           // Send notification to admin about new approved gift
           await sendAdminNotification(
             'new_approved_gift',
             `New gift order approved by influencer and ready for processing`,
-            orderData.id,
+            id,
             request.sender_id
           );
 
@@ -145,7 +120,7 @@ export const useGiftRequestActions = (
             recipient_id: request.sender_id,
             type: "gift_request_approved",
             message: `Your gift request has been approved by the influencer and is being processed.`,
-            reference_id: orderData.id,
+            reference_id: id,
             sender_id: request.influencer_id
           });
           

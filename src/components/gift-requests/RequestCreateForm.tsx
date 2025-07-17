@@ -84,13 +84,18 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
         sender_id: user.id
       });
       
-      // Insert into gift_requests
-      const { data, error } = await supabase.from("gift_requests").insert({
+      // Insert into orders table with gift_type = true
+      const { data, error } = await supabase.from("orders").insert({
+        user_id: user.id,
+        sender_id: user.id,
+        influencer_id: influencerId,
         product_url: productUrl,
         message,
-        influencer_id: influencerId,
-        sender_id: user.id,
-        // product_title/price will be filled in automatically if scraping
+        status: 'pending_admin_approval',
+        gift_type: true,
+        admin_approved: false,
+        platform_fee: 5.00,
+        total_amount: 5.00 // Will be updated when product price is determined
       }).select().maybeSingle();
 
       if (error) throw error;

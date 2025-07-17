@@ -58,7 +58,7 @@ export default function AdminOrderDetails() {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('gift_requests')
+          .from('orders')
           .select('*')
           .eq('id', orderId)
           .single();
@@ -67,18 +67,21 @@ export default function AdminOrderDetails() {
           throw error;
         }
 
-        // Transform gift_requests data to match OrderDetails interface
+        // Use data directly from orders table
         const transformedOrder: OrderDetails = {
           id: data.id,
-          user_id: data.sender_id,
+          user_id: data.user_id,
+          sender_id: data.sender_id,
           product_title: data.product_title || 'Unknown Product',
           product_url: data.product_url,
           product_price: data.product_price || 0,
-          platform_fee: 5.00, // Default platform fee
-          total_amount: (data.product_price || 0) + 5.00,
+          platform_fee: data.platform_fee || 5.00,
+          total_amount: data.total_amount || (data.product_price || 0) + 5.00,
           created_at: data.created_at,
           message: data.message,
           influencer_id: data.influencer_id,
+          shipping_address: data.shipping_address,
+          delivery_estimate: data.delivery_estimate,
         };
 
         setOrder(transformedOrder);

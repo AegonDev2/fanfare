@@ -88,30 +88,32 @@ export const useFanProfile = (userId: string) => {
 
       console.log('Fan profile data fetched:', fanProfileData);
 
-      // Get fan stats from gift requests
-      const { data: giftRequestsData, error: giftRequestsError } = await supabase
-        .from('gift_requests')
+      // Get fan stats from unified orders table (gifts only)
+      const { data: giftOrdersData, error: giftOrdersError } = await supabase
+        .from('orders')
         .select(`
           id,
           product_price,
+          total_amount,
           status,
           created_at,
           completed_at,
           influencer_id,
           product_title
         `)
-        .eq('sender_id', userId);
+        .eq('user_id', userId)
+        .eq('gift_type', true);
 
-      if (giftRequestsError) {
-        console.error('Gift requests fetch error:', giftRequestsError);
-        // Don't set error here, just use empty array for gift requests
+      if (giftOrdersError) {
+        console.error('Gift orders fetch error:', giftOrdersError);
+        // Don't set error here, just use empty array for gift orders
       }
 
-      console.log('Gift requests data fetched:', giftRequestsData);
+      console.log('Gift orders data fetched:', giftOrdersData);
 
       // Calculate stats
-      const completedGifts = giftRequestsData?.filter(g => g.status === 'completed') || [];
-      const totalSpent = completedGifts.reduce((sum, gift) => sum + (gift.product_price || 0), 0);
+      const completedGifts = giftOrdersData?.filter(g => g.status === 'completed') || [];
+      const totalSpent = completedGifts.reduce((sum, gift) => sum + (gift.total_amount || gift.product_price || 0), 0);
       const uniqueInfluencers = new Set(completedGifts.map(g => g.influencer_id)).size;
 
       const stats: FanStats = {
@@ -121,7 +123,7 @@ export const useFanProfile = (userId: string) => {
       };
 
       // Format gift history
-      const giftHistory: GiftHistory[] = (giftRequestsData || []).map(gift => ({
+      const giftHistory: GiftHistory[] = (giftOrdersData || []).map(gift => ({
         id: gift.id,
         influencer_name: 'Influencer', // We'll fetch this separately if needed
         influencer_id: gift.influencer_id,
