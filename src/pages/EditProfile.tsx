@@ -90,8 +90,13 @@ export default function EditProfile() {
   }, [user?.id]);
 
   // Redirect if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate('/auth');
     return null;
   }
 
