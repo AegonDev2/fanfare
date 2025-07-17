@@ -33,7 +33,7 @@ export const useInfluencerProfile = (profileId: string | null) => {
         .from('influencer_profiles')
         .select('*')
         .eq('id', profileId)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
       

@@ -78,7 +78,7 @@ export const useGiftsSent = () => {
                 .from('influencer_profiles')
                 .select('name')
                 .eq('id', order.influencer_id)
-                .single();
+                .maybeSingle();
                 
               if (!influencerError && influencerProfile) {
                 influencerName = influencerProfile.name;

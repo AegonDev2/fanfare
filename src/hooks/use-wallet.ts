@@ -26,10 +26,10 @@ export const useWallet = () => {
         .from('wallets')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (error) {
-        if (error.code === 'PGRST116') {
+        if (error.code === 'PGRST116' || !data) {
           // No wallet found, create one
           const { data: newWallet, error: createError } = await supabase
             .from('wallets')

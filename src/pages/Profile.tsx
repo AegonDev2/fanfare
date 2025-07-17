@@ -81,7 +81,7 @@ export default function Profile() {
           .from('profiles')
           .select('user_type, name, email')
           .eq('id', profileId)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching profile:', error);
