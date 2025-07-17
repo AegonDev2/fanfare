@@ -45,13 +45,10 @@ export const useGiftsSent = () => {
       
       console.log("useGiftsSent - Fetching orders for user:", user.id);
       
-      // Fetch all orders sent by this user from the unified orders table
+      // First fetch orders sent by this user
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
-        .select(`
-          *,
-          influencer:influencer_profiles(id, name)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -63,13 +60,35 @@ export const useGiftsSent = () => {
       console.log("useGiftsSent - Raw orders data:", orders);
 
       if (orders && orders.length > 0) {
-        const mappedRequests = orders.map((order: any) => {
-          console.log("useGiftsSent - Mapping order:", { 
+        // For each order, fetch the influencer profile data separately
+        const mappedRequests = await Promise.all(orders.map(async (order: any) => {
+          console.log("useGiftsSent - Processing order:", { 
             id: order.id, 
             status: order.status, 
-            influencer: order.influencer,
+            influencer_id: order.influencer_id,
             product_title: order.product_title 
           });
+          
+          let influencerName = 'Unknown Influencer';
+          
+          // Fetch influencer profile if influencer_id exists
+          if (order.influencer_id) {
+            try {
+              const { data: influencerProfile, error: influencerError } = await supabase
+                .from('influencer_profiles')
+                .select('name')
+                .eq('id', order.influencer_id)
+                .single();
+                
+              if (!influencerError && influencerProfile) {
+                influencerName = influencerProfile.name;
+              } else {
+                console.warn("useGiftsSent - Could not fetch influencer profile:", influencerError);
+              }
+            } catch (err) {
+              console.warn("useGiftsSent - Error fetching influencer profile:", err);
+            }
+          }
           
           return {
             id: order.id,
@@ -79,13 +98,13 @@ export const useGiftsSent = () => {
             message: order.message,
             created_at: order.created_at,
             status: order.status,
-            influencer_name: order.influencer?.name || 'Unknown Influencer',
+            influencer_name: influencerName,
             platform_fee: order.platform_fee,
             total_amount: order.total_amount,
             completed_at: order.completed_at,
             delivery_estimate: order.delivery_estimate
           };
-        });
+        }));
         
         console.log("useGiftsSent - Mapped requests:", mappedRequests);
         setRequests(mappedRequests);
