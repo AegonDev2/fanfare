@@ -5,27 +5,26 @@ import { useUser } from '@/hooks/useUser';
 export interface GiftRequest {
   id: string;
   sender_id: string;
-  user_id: string;
   influencer_id: string;
   product_title: string | null;
   product_url: string;
   product_price: number | null;
   message: string | null;
-  status: 'pending_admin_approval' | 'approved_waiting_influencer' | 'accepted' | 'rejected_by_influencer' | 'rejected_by_admin' | 'completed' | 'cancelled_by_user';
+  status: 'pending' | 'accepted' | 'rejected' | 'under process' | 'completed';
   created_at: string;
   updated_at: string;
   completed_at?: string | null;
-  admin_approved: boolean;
+  admin_approved: boolean | null;
   admin_approved_at: string | null;
   influencer_response: string | null;
   influencer_response_at: string | null;
+  delivery_estimate?: string | null;
   sender?: {
     name: string;
     email: string;
   };
   sender_name?: string;
   sender_email?: string;
-  gift_type: boolean;
 }
 
 export const useGiftRequests = () => {
@@ -43,12 +42,11 @@ export const useGiftRequests = () => {
       
       console.log("Fetching gift requests for influencer:", user.id);
       
-      // First fetch the orders
+      // First fetch the gift requests
       const { data: ordersData, error: fetchError } = await supabase
-        .from('orders')
+        .from('gift_requests')
         .select('*')
         .eq('influencer_id', user.id)
-        .eq('gift_type', true)
         .order('created_at', { ascending: false });
 
       if (fetchError) {
@@ -71,13 +69,11 @@ export const useGiftRequests = () => {
       }
 
       // Transform the data to match GiftRequest interface
-      const transformedData = (ordersData || []).map(order => {
-        const senderProfile = profilesData.find(p => p.id === order.sender_id);
+      const transformedData = (ordersData || []).map(request => {
+        const senderProfile = profilesData.find(p => p.id === request.sender_id);
         return {
-          ...order,
-          sender_id: order.sender_id || order.user_id,
-          user_id: order.user_id || order.sender_id,
-          status: order.status as GiftRequest['status'],
+          ...request,
+          status: request.status as GiftRequest['status'],
           sender_name: senderProfile?.name,
           sender_email: senderProfile?.email,
           sender: senderProfile ? { name: senderProfile.name, email: senderProfile.email } : undefined
@@ -98,7 +94,7 @@ export const useGiftRequests = () => {
 
   const getPendingRequests = () => {
     return requests.filter(request => 
-      request.admin_approved && request.status === 'approved_waiting_influencer' && !request.influencer_response
+      request.admin_approved && request.status === 'pending' && !request.influencer_response
     );
   };
 
@@ -111,7 +107,7 @@ export const useGiftRequests = () => {
 
   const getRejectedRequests = () => {
     return requests.filter(request => 
-      request.status === 'rejected_by_influencer' || request.status === 'rejected_by_admin'
+      request.status === 'rejected'
     );
   };
 
