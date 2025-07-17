@@ -139,6 +139,7 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
         .from('orders')
         .update({
           status: 'approved_waiting_influencer',
+          admin_approved: true,
           admin_approved_at: new Date().toISOString(),
           delivery_estimate: deliveryDate
         })
