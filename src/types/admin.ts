@@ -43,6 +43,7 @@ export interface EnrichedOrderFields {
 // Combined type for orders in the admin panel with all possible statuses
 export interface OrderDetails extends BaseOrder {
   status: 'under_process' | 'completed' | 'processing' | 'accepted' | 'pending';
+  original_status: string; // Add the original database status
   fan_email: string;
   fan_name: string;
   influencer_name: string;

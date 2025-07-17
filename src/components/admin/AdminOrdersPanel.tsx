@@ -42,7 +42,6 @@ export default function AdminOrdersPanel() {
   console.log("Order statuses in detail:", orders.map(o => ({ 
     id: o.id, 
     status: o.status, 
-    original_status: o.original_status, 
     product_title: o.product_title 
   })));
 

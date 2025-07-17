@@ -65,7 +65,11 @@ export const useAdminOrders = () => {
             influencer_response: order.influencer_response,
             rejected_by: order.rejected_by,
             influencer: order.influencer,
-            user: order.user
+            user: order.user,
+            // Map the required fields from the joined data
+            fan_email: order.user?.email || '',
+            fan_name: order.user?.name || '',
+            influencer_name: order.influencer?.name || ''
           };
         });
         
@@ -92,6 +96,7 @@ export const useAdminOrders = () => {
   return {
     orders,
     isLoading,
-    fetchAllOrders
+    fetchAllOrders,
+    setOrders
   };
 };
