@@ -103,6 +103,55 @@ export default function EditProfile() {
     is_primary: true,
   });
 
+  // Define fetchAddresses function before useEffect
+  const fetchAddresses = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('influencer_addresses')
+        .select('*')
+        .eq('influencer_id', user.id)
+        .order('is_primary', { ascending: false });
+
+      if (error) throw error;
+      setAddresses(data || []);
+    } catch (error: any) {
+      console.error("Error fetching addresses:", error);
+    }
+  };
+
+  // useEffect to populate data when influencer profile is loaded
+  useEffect(() => {
+    if (influencer) {
+      setProfileData({
+        name: influencer.name || "",
+        about: influencer.about || "",
+        platform: influencer.platform || "",
+        followers: influencer.followers || 0,
+        hobbies: influencer.hobbies || [],
+        instagram_url: influencer.instagram_url || "",
+        youtube_url: influencer.youtube_url || "",
+        twitter_url: influencer.twitter_url || "",
+        facebook_url: influencer.facebook_url || "",
+        tiktok_url: influencer.tiktok_url || "",
+        category: influencer.category || "",
+      });
+
+      if (influencer.size_preferences) {
+        setSizeData({
+          tshirt_size: influencer.size_preferences.tshirt_size || "",
+          pants_waist: influencer.size_preferences.pants_waist || "",
+          pants_length: influencer.size_preferences.pants_length || "",
+          shoe_size: influencer.size_preferences.shoe_size || "",
+          food_preferences: influencer.size_preferences.food_preferences || [],
+        });
+      }
+    }
+
+    fetchAddresses();
+  }, [influencer]);
+
   // Check user type first
   useEffect(() => {
     const checkUserType = async () => {
@@ -204,52 +253,6 @@ export default function EditProfile() {
 
   // Continue with influencer edit profile implementation
 
-  useEffect(() => {
-    if (influencer) {
-      setProfileData({
-        name: influencer.name || "",
-        about: influencer.about || "",
-        platform: influencer.platform || "",
-        followers: influencer.followers || 0,
-        hobbies: influencer.hobbies || [],
-        instagram_url: influencer.instagram_url || "",
-        youtube_url: influencer.youtube_url || "",
-        twitter_url: influencer.twitter_url || "",
-        facebook_url: influencer.facebook_url || "",
-        tiktok_url: influencer.tiktok_url || "",
-        category: influencer.category || "",
-      });
-
-      if (influencer.size_preferences) {
-        setSizeData({
-          tshirt_size: influencer.size_preferences.tshirt_size || "",
-          pants_waist: influencer.size_preferences.pants_waist || "",
-          pants_length: influencer.size_preferences.pants_length || "",
-          shoe_size: influencer.size_preferences.shoe_size || "",
-          food_preferences: influencer.size_preferences.food_preferences || [],
-        });
-      }
-    }
-
-    fetchAddresses();
-  }, [influencer]);
-
-  const fetchAddresses = async () => {
-    if (!user?.id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('influencer_addresses')
-        .select('*')
-        .eq('influencer_id', user.id)
-        .order('is_primary', { ascending: false });
-
-      if (error) throw error;
-      setAddresses(data || []);
-    } catch (error: any) {
-      console.error("Error fetching addresses:", error);
-    }
-  };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
