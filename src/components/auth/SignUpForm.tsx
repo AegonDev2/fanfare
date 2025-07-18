@@ -78,11 +78,11 @@ const SignUpForm = () => {
         description: "Account created successfully! Please check your email to verify your account."
       });
 
-      // Navigate based on user type
+      // Navigate based on user type to create profile pages
       if (userType === "influencer") {
         navigate("/create-profile");
       } else {
-        navigate("/");
+        navigate("/create-fan-profile");
       }
     } catch (error: any) {
       console.error("Signup error:", error);
