@@ -51,11 +51,12 @@ interface SizeFormData {
 
 export default function EditProfile() {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, isLoading: userLoading } = useUser();
   const { toast } = useToast();
   const [navOpen, setNavOpen] = useState(false);
   const [userType, setUserType] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
   // Check user type first
   useEffect(() => {
     const checkUserType = async () => {
@@ -97,13 +98,30 @@ export default function EditProfile() {
     checkUserType();
   }, [user?.id]);
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated - BUT WAIT for auth check to complete
   useEffect(() => {
-    if (!user) {
+    if (!userLoading && !user) {
+      console.log('EditProfile: User not authenticated, redirecting to auth');
       navigate('/auth');
     }
-  }, [user, navigate]);
+  }, [user, userLoading, navigate]);
 
+  // Show loading while checking authentication
+  if (userLoading) {
+    return (
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        <div className="min-h-screen bg-background pt-20 p-4 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold">Loading...</h2>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // If not authenticated, don't render anything (redirect will happen)
   if (!user) {
     return null;
   }
