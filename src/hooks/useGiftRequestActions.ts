@@ -107,6 +107,37 @@ export const useGiftRequestActions = (
             console.error("Failed to update shipping address:", updateAddressError);
           }
 
+          // Process payment from user's wallet
+          console.log("Processing payment for gift request");
+          const { data: orderData, error: orderError } = await supabase
+            .from('orders')
+            .select('total_amount, delivery_fee')
+            .eq('id', id)
+            .single();
+
+          if (orderError) {
+            console.error("Error fetching order details:", orderError);
+            throw orderError;
+          }
+
+          const totalAmount = orderData.total_amount + (orderData.delivery_fee || 0);
+          
+          // Process payment using the existing function
+          const { data: paymentResult, error: paymentError } = await supabase
+            .rpc('process_gift_payment', {
+              p_user_id: request.sender_id,
+              p_amount: totalAmount,
+              p_gift_request_id: id,
+              p_description: `Gift payment for: ${request.product_title}`
+            });
+
+          if (paymentError) {
+            console.error("Payment processing failed:", paymentError);
+            throw new Error(`Payment failed: ${paymentError.message}`);
+          }
+
+          console.log("Payment processed successfully");
+
           // Send notification to admin about new approved gift
           await sendAdminNotification(
             'new_approved_gift',
@@ -119,7 +150,7 @@ export const useGiftRequestActions = (
           await supabase.from("notifications").insert({
             recipient_id: request.sender_id,
             type: "gift_request_approved",
-            message: `Your gift request has been approved by the influencer and is being processed.`,
+            message: `Your gift request has been approved by the influencer and is being processed. Payment of ₹${totalAmount} has been deducted from your wallet.`,
             reference_id: id,
             sender_id: request.influencer_id
           });

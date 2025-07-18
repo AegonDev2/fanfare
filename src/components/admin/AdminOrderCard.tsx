@@ -55,6 +55,7 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState(0);
   const { toast } = useToast();
 
   const fetchWalletBalance = async () => {
@@ -141,7 +142,9 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
           status: 'approved_waiting_influencer',
           admin_approved: true,
           admin_approved_at: new Date().toISOString(),
-          delivery_estimate: deliveryDate
+          delivery_estimate: deliveryDate,
+          delivery_fee: deliveryFee,
+          total_amount: order.product_price + (order.platform_fee || 5) + deliveryFee
         })
         .eq('id', order.id);
 
@@ -152,11 +155,12 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
 
       toast({
         title: "Order Approved",
-        description: `Order sent to influencer for approval with delivery date: ${format(new Date(deliveryDate), 'MMM dd, yyyy')}`,
+        description: `Order sent to influencer for approval with delivery date: ${format(new Date(deliveryDate), 'MMM dd, yyyy')} and delivery fee: ₹${deliveryFee}`,
       });
 
       setShowApproveDialog(false);
       setDeliveryDate("");
+      setDeliveryFee(0);
       onStatusChange(order.id, 'approved');
     } catch (error: any) {
       console.error("Error approving order:", error);
@@ -237,7 +241,8 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
   };
 
   const totalAmount = order.total_amount || (order.product_price + (order.platform_fee || 5));
-  const hasSufficientBalance = walletData ? walletData.balance >= totalAmount : false;
+  const totalWithDelivery = totalAmount + deliveryFee;
+  const hasSufficientBalance = walletData ? walletData.balance >= totalWithDelivery : false;
 
   const getStatusDisplay = (originalStatus: string) => {
     switch (originalStatus) {
@@ -305,10 +310,10 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
           </a>
         </div>
         
-        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-gray-400" />
-            <span>₹{totalAmount}</span>
+            <span>₹{totalAmount}{deliveryFee > 0 && ` + ₹${deliveryFee} delivery`}</span>
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-400" />
@@ -346,7 +351,7 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
           </div>
           
           {walletData && (
-            <div className="mt-2 p-2 bg-gray-50 rounded">
+              <div className="mt-2 p-2 bg-gray-50 rounded">
               <div className="flex items-center justify-between text-sm">
                 <span>Balance: ₹{walletData.balance}</span>
                 <div className="flex items-center gap-1">
@@ -355,11 +360,16 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
                   ) : (
                     <>
                       <AlertCircle className="h-4 w-4 text-red-500" />
-                      <span className="text-red-600">Insufficient (₹{(totalAmount - walletData.balance).toFixed(2)} short)</span>
+                      <span className="text-red-600">Insufficient (₹{(totalWithDelivery - walletData.balance).toFixed(2)} short)</span>
                     </>
                   )}
                 </div>
               </div>
+              {deliveryFee > 0 && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Total with delivery: ₹{totalWithDelivery}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -383,17 +393,34 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
                   </DialogHeader>
                   <div className="space-y-4">
                     <p className="text-sm text-gray-600">
-                      Set an estimated delivery date for this order:
+                      Set an estimated delivery date and delivery fee for this order:
                     </p>
-                    <div className="space-y-2">
-                      <Label htmlFor="delivery-date">Estimated Delivery Date</Label>
-                      <Input
-                        id="delivery-date"
-                        type="date"
-                        value={deliveryDate}
-                        onChange={(e) => setDeliveryDate(e.target.value)}
-                        min={new Date().toISOString().split('T')[0]}
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery-date">Estimated Delivery Date</Label>
+                        <Input
+                          id="delivery-date"
+                          type="date"
+                          value={deliveryDate}
+                          onChange={(e) => setDeliveryDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery-fee">Delivery Fee (₹)</Label>
+                        <Input
+                          id="delivery-fee"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={deliveryFee}
+                          onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
+                          placeholder="0"
+                        />
+                        <p className="text-xs text-gray-500">
+                          Total amount: ₹{totalAmount + deliveryFee}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Button

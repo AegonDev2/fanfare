@@ -463,6 +463,7 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           delivery_estimate: string | null
+          delivery_fee: number | null
           gift_type: boolean | null
           id: string
           influencer_id: string | null
@@ -490,6 +491,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           delivery_estimate?: string | null
+          delivery_fee?: number | null
           gift_type?: boolean | null
           id?: string
           influencer_id?: string | null
@@ -517,6 +519,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           delivery_estimate?: string | null
+          delivery_fee?: number | null
           gift_type?: boolean | null
           id?: string
           influencer_id?: string | null
