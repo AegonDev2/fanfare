@@ -56,6 +56,52 @@ export default function EditProfile() {
   const [navOpen, setNavOpen] = useState(false);
   const [userType, setUserType] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // All hooks must be called before any conditional returns
+  const [activeTab, setActiveTab] = useState<'profile' | 'sizes' | 'addresses' | 'wishlist'>('profile');
+  const [newHobby, setNewHobby] = useState('');
+  const [newFoodPref, setNewFoodPref] = useState('');
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+
+  const { influencer, updateProfile, updateSizePreferences, isUpdating } = useInfluencerProfile(user?.id || null);
+  const { 
+    wishlist, 
+    isLoading: isLoadingWishlist, 
+    addWishlistItem, 
+    removeWishlistItem 
+  } = useInfluencerWishlist(user?.id || '');
+
+  const [profileData, setProfileData] = useState<ProfileFormData>({
+    name: "",
+    about: "",
+    platform: "",
+    followers: 0,
+    hobbies: [],
+    instagram_url: "",
+    youtube_url: "",
+    twitter_url: "",
+    facebook_url: "",
+    tiktok_url: "",
+    category: "",
+  });
+
+  const [sizeData, setSizeData] = useState<SizeFormData>({
+    tshirt_size: "",
+    pants_waist: "",
+    pants_length: "",
+    shoe_size: "",
+    food_preferences: [],
+  });
+
+  const [addressData, setAddressData] = useState<AddressFormData>({
+    street_address: "",
+    city: "",
+    state: "",
+    postal_code: "",
+    country: "India",
+    is_primary: true,
+  });
 
   // Check user type first
   useEffect(() => {
@@ -157,50 +203,6 @@ export default function EditProfile() {
   }
 
   // Continue with influencer edit profile implementation
-  const [activeTab, setActiveTab] = useState<'profile' | 'sizes' | 'addresses' | 'wishlist'>('profile');
-  const [newHobby, setNewHobby] = useState('');
-  const [newFoodPref, setNewFoodPref] = useState('');
-  const [addresses, setAddresses] = useState<any[]>([]);
-  const [showAddressForm, setShowAddressForm] = useState(false);
-
-  const { influencer, updateProfile, updateSizePreferences, isUpdating } = useInfluencerProfile(user?.id || null);
-  const { 
-    wishlist, 
-    isLoading: isLoadingWishlist, 
-    addWishlistItem, 
-    removeWishlistItem 
-  } = useInfluencerWishlist(user?.id || '');
-
-  const [profileData, setProfileData] = useState<ProfileFormData>({
-    name: "",
-    about: "",
-    platform: "",
-    followers: 0,
-    hobbies: [],
-    instagram_url: "",
-    youtube_url: "",
-    twitter_url: "",
-    facebook_url: "",
-    tiktok_url: "",
-    category: "",
-  });
-
-  const [sizeData, setSizeData] = useState<SizeFormData>({
-    tshirt_size: "",
-    pants_waist: "",
-    pants_length: "",
-    shoe_size: "",
-    food_preferences: [],
-  });
-
-  const [addressData, setAddressData] = useState<AddressFormData>({
-    street_address: "",
-    city: "",
-    state: "",
-    postal_code: "",
-    country: "India",
-    is_primary: true,
-  });
 
   useEffect(() => {
     if (influencer) {
