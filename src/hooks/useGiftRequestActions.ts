@@ -138,6 +138,9 @@ export const useGiftRequestActions = (
 
           console.log("Payment processed successfully");
 
+          // Trigger wallet refresh by dispatching a custom event
+          window.dispatchEvent(new CustomEvent('wallet-updated'));
+
           // Send notification to admin about new approved gift
           await sendAdminNotification(
             'new_approved_gift',

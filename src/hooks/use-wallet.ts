@@ -261,6 +261,19 @@ export const useWallet = () => {
     
     checkSession();
   }, [fetchWallet]);
+
+  // Listen for wallet updates
+  useEffect(() => {
+    const handleWalletUpdate = () => {
+      fetchWallet();
+      fetchTransactions();
+    };
+
+    window.addEventListener('wallet-updated', handleWalletUpdate);
+    return () => {
+      window.removeEventListener('wallet-updated', handleWalletUpdate);
+    };
+  }, [fetchWallet, fetchTransactions]);
   
   return {
     wallet,
