@@ -166,10 +166,7 @@ const ProductPreview = ({
             <ShoppingCart className="h-4 w-4 mr-2" />
             Product Details
           </TabsTrigger>
-          <TabsTrigger value="message" disabled={isLoading}>
-            <Gift className="h-4 w-4 mr-2" />
-            Gift Message
-          </TabsTrigger>
+          
         </TabsList>
 
         <TabsContent value="product" className="mt-4">
@@ -208,49 +205,14 @@ const ProductPreview = ({
                   </p>
                 </div>
 
-                <Button onClick={() => setActiveTab("message")} className="w-full mt-4" disabled={isLoading}>
-                  Next: Add a Message
-                </Button>
+                <Button onClick={() => setActiveTab("message")} className="w-full mt-4" disabled={isLoading}>Next: Select Influencer</Button>
               </div>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="message" className="mt-4">
-          <div className="bg-white p-6 shadow-md rounded-lg">
-            <h3 className="text-lg font-medium mb-4 text-slate-950">Add a Personal Message</h3>
-            <Textarea placeholder="Write a personal message to the influencer..." value={message} onChange={e => onMessageChange(e.target.value)} rows={6} disabled={isLoading} className="mb-6 bg-slate-50" />
-            
-            <div className="p-4 rounded-md mb-6 bg-zinc-200">
-              <div className="flex items-center mb-4">
-                <Wallet className="h-5 w-5 mr-2 text-primary" />
-                <span className="font-semibold">Payment via Wallet</span>
-              </div>
-              
-              <div className="flex justify-between mb-2 text-sm">
-                <span>Subtotal</span>
-                <span>₹{productPrice.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between mb-2 text-sm">
-                <span>Platform Fee</span>
-                <span>₹{platformFee.toFixed(2)}</span>
-              </div>
-              <Separator className="my-2" />
-              <div className="flex justify-between font-semibold">
-                <span>Total Amount</span>
-                <span>₹{totalAmount.toFixed(2)}</span>
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button onClick={() => setActiveTab("product")} variant="outline" className="w-full sm:w-1/2" disabled={isLoading}>
-                Back to Product Details
-              </Button>
-              <Button onClick={handleSubmit} className="w-full sm:w-1/2" disabled={isLoading}>
-                {isLoading ? "Processing..." : "Submit Gift Request"}
-              </Button>
-            </div>
-          </div>
+          
         </TabsContent>
       </Tabs>
     </div>;
