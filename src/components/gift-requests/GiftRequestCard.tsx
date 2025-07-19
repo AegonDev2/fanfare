@@ -9,65 +9,33 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-interface GiftRequest {
-  id: string;
-  sender_id: string;
-  influencer_id: string;
-  product_url: string;
-  product_title: string | null;
-  product_price: number | null;
-  message: string | null;
-  status: string;
-  created_at: string;
-  admin_approved: boolean;
-  admin_approved_at: string | null;
-  influencer_response: string | null;
-  influencer_response_at: string | null;
-  // Additional fields from joins
-  sender_name?: string;
-  sender_email?: string;
-}
+import { useGiftRequestActions } from "@/hooks/useGiftRequestActions";
+import { GiftRequest } from "@/hooks/useGiftRequests";
 interface GiftRequestCardProps {
   request: GiftRequest;
   onStatusChange: () => void;
+  requests: GiftRequest[];
+  setRequests: React.Dispatch<React.SetStateAction<GiftRequest[]>>;
 }
 export default function GiftRequestCard({
   request,
-  onStatusChange
+  onStatusChange,
+  requests,
+  setRequests
 }: GiftRequestCardProps) {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { updateRequestStatus } = useGiftRequestActions(requests, setRequests);
   const handleAccept = async () => {
     setLoading(true);
     try {
-      // Update order status directly using the unified orders table
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          status: 'accepted',
-          influencer_response: 'accepted',
-          influencer_response_at: new Date().toISOString()
-        })
-        .eq('id', request.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Request Accepted",
-        description: "Gift request accepted successfully!"
-      });
-      
+      await updateRequestStatus(request.id, 'accepted');
       onStatusChange();
     } catch (error: any) {
       console.error("Error accepting request:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to accept request",
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }
@@ -83,31 +51,12 @@ export default function GiftRequestCard({
     }
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          status: 'rejected_by_influencer',
-          influencer_response: 'rejected',
-          influencer_response_at: new Date().toISOString(),
-          rejection_reason: rejectionReason
-        })
-        .eq('id', request.id);
-        
-      if (error) throw error;
-      toast({
-        title: "Request Rejected",
-        description: "Gift request has been rejected"
-      });
+      await updateRequestStatus(request.id, 'rejected');
       setShowRejectDialog(false);
       setRejectionReason("");
       onStatusChange();
     } catch (error: any) {
       console.error("Error rejecting request:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to reject request",
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }

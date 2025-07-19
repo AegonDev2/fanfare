@@ -68,6 +68,8 @@ export const useGiftRequestActions = (
         const request = requests.find(r => r.id === id);
         if (request) {
           console.log("Processing accepted gift request:", request);
+          console.log("Request sender_id:", request.sender_id);
+          console.log("Request influencer_id:", request.influencer_id);
           
           const { data: addressData, error: addressError } = await supabase
             .from('influencer_addresses')
@@ -108,7 +110,8 @@ export const useGiftRequestActions = (
           }
 
           // Process payment from user's wallet
-          console.log("Processing payment for gift request");
+          console.log("Processing payment for gift request:", id);
+          console.log("Sender ID for payment:", request.sender_id);
           const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .select('total_amount, delivery_fee')
@@ -121,8 +124,17 @@ export const useGiftRequestActions = (
           }
 
           const totalAmount = orderData.total_amount; // total_amount already includes delivery_fee
+          console.log("Total amount to deduct:", totalAmount);
+          console.log("Order data:", orderData);
           
           // Process payment using the existing function
+          console.log("Calling process_gift_payment with:", {
+            p_user_id: request.sender_id,
+            p_amount: totalAmount,
+            p_gift_request_id: id,
+            p_description: `Gift payment for: ${request.product_title}`
+          });
+          
           const { data: paymentResult, error: paymentError } = await supabase
             .rpc('process_gift_payment', {
               p_user_id: request.sender_id,
@@ -136,7 +148,7 @@ export const useGiftRequestActions = (
             throw new Error(`Payment failed: ${paymentError.message}`);
           }
 
-          console.log("Payment processed successfully");
+          console.log("Payment processed successfully, result:", paymentResult);
 
           // Trigger wallet refresh by dispatching a custom event
           window.dispatchEvent(new CustomEvent('wallet-updated'));

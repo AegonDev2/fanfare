@@ -12,7 +12,7 @@ import { useUser } from '@/hooks/useUser';
 export default function GiftRequests() {
   const [navOpen, setNavOpen] = useState(false);
   const { user } = useUser();
-  const { requests: giftRequests, loading: isLoading, error, fetchRequests, getPendingRequests, getAcceptedRequests, getRejectedRequests } = useGiftRequests();
+  const { requests: giftRequests, loading: isLoading, error, fetchRequests, getPendingRequests, getAcceptedRequests, getRejectedRequests, setRequests } = useGiftRequests();
 
   // Redirect if not influencer
   if (user && user.user_type !== 'influencer') {
@@ -92,6 +92,8 @@ export default function GiftRequests() {
                       key={request.id} 
                       request={request} 
                       onStatusChange={fetchRequests}
+                      requests={giftRequests}
+                      setRequests={setRequests}
                     />
                   ))}
                 </div>
@@ -114,6 +116,8 @@ export default function GiftRequests() {
                       key={request.id} 
                       request={request} 
                       onStatusChange={fetchRequests}
+                      requests={giftRequests}
+                      setRequests={setRequests}
                     />
                   ))}
                 </div>
