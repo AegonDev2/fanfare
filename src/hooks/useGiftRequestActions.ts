@@ -120,7 +120,7 @@ export const useGiftRequestActions = (
             throw orderError;
           }
 
-          const totalAmount = orderData.total_amount + (orderData.delivery_fee || 0);
+          const totalAmount = orderData.total_amount; // total_amount already includes delivery_fee
           
           // Process payment using the existing function
           const { data: paymentResult, error: paymentError } = await supabase

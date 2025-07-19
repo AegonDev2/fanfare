@@ -47,6 +47,18 @@ export const useWallet = () => {
         }
       } else {
         setWallet(data as Wallet);
+        // Fetch transactions after wallet is set
+        if (data) {
+          const { data: transactionData, error: transactionError } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('wallet_id', data.id)
+            .order('created_at', { ascending: false });
+          
+          if (!transactionError && transactionData) {
+            setTransactions(transactionData as Transaction[]);
+          }
+        }
       }
     } catch (error: any) {
       console.error("Error fetching wallet:", error);
@@ -61,7 +73,7 @@ export const useWallet = () => {
   }, [toast]);
   
   // Fetch user transactions
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       if (!wallet) {
         await fetchWallet();
@@ -91,7 +103,7 @@ export const useWallet = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [wallet, toast]);
   
   // Create Razorpay order
   const createRazorpayOrder = async (amount: number): Promise<{id: string, key: string} | null> => {
