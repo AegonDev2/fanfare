@@ -15,7 +15,7 @@ import FanProfile from '@/components/profile/FanProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, List, Star, User, AlertCircle } from 'lucide-react';
+import { Heart, List, Star, User, AlertCircle, Instagram, Youtube, Twitter, Facebook } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Profile() {
@@ -213,131 +213,221 @@ export default function Profile() {
         <FloatingHeader setNavOpen={setNavOpen} />
         <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
         
-        <div className="min-h-screen bg-background pt-20">
-          <div className="max-w-4xl mx-auto p-4 space-y-6">
-            <ProfileHeader 
-              name={influencer.name}
-              platform={influencer.platform}
-              followers={influencer.followers}
-              profileImage={influencer.profile_image || '/placeholder.svg'}
-              onSendGift={async () => {}}
-              profileId={influencer.id}
-            />
-            
-            <ProfileBio 
-              about={influencer.about || ''}
-              hobbies={influencer.hobbies || []}
-            />
-            
-            {/* Additional Profile Information */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-funky-purple/10">
-              <CardHeader>
-                <CardTitle className="text-lg bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink">
-                  Profile Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10 pt-20">
+          {/* Hero Section with emphasized profile */}
+          <div className="relative bg-gradient-to-b from-primary/5 to-transparent">
+            <div className="max-w-6xl mx-auto px-6 py-16">
+              <div className="flex flex-col lg:flex-row items-center gap-12">
+                {/* Profile Image - Emphasized */}
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-all duration-500 scale-110"></div>
+                  <img 
+                    src={influencer.profile_image || '/placeholder.svg'} 
+                    alt={`${influencer.name}'s profile`}
+                    className="relative w-48 h-48 lg:w-64 lg:h-64 rounded-full object-cover shadow-2xl border-4 border-white/80 transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+
+                {/* Profile Info - Emphasized name and followers */}
+                <div className="flex-1 text-center lg:text-left space-y-6">
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-2">Platform</h4>
-                    <Badge variant="secondary" className="bg-funky-purple/10 text-funky-purple">
-                      {influencer.platform}
-                    </Badge>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-700 mb-2">Followers</h4>
-                    <p className="text-lg font-semibold text-funky-purple">
-                      {influencer.followers.toLocaleString()}
-                    </p>
-                  </div>
-                  {influencer.category && (
-                    <div>
-                      <h4 className="font-medium text-gray-700 mb-2">Category</h4>
-                      <Badge variant="outline" className="border-funky-pink/30 text-funky-pink">
-                        {influencer.category}
+                    <h1 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-primary via-primary to-secondary bg-clip-text text-transparent leading-tight">
+                      {influencer.name}
+                    </h1>
+                    <div className="flex items-center justify-center lg:justify-start gap-4 mt-4">
+                      <Badge variant="outline" className="px-4 py-2 text-lg border-primary/30 text-primary">
+                        {influencer.platform}
                       </Badge>
+                      {influencer.category && (
+                        <Badge variant="secondary" className="px-4 py-2 text-lg">
+                          {influencer.category}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Followers Count - Prominently displayed */}
+                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+                    <div className="text-center lg:text-left">
+                      <p className="text-muted-foreground text-lg font-medium mb-2">Followers</p>
+                      <p className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        {influencer.followers.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    {!isCurrentUserProfile ? (
+                      <Button 
+                        size="lg"
+                        className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white px-8 py-3 text-lg shadow-lg"
+                        onClick={() => navigate(`/place-order?influencer=${influencer.id}`)}
+                      >
+                        <Heart className="h-5 w-5 mr-2" />
+                        Send Gift
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="lg"
+                        className="border-primary/30 text-primary hover:bg-primary/10 px-8 py-3 text-lg"
+                        onClick={() => navigate('/edit-profile')}
+                      >
+                        <User className="h-5 w-5 mr-2" />
+                        Edit Profile
+                      </Button>
+                    )}
+                    
+                    {!isCurrentUserProfile && (
+                      <Button 
+                        variant="outline"
+                        size="lg"
+                        className="border-secondary/30 text-secondary hover:bg-secondary/10 px-8 py-3 text-lg"
+                        onClick={() => navigate(`/wishlist/${influencer.id}`)}
+                      >
+                        <List className="h-5 w-5 mr-2" />
+                        View Wishlist
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Section */}
+          <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+            {/* About Section */}
+            {influencer.about && (
+              <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/20">
+                <h3 className="text-2xl font-bold text-foreground mb-6">About</h3>
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  {influencer.about}
+                </p>
+              </div>
+            )}
+
+            {/* Hobbies & Interests */}
+            {influencer.hobbies && influencer.hobbies.length > 0 && (
+              <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/20">
+                <h3 className="text-2xl font-bold text-foreground mb-6">Interests & Hobbies</h3>
+                <div className="flex flex-wrap gap-3">
+                  {influencer.hobbies.map((hobby, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className="px-4 py-2 text-base rounded-full bg-primary/10 text-primary border-primary/20"
+                    >
+                      {hobby}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Size Preferences */}
+            {influencer.size_preferences && (
+              <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/20">
+                <h3 className="text-2xl font-bold text-foreground mb-6">Size Preferences</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  {influencer.size_preferences.tshirt_size && (
+                    <div className="bg-primary/5 rounded-xl p-4 text-center">
+                      <p className="text-sm text-muted-foreground mb-1">T-Shirt</p>
+                      <p className="text-lg font-semibold text-primary">{influencer.size_preferences.tshirt_size}</p>
+                    </div>
+                  )}
+                  {influencer.size_preferences.pants_waist && (
+                    <div className="bg-primary/5 rounded-xl p-4 text-center">
+                      <p className="text-sm text-muted-foreground mb-1">Pants Waist</p>
+                      <p className="text-lg font-semibold text-primary">{influencer.size_preferences.pants_waist}</p>
+                    </div>
+                  )}
+                  {influencer.size_preferences.pants_length && (
+                    <div className="bg-primary/5 rounded-xl p-4 text-center">
+                      <p className="text-sm text-muted-foreground mb-1">Pants Length</p>
+                      <p className="text-lg font-semibold text-primary">{influencer.size_preferences.pants_length}</p>
+                    </div>
+                  )}
+                  {influencer.size_preferences.shoe_size && (
+                    <div className="bg-primary/5 rounded-xl p-4 text-center">
+                      <p className="text-sm text-muted-foreground mb-1">Shoe Size</p>
+                      <p className="text-lg font-semibold text-primary">{influencer.size_preferences.shoe_size}</p>
                     </div>
                   )}
                 </div>
-
-                {/* Size Preferences - Only show if available */}
-                {influencer.size_preferences && (
-                  <div className="mt-6">
-                    <h4 className="font-medium text-gray-700 mb-3">Size Preferences</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {influencer.size_preferences.tshirt_size && (
-                        <div className="p-2 bg-funky-purple/5 rounded-lg">
-                          <p className="text-xs text-gray-600">T-Shirt</p>
-                          <p className="font-medium">{influencer.size_preferences.tshirt_size}</p>
-                        </div>
-                      )}
-                      {influencer.size_preferences.pants_waist && (
-                        <div className="p-2 bg-funky-purple/5 rounded-lg">
-                          <p className="text-xs text-gray-600">Pants Waist</p>
-                          <p className="font-medium">{influencer.size_preferences.pants_waist}</p>
-                        </div>
-                      )}
-                      {influencer.size_preferences.pants_length && (
-                        <div className="p-2 bg-funky-purple/5 rounded-lg">
-                          <p className="text-xs text-gray-600">Pants Length</p>
-                          <p className="font-medium">{influencer.size_preferences.pants_length}</p>
-                        </div>
-                      )}
-                      {influencer.size_preferences.shoe_size && (
-                        <div className="p-2 bg-funky-purple/5 rounded-lg">
-                          <p className="text-xs text-gray-600">Shoe Size</p>
-                          <p className="font-medium">{influencer.size_preferences.shoe_size}</p>
-                        </div>
-                      )}
+                
+                {/* Food Preferences */}
+                {influencer.size_preferences.food_preferences && influencer.size_preferences.food_preferences.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-foreground mb-3">Food Preferences</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {influencer.size_preferences.food_preferences.map((pref, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="outline" 
+                          className="border-secondary/30 text-secondary px-3 py-1"
+                        >
+                          {pref}
+                        </Badge>
+                      ))}
                     </div>
-                    
-                    {/* Food Preferences */}
-                    {influencer.size_preferences.food_preferences && influencer.size_preferences.food_preferences.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Food Preferences</p>
-                        <div className="flex flex-wrap gap-2">
-                          {influencer.size_preferences.food_preferences.map((pref, index) => (
-                            <Badge key={index} variant="outline" className="border-funky-pink/30 text-funky-pink">
-                              {pref}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            )}
 
-            <SocialLinks 
-              instagramUrl={influencer.instagram_url}
-              youtubeUrl={influencer.youtube_url}
-              twitterUrl={influencer.twitter_url}
-              facebookUrl={influencer.facebook_url}
-            />
-
-            {/* Wishlist Button - Only show for fans viewing other profiles */}
-            {!isCurrentUserProfile && (
-              <Card className="bg-white/80 backdrop-blur-sm border border-funky-purple/10">
-                <CardContent className="pt-6">
-                  <div className="text-center space-y-4">
-                    <div className="flex items-center justify-center gap-2 text-funky-purple">
-                      <Heart className="h-5 w-5" />
-                      <h3 className="text-lg font-semibold">Want to send a gift?</h3>
-                    </div>
-                    <p className="text-gray-600 max-w-md mx-auto">
-                      Check out {influencer.name}'s wishlist to see what they'd love to receive from their fans!
-                    </p>
-                    <Button 
-                      onClick={() => navigate(`/wishlist/${influencer.id}`)}
-                      className="bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple text-white"
+            {/* Social Links */}
+            {(influencer.instagram_url || influencer.youtube_url || influencer.twitter_url || influencer.facebook_url) && (
+              <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/20">
+                <h3 className="text-2xl font-bold text-foreground mb-6">Connect</h3>
+                <div className="flex flex-wrap gap-4">
+                  {influencer.instagram_url && (
+                    <a
+                      href={influencer.instagram_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                     >
-                      <List className="h-4 w-4 mr-2" />
-                      View Wishlist
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                      <Instagram className="h-5 w-5" />
+                      <span className="font-medium">Instagram</span>
+                    </a>
+                  )}
+                  {influencer.youtube_url && (
+                    <a
+                      href={influencer.youtube_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                      <Youtube className="h-5 w-5" />
+                      <span className="font-medium">YouTube</span>
+                    </a>
+                  )}
+                  {influencer.twitter_url && (
+                    <a
+                      href={influencer.twitter_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                      <Twitter className="h-5 w-5" />
+                      <span className="font-medium">Twitter</span>
+                    </a>
+                  )}
+                  {influencer.facebook_url && (
+                    <a
+                      href={influencer.facebook_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                      <Facebook className="h-5 w-5" />
+                      <span className="font-medium">Facebook</span>
+                    </a>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>
