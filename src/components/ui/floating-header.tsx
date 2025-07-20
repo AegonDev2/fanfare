@@ -49,7 +49,7 @@ const FloatingHeader = ({
     return user.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
   };
   return <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-      <div className="max-w-full mx-auto px-4 py-3">
+      <div className="max-w-full mx-auto px-4 py-3 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon" onClick={() => setNavOpen(true)} className="lg:hidden">
