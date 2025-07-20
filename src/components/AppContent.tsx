@@ -27,6 +27,8 @@ import NotFound from "@/pages/NotFound";
 import Influencers from "@/pages/Influencers";
 import GiftShop from "@/pages/GiftShop";
 import ShopView from "@/pages/ShopView";
+import EmailVerification from "@/pages/EmailVerification";
+import AuthCallback from "@/pages/AuthCallback";
 
 export function AppContent() {
   const [navOpen, setNavOpen] = useState(false);
@@ -45,6 +47,8 @@ export function AppContent() {
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/email-verification" element={<EmailVerification />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/place-order" element={<PlaceOrder />} />
         <Route path="/profile" element={<Profile />} />

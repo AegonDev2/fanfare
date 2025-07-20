@@ -1,17 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-type UserType = 'fan' | 'influencer';
+
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState<UserType | "">("");
   const [isLoading, setIsLoading] = useState(false);
   const {
     toast
@@ -19,14 +17,7 @@ const SignUpForm = () => {
   const navigate = useNavigate();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userType) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please select a user type"
-      });
-      return;
-    }
+    
     if (password.length < 6) {
       toast({
         variant: "destructive",
@@ -45,7 +36,7 @@ const SignUpForm = () => {
     }
     setIsLoading(true);
     try {
-      console.log("Starting signup process for:", email, "as", userType);
+      console.log("Starting signup process for:", email);
       const {
         data: authData,
         error: authError
@@ -54,8 +45,8 @@ const SignUpForm = () => {
         password,
         options: {
           data: {
-            user_type: userType,
-            name: name // Add name to user metadata
+            user_type: 'fan', // All signups are now fans
+            name: name
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
@@ -74,16 +65,12 @@ const SignUpForm = () => {
       // The profile creation and role assignment now happen automatically via database triggers
 
       toast({
-        title: "Success",
-        description: "Account created successfully! Please check your email to verify your account."
+        title: "Account created!",
+        description: "Please check your email to verify your account before logging in."
       });
 
-      // Navigate based on user type to create profile pages
-      if (userType === "influencer") {
-        navigate("/create-profile");
-      } else {
-        navigate("/create-fan-profile");
-      }
+      // Navigate to email verification page
+      navigate("/email-verification");
     } catch (error: any) {
       console.error("Signup error:", error);
 
@@ -117,18 +104,6 @@ const SignUpForm = () => {
       <div className="space-y-2">
         <Label htmlFor="signup-password">Password</Label>
         <Input id="signup-password" type="password" placeholder="Create a password (min. 6 characters)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="bg-slate-50" />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="user-type">I am a...</Label>
-        <Select onValueChange={value => setUserType(value as UserType)} required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select user type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="fan">Fan</SelectItem>
-            <SelectItem value="influencer">Influencer</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create Account"}
