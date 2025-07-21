@@ -126,7 +126,7 @@ const HeroCarousel = () => {
                 key={index}
                 onClick={() => scrollTo(index)}
                 className={cn(
-                  "w-2 h-2 rounded-full transition-colors duration-200",
+                  "w-1.5 h-1.5 rounded-full transition-colors duration-200",
                   index === current - 1 
                     ? "bg-funky-purple" 
                     : "bg-gray-300 hover:bg-gray-400"
