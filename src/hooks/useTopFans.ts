@@ -23,30 +23,29 @@ export const useTopFans = (influencerId: string) => {
     setIsLoading(true);
     try {
       // Query to get top fans for specific influencer based on completed gifts
-      const { data, error } = await supabase
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select(`
-          sender_id,
-          profiles!orders_sender_id_fkey(name, email),
-          fan_profiles!fan_profiles_user_id_fkey(profile_image_url)
-        `)
+        .select('sender_id')
         .eq('influencer_id', influencerId)
         .eq('status', 'completed')
         .eq('gift_type', true);
 
-      if (error) {
-        throw error;
+      if (ordersError) {
+        throw ordersError;
+      }
+
+      if (!ordersData || ordersData.length === 0) {
+        setTopFans([]);
+        setIsLoading(false);
+        return;
       }
 
       // Group by sender_id and count gifts
-      const fanGiftCounts = data.reduce((acc: any, order: any) => {
+      const fanGiftCounts = ordersData.reduce((acc: any, order: any) => {
         const fanId = order.sender_id;
         if (!acc[fanId]) {
           acc[fanId] = {
             fan_id: fanId,
-            fan_name: order.profiles?.name || 'Anonymous Fan',
-            fan_email: order.profiles?.email || '',
-            profile_image_url: order.fan_profiles?.profile_image_url,
             total_gifts: 0
           };
         }
@@ -54,12 +53,54 @@ export const useTopFans = (influencerId: string) => {
         return acc;
       }, {});
 
-      // Convert to array and sort by gift count
-      const sortedFans = Object.values(fanGiftCounts)
-        .sort((a: any, b: any) => b.total_gifts - a.total_gifts)
-        .slice(0, 4); // Get top 4 fans
+      // Get unique fan IDs and fetch their profile data
+      const fanIds = Object.keys(fanGiftCounts);
+      
+      if (fanIds.length === 0) {
+        setTopFans([]);
+        setIsLoading(false);
+        return;
+      }
 
-      setTopFans(sortedFans as TopFan[]);
+      // Fetch profiles and fan profiles data
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', fanIds);
+
+      const { data: fanProfilesData, error: fanProfilesError } = await supabase
+        .from('fan_profiles')
+        .select('user_id, profile_image_url')
+        .in('user_id', fanIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+      }
+
+      if (fanProfilesError) {
+        console.error("Error fetching fan profiles:", fanProfilesError);
+      }
+
+      // Combine the data
+      const combinedFans = fanIds.map(fanId => {
+        const profile = profilesData?.find(p => p.id === fanId);
+        const fanProfile = fanProfilesData?.find(fp => fp.user_id === fanId);
+        
+        return {
+          fan_id: fanId,
+          fan_name: profile?.name || 'Anonymous Fan',
+          fan_email: profile?.email || '',
+          profile_image_url: fanProfile?.profile_image_url,
+          total_gifts: fanGiftCounts[fanId].total_gifts
+        };
+      });
+
+      // Sort by gift count and get top 4
+      const sortedFans = combinedFans
+        .sort((a, b) => b.total_gifts - a.total_gifts)
+        .slice(0, 4);
+
+      setTopFans(sortedFans);
     } catch (error: any) {
       console.error("Error fetching top fans:", error);
       setTopFans([]);
