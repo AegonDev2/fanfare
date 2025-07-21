@@ -5,6 +5,7 @@ import { useUser } from '@/hooks/useUser';
 import { useInfluencerProfile } from '@/hooks/useInfluencerProfile';
 import { useFanProfile } from '@/hooks/useFanProfile';
 import { useToast } from '@/hooks/use-toast';
+import { useTopFans } from '@/hooks/useTopFans';
 import { Skeleton } from '@/components/ui/skeleton';
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
@@ -15,7 +16,7 @@ import FanProfile from '@/components/profile/FanProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, List, Star, User, AlertCircle, Instagram, Youtube, Twitter, Facebook } from 'lucide-react';
+import { Heart, List, Star, User, AlertCircle, Instagram, Youtube, Twitter, Facebook, Users } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Profile() {
@@ -43,6 +44,12 @@ export default function Profile() {
     isLoading: fanLoading, 
     error: fanError 
   } = useFanProfile(profileId || '');
+
+  // Fetch top fans for influencer profiles
+  const { 
+    topFans, 
+    isLoading: topFansLoading 
+  } = useTopFans(influencer?.id || '');
 
   // Helper function to safely convert error to string
   const getErrorMessage = (error: unknown): string => {
@@ -438,6 +445,41 @@ export default function Profile() {
                     </div>
                   )}
                 </div>
+
+                {/* Top Fans Section */}
+                {topFans.length > 0 && (
+                  <div className="xl:col-span-2">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+                      <h3 className="text-xl font-bold text-foreground mb-4 flex items-center">
+                        <Users className="h-5 w-5 mr-2 text-primary" />
+                        Top Fans
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {topFans.map((fan, index) => (
+                          <div key={fan.fan_id} className="text-center group">
+                            <div className="relative mb-3">
+                              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-lg opacity-50 group-hover:opacity-70 transition-all duration-300"></div>
+                              <img 
+                                src={fan.profile_image_url || '/placeholder.svg'} 
+                                alt={fan.fan_name || 'Fan'}
+                                className="relative w-16 h-16 mx-auto rounded-full object-cover shadow-lg border-2 border-white/80 transition-transform duration-300 group-hover:scale-105"
+                              />
+                              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-lg">
+                                {index + 1}
+                              </div>
+                            </div>
+                            <h4 className="font-semibold text-sm text-foreground mb-1 truncate">
+                              {fan.fan_name || 'Anonymous Fan'}
+                            </h4>
+                            <p className="text-xs text-muted-foreground">
+                              {fan.total_gifts} gift{fan.total_gifts !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
