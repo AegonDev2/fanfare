@@ -16,12 +16,9 @@ const Hero = () => {
         <HeroCarousel />
         
         <div className="text-center max-w-4xl mx-auto mt-8">
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold font-display mb-4 md:mb-6 bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent">
-            Send Gifts to Your Favorite Influencers
-          </h1>
+          <h1 className="md:text-4xl lg:text-5xl font-bold font-display mb-4 md:mb-6 bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent text-lg">Real Gifts. Real Connections. Real Appreciation.</h1>
           
-          <p className="text-base md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8 font-body max-w-3xl mx-auto">No more missing out on gifts and connecting emotions with your favourite creator due to privacy concerns.
-        </p>
+          
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button size="lg" className="bg-gradient-to-r from-funky-purple to-funky-pink text-white hover:from-funky-purple/90 hover:to-funky-pink/90 transform hover:scale-105 transition-all duration-200 text-sm md:text-base px-6 md:px-8" onClick={() => navigate('/gift-shop')}>
