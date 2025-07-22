@@ -882,6 +882,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_influencer_top_fans: {
+        Args: { influencer_id_param: string }
+        Returns: {
+          fan_id: string
+          fan_name: string
+          fan_email: string
+          profile_image_url: string
+          total_gifts: number
+        }[]
+      }
       get_monthly_leaderboard: {
         Args: { target_month: number; target_year: number }
         Returns: {
