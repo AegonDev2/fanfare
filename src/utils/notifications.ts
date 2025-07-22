@@ -27,8 +27,7 @@ export const sendNotification = async (
       message,
       reference_id: referenceId,
       sender_id: senderId,
-      is_read: false,
-      image_url: imageUrl
+      is_read: false
     });
     
     if (error) {
@@ -87,8 +86,7 @@ export const sendAdminNotification = async (
       message,
       reference_id: referenceId,
       sender_id: senderId,
-      is_read: false,
-      image_url: imageUrl
+      is_read: false
     }));
     
     const { data, error } = await supabase.from("notifications").insert(notifications);
