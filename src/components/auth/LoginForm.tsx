@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 interface LoginFormProps {
   onForgotPassword?: () => void;
@@ -52,6 +53,16 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const signIn = async () => {
+    try {
+      const user = await GoogleAuth.signIn();
+      console.log(user);
+      // You can now use user.authentication.idToken, user.email, etc.
+    } catch (err) {
+      console.error(err);
     }
   };
 

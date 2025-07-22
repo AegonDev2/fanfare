@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">giftloop-connect</string>
+    <string name="title_activity_main">giftloop-connect</string>
+    <string name="package_name">app.lovable.a407041e65d3402da5484a08462e8022</string>
+    <string name="custom_url_scheme">app.lovable.a407041e65d3402da5484a08462e8022</string>
+</resources>
