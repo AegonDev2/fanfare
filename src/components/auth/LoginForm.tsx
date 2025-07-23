@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import GoogleLoginButton from './GoogleLoginButton';
 
 interface LoginFormProps {
   onForgotPassword?: () => void;
@@ -74,6 +75,10 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
           <AlertDescription>{loginError}</AlertDescription>
         </Alert>
       )}
+      <div style={{ margin: '16px 0', textAlign: 'center' }}>
+        <GoogleLoginButton />
+        <div style={{ margin: '8px 0', color: '#888' }}>or</div>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
