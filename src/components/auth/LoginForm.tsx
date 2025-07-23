@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import GoogleLoginButton from './GoogleLoginButton';
 
 interface LoginFormProps {
@@ -57,15 +56,6 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
     }
   };
 
-  const signIn = async () => {
-    try {
-      const user = await GoogleAuth.signIn();
-      console.log(user);
-      // You can now use user.authentication.idToken, user.email, etc.
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,10 +65,6 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
           <AlertDescription>{loginError}</AlertDescription>
         </Alert>
       )}
-      <div style={{ margin: '16px 0', textAlign: 'center' }}>
-        <GoogleLoginButton />
-        <div style={{ margin: '8px 0', color: '#888' }}>or</div>
-      </div>
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -104,6 +90,17 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Logging in..." : "Login"}
       </Button>
+
+      <div className="flex items-center my-4">
+        <div className="flex-1 border-t border-border"></div>
+        <span className="px-3 text-sm text-muted-foreground">or</span>
+        <div className="flex-1 border-t border-border"></div>
+      </div>
+
+      <GoogleLoginButton 
+        isLoading={isLoading} 
+        onLoadingChange={setIsLoading} 
+      />
       
       <div className="text-center mt-4">
         <Button 

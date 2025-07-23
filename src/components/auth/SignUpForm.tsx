@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import GoogleLoginButton from './GoogleLoginButton';
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -108,6 +109,17 @@ const SignUpForm = () => {
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>
+
+      <div className="flex items-center my-4">
+        <div className="flex-1 border-t border-border"></div>
+        <span className="px-3 text-sm text-muted-foreground">or</span>
+        <div className="flex-1 border-t border-border"></div>
+      </div>
+
+      <GoogleLoginButton 
+        isLoading={isLoading} 
+        onLoadingChange={setIsLoading} 
+      />
     </form>;
 };
 export default SignUpForm;
