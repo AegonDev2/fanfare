@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 
 interface GoogleLoginButtonProps {
   isLoading?: boolean;
@@ -17,13 +18,28 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Get client IDs from environment variables
+  const webClientId = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID;
+  const androidClientId = import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID;
+
+  // Determine which client ID to use
+  const clientId = Capacitor.isNativePlatform() ? androidClientId : webClientId;
+
   const handleGoogleAuth = async () => {
     try {
       onLoadingChange?.(true);
-      
+
+      // Initialize GoogleAuth with the correct client ID (for native)
+      if (Capacitor.isNativePlatform()) {
+        GoogleAuth.initialize({
+          clientId,
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true,
+        });
+      }
       // Sign in with Google using Capacitor plugin
       const googleUser = await GoogleAuth.signIn();
-      
+
       if (googleUser?.authentication?.idToken) {
         // Sign in to Supabase with the Google ID token
         const { data, error } = await supabase.auth.signInWithIdToken({
