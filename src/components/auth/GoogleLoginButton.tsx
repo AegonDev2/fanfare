@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 
 interface GoogleLoginButtonProps {
   isLoading?: boolean;
@@ -17,11 +18,39 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Initialize Google Auth for web
+    if (Capacitor.isNativePlatform() === false) {
+      GoogleAuth.initialize({
+        clientId: '857862550162-n8fkms9dv0h2pr8f89c1sdhahqajej3h.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
+    }
+  }, []);
+
   const handleGoogleAuth = async () => {
     try {
       onLoadingChange?.(true);
       
-      // Sign in with Google using Capacitor plugin
+      // For web platforms, use Supabase's built-in Google OAuth
+      if (Capacitor.isNativePlatform() === false) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        });
+        
+        if (error) {
+          throw error;
+        }
+        
+        // The redirect will handle the rest
+        return;
+      }
+      
+      // For native platforms, use Capacitor Google Auth
       const googleUser = await GoogleAuth.signIn();
       
       if (googleUser?.authentication?.idToken) {
