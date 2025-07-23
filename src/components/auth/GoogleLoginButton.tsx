@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
+
   // Get client IDs from environment variables
   const webClientId = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID;
   const androidClientId = import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID;
@@ -25,9 +26,21 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   // Determine which client ID to use
   const clientId = Capacitor.isNativePlatform() ? androidClientId : webClientId;
 
+  useEffect(() => {
+    // Initialize Google Auth for web
+    if (Capacitor.isNativePlatform() === false) {
+      GoogleAuth.initialize({
+        clientId: '857862550162-n8fkms9dv0h2pr8f89c1sdhahqajej3h.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
+    }
+  }, []);
+
   const handleGoogleAuth = async () => {
     try {
       onLoadingChange?.(true);
+
 
       // Initialize GoogleAuth with the correct client ID (for native)
       if (Capacitor.isNativePlatform()) {
@@ -38,6 +51,26 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
         });
       }
       // Sign in with Google using Capacitor plugin
+
+      
+      // For web platforms, use Supabase's built-in Google OAuth
+      if (Capacitor.isNativePlatform() === false) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        });
+        
+        if (error) {
+          throw error;
+        }
+        
+        // The redirect will handle the rest
+        return;
+      }
+      
+      // For native platforms, use Capacitor Google Auth
       const googleUser = await GoogleAuth.signIn();
 
       if (googleUser?.authentication?.idToken) {
