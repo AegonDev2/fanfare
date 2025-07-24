@@ -13,10 +13,10 @@ const TrackOrder = () => {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('order');
   const { userRole } = useNavigation();
-  const { orders, loading, cancelOrder } = useOrderTracking();
+  const { orders, loading, cancelOrder } = useOrderTracking(orderId || undefined);
 
-  // Filter orders to show only the specific order if orderId is provided
-  const filteredOrders = orderId ? orders.filter(order => order.id === orderId) : orders;
+  // Use orders directly since the hook now handles filtering
+  const filteredOrders = orders;
 
   return (
     <>

@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigation } from "@/components/navigation/useNavigation";
 import type { TrackingOrder, OrderStatus } from "@/types/tracking";
 
-export const useOrderTracking = () => {
+export const useOrderTracking = (specificOrderId?: string) => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<TrackingOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,14 +47,26 @@ export const useOrderTracking = () => {
 
     setLoading(true);
     try {
-      console.log("Fetching orders from unified orders table for user:", user.id, "role:", userRole);
+      console.log("Fetching orders from unified orders table for user:", user.id, "role:", userRole, "specificOrderId:", specificOrderId);
 
-      // Fetch from the unified orders table
-      const { data: allOrders, error } = await supabase
+      // Build query based on whether we need a specific order or all orders
+      let query = supabase
         .from('orders')
-        .select('*')
-        .eq(userRole === 'fan' ? 'user_id' : 'influencer_id', user.id)
-        .order('created_at', { ascending: false });
+        .select('*');
+
+      if (specificOrderId) {
+        // If specific order ID is provided, fetch only that order and verify user has permission
+        query = query
+          .eq('id', specificOrderId)
+          .eq(userRole === 'fan' ? 'user_id' : 'influencer_id', user.id);
+      } else {
+        // Fetch all orders for the user
+        query = query
+          .eq(userRole === 'fan' ? 'user_id' : 'influencer_id', user.id)
+          .order('created_at', { ascending: false });
+      }
+
+      const { data: allOrders, error } = await query;
 
       if (error) {
         console.error("Error fetching orders:", error);
@@ -165,7 +177,7 @@ export const useOrderTracking = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [user, userRole]);
+  }, [user, userRole, specificOrderId]);
 
   return {
     orders,
