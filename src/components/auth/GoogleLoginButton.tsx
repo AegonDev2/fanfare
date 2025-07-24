@@ -30,12 +30,12 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     // Initialize Google Auth for web
     if (Capacitor.isNativePlatform() === false) {
       GoogleAuth.initialize({
-        clientId: '857862550162-n8fkms9dv0h2pr8f89c1sdhahqajej3h.apps.googleusercontent.com',
+        clientId: webClientId,
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
       });
     }
-  }, []);
+  }, [webClientId]);
 
   const handleGoogleAuth = async () => {
     try {
@@ -58,7 +58,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${window.location.origin}/auth/callback`
+            redirectTo: `${window.location.origin}/`
           }
         });
         
