@@ -10,30 +10,60 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the session from the URL hash
+        console.log("Processing auth callback...");
+        console.log("Current URL:", window.location.href);
+        console.log("Hash:", window.location.hash);
+        console.log("Search:", window.location.search);
+
+        // Handle OAuth callback by getting session
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Auth callback error:", error);
           toast({
             variant: "destructive",
-            title: "Verification failed",
-            description: "Failed to verify your email. Please try again."
+            title: "Authentication failed",
+            description: error.message || "Failed to complete authentication. Please try again."
           });
           navigate("/auth");
           return;
         }
 
         if (data.session) {
-          // User is verified and logged in
+          console.log("Session found:", data.session);
+          // Check if user has a profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.session.user.id)
+            .single();
+
+          if (!profile) {
+            console.log("No profile found, creating one...");
+            // Create profile for new Google user
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: data.session.user.id,
+                email: data.session.user.email!,
+                name: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name || 'User',
+                user_type: 'fan' // Default to fan
+              });
+
+            if (profileError) {
+              console.error("Profile creation error:", profileError);
+            }
+          }
+
           toast({
-            title: "Email verified!",
-            description: "Welcome to FanFare! Your account has been verified successfully."
+            title: "Success!",
+            description: "Successfully authenticated with Google!"
           });
           
-          // Redirect to dashboard/home
+          // Redirect to home
           navigate("/");
         } else {
+          console.log("No session found");
           // No session, redirect to auth
           navigate("/auth");
         }
@@ -42,7 +72,7 @@ const AuthCallback = () => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "An error occurred during verification."
+          description: "An error occurred during authentication."
         });
         navigate("/auth");
       }

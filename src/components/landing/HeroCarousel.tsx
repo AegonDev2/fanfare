@@ -1,19 +1,15 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { CarouselNext, CarouselPrevious, Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { useAdBanners } from "@/hooks/useAdBanners";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
-import Autoplay from "embla-carousel-autoplay";
+
 const HeroCarousel = () => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
   const isMobile = useIsMobile();
-  const autoplayPlugin = useRef(Autoplay({
-    delay: 4000,
-    stopOnInteraction: true
-  }));
   const {
     data: slides = [],
     isLoading
@@ -61,7 +57,7 @@ const HeroCarousel = () => {
       <Carousel setApi={setApi} opts={{
       loop: true,
       align: "center"
-    }} plugins={[autoplayPlugin.current]} className="w-full max-w-3xl lg:max-w-2xl mx-auto relative" onMouseEnter={() => autoplayPlugin.current.stop()} onMouseLeave={() => autoplayPlugin.current.play()}>
+    }} className="w-full max-w-3xl lg:max-w-2xl mx-auto relative">
         <CarouselContent>
           {processedSlides.map(slide => <CarouselItem key={slide.id} className="flex justify-center items-center">
               <div className="py-0 my-[15px] w-full">
