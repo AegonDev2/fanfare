@@ -29,9 +29,9 @@ export default function OrderTabsContent({ orders, onStatusChange }: OrderTabsCo
   const getFilteredProcessingOrders = () => {
     switch (processingFilter) {
       case "pending_approval":
-        return allProcessingOrders.filter(o => o.status === 'processing');
+        return allProcessingOrders.filter(o => o.original_status === 'approved_waiting_influencer');
       case "accepted":
-        return allProcessingOrders.filter(o => o.status === 'accepted');
+        return allProcessingOrders.filter(o => o.original_status === 'accepted');
       default:
         return allProcessingOrders;
     }
