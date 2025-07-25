@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
 import { 
@@ -6,6 +7,7 @@ import {
   Package,
   CheckCircle2
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AdminOrderCard from "./AdminOrderCard";
 import type { OrderDetails } from "@/types/admin";
 
@@ -15,11 +17,27 @@ interface OrderTabsContentProps {
 }
 
 export default function OrderTabsContent({ orders, onStatusChange }: OrderTabsContentProps) {
+  const [processingFilter, setProcessingFilter] = useState<string>("all");
+
   // Filter orders by status using the correct unified status system
   const pendingOrders = orders.filter(o => o.status === 'under_process');
-  const underProcessOrders = orders.filter(o => o.status === 'processing');
+  const allProcessingOrders = orders.filter(o => o.status === 'processing' || o.status === 'accepted');
   const acceptedOrders = orders.filter(o => o.status === 'accepted');
   const completedOrders = orders.filter(o => o.status === 'completed');
+
+  // Apply additional filtering for processing tab
+  const getFilteredProcessingOrders = () => {
+    switch (processingFilter) {
+      case "pending_approval":
+        return allProcessingOrders.filter(o => o.status === 'processing');
+      case "accepted":
+        return allProcessingOrders.filter(o => o.status === 'accepted');
+      default:
+        return allProcessingOrders;
+    }
+  };
+
+  const underProcessOrders = getFilteredProcessingOrders();
 
   console.log("OrderTabsContent - Filtering orders:", {
     total: orders.length,
@@ -57,6 +75,18 @@ export default function OrderTabsContent({ orders, onStatusChange }: OrderTabsCo
       </TabsContent>
 
       <TabsContent value="processing" className="mt-6">
+        <div className="mb-4">
+          <Select value={processingFilter} onValueChange={setProcessingFilter}>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Filter processing orders" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Processing Orders</SelectItem>
+              <SelectItem value="pending_approval">Pending Influencer Approval</SelectItem>
+              <SelectItem value="accepted">Accepted by Influencer</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         {underProcessOrders.length > 0 ? (
           <OrderGrid orders={underProcessOrders} />
         ) : (
