@@ -60,10 +60,9 @@ serve(async (req) => {
     // Prepare FCM messages
     const tokens = tokenData.map(t => t.token)
     
-    // For this example, we'll use Firebase Admin SDK approach
-    // Note: In production, you'd want to use proper FCM credentials
+    // Use Firebase Cloud Messaging API
     const fcmUrl = 'https://fcm.googleapis.com/fcm/send'
-    const fcmKey = Deno.env.get('FCM_SERVER_KEY') // You'll need to set this
+    const fcmKey = Deno.env.get('FCM_SERVER_KEY')
     
     if (!fcmKey) {
       console.error('FCM_SERVER_KEY not configured')
@@ -72,6 +71,8 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
+
+    console.log(`Sending FCM notifications to ${tokens.length} devices`)
 
     // Send notifications to all tokens
     const promises = tokens.map(async (token) => {

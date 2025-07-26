@@ -33,24 +33,28 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
   }, [registerForPushNotifications]);
 
   const setupNotificationListeners = (userId: string) => {
-    // Listen for new gift requests (for influencers)
+    // Listen for new gift requests in orders table (for influencers)
     const giftRequestsChannel = supabase
       .channel('gift-requests-notifications')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'gift_requests',
+        table: 'orders',
         filter: `influencer_id=eq.${userId}`
       }, (payload) => {
-        sendPushNotification({
-          userIds: [userId],
-          title: 'New Gift Request! 🎁',
-          body: 'You have received a new gift request from a fan!',
-          data: {
-            type: 'new_gift_request',
-            giftRequestId: payload.new.id
-          }
-        });
+        // Only send notification for gift requests
+        if (payload.new.gift_type === true) {
+          sendPushNotification({
+            userIds: [userId],
+            title: 'New Gift Request! 🎁',
+            body: 'You have received a new gift request from a fan!',
+            data: {
+              type: 'new_gift_request',
+              orderId: payload.new.id,
+              productUrl: payload.new.product_url
+            }
+          });
+        }
       })
       .subscribe();
 

@@ -109,7 +109,7 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
 
       console.log("Gift request created successfully:", data);
 
-      // Notify influencer of new gift request
+      // Notify influencer of new gift request (in-app notification)
       await sendNotification(
         influencerId,
         "new_gift_request",
@@ -117,6 +117,27 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
         data?.id,
         user.id
       );
+
+      // Send push notification to the influencer
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            userIds: [influencerId],
+            title: '🎁 New Gift Request!',
+            body: `You received a gift request from ${user?.user_metadata?.name || 'a fan'}`,
+            notificationType: 'gift_request',
+            data: {
+              product_url: productUrl,
+              sender_id: user.id,
+              gift_request_id: data?.id
+            }
+          }
+        });
+        console.log('Push notification sent successfully');
+      } catch (pushError) {
+        console.error('Failed to send push notification:', pushError);
+        // Don't block the main flow if push notification fails
+      }
 
       setProductUrl("");
       setMessage("");
