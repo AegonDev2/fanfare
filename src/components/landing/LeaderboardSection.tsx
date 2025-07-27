@@ -1,16 +1,253 @@
 
+import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Crown, Medal, Users, Star, Sparkles } from "lucide-react";
+import { Trophy, Crown, Medal, Users, Star, Sparkles, ChevronLeft, ChevronRight, Gift } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { useTopCreators } from "@/hooks/useTopCreators";
+import { TopCreatorsCard } from "@/components/leaderboard/TopCreatorsCard";
 
 const LeaderboardSection = () => {
   const navigate = useNavigate();
   const { leaderboard, isLoading, currentMonth, currentYear } = useLeaderboard();
+  const { topCreators, isLoading: creatorsLoading } = useTopCreators();
+  const [currentView, setCurrentView] = useState<'fans' | 'creators'>('fans');
 
-  if (isLoading) {
+  const switchView = (direction: 'left' | 'right') => {
+    if (direction === 'left') {
+      setCurrentView(currentView === 'fans' ? 'creators' : 'fans');
+    } else {
+      setCurrentView(currentView === 'fans' ? 'creators' : 'fans');
+    }
+  };
+
+  const renderFansLeaderboard = () => {
+    const topFans = leaderboard.slice(0, 3);
+    
+    const getPositionDisplay = (index: number) => {
+      switch (index) {
+        case 0:
+          return {
+            icon: Crown,
+            gradient: "from-yellow-400 to-yellow-600",
+            textColor: "text-yellow-600",
+            bgColor: "bg-gradient-to-br from-yellow-50 to-yellow-100",
+            borderColor: "border-yellow-300",
+            title: "Champion"
+          };
+        case 1:
+          return {
+            icon: Medal,
+            gradient: "from-gray-400 to-gray-600", 
+            textColor: "text-gray-600",
+            bgColor: "bg-gradient-to-br from-gray-50 to-gray-100",
+            borderColor: "border-gray-300",
+            title: "Legend"
+          };
+        case 2:
+          return {
+            icon: Medal,
+            gradient: "from-amber-500 to-amber-700",
+            textColor: "text-amber-600",
+            bgColor: "bg-gradient-to-br from-amber-50 to-amber-100", 
+            borderColor: "border-amber-300",
+            title: "Hero"
+          };
+        default:
+          return {
+            icon: Star,
+            gradient: "from-purple-400 to-pink-500",
+            textColor: "text-purple-600",
+            bgColor: "bg-gradient-to-br from-purple-50 to-pink-50",
+            borderColor: "border-purple-300",
+            title: "Star"
+          };
+      }
+    };
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {topFans.map((fan, index) => {
+          const display = getPositionDisplay(index);
+          const IconComponent = display.icon;
+          
+          return (
+            <div key={fan.fan_id} className={`${display.bgColor} ${display.borderColor} border-2 rounded-xl p-3 hover:scale-105 transition-all duration-300 hover:shadow-lg backdrop-blur-sm relative overflow-hidden`}>
+              {/* Rank indicator */}
+              <div className="flex items-center justify-between mb-2">
+                <div className={`flex items-center gap-2 px-2 py-1 rounded-full bg-gradient-to-r ${display.gradient} text-white text-xs font-bold shadow-sm`}>
+                  <IconComponent className="h-3 w-3" />
+                  <span>{display.title}</span>
+                </div>
+                <div className="text-lg font-black text-gray-300">#{index + 1}</div>
+              </div>
+              
+              {/* Fan avatar */}
+              <div className="text-center mb-2">
+                <div className={`w-12 h-12 mx-auto rounded-full bg-gradient-to-r ${display.gradient} flex items-center justify-center text-white text-base font-bold shadow-lg`}>
+                  {fan.fan_name ? fan.fan_name.charAt(0).toUpperCase() : "?"}
+                </div>
+              </div>
+              
+              {/* Fan details */}
+              <div className="text-center space-y-1">
+                <div className={`font-bold text-sm ${display.textColor} truncate`}>
+                  {fan.fan_name || "Anonymous Fan"}
+                </div>
+                
+                <div className="text-xs text-gray-600 truncate">
+                  {fan.favorite_influencer_name ? 
+                    `Favorite: ${fan.favorite_influencer_name}` : 
+                    "No favorite yet"
+                  }
+                </div>
+                
+                {/* Gift count */}
+                <div className="flex items-center justify-center gap-1 mt-2">
+                  <Trophy className={`h-3 w-3 ${display.textColor}`} />
+                  <span className={`text-lg font-black ${display.textColor}`}>
+                    {fan.total_gifts}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    gift{fan.total_gifts !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderCreatorsLeaderboard = () => {
+    const topCreatorsData = topCreators.slice(0, 3);
+    
+    const getCreatorPositionDisplay = (index: number) => {
+      switch (index) {
+        case 0:
+          return {
+            icon: Crown,
+            gradient: "from-purple-400 to-purple-600",
+            textColor: "text-purple-600",
+            bgColor: "bg-gradient-to-br from-purple-50 to-purple-100",
+            borderColor: "border-purple-300",
+            title: "Top Creator"
+          };
+        case 1:
+          return {
+            icon: Gift,
+            gradient: "from-pink-400 to-pink-600", 
+            textColor: "text-pink-600",
+            bgColor: "bg-gradient-to-br from-pink-50 to-pink-100",
+            borderColor: "border-pink-300",
+            title: "Rising Star"
+          };
+        case 2:
+          return {
+            icon: Star,
+            gradient: "from-blue-400 to-blue-600",
+            textColor: "text-blue-600",
+            bgColor: "bg-gradient-to-br from-blue-50 to-blue-100", 
+            borderColor: "border-blue-300",
+            title: "Beloved"
+          };
+        default:
+          return {
+            icon: Star,
+            gradient: "from-indigo-400 to-indigo-600",
+            textColor: "text-indigo-600",
+            bgColor: "bg-gradient-to-br from-indigo-50 to-indigo-100",
+            borderColor: "border-indigo-300",
+            title: "Popular"
+          };
+      }
+    };
+
+    if (creatorsLoading) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center space-x-3 animate-pulse p-4 rounded-lg bg-white/30">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-gray-200 to-gray-300"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (topCreatorsData.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <Gift className="h-16 w-16 text-purple-300 mx-auto mb-4" />
+          <p className="text-purple-600 font-semibold mb-2">No creators with gifts yet!</p>
+          <p className="text-sm text-gray-500">Be the first to send a gift to your favorite creator!</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {topCreatorsData.map((creator, index) => {
+          const display = getCreatorPositionDisplay(index);
+          const IconComponent = display.icon;
+          
+          return (
+            <div key={creator.influencer_id} className={`${display.bgColor} ${display.borderColor} border-2 rounded-xl p-3 hover:scale-105 transition-all duration-300 hover:shadow-lg backdrop-blur-sm relative overflow-hidden`}>
+              {/* Rank indicator */}
+              <div className="flex items-center justify-between mb-2">
+                <div className={`flex items-center gap-2 px-2 py-1 rounded-full bg-gradient-to-r ${display.gradient} text-white text-xs font-bold shadow-sm`}>
+                  <IconComponent className="h-3 w-3" />
+                  <span>{display.title}</span>
+                </div>
+                <div className="text-lg font-black text-gray-300">#{index + 1}</div>
+              </div>
+              
+              {/* Creator avatar */}
+              <div className="text-center mb-2">
+                <div className={`w-12 h-12 mx-auto rounded-full bg-gradient-to-r ${display.gradient} flex items-center justify-center text-white text-base font-bold shadow-lg`}>
+                  {creator.influencer_name ? creator.influencer_name.charAt(0).toUpperCase() : "?"}
+                </div>
+              </div>
+              
+              {/* Creator details */}
+              <div className="text-center space-y-1">
+                <div className={`font-bold text-sm ${display.textColor} truncate`}>
+                  {creator.influencer_name || "Anonymous Creator"}
+                </div>
+                
+                <div className="text-xs text-gray-600 truncate">
+                  {creator.top_fan_name ? 
+                    `Top Fan: ${creator.top_fan_name}` : 
+                    "No top fan yet"
+                  }
+                </div>
+                
+                {/* Gift count */}
+                <div className="flex items-center justify-center gap-1 mt-2">
+                  <Gift className={`h-3 w-3 ${display.textColor}`} />
+                  <span className={`text-lg font-black ${display.textColor}`}>
+                    {creator.total_gifts_received}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    gift{creator.total_gifts_received !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  if (isLoading && creatorsLoading) {
     return (
       <section className="mb-6 px-4">
         <div className="max-w-6xl mx-auto">
@@ -25,7 +262,7 @@ const LeaderboardSection = () => {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl lg:text-2xl flex items-center bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent font-bold">
                   <Trophy className="mr-2 h-6 w-6 lg:h-7 lg:w-7 text-funky-yellow animate-pulse" />
-                  Top Fans This Month
+                  Loading Leaderboards...
                 </CardTitle>
                 <Badge variant="outline" className="border-funky-purple/50 text-funky-purple bg-funky-purple/5">
                   {currentMonth} {currentYear}
@@ -49,7 +286,7 @@ const LeaderboardSection = () => {
     );
   }
 
-  if (leaderboard.length === 0) {
+  if (leaderboard.length === 0 && topCreators.length === 0) {
     return (
       <section className="mb-6 px-4">
         <div className="max-w-6xl mx-auto">
@@ -63,7 +300,7 @@ const LeaderboardSection = () => {
             <CardHeader className="pb-3 relative z-10">
               <CardTitle className="text-xl lg:text-2xl flex items-center bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent font-bold">
                 <Trophy className="mr-2 h-6 w-6 lg:h-7 lg:w-7 text-funky-yellow animate-pulse" />
-                Top Fans This Month
+                Leaderboards This Month
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center py-6 relative z-10">
@@ -86,49 +323,6 @@ const LeaderboardSection = () => {
     );
   }
 
-  const topFans = leaderboard.slice(0, 3);
-
-  const getPositionDisplay = (index: number) => {
-    switch (index) {
-      case 0:
-        return {
-          icon: Crown,
-          gradient: "from-yellow-400 to-yellow-600",
-          textColor: "text-yellow-600",
-          bgColor: "bg-gradient-to-br from-yellow-50 to-yellow-100",
-          borderColor: "border-yellow-300",
-          title: "Champion"
-        };
-      case 1:
-        return {
-          icon: Medal,
-          gradient: "from-gray-400 to-gray-600", 
-          textColor: "text-gray-600",
-          bgColor: "bg-gradient-to-br from-gray-50 to-gray-100",
-          borderColor: "border-gray-300",
-          title: "Legend"
-        };
-      case 2:
-        return {
-          icon: Medal,
-          gradient: "from-amber-500 to-amber-700",
-          textColor: "text-amber-600",
-          bgColor: "bg-gradient-to-br from-amber-50 to-amber-100", 
-          borderColor: "border-amber-300",
-          title: "Hero"
-        };
-      default:
-        return {
-          icon: Star,
-          gradient: "from-purple-400 to-pink-500",
-          textColor: "text-purple-600",
-          bgColor: "bg-gradient-to-br from-purple-50 to-pink-50",
-          borderColor: "border-purple-300",
-          title: "Star"
-        };
-    }
-  };
-
   return (
     <section className="mb-6 px-4">
       <div className="max-w-6xl mx-auto">
@@ -142,67 +336,60 @@ const LeaderboardSection = () => {
           
           <CardHeader className="pb-3 relative z-10">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xl lg:text-2xl flex items-center bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent font-bold">
-                <Trophy className="mr-2 h-6 w-6 lg:h-7 lg:w-7 text-funky-yellow" />
-                Top Fans This Month
-              </CardTitle>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => switchView('left')}
+                  className="p-1 h-8 w-8 rounded-full bg-white/50 hover:bg-white/80 transition-all duration-200"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <CardTitle className="text-xl lg:text-2xl flex items-center bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent font-bold">
+                  {currentView === 'fans' ? (
+                    <>
+                      <Trophy className="mr-2 h-6 w-6 lg:h-7 lg:w-7 text-funky-yellow" />
+                      Top Fans This Month
+                    </>
+                  ) : (
+                    <>
+                      <Gift className="mr-2 h-6 w-6 lg:h-7 lg:w-7 text-funky-purple" />
+                      Top Gifted Creators
+                    </>
+                  )}
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => switchView('right')}
+                  className="p-1 h-8 w-8 rounded-full bg-white/50 hover:bg-white/80 transition-all duration-200"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
               <Badge variant="outline" className="border-funky-purple/50 text-funky-purple bg-funky-purple/10 backdrop-blur-sm">
                 {currentMonth} {currentYear}
               </Badge>
             </div>
+            
+            {/* View indicator dots */}
+            <div className="flex justify-center space-x-2 mt-2">
+              <div 
+                className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                  currentView === 'fans' ? 'bg-funky-purple' : 'bg-gray-300'
+                }`}
+              />
+              <div 
+                className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                  currentView === 'creators' ? 'bg-funky-purple' : 'bg-gray-300'
+                }`}
+              />
+            </div>
           </CardHeader>
           
           <CardContent className="space-y-3 relative z-10 pb-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {topFans.map((fan, index) => {
-                const display = getPositionDisplay(index);
-                const IconComponent = display.icon;
-                
-                return (
-                  <div key={fan.fan_id} className={`${display.bgColor} ${display.borderColor} border-2 rounded-xl p-3 hover:scale-105 transition-all duration-300 hover:shadow-lg backdrop-blur-sm relative overflow-hidden`}>
-                    {/* Rank indicator */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className={`flex items-center gap-2 px-2 py-1 rounded-full bg-gradient-to-r ${display.gradient} text-white text-xs font-bold shadow-sm`}>
-                        <IconComponent className="h-3 w-3" />
-                        <span>{display.title}</span>
-                      </div>
-                      <div className="text-lg font-black text-gray-300">#{index + 1}</div>
-                    </div>
-                    
-                    {/* Fan avatar - smaller */}
-                    <div className="text-center mb-2">
-                      <div className={`w-12 h-12 mx-auto rounded-full bg-gradient-to-r ${display.gradient} flex items-center justify-center text-white text-base font-bold shadow-lg`}>
-                        {fan.fan_name ? fan.fan_name.charAt(0).toUpperCase() : "?"}
-                      </div>
-                    </div>
-                    
-                    {/* Fan details - more compact */}
-                    <div className="text-center space-y-1">
-                      <div className={`font-bold text-sm ${display.textColor} truncate`}>
-                        {fan.fan_name || "Anonymous Fan"}
-                      </div>
-                      
-                      <div className="text-xs text-gray-600 truncate">
-                        {fan.favorite_influencer_name ? 
-                          `Favorite: ${fan.favorite_influencer_name}` : 
-                          "No favorite yet"
-                        }
-                      </div>
-                      
-                      {/* Gift count - smaller */}
-                      <div className="flex items-center justify-center gap-1 mt-2">
-                        <Trophy className={`h-3 w-3 ${display.textColor}`} />
-                        <span className={`text-lg font-black ${display.textColor}`}>
-                          {fan.total_gifts}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          gift{fan.total_gifts !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="transition-all duration-300">
+              {currentView === 'fans' ? renderFansLeaderboard() : renderCreatorsLeaderboard()}
             </div>
             
             <div className="text-center pt-3">

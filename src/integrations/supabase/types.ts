@@ -932,6 +932,19 @@ export type Database = {
           year: number
         }[]
       }
+      get_top_gifted_creators: {
+        Args: { target_month?: number; target_year?: number }
+        Returns: {
+          influencer_id: string
+          influencer_name: string
+          total_gifts_received: number
+          total_amount_received: number
+          top_fan_id: string
+          top_fan_name: string
+          month: string
+          year: number
+        }[]
+      }
       has_role: {
         Args: {
           _user_id: string
