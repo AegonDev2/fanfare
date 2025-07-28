@@ -324,6 +324,7 @@ export type Database = {
       influencer_profiles: {
         Row: {
           about: string | null
+          birthday: string | null
           category: string | null
           created_at: string
           facebook_url: string | null
@@ -341,6 +342,7 @@ export type Database = {
         }
         Insert: {
           about?: string | null
+          birthday?: string | null
           category?: string | null
           created_at?: string
           facebook_url?: string | null
@@ -358,6 +360,7 @@ export type Database = {
         }
         Update: {
           about?: string | null
+          birthday?: string | null
           category?: string | null
           created_at?: string
           facebook_url?: string | null

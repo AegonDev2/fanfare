@@ -15,6 +15,7 @@ import CreateProductDialog from '@/components/gift-shop/CreateProductDialog';
 import ShopTileView from '@/components/gift-shop/ShopTileView';
 import { useShops } from '@/hooks/useShops';
 import { useShopProducts } from '@/hooks/useShopProducts';
+import { useAllShopProducts } from '@/hooks/useAllShopProducts';
 import { useUser } from '@/hooks/useUser';
 import { hasRole } from '@/utils/roleManager';
 
@@ -31,7 +32,7 @@ export default function GiftShop() {
 
   const { user } = useUser();
   const { data: shops = [], isLoading: shopsLoading, refetch: refetchShops } = useShops();
-  const { data: allProducts = [], isLoading: allProductsLoading, refetch: refetchAllProducts } = useShopProducts(null);
+  const { data: allProducts = [], isLoading: allProductsLoading, refetch: refetchAllProducts } = useAllShopProducts();
   const { data: products = [], isLoading: productsLoading, refetch: refetchProducts } = useShopProducts(selectedShopId);
 
   // Check if user is admin

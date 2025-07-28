@@ -39,6 +39,7 @@ interface ProfileFormData {
   facebook_url: string;
   tiktok_url: string;
   category: string;
+  birthday: string;
 }
 
 interface SizeFormData {
@@ -84,6 +85,7 @@ export default function EditProfile() {
     facebook_url: "",
     tiktok_url: "",
     category: "",
+    birthday: "",
   });
 
   const [sizeData, setSizeData] = useState<SizeFormData>({
@@ -136,6 +138,7 @@ export default function EditProfile() {
         facebook_url: influencer.facebook_url || "",
         tiktok_url: influencer.tiktok_url || "",
         category: influencer.category || "",
+        birthday: influencer.birthday ? new Date(influencer.birthday).toISOString().split('T')[0] : "",
       });
 
       if (influencer.size_preferences) {
@@ -490,6 +493,16 @@ export default function EditProfile() {
                           <SelectItem value="beauty">Beauty</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="birthday">Birthday</Label>
+                      <Input
+                        id="birthday"
+                        type="date"
+                        value={profileData.birthday}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, birthday: e.target.value }))}
+                      />
                     </div>
                   </div>
 
