@@ -951,6 +951,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_admin_session_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_influencer_top_fans: {
         Args: { influencer_id_param: string }
         Returns: {
@@ -1059,6 +1063,10 @@ export type Database = {
           rejection_reason?: string
           influencer_response?: string
         }
+        Returns: boolean
+      }
+      verify_admin_access: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
     }
