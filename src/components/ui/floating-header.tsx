@@ -55,6 +55,11 @@ const FloatingHeader = ({
             <Button variant="ghost" size="icon" onClick={() => setNavOpen(true)} className="lg:hidden">
               <Menu className="h-5 w-5" />
             </Button>
+            
+            {/* Desktop Navigation Toggle */}
+            <Button variant="ghost" size="icon" className="hidden lg:flex">
+              <Menu className="h-5 w-5" />
+            </Button>
             <div className="flex items-center space-x-2 cursor-pointer hover-scale transition-all duration-200" onClick={() => navigate('/')}>
               <img src="/lovable-uploads/8f181bc3-b317-49b4-8117-1c20245ec9b0.png" alt="FanFare Logo" className="h-11 w-auto" />
             </div>
