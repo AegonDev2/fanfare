@@ -41,17 +41,13 @@ const ProductCard = memo(({
             <Gift className="h-3.5 w-3.5" />
           </Button>
         </div>
-        
-        <div className="space-y-1">
-          <h3 className="font-semibold text-gray-900 text-xs lg:text-sm line-clamp-2 leading-tight group-hover:text-funky-purple transition-colors duration-300">
+        <div className="space-y-1.5">
+          <h3 className="font-semibold text-gray-900 text-[10px] lg:text-xs leading-tight group-hover:text-funky-purple transition-colors duration-300 line-clamp-2 min-h-[2.5rem]">
             {product.name}
           </h3>
-          
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-1">
-              <span className="text-xs lg:text-sm font-bold text-funky-purple">
-                ₹{product.price?.toLocaleString() || 'N/A'}
-              </span>
+              <span className="text-[10px] lg:text-xs font-bold text-funky-purple">{product.price?.toLocaleString() || 'N/A'}</span>
             </div>
             
             <Badge variant="secondary" className="bg-funky-pink/10 text-funky-pink border-funky-pink/20 text-[10px] px-1.5 py-0.5">
@@ -60,8 +56,8 @@ const ProductCard = memo(({
             </Badge>
           </div>
           
-          <Button onClick={handleGiftClick} size="sm" className="w-full mt-2 bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple text-white border-0 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-[10px] lg:text-xs py-1.5">
-            <Heart className="h-3 w-3 mr-1" />
+          <Button onClick={handleGiftClick} size="sm" className="w-full mt-2 bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple text-white border-0 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-[9px] lg:text-[10px] py-1.5 h-7">
+            <Heart className="h-2.5 w-2.5 mr-1" />
             Gift This
           </Button>
         </div>

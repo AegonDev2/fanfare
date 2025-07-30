@@ -55,10 +55,39 @@ const FloatingHeader = ({
             <Button variant="ghost" size="icon" onClick={() => setNavOpen(true)} className="lg:hidden">
               <Menu className="h-5 w-5" />
             </Button>
-            
             <div className="flex items-center space-x-2 cursor-pointer hover-scale transition-all duration-200" onClick={() => navigate('/')}>
               <img src="/lovable-uploads/8f181bc3-b317-49b4-8117-1c20245ec9b0.png" alt="FanFare Logo" className="h-11 w-auto" />
             </div>
+
+            {/* Desktop Navigation Menu */}
+            <nav className="hidden lg:flex items-center space-x-8 ml-8">
+              <button 
+                onClick={() => navigate('/influencers')} 
+                className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium"
+              >
+                Influencers
+              </button>
+              <button 
+                onClick={() => navigate('/gift-shop')} 
+                className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium"
+              >
+                Gift Shop
+              </button>
+              <button 
+                onClick={() => navigate('/leaderboard')} 
+                className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium"
+              >
+                Leaderboard
+              </button>
+              {user && (
+                <button 
+                  onClick={() => navigate('/gift-requests')} 
+                  className="text-gray-700 hover:text-funky-purple transition-colors text-sm font-medium"
+                >
+                  Gift Requests
+                </button>
+              )}
+            </nav>
           </div>
 
           {/* User Actions - Only show when logged in */}

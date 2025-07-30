@@ -55,25 +55,23 @@ const InfluencerCard = memo(({
             <div className={cn("absolute inset-0 bg-gradient-to-t from-funky-purple/40 to-transparent opacity-0 transition-opacity duration-300", isHovering ? "opacity-100" : "opacity-0")}></div>
           </div>
         </div>
-        
-        <div className="mt-1 relative">
-          <h3 className="text-xs lg:text-sm font-semibold truncate font-display text-zinc-950">{influencer.name}</h3>
-          <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mt-0.5 space-x-1">
-            {influencer.category && <>
+        <div className="mt-2 relative">
+          <h3 className="text-xs lg:text-sm font-semibold truncate font-display text-zinc-950 leading-tight">{influencer.name}</h3>
+          <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mt-1 space-x-1">{influencer.category && <>
+                <span className="text-[9px] lg:text-[10px] text-slate-600 capitalize truncate max-w-[60px]">{influencer.category}</span>
                 <span>•</span>
-                <span className="text-[10px] lg:text-xs text-slate-600 capitalize">{influencer.category}</span>
               </>}
             <span>•</span>
             <div className="flex items-center">
               <Users className="h-2.5 w-2.5 mr-0.5 text-funky-pink" />
-              <span className="text-[10px] lg:text-xs text-slate-950">{formatFollowers(influencer.followers)}</span>
+              <span className="text-[9px] lg:text-[10px] text-slate-950">{formatFollowers(influencer.followers)}</span>
             </div>
           </div>
           <Button size="sm" variant="secondary" onClick={e => {
           e.stopPropagation();
           onProfileClick(influencer.id);
-        }} className="mt-1 w-full text-[10px] lg:text-xs py-1 px-2 transition-all duration-300 border border-funky-purple/20 text-stone-50 bg-funky-purple">
-            <User className="h-3 w-3 mr-1" />
+        }} className="mt-2 w-full text-[9px] lg:text-[10px] py-1.5 px-2 transition-all duration-300 border border-funky-purple/20 text-stone-50 bg-funky-purple hover:bg-funky-purple/90 rounded-md">
+            <User className="h-2.5 w-2.5 mr-1" />
             View Profile
           </Button>
         </div>
