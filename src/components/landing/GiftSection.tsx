@@ -41,13 +41,17 @@ const ProductCard = memo(({
             <Gift className="h-3.5 w-3.5" />
           </Button>
         </div>
-        <div className="space-y-1.5">
-          <h3 className="font-semibold text-gray-900 text-[10px] lg:text-xs leading-tight group-hover:text-funky-purple transition-colors duration-300 line-clamp-2 min-h-[2.5rem]">
+        
+        <div className="space-y-1">
+          <h3 className="font-semibold text-gray-900 text-xs lg:text-sm line-clamp-2 leading-tight group-hover:text-funky-purple transition-colors duration-300">
             {product.name}
           </h3>
+          
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-1">
-              <span className="text-[10px] lg:text-xs font-bold text-funky-purple">{product.price?.toLocaleString() || 'N/A'}</span>
+              <span className="text-xs lg:text-sm font-bold text-funky-purple">
+                ₹{product.price?.toLocaleString() || 'N/A'}
+              </span>
             </div>
             
             <Badge variant="secondary" className="bg-funky-pink/10 text-funky-pink border-funky-pink/20 text-[10px] px-1.5 py-0.5">
@@ -56,8 +60,8 @@ const ProductCard = memo(({
             </Badge>
           </div>
           
-          <Button onClick={handleGiftClick} size="sm" className="w-full mt-2 bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple text-white border-0 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-[9px] lg:text-[10px] py-1.5 h-7">
-            <Heart className="h-2.5 w-2.5 mr-1" />
+          <Button onClick={handleGiftClick} size="sm" className="w-full mt-2 bg-gradient-to-r from-funky-purple to-funky-pink hover:from-funky-pink hover:to-funky-purple text-white border-0 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-[10px] lg:text-xs py-1.5">
+            <Heart className="h-3 w-3 mr-1" />
             Gift This
           </Button>
         </div>
@@ -125,9 +129,8 @@ const GiftCarousel = ({
   const handleMouseUp = (e: React.MouseEvent) => {
     handleEnd(e.clientX);
   };
-  return <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-slate-50/50 to-white border border-funky-purple/10 shadow-lg">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.4),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(236,72,153,0.4),transparent_50%)]"></div>
+  return <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-funky-pink/5 to-funky-purple/5 border-2 border-gradient-to-r from-funky-pink/20 to-funky-purple/20 shadow-xl">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,105,180,0.1),transparent_50%)]"></div>
       
       <div ref={carouselRef} className="flex transition-transform duration-300 ease-out relative z-10 cursor-grab active:cursor-grabbing" style={{
       transform: `translateX(-${currentIndex * 100}%)`
@@ -135,27 +138,25 @@ const GiftCarousel = ({
         {Array.from({
         length: totalSlides
       }).map((_, slideIndex) => <div key={slideIndex} className="w-full flex-shrink-0">
-            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-6`}>
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`}>
               {products.slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView).map(product => <ProductCard key={product.id} product={product} />)}
             </div>
           </div>)}
       </div>
 
-      {/* Navigation Buttons - Desktop only */}
-      <button onClick={scrollPrev} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white hover:shadow-xl transition-all duration-200 hover:scale-105 hidden lg:flex z-20 border border-funky-purple/10">
-        <ArrowRight className="h-5 w-5 rotate-180" />
+      {/* Navigation Buttons - Only visible on desktop/laptop */}
+      <button onClick={scrollPrev} className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex z-20">
+        <ArrowRight className="h-4 w-4 rotate-180" />
       </button>
       
-      <button onClick={scrollNext} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white hover:shadow-xl transition-all duration-200 hover:scale-105 hidden lg:flex z-20 border border-funky-purple/10">
-        <ArrowRight className="h-5 w-5" />
+      <button onClick={scrollNext} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex z-20">
+        <ArrowRight className="h-4 w-4" />
       </button>
 
-      {/* Slide indicators */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        {Array.from({
-        length: totalSlides
-      }).map((_, index) => {})}
-      </div>
+      {/* Decorative Elements */}
+      <div className="absolute top-4 left-4 w-6 h-6 bg-funky-pink/20 rounded-full animate-pulse"></div>
+      <div className="absolute top-8 right-8 w-4 h-4 bg-funky-purple/20 rounded-full animate-pulse delay-700"></div>
+      <div className="absolute bottom-12 right-6 w-3 h-3 bg-funky-pink/30 rounded-full animate-pulse delay-1000"></div>
     </div>;
 };
 const GiftSection = () => {

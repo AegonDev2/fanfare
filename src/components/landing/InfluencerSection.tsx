@@ -55,23 +55,25 @@ const InfluencerCard = memo(({
             <div className={cn("absolute inset-0 bg-gradient-to-t from-funky-purple/40 to-transparent opacity-0 transition-opacity duration-300", isHovering ? "opacity-100" : "opacity-0")}></div>
           </div>
         </div>
-        <div className="mt-2 relative">
-          <h3 className="text-xs lg:text-sm font-semibold truncate font-display text-zinc-950 leading-tight">{influencer.name}</h3>
-          <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mt-1 space-x-1">{influencer.category && <>
-                <span className="text-[9px] lg:text-[10px] text-slate-600 capitalize truncate max-w-[60px]">{influencer.category}</span>
+        
+        <div className="mt-1 relative">
+          <h3 className="text-xs lg:text-sm font-semibold truncate font-display text-zinc-950">{influencer.name}</h3>
+          <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mt-0.5 space-x-1">
+            {influencer.category && <>
                 <span>•</span>
+                <span className="text-[10px] lg:text-xs text-slate-600 capitalize">{influencer.category}</span>
               </>}
             <span>•</span>
             <div className="flex items-center">
               <Users className="h-2.5 w-2.5 mr-0.5 text-funky-pink" />
-              <span className="text-[9px] lg:text-[10px] text-slate-950">{formatFollowers(influencer.followers)}</span>
+              <span className="text-[10px] lg:text-xs text-slate-950">{formatFollowers(influencer.followers)}</span>
             </div>
           </div>
           <Button size="sm" variant="secondary" onClick={e => {
           e.stopPropagation();
           onProfileClick(influencer.id);
-        }} className="mt-2 w-full text-[9px] lg:text-[10px] py-1.5 px-2 transition-all duration-300 border border-funky-purple/20 text-stone-50 bg-funky-purple hover:bg-funky-purple/90 rounded-md">
-            <User className="h-2.5 w-2.5 mr-1" />
+        }} className="mt-1 w-full text-[10px] lg:text-xs py-1 px-2 transition-all duration-300 border border-funky-purple/20 text-stone-50 bg-funky-purple">
+            <User className="h-3 w-3 mr-1" />
             View Profile
           </Button>
         </div>
@@ -142,37 +144,27 @@ const CreatorCarousel = ({
   const handleMouseUp = (e: React.MouseEvent) => {
     handleEnd(e.clientX);
   };
-  return <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-slate-50/50 to-white border border-funky-purple/10 shadow-lg">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.4),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(236,72,153,0.4),transparent_50%)]"></div>
-      
-      <div ref={carouselRef} className="flex transition-transform duration-300 ease-out relative z-10 cursor-grab active:cursor-grabbing" style={{
+  return <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-funky-purple/10">
+      <div ref={carouselRef} className="flex transition-transform duration-300 ease-out cursor-grab active:cursor-grabbing" style={{
       transform: `translateX(-${currentIndex * 100}%)`
     }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onMouseDown={handleMouseDown} onMouseMove={isDragging ? handleMouseMove : undefined} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
         {Array.from({
         length: totalSlides
       }).map((_, slideIndex) => <div key={slideIndex} className="w-full flex-shrink-0">
-            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-6`}>
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`}>
               {influencers.slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView).map(influencer => <InfluencerCard key={influencer.id} influencer={influencer} onProfileClick={onProfileClick} isMobile={isMobile} />)}
             </div>
           </div>)}
       </div>
 
-      {/* Navigation Buttons - Desktop only */}
-      <button onClick={scrollPrev} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white hover:shadow-xl transition-all duration-200 hover:scale-105 hidden lg:flex z-20 border border-funky-purple/10">
-        <ArrowRight className="h-5 w-5 rotate-180" />
+      {/* Navigation Buttons - Only visible on desktop/laptop */}
+      <button onClick={scrollPrev} className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex">
+        <ArrowRight className="h-4 w-4 rotate-180" />
       </button>
       
-      <button onClick={scrollNext} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white hover:shadow-xl transition-all duration-200 hover:scale-105 hidden lg:flex z-20 border border-funky-purple/10">
-        <ArrowRight className="h-5 w-5" />
+      <button onClick={scrollNext} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white transition-all duration-200 hover:scale-110 hidden lg:flex">
+        <ArrowRight className="h-4 w-4" />
       </button>
-
-      {/* Slide indicators */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        {Array.from({
-        length: totalSlides
-      }).map((_, index) => {})}
-      </div>
     </div>;
 };
 const InfluencerSection = () => {
