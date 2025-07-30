@@ -30,8 +30,8 @@ export default function Profile() {
   const [profileCheckError, setProfileCheckError] = useState<string | null>(null);
 
   // Determine the profile ID to load
-  const profileId = id || user?.id;
-  const isCurrentUserProfile = !id || id === user?.id;
+  const profileId = id; // For public viewing, we only use the ID from params
+  const isCurrentUserProfile = id && user?.id && id === user.id;
 
   const { 
     influencer, 
@@ -116,7 +116,7 @@ export default function Profile() {
   }, [profileId]);
 
   useEffect(() => {
-    if (!user && !profileLoaded) return;
+    // Allow profile loading for public viewing even without authentication
     
     const handleProfileLoad = async () => {
       try {
@@ -130,7 +130,7 @@ export default function Profile() {
           return;
         }
 
-        // For current user, check if they need to create a profile
+        // For current user viewing their own profile, check if they need to create a profile
         if (isCurrentUserProfile && user && userType) {
           if (userType === 'influencer' && !influencer && !influencerLoading && !influencerError) {
             console.log('Redirecting to create influencer profile');
@@ -265,37 +265,43 @@ export default function Profile() {
 
                     {/* Action Buttons */}
                     <div className="space-y-3">
-                      {!isCurrentUserProfile ? (
-                        <>
-                          <Button 
-                            size="lg"
-                            className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white"
-                            onClick={() => navigate(`/place-order?influencer=${influencer.id}`)}
-                          >
-                            <Heart className="h-4 w-4 mr-2" />
-                            Send Gift
-                          </Button>
-                          <Button 
-                            variant="outline"
-                            size="lg"
-                            className="w-full border-secondary/30 text-secondary hover:bg-secondary/10"
-                            onClick={() => navigate(`/wishlist/${influencer.id}`)}
-                          >
-                            <List className="h-4 w-4 mr-2" />
-                            View Wishlist
-                          </Button>
-                        </>
-                      ) : (
-                        <Button 
-                          variant="outline" 
-                          size="lg"
-                          className="w-full border-primary/30 text-primary hover:bg-primary/10"
-                          onClick={() => navigate('/edit-profile')}
-                        >
-                          <User className="h-4 w-4 mr-2" />
-                          Edit Profile
-                        </Button>
-                      )}
+                       {!isCurrentUserProfile ? (
+                         <>
+                           <Button 
+                             size="lg"
+                             className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white"
+                             onClick={() => {
+                               if (user) {
+                                 navigate(`/place-order?influencer=${influencer.id}`);
+                               } else {
+                                 navigate(`/auth?redirectTo=${encodeURIComponent(`/place-order?influencer=${influencer.id}`)}`);
+                               }
+                             }}
+                           >
+                             <Heart className="h-4 w-4 mr-2" />
+                             Send Gift
+                           </Button>
+                           <Button 
+                             variant="outline"
+                             size="lg"
+                             className="w-full border-secondary/30 text-secondary hover:bg-secondary/10"
+                             onClick={() => navigate(`/wishlist/${influencer.id}`)}
+                           >
+                             <List className="h-4 w-4 mr-2" />
+                             View Wishlist
+                           </Button>
+                         </>
+                       ) : (
+                         <Button 
+                           variant="outline" 
+                           size="lg"
+                           className="w-full border-primary/30 text-primary hover:bg-primary/10"
+                           onClick={() => navigate('/edit-profile')}
+                         >
+                           <User className="h-4 w-4 mr-2" />
+                           Edit Profile
+                         </Button>
+                       )}
                     </div>
                   </div>
                 </div>
