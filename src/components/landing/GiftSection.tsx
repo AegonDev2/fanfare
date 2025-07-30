@@ -77,11 +77,9 @@ const GiftCarousel = ({
   const carouselRef = useRef<HTMLDivElement>(null);
   const itemsPerView = isMobile ? 2 : 4;
   const totalSlides = Math.ceil(products.length / itemsPerView);
-
   const scrollPrev = useCallback(() => {
     setCurrentIndex(prev => (prev - 1 + totalSlides) % totalSlides);
   }, [totalSlides]);
-
   const scrollNext = useCallback(() => {
     setCurrentIndex(prev => (prev + 1) % totalSlides);
   }, [totalSlides]);
@@ -91,17 +89,14 @@ const GiftCarousel = ({
     setStartX(clientX);
     setIsDragging(true);
   };
-
   const handleMove = (clientX: number) => {
     if (!isDragging) return;
   };
-
   const handleEnd = (clientX: number) => {
     if (!isDragging) return;
     setIsDragging(false);
     const deltaX = startX - clientX;
     const threshold = 50;
-
     if (deltaX > threshold) {
       scrollNext();
     } else if (deltaX < -threshold) {
@@ -113,11 +108,9 @@ const GiftCarousel = ({
   const handleTouchStart = (e: React.TouchEvent) => {
     handleStart(e.touches[0].clientX);
   };
-
   const handleTouchMove = (e: React.TouchEvent) => {
     handleMove(e.touches[0].clientX);
   };
-
   const handleTouchEnd = (e: React.TouchEvent) => {
     handleEnd(e.changedTouches[0].clientX);
   };
@@ -126,77 +119,44 @@ const GiftCarousel = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     handleStart(e.clientX);
   };
-
   const handleMouseMove = (e: React.MouseEvent) => {
     handleMove(e.clientX);
   };
-
   const handleMouseUp = (e: React.MouseEvent) => {
     handleEnd(e.clientX);
   };
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-slate-50/50 to-white border border-funky-purple/10 shadow-lg">
+  return <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-slate-50/50 to-white border border-funky-purple/10 shadow-lg">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.4),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(236,72,153,0.4),transparent_50%)]"></div>
       
-      <div 
-        ref={carouselRef} 
-        className="flex transition-transform duration-300 ease-out relative z-10 cursor-grab active:cursor-grabbing"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={isDragging ? handleMouseMove : undefined}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        {Array.from({ length: totalSlides }).map((_, slideIndex) => (
-          <div key={slideIndex} className="w-full flex-shrink-0">
+      <div ref={carouselRef} className="flex transition-transform duration-300 ease-out relative z-10 cursor-grab active:cursor-grabbing" style={{
+      transform: `translateX(-${currentIndex * 100}%)`
+    }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onMouseDown={handleMouseDown} onMouseMove={isDragging ? handleMouseMove : undefined} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+        {Array.from({
+        length: totalSlides
+      }).map((_, slideIndex) => <div key={slideIndex} className="w-full flex-shrink-0">
             <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-6`}>
-              {products
-                .slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView)
-                .map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+              {products.slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView).map(product => <ProductCard key={product.id} product={product} />)}
             </div>
-          </div>
-        ))}
+          </div>)}
       </div>
 
       {/* Navigation Buttons - Desktop only */}
-      <button
-        onClick={scrollPrev}
-        className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white hover:shadow-xl transition-all duration-200 hover:scale-105 hidden lg:flex z-20 border border-funky-purple/10"
-      >
+      <button onClick={scrollPrev} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white hover:shadow-xl transition-all duration-200 hover:scale-105 hidden lg:flex z-20 border border-funky-purple/10">
         <ArrowRight className="h-5 w-5 rotate-180" />
       </button>
       
-      <button
-        onClick={scrollNext}
-        className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white hover:shadow-xl transition-all duration-200 hover:scale-105 hidden lg:flex z-20 border border-funky-purple/10"
-      >
+      <button onClick={scrollNext} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg items-center justify-center text-funky-purple hover:bg-white hover:shadow-xl transition-all duration-200 hover:scale-105 hidden lg:flex z-20 border border-funky-purple/10">
         <ArrowRight className="h-5 w-5" />
       </button>
 
       {/* Slide indicators */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        {Array.from({ length: totalSlides }).map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={cn(
-              "w-2 h-2 rounded-full transition-all duration-200",
-              index === currentIndex 
-                ? "bg-funky-purple w-6" 
-                : "bg-funky-purple/30 hover:bg-funky-purple/50"
-            )}
-          />
-        ))}
+        {Array.from({
+        length: totalSlides
+      }).map((_, index) => {})}
       </div>
-    </div>
-  );
+    </div>;
 };
 const GiftSection = () => {
   const navigate = useNavigate();
