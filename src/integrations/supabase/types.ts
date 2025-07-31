@@ -235,42 +235,6 @@ export type Database = {
           },
         ]
       }
-      gift_selection_items: {
-        Row: {
-          created_at: string
-          description: string | null
-          gift_url: string | null
-          id: string
-          image_url: string
-          is_featured: boolean | null
-          name: string
-          price: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          gift_url?: string | null
-          id?: string
-          image_url: string
-          is_featured?: boolean | null
-          name: string
-          price: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          gift_url?: string | null
-          id?: string
-          image_url?: string
-          is_featured?: boolean | null
-          name?: string
-          price?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       gifts_to_influencers: {
         Row: {
           created_at: string
