@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCallback } from "react";
 
 /**
  * Enhanced security manager for handling sensitive operations
@@ -176,7 +177,7 @@ export const useSecurityManager = () => {
   const { toast } = useToast();
   const securityManager = SecurityManager.getInstance();
   
-  const verifyAdminWithFeedback = async (): Promise<boolean> => {
+  const verifyAdminWithFeedback = useCallback(async (): Promise<boolean> => {
     try {
       // Check for suspicious activity first
       const isSuspicious = await securityManager.detectSuspiciousActivity();
@@ -224,7 +225,7 @@ export const useSecurityManager = () => {
       });
       return false;
     }
-  };
+  }, [toast, securityManager]);
   
   return {
     verifyAdminWithFeedback,
