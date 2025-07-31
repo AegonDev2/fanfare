@@ -191,7 +191,7 @@ export const useSecurityManager = () => {
       }
       
       // Check rate limiting
-      const isWithinLimit = await securityManager.checkRateLimit('ADMIN_VERIFICATION', 10, 30);
+      const isWithinLimit = await securityManager.checkRateLimit('ADMIN_VERIFICATION', 50, 60);
       
       if (!isWithinLimit) {
         toast({

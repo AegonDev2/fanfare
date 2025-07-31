@@ -22,13 +22,26 @@ export function useGiftItems() {
   const fetchGiftItems = useCallback(async (): Promise<GiftItem[]> => {
     try {
       const { data, error } = await supabase
-        .from('gift_selection_items')
+        .from('shop_products')
         .select('*')
-        .order('is_featured', { ascending: false });
+        .eq('is_available', true)
+        .order('is_featured', { ascending: false })
+        .order('ranking', { ascending: true });
         
       if (error) throw error;
       
-      return data || [];
+      // Map shop products to gift items format
+      return (data || []).map(product => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image_url: product.image_url || '',
+        description: product.description,
+        is_featured: product.is_featured,
+        created_at: product.created_at,
+        updated_at: product.updated_at,
+        gift_url: product.product_url,
+      }));
     } catch (error: any) {
       console.error('Error fetching gift items:', error);
       toast({
@@ -46,9 +59,10 @@ export function useGiftItems() {
     try {
       console.log("Fetching gift with ID:", id);
       const { data, error } = await supabase
-        .from('gift_selection_items')
+        .from('shop_products')
         .select('*')
         .eq('id', id)
+        .eq('is_available', true)
         .maybeSingle();
         
       if (error) {
@@ -57,7 +71,21 @@ export function useGiftItems() {
       }
       
       console.log("Gift data result:", data);
-      return data;
+      
+      if (!data) return null;
+      
+      // Map shop product to gift item format
+      return {
+        id: data.id,
+        name: data.name,
+        price: data.price,
+        image_url: data.image_url || '',
+        description: data.description,
+        is_featured: data.is_featured,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        gift_url: data.product_url,
+      };
     } catch (error: any) {
       console.error('Error fetching gift item by ID:', error);
       return null;
