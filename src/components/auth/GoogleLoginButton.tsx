@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 interface GoogleLoginButtonProps {
   isLoading?: boolean;
@@ -21,24 +23,67 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       console.log("Starting Google authentication...");
       onLoadingChange?.(true);
 
-      // Use Supabase's built-in Google OAuth
-      console.log("Attempting signInWithOAuth...");
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`
+      if (Capacitor.isNativePlatform()) {
+        // Use native Google Auth for mobile
+        console.log("Using native Google Auth for mobile...");
+        
+        // Initialize Google Auth if needed
+        try {
+          await GoogleAuth.initialize({
+            clientId: '551635583332-rjnaq9j7ssv0mst8b3t9ph7pt56ua6m6.apps.googleusercontent.com',
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: true
+          });
+        } catch (initError) {
+          console.log("GoogleAuth already initialized or init error:", initError);
         }
-      });
-      
-      console.log("OAuth response:", { data, error });
-      
-      if (error) {
-        console.error('Google OAuth error:', error);
-        throw error;
+
+        const result = await GoogleAuth.signIn();
+        console.log("Native Google Auth result:", result);
+
+        if (result?.authentication?.idToken) {
+          // Sign in to Supabase with the Google ID token
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: result.authentication.idToken,
+          });
+
+          if (error) {
+            console.error('Supabase signInWithIdToken error:', error);
+            throw error;
+          }
+
+          console.log("Successfully authenticated with Supabase:", data);
+          
+          toast({
+            title: "Success!",
+            description: "Successfully authenticated with Google!"
+          });
+          
+          // Navigate to home page
+          navigate("/");
+        } else {
+          throw new Error("No ID token received from Google Auth");
+        }
+      } else {
+        // Use web OAuth for browser
+        console.log("Using web OAuth for browser...");
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/`
+          }
+        });
+        
+        console.log("OAuth response:", { data, error });
+        
+        if (error) {
+          console.error('Google OAuth error:', error);
+          throw error;
+        }
+        
+        console.log("OAuth initiated successfully, redirecting...");
       }
-      
-      console.log("OAuth initiated successfully, redirecting...");
-      // The redirect will handle the authentication flow
     } catch (err: any) {
       console.error('Google auth error:', err);
       toast({
