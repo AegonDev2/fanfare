@@ -49,4 +49,15 @@ export interface OrderDetails extends BaseOrder {
   influencer_name: string;
   completed_at?: string | null;
   delivery_estimate?: string | null;
+  influencer_address?: {
+    id: string;
+    influencer_id: string;
+    street_address: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+    is_primary: boolean;
+    created_at: string;
+  } | null;
 }

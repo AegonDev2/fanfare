@@ -45,6 +45,7 @@ export const useAdminOrders = () => {
 
         // Fetch influencer data separately
         let influencerData: any[] = [];
+        let influencerAddressData: any[] = [];
         if (influencerIds.length > 0) {
           const { data: influencers } = await supabase
             .from('influencer_profiles')
@@ -52,6 +53,15 @@ export const useAdminOrders = () => {
             .in('id', influencerIds);
           
           influencerData = influencers || [];
+
+          // Fetch influencer addresses
+          const { data: addresses } = await supabase
+            .from('influencer_addresses')
+            .select('*')
+            .in('influencer_id', influencerIds)
+            .eq('is_primary', true); // Get primary addresses only
+          
+          influencerAddressData = addresses || [];
         }
 
         const mappedOrders: OrderDetails[] = ordersData.map((order: any) => {
@@ -67,6 +77,7 @@ export const useAdminOrders = () => {
 
           const user = userData.find(u => u.id === order.user_id);
           const influencer = influencerData.find(inf => inf.id === order.influencer_id);
+          const influencerAddress = influencerAddressData.find(addr => addr.influencer_id === order.influencer_id);
 
           return {
             id: order.id,
@@ -92,6 +103,7 @@ export const useAdminOrders = () => {
             influencer_response: order.influencer_response,
             rejected_by: order.rejected_by,
             influencer: influencer ? { id: influencer.id, name: influencer.name } : null,
+            influencer_address: influencerAddress || null,
             user: user ? { id: user.id, name: user.name, email: user.email } : null,
             // Map the required fields from the joined data
             fan_email: user?.email || '',

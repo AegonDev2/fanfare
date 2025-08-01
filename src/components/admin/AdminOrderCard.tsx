@@ -36,6 +36,17 @@ interface OrderData {
   fan_email?: string;
   fan_name?: string;
   influencer_name?: string;
+  influencer_address?: {
+    id: string;
+    influencer_id: string;
+    street_address: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+    is_primary: boolean;
+    created_at: string;
+  } | null;
 }
 
 interface WalletData {
@@ -324,7 +335,34 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
         {order.fan_name && (
           <div className="flex items-center gap-2 text-sm">
             <User className="h-4 w-4 text-gray-400" />
-            <span>{order.fan_name} ({order.fan_email})</span>
+            <span>Fan: {order.fan_name} ({order.fan_email})</span>
+          </div>
+        )}
+
+        {/* Influencer Information Section - Only for gift orders */}
+        {order.influencer_name && (
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+            <div className="flex items-center gap-2 text-sm font-medium text-blue-800 mb-2">
+              <User className="h-4 w-4" />
+              <span>Influencer: {order.influencer_name}</span>
+            </div>
+            
+            {order.influencer_address && (
+              <div className="text-sm text-blue-700 space-y-1">
+                <div className="font-medium">Shipping Address:</div>
+                <div>{order.influencer_address.street_address}</div>
+                <div>
+                  {order.influencer_address.city}, {order.influencer_address.state} {order.influencer_address.postal_code}
+                </div>
+                <div>{order.influencer_address.country}</div>
+              </div>
+            )}
+            
+            {!order.influencer_address && (
+              <div className="text-sm text-amber-600">
+                ⚠️ No shipping address found for this influencer
+              </div>
+            )}
           </div>
         )}
 
