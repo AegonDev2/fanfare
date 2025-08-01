@@ -14,7 +14,10 @@ import {
   Wallet,
   User,
   AlertCircle,
-  Truck
+  Truck,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +36,7 @@ interface OrderData {
   original_status: string;
   influencer_id?: string;
   message?: string;
+  rejection_reason?: string;
   fan_email?: string;
   fan_name?: string;
   influencer_name?: string;
@@ -58,6 +62,42 @@ interface AdminOrderCardProps {
   order: OrderData;
   onStatusChange: (orderId: string, newStatus: string) => void;
 }
+
+const RejectionReasonDisplay = ({ reason }: { reason: string }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  return (
+    <div className="p-3 bg-red-50 rounded-lg border border-red-100">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-red-500" />
+          <p className="text-sm font-medium text-red-900">Rejection Reason</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-red-600 hover:text-red-700 h-auto p-1"
+        >
+          {isExpanded ? (
+            <>
+              Hide <ChevronUp className="w-3 h-3 ml-1" />
+            </>
+          ) : (
+            <>
+              Show <ChevronDown className="w-3 h-3 ml-1" />
+            </>
+          )}
+        </Button>
+      </div>
+      {isExpanded && (
+        <div className="mt-2 pt-2 border-t border-red-200">
+          <p className="text-sm text-red-700">{reason}</p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCardProps) {
   const [walletData, setWalletData] = useState<WalletData | null>(null);
@@ -371,6 +411,11 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
             <span className="font-medium">Message:</span>
             <p className="text-gray-600 mt-1">{order.message}</p>
           </div>
+        )}
+
+        {/* Rejection Reason Display */}
+        {(order.original_status === 'rejected_by_admin' || order.original_status === 'rejected_by_influencer') && order.rejection_reason && (
+          <RejectionReasonDisplay reason={order.rejection_reason} />
         )}
 
         {/* Wallet Balance Section */}

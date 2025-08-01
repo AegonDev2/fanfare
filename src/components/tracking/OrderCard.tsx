@@ -3,9 +3,45 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ExternalLink, Calendar, User, DollarSign, MessageSquare, X } from "lucide-react";
+import { ExternalLink, Calendar, User, DollarSign, MessageSquare, X, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { ORDER_STATUS_CONFIG, type TrackingOrder } from "@/types/tracking";
 import OrderStatusTimeline from "./OrderStatusTimeline";
+
+const RejectionReasonDisplay = ({ reason }: { reason: string }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  return (
+    <div className="p-3 bg-red-50 rounded-lg border border-red-100">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-red-500" />
+          <p className="text-sm font-medium text-red-900">Order Rejected</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-red-600 hover:text-red-700 h-auto p-1"
+        >
+          {isExpanded ? (
+            <>
+              Hide Reason <ChevronUp className="w-3 h-3 ml-1" />
+            </>
+          ) : (
+            <>
+              Show Reason <ChevronDown className="w-3 h-3 ml-1" />
+            </>
+          )}
+        </Button>
+      </div>
+      {isExpanded && (
+        <div className="mt-2 pt-2 border-t border-red-200">
+          <p className="text-sm text-red-700">{reason}</p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface OrderCardProps {
   order: TrackingOrder;
@@ -113,10 +149,7 @@ const OrderCard = ({ order, userRole, onCancelOrder }: OrderCardProps) => {
 
         {/* Rejection Reason */}
         {order.rejection_reason && (
-          <div className="p-3 bg-red-50 rounded-lg">
-            <p className="text-sm font-medium text-red-900">Rejection Reason</p>
-            <p className="text-sm text-red-700">{order.rejection_reason}</p>
-          </div>
+          <RejectionReasonDisplay reason={order.rejection_reason} />
         )}
 
         {/* Order Timeline */}
