@@ -500,6 +500,7 @@ export type Database = {
           gift_type: boolean | null
           id: string
           influencer_id: string | null
+          influencer_message: string | null
           influencer_response: string | null
           influencer_response_at: string | null
           message: string | null
@@ -528,6 +529,7 @@ export type Database = {
           gift_type?: boolean | null
           id?: string
           influencer_id?: string | null
+          influencer_message?: string | null
           influencer_response?: string | null
           influencer_response_at?: string | null
           message?: string | null
@@ -556,6 +558,7 @@ export type Database = {
           gift_type?: boolean | null
           id?: string
           influencer_id?: string | null
+          influencer_message?: string | null
           influencer_response?: string | null
           influencer_response_at?: string | null
           message?: string | null

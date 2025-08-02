@@ -102,6 +102,7 @@ export const useOrderTracking = (specificOrderId?: string) => {
             product_price: order.product_price,
             total_amount: order.total_amount,
             message: order.message,
+            influencer_message: order.influencer_message,
             delivery_estimate: order.delivery_estimate,
             completed_at: order.completed_at,
             rejected_at: order.cancelled_at, // Map cancelled_at to rejected_at for cancelled orders

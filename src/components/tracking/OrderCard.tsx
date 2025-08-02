@@ -118,26 +118,21 @@ const OrderCard = ({ order, userRole, onCancelOrder }: OrderCardProps) => {
             <div className="flex items-start gap-2">
               <MessageSquare className="w-4 h-4 text-blue-500 mt-0.5" />
               <div className="w-full">
-                <p className="text-sm font-medium text-blue-900">Message</p>
-                {/* Check if message contains influencer response */}
-                {order.message.includes('Influencer Response:') ? (
-                  <div className="space-y-2">
-                    {order.message.split('\n\nInfluencer Response:').map((part, index) => (
-                      <div key={index}>
-                        {index === 0 ? (
-                          <p className="text-sm text-blue-700">{part}</p>
-                        ) : (
-                          <div className="mt-2 p-2 bg-green-50 rounded border-l-2 border-green-400">
-                            <p className="text-xs font-medium text-green-800">Influencer's Response:</p>
-                            <p className="text-sm text-green-700">{part}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-blue-700">{order.message}</p>
-                )}
+                <p className="text-sm font-medium text-blue-900">Message from Fan</p>
+                <p className="text-sm text-blue-700">{order.message}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Influencer Message */}
+        {order.influencer_message && (
+          <div className="p-3 bg-green-50 rounded-lg">
+            <div className="flex items-start gap-2">
+              <MessageSquare className="w-4 h-4 text-green-500 mt-0.5" />
+              <div className="w-full">
+                <p className="text-sm font-medium text-green-900">Message from Influencer</p>
+                <p className="text-sm text-green-700">{order.influencer_message}</p>
               </div>
             </div>
           </div>

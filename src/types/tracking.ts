@@ -16,6 +16,7 @@ export interface TrackingOrder {
   product_price: number | null;
   total_amount: number | null;
   message: string | null;
+  influencer_message: string | null;
   delivery_estimate?: string | null;
   completed_at?: string | null;
   rejected_at?: string | null;

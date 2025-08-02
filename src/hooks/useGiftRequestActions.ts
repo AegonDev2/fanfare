@@ -53,10 +53,8 @@ export const useGiftRequestActions = (
           influencer_response: status,
           influencer_response_at: new Date().toISOString(),
           rejection_reason: rejectionReason,
-          // Store acceptance message in a way that can be displayed
-          ...(acceptanceMessage && { 
-            message: `${requests.find(r => r.id === id)?.message || ''}\n\nInfluencer Response: ${acceptanceMessage}`.trim()
-          })
+          // Store acceptance message in the new dedicated column
+          ...(acceptanceMessage && { influencer_message: acceptanceMessage })
         })
         .eq('id', id);
 
