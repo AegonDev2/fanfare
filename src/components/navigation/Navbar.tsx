@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/useUser";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import NotificationCenter from "@/components/notifications/NotificationCenter";
 
 interface NavbarProps {
   isOpen: boolean;
@@ -149,12 +150,17 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           {/* User Info */}
           {user && (
             <div className="mb-6 p-4 bg-gradient-to-r from-funky-purple/10 to-funky-pink/10 rounded-lg">
-              <p className="font-semibold text-gray-900 dark:text-white">
-                Welcome back!
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                {user.email}
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    Welcome back!
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {user.email}
+                  </p>
+                </div>
+                <NotificationCenter />
+              </div>
             </div>
           )}
 

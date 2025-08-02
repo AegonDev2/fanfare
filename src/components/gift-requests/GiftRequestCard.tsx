@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useGiftRequestActions } from "@/hooks/useGiftRequestActions";
 import { GiftRequest } from "@/hooks/useGiftRequests";
+import { AcceptGiftDialog } from "./AcceptGiftDialog";
 interface GiftRequestCardProps {
   request: GiftRequest;
   onStatusChange: () => void;
@@ -25,14 +26,15 @@ export default function GiftRequestCard({
 }: GiftRequestCardProps) {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { updateRequestStatus } = useGiftRequestActions(requests, setRequests);
-  const handleAccept = async () => {
+  const handleAccept = async (message?: string) => {
     setLoading(true);
     try {
-      await updateRequestStatus(request.id, 'accepted');
+      await updateRequestStatus(request.id, 'accepted', undefined, message);
       onStatusChange();
     } catch (error: any) {
       console.error("Error accepting request:", error);
@@ -51,7 +53,7 @@ export default function GiftRequestCard({
     }
     setLoading(true);
     try {
-      await updateRequestStatus(request.id, 'rejected');
+      await updateRequestStatus(request.id, 'rejected', rejectionReason);
       setShowRejectDialog(false);
       setRejectionReason("");
       onStatusChange();
@@ -134,8 +136,12 @@ export default function GiftRequestCard({
             </div>}
 
           {showActionButtons && <div className="flex gap-2 pt-3 border-t">
-              <Button onClick={handleAccept} disabled={loading} className="flex-1">
-                {loading ? "Processing..." : "Accept Gift"}
+              <Button 
+                onClick={() => setShowAcceptDialog(true)} 
+                disabled={loading} 
+                className="flex-1"
+              >
+                Accept Gift
               </Button>
               
               <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
@@ -165,6 +171,15 @@ export default function GiftRequestCard({
                 </DialogContent>
               </Dialog>
             </div>}
+
+          {/* Accept Gift Dialog */}
+          <AcceptGiftDialog
+            isOpen={showAcceptDialog}
+            onClose={() => setShowAcceptDialog(false)}
+            onAccept={handleAccept}
+            productTitle={request.product_title || 'Gift Request'}
+            loading={loading}
+          />
 
           {showTrackingButton && <div className="pt-3 border-t">
               <Button onClick={handleTrackOrder} variant="outline" className="w-full flex items-center gap-2">

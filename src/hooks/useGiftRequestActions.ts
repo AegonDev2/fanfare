@@ -36,7 +36,12 @@ export const useGiftRequestActions = (
 ) => {
   const { toast } = useToast();
 
-  const updateRequestStatus = async (id: string, status: 'accepted' | 'rejected') => {
+  const updateRequestStatus = async (
+    id: string, 
+    status: 'accepted' | 'rejected', 
+    rejectionReason?: string, 
+    acceptanceMessage?: string
+  ) => {
     try {
       const newStatus = status === 'accepted' ? 'accepted' : 'rejected_by_influencer';
       
@@ -46,7 +51,12 @@ export const useGiftRequestActions = (
         .update({ 
           status: newStatus,
           influencer_response: status,
-          influencer_response_at: new Date().toISOString()
+          influencer_response_at: new Date().toISOString(),
+          rejection_reason: rejectionReason,
+          // Store acceptance message in a way that can be displayed
+          ...(acceptanceMessage && { 
+            message: `${requests.find(r => r.id === id)?.message || ''}\n\nInfluencer Response: ${acceptanceMessage}`.trim()
+          })
         })
         .eq('id', id);
 
@@ -162,10 +172,14 @@ export const useGiftRequestActions = (
           );
 
           // Notify the fan that their gift request was approved
+          const approvalMessage = acceptanceMessage 
+            ? `Your gift request has been approved! ${acceptanceMessage} Payment of ₹${totalAmount} has been deducted from your wallet.`
+            : `Your gift request has been approved by the influencer and is being processed. Payment of ₹${totalAmount} has been deducted from your wallet.`;
+            
           await supabase.from("notifications").insert({
             recipient_id: request.sender_id,
             type: "gift_request_approved",
-            message: `Your gift request has been approved by the influencer and is being processed. Payment of ₹${totalAmount} has been deducted from your wallet.`,
+            message: approvalMessage,
             reference_id: id,
             sender_id: request.influencer_id
           });
@@ -176,10 +190,14 @@ export const useGiftRequestActions = (
         // If rejected, notify the fan
         const request = requests.find(r => r.id === id);
         if (request) {
+          const rejectionMessage = rejectionReason 
+            ? `Your gift request has been rejected by the influencer. Reason: ${rejectionReason}`
+            : `Your gift request has been rejected by the influencer.`;
+            
           await supabase.from("notifications").insert({
             recipient_id: request.sender_id,
             type: "gift_request_rejected",
-            message: `Your gift request has been rejected by the influencer.`,
+            message: rejectionMessage,
             reference_id: id,
             sender_id: request.influencer_id
           });
