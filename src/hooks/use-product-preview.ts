@@ -140,9 +140,13 @@ export const useProductPreview = () => {
       // Parse price from string if needed
       let priceNumber = 0;
       if (typeof productData.price === 'string') {
-        // Extract numeric value from price string (e.g. "₹ 999" -> 999)
-        const priceMatch = productData.price.match(/[\d.]+/);
-        priceNumber = priceMatch ? parseFloat(priceMatch[0]) : 0;
+        // Extract numeric value from price string (e.g. "₹ 44,999" -> 44999)
+        const priceMatch = productData.price.match(/[\d,]+/);
+        if (priceMatch) {
+          // Remove commas and parse as float
+          const cleanPrice = priceMatch[0].replace(/,/g, '');
+          priceNumber = parseFloat(cleanPrice);
+        }
       } else {
         priceNumber = parseFloat(productData.price) || 0;
       }
