@@ -34,8 +34,10 @@ const ForgotPassword = () => {
     setIsLoading(true);
     
     try {
-      const currentOrigin = window.location.origin;
-      const redirectTo = `${currentOrigin}/forgot-password?type=recovery`;
+      // Use the actual web URL for password reset, not the Capacitor server URL
+      // This ensures the email link opens the web version for password reset
+      const baseUrl = "https://a407041e-65d3-402d-a548-4a08462e8022.lovableproject.com";
+      const redirectTo = `${baseUrl}/forgot-password?type=recovery`;
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo
