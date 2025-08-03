@@ -58,6 +58,34 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
       })
       .subscribe();
 
+    // Listen for admin approval updates on orders (for influencers)
+    const adminApprovalChannel = supabase
+      .channel('admin-approval-notifications')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders',
+        filter: `influencer_id=eq.${userId}`
+      }, (payload) => {
+        // Check if order was just approved by admin
+        const oldStatus = payload.old.status;
+        const newStatus = payload.new.status;
+        
+        if (oldStatus !== newStatus && newStatus === 'approved_waiting_influencer' && payload.new.gift_type === true) {
+          sendPushNotification({
+            userIds: [userId],
+            title: 'Gift Request Approved! ✅',
+            body: 'A gift request has been approved by admin and is waiting for your response!',
+            data: {
+              type: 'admin_approved_gift',
+              orderId: payload.new.id,
+              productUrl: payload.new.product_url
+            }
+          });
+        }
+      })
+      .subscribe();
+
     // Listen for gift request status updates (for fans)
     const giftUpdatesChannel = supabase
       .channel('gift-updates-notifications')
@@ -133,6 +161,7 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
     // Cleanup function
     return () => {
       supabase.removeChannel(giftRequestsChannel);
+      supabase.removeChannel(adminApprovalChannel);
       supabase.removeChannel(giftUpdatesChannel);
       supabase.removeChannel(ordersChannel);
     };
