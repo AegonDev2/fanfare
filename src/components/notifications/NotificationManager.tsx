@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { sendNotification } from '@/utils/notifications';
 
 interface NotificationManagerProps {
   children: React.ReactNode;
@@ -33,6 +34,8 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
   }, [registerForPushNotifications]);
 
   const setupNotificationListeners = (userId: string) => {
+    console.log("Setting up notification listeners for user:", userId);
+    
     // Listen for new gift requests in orders table (for influencers)
     const giftRequestsChannel = supabase
       .channel('gift-requests-notifications')
@@ -41,9 +44,20 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
         schema: 'public',
         table: 'orders',
         filter: `influencer_id=eq.${userId}`
-      }, (payload) => {
+      }, async (payload) => {
+        console.log("New order detected for influencer:", payload);
         // Only send notification for gift requests
         if (payload.new.gift_type === true) {
+          console.log("Processing new gift request notification for influencer:", userId);
+          // Send both push notification and in-app notification
+          await sendNotification(
+            userId,
+            'new_gift_request',
+            'You have received a new gift request from a fan!',
+            payload.new.id,
+            payload.new.sender_id
+          );
+
           sendPushNotification({
             userIds: [userId],
             title: 'New Gift Request! 🎁',
@@ -66,12 +80,23 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
         schema: 'public',
         table: 'orders',
         filter: `influencer_id=eq.${userId}`
-      }, (payload) => {
+      }, async (payload) => {
+        console.log("Order status update detected:", payload);
         // Check if order was just approved by admin
         const oldStatus = payload.old.status;
         const newStatus = payload.new.status;
         
         if (oldStatus !== newStatus && newStatus === 'approved_waiting_influencer' && payload.new.gift_type === true) {
+          console.log("Processing admin approval notification for influencer:", userId);
+          // Send both push notification and in-app notification
+          await sendNotification(
+            userId,
+            'admin_approved_gift',
+            'A gift request has been approved by admin and is waiting for your response!',
+            payload.new.id,
+            payload.new.sender_id
+          );
+
           sendPushNotification({
             userIds: [userId],
             title: 'Gift Request Approved! ✅',

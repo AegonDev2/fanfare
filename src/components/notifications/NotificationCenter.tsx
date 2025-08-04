@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 interface Notification {
   id: string;
   type: string;
@@ -21,9 +22,8 @@ const NotificationCenter = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Fetch notifications on component mount
   useEffect(() => {
@@ -84,9 +84,7 @@ const NotificationCenter = () => {
   };
   const markAsRead = async (id: string) => {
     try {
-      const {
-        error
-      } = await supabase.from('notifications').update({
+      const { error } = await supabase.from('notifications').update({
         is_read: true
       }).eq('id', id);
       if (error) throw error;
@@ -98,6 +96,35 @@ const NotificationCenter = () => {
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
+  };
+
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read first
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+
+    // Navigate based on notification type
+    switch (notification.type) {
+      case 'new_gift_request':
+      case 'admin_approved_gift':
+        navigate('/gift-requests');
+        break;
+      case 'gift_request_approved':
+      case 'gift_request_rejected':
+      case 'order_update':
+        navigate('/gifts-sent');
+        break;
+      default:
+        // For other notification types, check if there's a reference_id
+        if (notification.reference_id) {
+          navigate('/gifts-sent');
+        }
+        break;
+    }
+    
+    // Close the popover
+    setIsOpen(false);
   };
   const markAllAsRead = async () => {
     try {
@@ -131,6 +158,8 @@ const NotificationCenter = () => {
     switch (type) {
       case 'new_gift_request':
         return "🎁";
+      case 'admin_approved_gift':
+        return "✅";
       case 'gift_accepted':
       case 'gift_request_approved':
         return "✅";
@@ -142,6 +171,10 @@ const NotificationCenter = () => {
       case 'gift_delivered':
       case 'order_completed':
         return "🚚";
+      case 'order_update':
+        return "📋";
+      case 'new_approved_gift':
+        return "🎉";
       default:
         return "📣";
     }
@@ -171,13 +204,14 @@ const NotificationCenter = () => {
                 <Bell className="h-8 w-8 text-gray-400 mb-2" />
                 <p>No notifications yet</p>
               </div> : <div className="divide-y divide-gray-100">
-                {notifications.map(notification => <div key={notification.id} className={`p-4 flex items-start hover:bg-gray-50 cursor-pointer transition-colors ${!notification.is_read ? 'bg-funky-purple/5' : ''}`} onClick={() => markAsRead(notification.id)}>
+                {notifications.map(notification => <div key={notification.id} className={`p-4 flex items-start hover:bg-gray-50 cursor-pointer transition-colors ${!notification.is_read ? 'bg-funky-purple/5' : ''}`} onClick={() => handleNotificationClick(notification)}>
                     <div className={`mr-3 text-xl ${!notification.is_read ? 'animate-pulse-glow' : ''}`}>
                       {getNotificationIcon(notification.type)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 mb-1">{notification.message}</p>
                       <p className="text-xs text-gray-500">{formatDate(notification.created_at)}</p>
+                      <p className="text-xs text-funky-purple font-medium mt-1">Click to view details</p>
                     </div>
                     {!notification.is_read && <div className="ml-2 mt-1">
                         <Badge className="h-2 w-2 rounded-full bg-funky-pink p-0" />
