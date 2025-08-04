@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useGiftsSent } from "@/hooks/useGiftsSent";
 import { GiftRequestCard } from "@/components/gifts/GiftRequestCard";
@@ -12,12 +12,32 @@ import Navbar from '@/components/navigation/Navbar';
 const GiftsSent = () => {
   const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
+  const [searchParams] = useSearchParams();
   const {
     requests,
     loading,
     error,
     fetchSentGiftRequests
   } = useGiftsSent();
+
+  // Get focus parameter from URL
+  const focusId = searchParams.get('focus');
+
+  // Handle focusing on specific request
+  useEffect(() => {
+    if (focusId && requests.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(`gift-sent-${focusId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-2', 'ring-funky-purple', 'ring-opacity-50');
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-funky-purple', 'ring-opacity-50');
+          }, 3000);
+        }
+      }, 100);
+    }
+  }, [focusId, requests]);
 
   const handleDetailsClick = (request: any) => {
     navigate('/track-order', { state: { orderId: request.id } });

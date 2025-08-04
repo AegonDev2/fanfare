@@ -89,7 +89,7 @@ export default function GiftRequestCard({
   const handleTrackOrder = () => {
     navigate(`/track-order?order=${request.id}`);
   };
-  return <Card className="hover:shadow-lg transition-shadow">
+  return <Card id={`gift-request-${request.id}`} className="hover:shadow-lg transition-shadow">
       <CardHeader>
         <div className="flex items-start justify-between">
           <CardTitle className="flex items-center gap-2">

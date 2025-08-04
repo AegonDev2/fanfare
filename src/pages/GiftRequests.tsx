@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 import { useGiftRequests } from '@/hooks/useGiftRequests';
@@ -11,8 +12,29 @@ import { useUser } from '@/hooks/useUser';
 
 export default function GiftRequests() {
   const [navOpen, setNavOpen] = useState(false);
+  const [searchParams] = useSearchParams();
   const { user } = useUser();
   const { requests: giftRequests, loading: isLoading, error, fetchRequests, getPendingRequests, getAcceptedRequests, getRejectedRequests, setRequests } = useGiftRequests();
+
+  // Get URL parameters for tab and focus
+  const urlTab = searchParams.get('tab') || 'pending';
+  const focusId = searchParams.get('focus');
+
+  // Handle focusing on specific request
+  useEffect(() => {
+    if (focusId && giftRequests.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(`gift-request-${focusId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-2', 'ring-funky-purple', 'ring-opacity-50');
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-funky-purple', 'ring-opacity-50');
+          }, 3000);
+        }
+      }, 100);
+    }
+  }, [focusId, giftRequests]);
 
   // Redirect if not influencer
   if (user && user.user_type !== 'influencer') {
@@ -72,7 +94,7 @@ export default function GiftRequests() {
             </Card>
           )}
 
-          <Tabs defaultValue="pending" className="w-full">
+          <Tabs defaultValue={urlTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="pending" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />

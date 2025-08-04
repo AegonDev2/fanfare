@@ -33,7 +33,7 @@ export const GiftRequestCard = ({ request, onDetailsClick }: GiftRequestCardProp
   };
 
   return (
-    <Card key={request.id} className="overflow-hidden bg-white shadow-sm transition-all hover:shadow">
+    <Card id={`gift-sent-${request.id}`} key={request.id} className="overflow-hidden bg-white shadow-sm transition-all hover:shadow">
       <CardContent className="p-0">
         <div className="p-6 flex flex-col md:flex-row justify-between gap-4">
           <div className="flex-1">

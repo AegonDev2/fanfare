@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@/hooks/useUser";
 interface Notification {
   id: string;
   type: string;
@@ -24,6 +25,7 @@ const NotificationCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useUser();
 
   // Fetch notifications on component mount
   useEffect(() => {
@@ -99,28 +101,67 @@ const NotificationCenter = () => {
   };
 
   const handleNotificationClick = async (notification: Notification) => {
+    console.log('NotificationCenter - Handling click for notification:', {
+      type: notification.type,
+      userType: user?.user_type,
+      referenceId: notification.reference_id
+    });
+
     // Mark as read first
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
 
-    // Navigate based on notification type
-    switch (notification.type) {
-      case 'new_gift_request':
-      case 'admin_approved_gift':
-        navigate('/gift-requests');
-        break;
-      case 'gift_request_approved':
-      case 'gift_request_rejected':
-      case 'order_update':
-        navigate('/gifts-sent');
-        break;
-      default:
-        // For other notification types, check if there's a reference_id
-        if (notification.reference_id) {
-          navigate('/gifts-sent');
-        }
-        break;
+    // Navigate based on user type and notification type
+    if (!user) return;
+
+    const isInfluencer = user.user_type === 'influencer';
+    const isFan = user.user_type === 'fan';
+
+    // Build navigation path with focus parameter
+    let navigationPath = '';
+    let focusId = notification.reference_id;
+
+    if (isInfluencer) {
+      // Influencer notifications - route to gift-requests
+      switch (notification.type) {
+        case 'new_gift_request':
+        case 'admin_approved_gift':
+        case 'new_approved_gift':
+          // Navigate to pending tab with focus
+          navigationPath = focusId ? `/gift-requests?tab=pending&focus=${focusId}` : '/gift-requests?tab=pending';
+          break;
+        case 'gift_request_approved':
+        case 'gift_request_rejected':
+          // Navigate to history tab with focus  
+          navigationPath = focusId ? `/gift-requests?tab=history&focus=${focusId}` : '/gift-requests?tab=history';
+          break;
+        default:
+          navigationPath = '/gift-requests';
+          break;
+      }
+    } else if (isFan) {
+      // Fan notifications - route to gifts-sent
+      switch (notification.type) {
+        case 'gift_request_approved':
+        case 'gift_request_rejected':
+        case 'order_update':
+        case 'gift_shipped':
+        case 'gift_delivered':
+        case 'order_completed':
+          // Navigate to gifts-sent with focus
+          navigationPath = focusId ? `/gifts-sent?focus=${focusId}` : '/gifts-sent';
+          break;
+        default:
+          navigationPath = '/gifts-sent';
+          break;
+      }
+    }
+
+    console.log('NotificationCenter - Navigating to:', navigationPath);
+    
+    if (navigationPath) {
+      navigate(navigationPath);
     }
     
     // Close the popover
