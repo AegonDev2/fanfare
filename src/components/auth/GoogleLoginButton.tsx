@@ -21,68 +21,30 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   const handleGoogleAuth = async () => {
     try {
       console.log("Starting Google authentication...");
+      console.log("Platform info:", {
+        isNativePlatform: Capacitor.isNativePlatform(),
+        platform: Capacitor.getPlatform(),
+        userAgent: navigator.userAgent
+      });
+      
       onLoadingChange?.(true);
 
-      if (Capacitor.isNativePlatform()) {
+      // More robust platform detection
+      const isNative = Capacitor.isNativePlatform();
+      const platform = Capacitor.getPlatform();
+      
+      if (isNative && (platform === 'android' || platform === 'ios')) {
         // Use native Google Auth for mobile
-        console.log("Using native Google Auth for mobile...");
+        console.log(`Using native Google Auth for ${platform}...`);
         
-        // Initialize Google Auth if needed
-        try {
-          await GoogleAuth.initialize({
-            clientId: '551635583332-rjnaq9j7ssv0mst8b3t9ph7pt56ua6m6.apps.googleusercontent.com',
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: true
-          });
-        } catch (initError) {
-          console.log("GoogleAuth already initialized or init error:", initError);
-        }
-
-        const result = await GoogleAuth.signIn();
-        console.log("Native Google Auth result:", result);
-
-        if (result?.authentication?.idToken) {
-          // Sign in to Supabase with the Google ID token
-          const { data, error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: result.authentication.idToken,
-          });
-
-          if (error) {
-            console.error('Supabase signInWithIdToken error:', error);
-            throw error;
-          }
-
-          console.log("Successfully authenticated with Supabase:", data);
-          
-          toast({
-            title: "Success!",
-            description: "Successfully authenticated with Google!"
-          });
-          
-          // Navigate to home page
-          navigate("/");
-        } else {
-          throw new Error("No ID token received from Google Auth");
-        }
+        // Early return after native auth to prevent web flow
+        await handleNativeGoogleAuth();
+        return;
       } else {
         // Use web OAuth for browser
         console.log("Using web OAuth for browser...");
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/`
-          }
-        });
-        
-        console.log("OAuth response:", { data, error });
-        
-        if (error) {
-          console.error('Google OAuth error:', error);
-          throw error;
-        }
-        
-        console.log("OAuth initiated successfully, redirecting...");
+        await handleWebGoogleAuth();
+        return;
       }
     } catch (err: any) {
       console.error('Google auth error:', err);
@@ -94,6 +56,65 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     } finally {
       onLoadingChange?.(false);
     }
+  };
+
+  const handleNativeGoogleAuth = async () => {
+    // Initialize Google Auth if needed
+    try {
+      await GoogleAuth.initialize({
+        clientId: '551635583332-rjnaq9j7ssv0mst8b3t9ph7pt56ua6m6.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true
+      });
+    } catch (initError) {
+      console.log("GoogleAuth already initialized or init error:", initError);
+    }
+
+    const result = await GoogleAuth.signIn();
+    console.log("Native Google Auth result:", result);
+
+    if (result?.authentication?.idToken) {
+      // Sign in to Supabase with the Google ID token
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: result.authentication.idToken,
+      });
+
+      if (error) {
+        console.error('Supabase signInWithIdToken error:', error);
+        throw error;
+      }
+
+      console.log("Successfully authenticated with Supabase:", data);
+      
+      toast({
+        title: "Success!",
+        description: "Successfully authenticated with Google!"
+      });
+      
+      // Navigate to home page
+      navigate("/");
+    } else {
+      throw new Error("No ID token received from Google Auth");
+    }
+  };
+
+  const handleWebGoogleAuth = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'https://a407041e-65d3-402d-a548-4a08462e8022.lovableproject.com/'
+      }
+    });
+    
+    console.log("OAuth response:", { data, error });
+    
+    if (error) {
+      console.error('Google OAuth error:', error);
+      throw error;
+    }
+    
+    console.log("OAuth initiated successfully, redirecting...");
   };
 
   return (
