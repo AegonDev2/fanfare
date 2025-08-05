@@ -81,12 +81,12 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
         table: 'orders',
         filter: `influencer_id=eq.${userId}`
       }, async (payload) => {
-        console.log("Order status update detected:", payload);
-        // Check if order was just approved by admin
+        console.log("Order status update detected for influencer:", payload);
+        // Check if order was just approved by admin and is waiting for influencer
         const oldStatus = payload.old.status;
         const newStatus = payload.new.status;
         
-        if (oldStatus !== newStatus && newStatus === 'approved_waiting_influencer' && payload.new.gift_type === true) {
+        if (oldStatus !== newStatus && newStatus === 'approved_waiting_influencer') {
           console.log("Processing admin approval notification for influencer:", userId);
           // Send both push notification and in-app notification
           await sendNotification(
@@ -94,47 +94,7 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
             'admin_approved_gift',
             'A gift request has been approved by admin and is waiting for your response!',
             payload.new.id,
-            payload.new.sender_id
-          );
-
-          sendPushNotification({
-            userIds: [userId],
-            title: 'Gift Request Approved! ✅',
-            body: 'A gift request has been approved by admin and is waiting for your response!',
-            data: {
-              type: 'admin_approved_gift',
-              orderId: payload.new.id,
-              productUrl: payload.new.product_url
-            }
-          });
-        }
-      })
-      .subscribe();
-
-    // Listen for gift request admin approval updates (for influencers)
-    const giftRequestApprovalChannel = supabase
-      .channel('gift-request-approval-notifications')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'gift_requests',
-        filter: `influencer_id=eq.${userId}`
-      }, async (payload) => {
-        console.log("Gift request status update detected for influencer:", payload);
-        const oldAdminApproved = payload.old.admin_approved;
-        const newAdminApproved = payload.new.admin_approved;
-        const newStatus = payload.new.status;
-        
-        // Check if admin just approved the gift request
-        if (!oldAdminApproved && newAdminApproved && newStatus === 'pending') {
-          console.log("Processing gift request admin approval notification for influencer:", userId);
-          // Send both push notification and in-app notification
-          await sendNotification(
-            userId,
-            'admin_approved_gift',
-            'A gift request has been approved by admin and is waiting for your response!',
-            payload.new.id,
-            payload.new.sender_id
+            payload.new.sender_id || payload.new.user_id
           );
 
           sendPushNotification({
@@ -227,7 +187,6 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
     return () => {
       supabase.removeChannel(giftRequestsChannel);
       supabase.removeChannel(adminApprovalChannel);
-      supabase.removeChannel(giftRequestApprovalChannel);
       supabase.removeChannel(giftUpdatesChannel);
       supabase.removeChannel(ordersChannel);
     };
