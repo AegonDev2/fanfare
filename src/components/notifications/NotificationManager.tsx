@@ -82,31 +82,43 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
         filter: `influencer_id=eq.${userId}`
       }, async (payload) => {
         console.log("Order status update detected for influencer:", payload);
+        console.log("Old status:", payload.old?.status, "New status:", payload.new?.status);
+        console.log("Influencer ID in payload:", payload.new?.influencer_id, "Current user ID:", userId);
+        
         // Check if order was just approved by admin and is waiting for influencer
         const oldStatus = payload.old.status;
         const newStatus = payload.new.status;
         
         if (oldStatus !== newStatus && newStatus === 'approved_waiting_influencer') {
           console.log("Processing admin approval notification for influencer:", userId);
-          // Send both push notification and in-app notification
-          await sendNotification(
-            userId,
-            'admin_approved_gift',
-            'A gift request has been approved by admin and is waiting for your response!',
-            payload.new.id,
-            payload.new.sender_id || payload.new.user_id
-          );
+          
+          try {
+            // Send both push notification and in-app notification
+            await sendNotification(
+              userId,
+              'admin_approved_gift',
+              'A gift request has been approved by admin and is waiting for your response!',
+              payload.new.id,
+              payload.new.sender_id || payload.new.user_id
+            );
 
-          sendPushNotification({
-            userIds: [userId],
-            title: 'Gift Request Approved! ✅',
-            body: 'A gift request has been approved by admin and is waiting for your response!',
-            data: {
-              type: 'admin_approved_gift',
-              orderId: payload.new.id,
-              productUrl: payload.new.product_url
-            }
-          });
+            console.log("In-app notification sent successfully to influencer:", userId);
+
+            sendPushNotification({
+              userIds: [userId],
+              title: 'Gift Request Approved! ✅',
+              body: 'A gift request has been approved by admin and is waiting for your response!',
+              data: {
+                type: 'admin_approved_gift',
+                orderId: payload.new.id,
+                productUrl: payload.new.product_url
+              }
+            });
+
+            console.log("Push notification sent successfully to influencer:", userId);
+          } catch (error) {
+            console.error("Error sending notification to influencer:", error);
+          }
         }
       })
       .subscribe();
