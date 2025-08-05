@@ -81,9 +81,11 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
         schema: 'public',
         table: 'orders'
       }, async (payload) => {
-        console.log("Order status update detected:", payload);
-        console.log("Old status:", payload.old?.status, "New status:", payload.new?.status);
-        console.log("Influencer ID in payload:", payload.new?.influencer_id, "Current user ID:", userId);
+        console.log("🔔 Order UPDATE event received:", payload);
+        console.log("🔔 Old data:", payload.old);
+        console.log("🔔 New data:", payload.new);
+        console.log("🔔 Old status:", payload.old?.status, "New status:", payload.new?.status);
+        console.log("🔔 Influencer ID in payload:", payload.new?.influencer_id, "Current user ID:", userId);
         
         // Check if this order is for the current influencer
         if (payload.new?.influencer_id === userId) {
