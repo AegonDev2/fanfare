@@ -73,52 +73,59 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
       .subscribe();
 
     // Listen for admin approval updates on orders (for influencers)
+    console.log("Setting up admin approval listener for influencer:", userId);
     const adminApprovalChannel = supabase
-      .channel('admin-approval-notifications')
+      .channel(`admin-approval-notifications-${userId}`)
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
-        table: 'orders',
-        filter: `influencer_id=eq.${userId}`
+        table: 'orders'
       }, async (payload) => {
-        console.log("Order status update detected for influencer:", payload);
+        console.log("Order status update detected:", payload);
         console.log("Old status:", payload.old?.status, "New status:", payload.new?.status);
         console.log("Influencer ID in payload:", payload.new?.influencer_id, "Current user ID:", userId);
         
-        // Check if order was just approved by admin and is waiting for influencer
-        const oldStatus = payload.old.status;
-        const newStatus = payload.new.status;
-        
-        if (oldStatus !== newStatus && newStatus === 'approved_waiting_influencer') {
-          console.log("Processing admin approval notification for influencer:", userId);
+        // Check if this order is for the current influencer
+        if (payload.new?.influencer_id === userId) {
+          console.log("Order is for current influencer, checking status change...");
           
-          try {
-            // Send both push notification and in-app notification
-            await sendNotification(
-              userId,
-              'admin_approved_gift',
-              'A gift request has been approved by admin and is waiting for your response!',
-              payload.new.id,
-              payload.new.sender_id || payload.new.user_id
-            );
+          // Check if order was just approved by admin and is waiting for influencer
+          const oldStatus = payload.old.status;
+          const newStatus = payload.new.status;
+          
+          if (oldStatus !== newStatus && newStatus === 'approved_waiting_influencer') {
+            console.log("Processing admin approval notification for influencer:", userId);
+            
+            try {
+              // Send both push notification and in-app notification
+              await sendNotification(
+                userId,
+                'admin_approved_gift',
+                'A gift request has been approved by admin and is waiting for your response!',
+                payload.new.id,
+                payload.new.sender_id || payload.new.user_id
+              );
 
-            console.log("In-app notification sent successfully to influencer:", userId);
+              console.log("In-app notification sent successfully to influencer:", userId);
 
-            sendPushNotification({
-              userIds: [userId],
-              title: 'Gift Request Approved! ✅',
-              body: 'A gift request has been approved by admin and is waiting for your response!',
-              data: {
-                type: 'admin_approved_gift',
-                orderId: payload.new.id,
-                productUrl: payload.new.product_url
-              }
-            });
+              sendPushNotification({
+                userIds: [userId],
+                title: 'Gift Request Approved! ✅',
+                body: 'A gift request has been approved by admin and is waiting for your response!',
+                data: {
+                  type: 'admin_approved_gift',
+                  orderId: payload.new.id,
+                  productUrl: payload.new.product_url
+                }
+              });
 
-            console.log("Push notification sent successfully to influencer:", userId);
-          } catch (error) {
-            console.error("Error sending notification to influencer:", error);
+              console.log("Push notification sent successfully to influencer:", userId);
+            } catch (error) {
+              console.error("Error sending notification to influencer:", error);
+            }
           }
+        } else {
+          console.log("Order is not for current influencer, skipping notification");
         }
       })
       .subscribe();
