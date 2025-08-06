@@ -34,7 +34,8 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
   }, [registerForPushNotifications]);
 
   const setupNotificationListeners = (userId: string) => {
-    console.log("Setting up notification listeners for user:", userId);
+    console.log("🔧 Setting up notification listeners for user:", userId);
+    console.log("🔧 Starting real-time subscriptions...");
     
     // Listen for new gift requests in orders table (for influencers)
     const giftRequestsChannel = supabase
@@ -130,7 +131,9 @@ export const NotificationManager = ({ children }: NotificationManagerProps) => {
           console.log("Order is not for current influencer, skipping notification");
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log("🔧 Admin approval channel subscription status:", status);
+      });
 
     // Listen for gift request status updates (for fans)
     const giftUpdatesChannel = supabase
