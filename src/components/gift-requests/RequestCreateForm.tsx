@@ -11,6 +11,8 @@ import { Image, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ImageViewer from "@/components/common/ImageViewer";
 import { useUser } from "@/hooks/useUser";
+import { useWallet } from "@/hooks/use-wallet";
+import { useNavigate } from "react-router-dom";
 
 const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, onSubmit?: () => void }) => {
   const [productUrl, setProductUrl] = useState("");
@@ -21,6 +23,8 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
   const [previewError, setPreviewError] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useUser();
+  const { wallet } = useWallet();
+  const navigate = useNavigate();
 
   // Generate website preview when URL changes
   useEffect(() => {
@@ -82,6 +86,25 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
       // Prevent self-gifting
       if (user.id === influencerId) {
         throw new Error("You cannot send gifts to yourself.");
+      }
+
+      // Check wallet balance for link method (RequestCreateForm is for direct URL sending)
+      // This is always link method, so we need to check if preview failed to determine rules
+      const totalAmount = 5.00; // Platform fee only
+      const hasSufficientBalance = wallet ? wallet.balance >= totalAmount : false;
+      
+      // Block insufficient balance since this is link method with unknown product extraction status
+      // We'll assume successful extraction unless there's a preview error
+      const hasFailedExtraction = !!previewError;
+      
+      if (!hasSufficientBalance && !hasFailedExtraction) {
+        toast({
+          title: "Insufficient Balance",
+          description: "Recharge before placing order",
+          variant: "destructive"
+        });
+        navigate('/wallet');
+        return;
       }
       
       console.log("Creating gift request with:", {

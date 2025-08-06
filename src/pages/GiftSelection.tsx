@@ -12,6 +12,7 @@ import InfluencerSelector from '@/components/gift-selection/InfluencerSelector';
 import GiftMessage from '@/components/gift-selection/GiftMessage';
 import { useGiftItems, GiftItem } from '@/hooks/useGiftItems';
 import { useUser } from '@/hooks/useUser';
+import { useWallet } from '@/hooks/use-wallet';
 
 interface WishlistItemData {
   url: string;
@@ -37,6 +38,7 @@ export default function GiftSelection() {
   const navigate = useNavigate();
   const { getGiftById } = useGiftItems();
   const { user } = useUser();
+  const { wallet } = useWallet();
   
   const giftId = searchParams.get('gift');
   // Check for wishlist params
@@ -164,6 +166,20 @@ export default function GiftSelection() {
         variant: 'destructive',
       });
       navigate('/auth');
+      return;
+    }
+
+    // Check wallet balance for gift collection (this is always from wishlist/collection)
+    const totalAmount = gift.price + 5.00; // Product price + platform fee
+    const hasSufficientBalance = wallet ? wallet.balance >= totalAmount : false;
+    
+    if (!hasSufficientBalance) {
+      toast({
+        title: "Insufficient Balance",
+        description: "Recharge before placing order",
+        variant: "destructive"
+      });
+      navigate('/wallet');
       return;
     }
     

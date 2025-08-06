@@ -21,7 +21,9 @@ export function useOrderSubmission() {
     message: string,
     influencerId: string,
     productPreview: ProductDetails | null,
-    influencerAddress: InfluencerAddress
+    influencerAddress: InfluencerAddress,
+    isFromWishlist = false,
+    hasValidProductData = true
   ) => {
     if (!user) {
       toast({
@@ -63,13 +65,28 @@ export function useOrderSubmission() {
 
       console.log("Order amounts:", { productPrice, platformFee, totalAmount });
 
-      // Check wallet balance (but don't block order if insufficient)
+      // Check wallet balance and enforce rules
       const hasSufficientBalance = wallet ? wallet.balance >= totalAmount : false;
       console.log("Wallet balance check:", { 
         walletBalance: wallet?.balance, 
         totalAmount, 
-        hasSufficientBalance 
+        hasSufficientBalance,
+        isFromWishlist,
+        hasValidProductData
       });
+
+      // Block insufficient balance except for link method with failed product extraction
+      const shouldBlockInsufficientBalance = isFromWishlist || hasValidProductData;
+      
+      if (!hasSufficientBalance && shouldBlockInsufficientBalance) {
+        toast({
+          title: "Insufficient Balance",
+          description: "Recharge before placing order",
+          variant: "destructive"
+        });
+        navigate('/wallet');
+        return;
+      }
 
       // Insert into the unified orders table with pending_admin_approval status
       const { data: order, error } = await supabase

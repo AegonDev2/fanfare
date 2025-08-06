@@ -159,12 +159,22 @@ export default function PlaceOrder() {
     // Use the actual gift URL if available, otherwise use a placeholder
     const orderUrl = giftUrl || searchParams.get('gift') || 'shop-product';
 
+    // Determine if this is from wishlist (gift collection) or has valid product data
+    const isFromWishlist = !!searchParams.get('giftName'); // Shop products or wishlist items
+    const hasValidProductData = productPreview && 
+      productPreview.name !== "Product information couldn't be extracted" && 
+      productPreview.name !== "Product information couldn't be fully extracted" &&
+      productPreview.name !== "Enter a product URL to preview" &&
+      productPreview.priceInr > 0;
+
     await submitOrder(
       orderUrl,
       message,
       selectedInfluencerId,
       productPreview,
-      influencerAddress
+      influencerAddress,
+      isFromWishlist,
+      hasValidProductData
     );
   };
 
