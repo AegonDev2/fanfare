@@ -10,7 +10,7 @@ const Hero = () => {
     userRole,
     isCheckingRole
   } = useAdmin();
-  return <section className="relative pt-16 pb-8 bg-transparent overflow-hidden">
+  return <section className="relative pt-16 pb-8 bg-gradient-to-br from-funky-purple/10 via-white to-funky-pink/10 overflow-hidden">
       <div className="container mx-auto px-4">
         {/* Ads Banner as Header */}
         <HeroCarousel />
