@@ -29,7 +29,7 @@ const ProductCard = memo(({
     });
     navigate(`/place-order?${params.toString()}`);
   };
-  return <Card className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white to-funky-pink/5 border-2 border-funky-pink/20 hover:border-funky-purple/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-funky-purple/25 cursor-pointer">
+  return <Card className="group relative overflow-hidden rounded-3xl bg-transparent border-2 border-funky-pink/20 hover:border-funky-purple/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-funky-purple/25 cursor-pointer">
       <div className="absolute inset-0 bg-gradient-to-t from-funky-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       
       <CardContent className="p-1 lg:p-2 relative z-10">
@@ -129,7 +129,7 @@ const GiftCarousel = ({
   const handleMouseUp = (e: React.MouseEvent) => {
     handleEnd(e.clientX);
   };
-  return <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-funky-pink/5 to-funky-purple/5 border-2 border-gradient-to-r from-funky-pink/20 to-funky-purple/20 shadow-xl">
+  return <div className="relative overflow-hidden rounded-3xl bg-transparent border-2 border-gradient-to-r from-funky-pink/20 to-funky-purple/20 shadow-xl">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,105,180,0.1),transparent_50%)]"></div>
       
       <div ref={carouselRef} className="flex transition-transform duration-300 ease-out relative z-10 cursor-grab active:cursor-grabbing" style={{
@@ -215,7 +215,7 @@ const GiftSection = () => {
       </section>;
   }
   return <section className="mb-8 relative py-8 px-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-funky-pink/5 to-funky-purple/5 rounded-3xl"></div>
+      <div className="absolute inset-0 bg-transparent rounded-3xl"></div>
       
       <div className="max-w-6xl mx-auto relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
