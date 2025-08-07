@@ -45,16 +45,6 @@
     --sidebar-ring: 260 80% 60%;
     
     --mobile-dock-height: 72px;
-    
-    /* Aurora background colors */
-    --white: #ffffff;
-    --black: #000000;
-    --transparent: transparent;
-    --blue-500: #3b82f6;
-    --indigo-300: #a5b4fc;
-    --blue-300: #93c5fd;
-    --violet-200: #ddd6fe;
-    --blue-400: #60a5fa;
   }
 
   .dark {
@@ -326,10 +316,6 @@ html, body {
   animation: pulse-subtle 2s ease-in-out infinite;
 }
 
-.animate-aurora {
-  animation: aurora 60s linear infinite;
-}
-
 @keyframes float {
   0%, 100% {
     transform: translateY(0);
@@ -345,14 +331,5 @@ html, body {
   }
   50% {
     opacity: 0.7;
-  }
-}
-
-@keyframes aurora {
-  from {
-    background-position: 50% 50%, 50% 50%;
-  }
-  to {
-    background-position: 350% 50%, 350% 50%;
   }
 }
