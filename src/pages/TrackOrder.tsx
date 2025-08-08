@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { useNavigation } from "@/components/navigation/useNavigation";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import OrderCard from "@/components/tracking/OrderCard";
@@ -11,7 +11,8 @@ import Navbar from '@/components/navigation/Navbar';
 const TrackOrder = () => {
   const [navOpen, setNavOpen] = useState(false);
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get('order');
+  const location = useLocation();
+  const orderId = searchParams.get('order') || location.state?.orderId;
   const { userRole } = useNavigation();
   const { orders, loading, cancelOrder } = useOrderTracking(orderId || undefined);
 

@@ -183,6 +183,17 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
       return;
     }
 
+    // Check wallet balance at approval time
+    const finalAmount = order.product_price + (order.platform_fee || 5) + deliveryFee;
+    if (walletData && walletData.balance < finalAmount) {
+      toast({
+        title: "Insufficient Wallet Balance",
+        description: `User has ₹${walletData.balance} but needs ₹${finalAmount}. Please ask user to top up wallet before approval.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       console.log("Approving order:", order.id, "with delivery date:", deliveryDate);
       
@@ -195,7 +206,7 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
           admin_approved_at: new Date().toISOString(),
           delivery_estimate: deliveryDate,
           delivery_fee: deliveryFee,
-          total_amount: order.product_price + (order.platform_fee || 5) + deliveryFee
+          total_amount: finalAmount
         })
         .eq('id', order.id);
 
@@ -245,9 +256,28 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
 
       if (error) throw error;
 
+      // Send notification to user about rejection
+      try {
+        const { data, error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            recipient_id: order.user_id,
+            type: 'order_rejected',
+            message: `Your gift order has been rejected by admin. Reason: ${rejectionReason}`,
+            reference_id: order.id,
+            is_read: false
+          });
+
+        if (notificationError) {
+          console.error("Error sending rejection notification:", notificationError);
+        }
+      } catch (notifError) {
+        console.error("Failed to send rejection notification:", notifError);
+      }
+
       toast({
         title: "Order Rejected",
-        description: "Order has been rejected",
+        description: "Order has been rejected and user has been notified",
       });
 
       setShowRejectDialog(false);

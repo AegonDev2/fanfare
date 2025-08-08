@@ -48,17 +48,18 @@ export const usePendingGiftRequests = () => {
     }
   }, []);
 
-  // Calculate total amount needed for all pending requests
+  // Calculate total amount needed for all pending requests including 50 extra for delivery
   const calculateTotalPendingAmount = useCallback((requests: PendingGiftRequest[] = pendingRequests): number => {
     return requests.reduce((total, request) => {
       // Use total_amount if available, otherwise calculate from product_price + platform_fee
       const requestAmount = request.total_amount || 
         ((request.product_price || 0) + (request.platform_fee || 5.00));
-      return total + requestAmount;
+      // Add 50 for potential delivery charges per order
+      return total + requestAmount + 50;
     }, 0);
   }, [pendingRequests]);
 
-  // Check if user has sufficient balance for all pending requests + new amount
+  // Check if user has sufficient balance for all pending requests + new amount + delivery buffer
   const checkSufficientBalanceForNewRequest = useCallback(async (
     newRequestAmount: number,
     currentWalletBalance: number
@@ -70,7 +71,9 @@ export const usePendingGiftRequests = () => {
   }> => {
     const requests = await fetchPendingGiftRequests();
     const totalPendingAmount = calculateTotalPendingAmount(requests);
-    const totalRequiredAmount = totalPendingAmount + newRequestAmount;
+    // Add 50 for delivery charges for the new request too
+    const newRequestWithDelivery = newRequestAmount + 50;
+    const totalRequiredAmount = totalPendingAmount + newRequestWithDelivery;
     const hasSufficientBalance = currentWalletBalance >= totalRequiredAmount;
 
     return {

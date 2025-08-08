@@ -40,7 +40,7 @@ const GiftsSent = () => {
   }, [focusId, requests]);
 
   const handleDetailsClick = (request: any) => {
-    navigate('/track-order', { state: { orderId: request.id } });
+    navigate(`/track-order?order=${request.id}`);
   };
 
   useEffect(() => {

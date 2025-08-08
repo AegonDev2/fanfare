@@ -94,7 +94,7 @@ export function useOrderSubmission() {
         const shortfallAmount = balanceCheck.totalRequiredAmount - currentWalletBalance;
         toast({
           title: "Insufficient Balance",
-          description: `You need ₹${shortfallAmount.toFixed(2)} more. You have ${balanceCheck.pendingRequestsCount} pending requests requiring ₹${balanceCheck.totalPendingAmount.toFixed(2)}.`,
+          description: `You need ₹${shortfallAmount.toFixed(2)} more (including ₹50 delivery buffer per order). You have ${balanceCheck.pendingRequestsCount} pending requests requiring ₹${balanceCheck.totalPendingAmount.toFixed(2)}.`,
           variant: "destructive"
         });
         navigate('/wallet');

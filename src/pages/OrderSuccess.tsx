@@ -21,7 +21,7 @@ export default function OrderSuccess() {
   }, [orderId, navigate]);
 
   const handleTrackOrder = () => {
-    navigate('/track-order', { state: { orderId } });
+    navigate(`/track-order?order=${orderId}`);
   };
 
   const handleBackToHome = () => {
