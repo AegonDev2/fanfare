@@ -13,6 +13,8 @@ import ImageViewer from "@/components/common/ImageViewer";
 import { useUser } from "@/hooks/useUser";
 import { useWallet } from "@/hooks/use-wallet";
 import { useNavigate } from "react-router-dom";
+import { usePendingGiftRequests } from "@/hooks/usePendingGiftRequests";
+import { InsufficientBalanceDialog } from "./InsufficientBalanceDialog";
 
 const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, onSubmit?: () => void }) => {
   const [productUrl, setProductUrl] = useState("");
@@ -21,9 +23,12 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
   const [websitePreview, setWebsitePreview] = useState<string | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [showInsufficientBalanceDialog, setShowInsufficientBalanceDialog] = useState(false);
+  const [balanceCheckData, setBalanceCheckData] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useUser();
   const { wallet } = useWallet();
+  const { checkSufficientBalanceForNewRequest } = usePendingGiftRequests();
   const navigate = useNavigate();
 
   // Generate website preview when URL changes
@@ -88,22 +93,26 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
         throw new Error("You cannot send gifts to yourself.");
       }
 
-      // Check wallet balance for link method (RequestCreateForm is for direct URL sending)
-      // This is always link method, so we need to check if preview failed to determine rules
-      const totalAmount = 5.00; // Platform fee only
-      const hasSufficientBalance = wallet ? wallet.balance >= totalAmount : false;
+      // Check wallet balance including pending gift requests
+      const newRequestAmount = 5.00; // Platform fee only for direct URL sending
+      const currentWalletBalance = wallet ? wallet.balance : 0;
       
-      // Block insufficient balance since this is link method with unknown product extraction status
-      // We'll assume successful extraction unless there's a preview error
-      const hasFailedExtraction = !!previewError;
+      // Check if user has sufficient balance considering all pending requests
+      const balanceCheck = await checkSufficientBalanceForNewRequest(
+        newRequestAmount, 
+        currentWalletBalance
+      );
       
-      if (!hasSufficientBalance && !hasFailedExtraction) {
-        toast({
-          title: "Insufficient Balance",
-          description: "Recharge before placing order",
-          variant: "destructive"
+      if (!balanceCheck.hasSufficientBalance) {
+        // Store balance check data for the dialog
+        setBalanceCheckData({
+          currentBalance: currentWalletBalance,
+          totalRequiredAmount: balanceCheck.totalRequiredAmount,
+          totalPendingAmount: balanceCheck.totalPendingAmount,
+          pendingRequestsCount: balanceCheck.pendingRequestsCount,
+          newRequestAmount: newRequestAmount
         });
-        navigate('/wallet');
+        setShowInsufficientBalanceDialog(true);
         return;
       }
       
@@ -175,75 +184,96 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
     }
   };
 
+  const handleTopUpWallet = () => {
+    setShowInsufficientBalanceDialog(false);
+    navigate('/wallet');
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Send a Gift Request</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {previewError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{previewError}</AlertDescription>
-            </Alert>
-          )}
-          
-          {websitePreview && (
-            <div className="border rounded-md overflow-hidden">
-              <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
-                <div className="flex items-center">
-                  <Image className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-600">Website Preview</span>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Send a Gift Request</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {previewError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{previewError}</AlertDescription>
+              </Alert>
+            )}
+            
+            {websitePreview && (
+              <div className="border rounded-md overflow-hidden">
+                <div className="bg-gray-100 p-2 border-b flex justify-between items-center">
+                  <div className="flex items-center">
+                    <Image className="h-4 w-4 mr-2 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-600">Website Preview</span>
+                  </div>
+                  {productUrl && (
+                    <a
+                      href={productUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
+                    >
+                      View Site <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  )}
                 </div>
-                {productUrl && (
-                  <a
-                    href={productUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
-                  >
-                    View Site <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
-                )}
+                <div className="aspect-video bg-white">
+                  <ImageViewer 
+                    imageUrl={websitePreview} 
+                    alt="Product preview" 
+                  />
+                </div>
               </div>
-              <div className="aspect-video bg-white">
-                <ImageViewer 
-                  imageUrl={websitePreview} 
-                  alt="Product preview" 
-                />
+            )}
+            
+            {isLoadingPreview && !websitePreview && (
+              <div className="rounded-md border overflow-hidden">
+                <div className="bg-gray-100 p-2 border-b flex justify-between">
+                  <span className="text-sm font-medium text-gray-600">Loading Preview</span>
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                </div>
+                <Skeleton className="aspect-video" />
               </div>
-            </div>
-          )}
-          
-          {isLoadingPreview && !websitePreview && (
-            <div className="rounded-md border overflow-hidden">
-              <div className="bg-gray-100 p-2 border-b flex justify-between">
-                <span className="text-sm font-medium text-gray-600">Loading Preview</span>
-                <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
-              </div>
-              <Skeleton className="aspect-video" />
-            </div>
-          )}
-          
-          <Input
-            required
-            type="url"
-            placeholder="Product URL"
-            value={productUrl}
-            onChange={e => setProductUrl(e.target.value)}
-          />
-          <Input
-            placeholder="Your message (optional)"
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-          />
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Sending..." : "Send Request"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            )}
+            
+            <Input
+              required
+              type="url"
+              placeholder="Product URL"
+              value={productUrl}
+              onChange={e => setProductUrl(e.target.value)}
+            />
+            <Input
+              placeholder="Your message (optional)"
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+            />
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Sending..." : "Send Request"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Insufficient Balance Dialog */}
+      {balanceCheckData && (
+        <InsufficientBalanceDialog
+          open={showInsufficientBalanceDialog}
+          onOpenChange={setShowInsufficientBalanceDialog}
+          onTopUpWallet={handleTopUpWallet}
+          currentBalance={balanceCheckData.currentBalance}
+          totalRequiredAmount={balanceCheckData.totalRequiredAmount}
+          totalPendingAmount={balanceCheckData.totalPendingAmount}
+          pendingRequestsCount={balanceCheckData.pendingRequestsCount}
+          newRequestAmount={balanceCheckData.newRequestAmount}
+        />
+      )}
+    </>
   );
 };
 

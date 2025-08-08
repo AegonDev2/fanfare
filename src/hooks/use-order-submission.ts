@@ -6,6 +6,7 @@ import { ProductDetails, InfluencerAddress } from "@/types/order";
 import { useUser } from "@/hooks/useUser";
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "@/hooks/use-wallet";
+import { usePendingGiftRequests } from "@/hooks/usePendingGiftRequests";
 
 export function useOrderSubmission() {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,6 +14,7 @@ export function useOrderSubmission() {
   const [orderError, setOrderError] = useState<string | null>(null);
   const { user } = useUser();
   const { wallet, checkWalletBalance } = useWallet();
+  const { checkSufficientBalanceForNewRequest } = usePendingGiftRequests();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -65,12 +67,22 @@ export function useOrderSubmission() {
 
       console.log("Order amounts:", { productPrice, platformFee, totalAmount });
 
-      // Check wallet balance and enforce rules
-      const hasSufficientBalance = wallet ? wallet.balance >= totalAmount : false;
-      console.log("Wallet balance check:", { 
-        walletBalance: wallet?.balance, 
+      // Check wallet balance including pending gift requests
+      const currentWalletBalance = wallet ? wallet.balance : 0;
+      
+      // Check if user has sufficient balance considering all pending requests
+      const balanceCheck = await checkSufficientBalanceForNewRequest(
         totalAmount, 
-        hasSufficientBalance,
+        currentWalletBalance
+      );
+      
+      console.log("Comprehensive wallet balance check:", { 
+        walletBalance: currentWalletBalance, 
+        totalAmount, 
+        totalPendingAmount: balanceCheck.totalPendingAmount,
+        totalRequiredAmount: balanceCheck.totalRequiredAmount,
+        hasSufficientBalance: balanceCheck.hasSufficientBalance,
+        pendingRequestsCount: balanceCheck.pendingRequestsCount,
         isFromWishlist,
         hasValidProductData
       });
@@ -78,10 +90,11 @@ export function useOrderSubmission() {
       // Block insufficient balance except for link method with failed product extraction
       const shouldBlockInsufficientBalance = isFromWishlist || hasValidProductData;
       
-      if (!hasSufficientBalance && shouldBlockInsufficientBalance) {
+      if (!balanceCheck.hasSufficientBalance && shouldBlockInsufficientBalance) {
+        const shortfallAmount = balanceCheck.totalRequiredAmount - currentWalletBalance;
         toast({
           title: "Insufficient Balance",
-          description: "Recharge before placing order",
+          description: `You need ₹${shortfallAmount.toFixed(2)} more. You have ${balanceCheck.pendingRequestsCount} pending requests requiring ₹${balanceCheck.totalPendingAmount.toFixed(2)}.`,
           variant: "destructive"
         });
         navigate('/wallet');
