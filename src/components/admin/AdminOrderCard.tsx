@@ -352,7 +352,7 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
       setShowEditDescriptionDialog(false);
       // Update local state and notify parent
       order.product_title = editedDescription.trim();
-      onStatusChange(order.id, 'description_updated', { product_title: editedDescription.trim() });
+      onStatusChange(order.id, order.status, { product_title: editedDescription.trim() });
     } catch (error: any) {
       console.error("Error updating description:", error);
       toast({
