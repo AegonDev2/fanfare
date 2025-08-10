@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/hooks/useUser';
+import { useOrderUpdates } from './useOrderUpdates';
 
 export interface GiftRequest {
   id: string;
@@ -119,6 +120,18 @@ export const useGiftRequests = () => {
       request.status === 'rejected_by_influencer' || request.status === 'rejected_by_admin'
     );
   };
+
+  const handleOrderUpdate = useCallback((orderId: string, updatedFields: any) => {
+    setRequests(prevRequests => 
+      prevRequests.map(request => 
+        request.id === orderId 
+          ? { ...request, ...updatedFields }
+          : request
+      )
+    );
+  }, []);
+
+  useOrderUpdates(handleOrderUpdate);
 
   return {
     requests,

@@ -17,7 +17,8 @@ import {
   Truck,
   AlertTriangle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Edit3
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -60,7 +61,7 @@ interface WalletData {
 
 interface AdminOrderCardProps {
   order: OrderData;
-  onStatusChange: (orderId: string, newStatus: string) => void;
+  onStatusChange: (orderId: string, newStatus: string, updatedOrder?: Partial<OrderData>) => void;
 }
 
 const RejectionReasonDisplay = ({ reason }: { reason: string }) => {
@@ -107,6 +108,8 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryFee, setDeliveryFee] = useState(0);
+  const [showEditDescriptionDialog, setShowEditDescriptionDialog] = useState(false);
+  const [editedDescription, setEditedDescription] = useState(order.product_title || "");
   const { toast } = useToast();
 
   const fetchWalletBalance = async () => {
@@ -321,6 +324,45 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
     }
   };
 
+  const handleEditDescription = async () => {
+    if (!editedDescription.trim()) {
+      toast({
+        title: "Error",
+        description: "Description cannot be empty",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          product_title: editedDescription.trim()
+        })
+        .eq('id', order.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Description Updated",
+        description: "Gift description has been updated successfully",
+      });
+
+      setShowEditDescriptionDialog(false);
+      // Update local state and notify parent
+      order.product_title = editedDescription.trim();
+      onStatusChange(order.id, 'description_updated', { product_title: editedDescription.trim() });
+    } catch (error: any) {
+      console.error("Error updating description:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update description", 
+        variant: "destructive"
+      });
+    }
+  };
+
   const totalAmount = order.total_amount || (order.product_price + (order.platform_fee || 5));
   const totalWithDelivery = totalAmount + deliveryFee;
   const hasSufficientBalance = walletData ? walletData.balance >= totalWithDelivery : false;
@@ -366,9 +408,23 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
     <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow">
       <CardHeader>
         <div className="flex items-start justify-between">
-          <CardTitle className="text-lg font-semibold line-clamp-1">
-            {order.product_title}
-          </CardTitle>
+          <div className="flex items-start gap-2 flex-1">
+            <CardTitle className="text-lg font-semibold line-clamp-1 flex-1">
+              {order.product_title}
+            </CardTitle>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setEditedDescription(order.product_title || "");
+                setShowEditDescriptionDialog(true);
+              }}
+              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+              title="Edit description"
+            >
+              <Edit3 className="h-3 w-3" />
+            </Button>
+          </div>
           <Badge 
             variant="outline"
             className={getStatusColor(order.original_status)}
@@ -615,6 +671,50 @@ export default function AdminOrderCard({ order, onStatusChange }: AdminOrderCard
             View Details
           </Button>
         </div>
+
+        {/* Edit Description Dialog */}
+        <Dialog open={showEditDescriptionDialog} onOpenChange={setShowEditDescriptionDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Gift Description</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Update the gift description to improve clarity for the influencer:
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="description">Gift Description</Label>
+                <Textarea
+                  id="description"
+                  value={editedDescription}
+                  onChange={(e) => setEditedDescription(e.target.value)}
+                  placeholder="Enter a clear description of the gift..."
+                  rows={3}
+                />
+                <p className="text-xs text-gray-500">
+                  This will be visible to the influencer and on all tracking pages.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleEditDescription}
+                  disabled={!editedDescription.trim() || editedDescription === order.product_title}
+                >
+                  Update Description
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowEditDescriptionDialog(false);
+                    setEditedDescription(order.product_title || "");
+                  }}
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

@@ -7,8 +7,15 @@ import OrderTabsContent from "./OrderTabsContent";
 import { useEffect } from "react";
 
 export default function AdminOrdersPanel() {
-  const { orders, isLoading, fetchAllOrders } = useAdminOrders();
+  const { orders, isLoading, fetchAllOrders, updateOrderInState } = useAdminOrders();
   const { handleStatusChange } = useOrderActions(orders, fetchAllOrders);
+
+  const handleOrderChange = (orderId: string, newStatus: string, updatedOrder?: any) => {
+    if (updatedOrder) {
+      updateOrderInState(orderId, updatedOrder);
+    }
+    handleStatusChange(orderId, newStatus);
+  };
 
   useEffect(() => {
     console.log("AdminOrdersPanel mounted, fetching orders...");
@@ -62,7 +69,7 @@ export default function AdminOrdersPanel() {
           <TabsTrigger value="accepted">Accepted ({acceptedOrders.length})</TabsTrigger>
         </TabsList>
 
-        <OrderTabsContent orders={orders} onStatusChange={handleStatusChange} />
+        <OrderTabsContent orders={orders} onStatusChange={handleOrderChange} />
       </Tabs>
     </div>
   );

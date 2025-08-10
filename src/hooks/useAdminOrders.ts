@@ -132,10 +132,19 @@ export const useAdminOrders = () => {
     }
   }, [toast]);
 
+  const updateOrderInState = useCallback((orderId: string, updates: Partial<OrderDetails>) => {
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.id === orderId ? { ...order, ...updates } : order
+      )
+    );
+  }, []);
+
   return {
     orders,
     isLoading,
     fetchAllOrders,
-    setOrders
+    setOrders,
+    updateOrderInState
   };
 };

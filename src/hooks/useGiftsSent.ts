@@ -1,7 +1,8 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useOrderUpdates } from "./useOrderUpdates";
 
 export interface GiftRequest {
   id: string;
@@ -126,6 +127,18 @@ export const useGiftsSent = () => {
       setLoading(false);
     }
   }, [toast]);
+
+  const handleOrderUpdate = useCallback((orderId: string, updatedFields: any) => {
+    setRequests(prevRequests => 
+      prevRequests.map(request => 
+        request.id === orderId 
+          ? { ...request, ...updatedFields }
+          : request
+      )
+    );
+  }, []);
+
+  useOrderUpdates(handleOrderUpdate);
 
   return {
     requests,

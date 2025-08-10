@@ -1,9 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigation } from "@/components/navigation/useNavigation";
 import type { TrackingOrder, OrderStatus } from "@/types/tracking";
+import { useOrderUpdates } from "./useOrderUpdates";
 
 export const useOrderTracking = (specificOrderId?: string) => {
   const { toast } = useToast();
@@ -175,6 +176,18 @@ export const useOrderTracking = (specificOrderId?: string) => {
       });
     }
   };
+
+  const handleOrderUpdate = useCallback((orderId: string, updatedFields: any) => {
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.id === orderId 
+          ? { ...order, ...updatedFields }
+          : order
+      )
+    );
+  }, []);
+
+  useOrderUpdates(handleOrderUpdate);
 
   useEffect(() => {
     fetchOrders();
