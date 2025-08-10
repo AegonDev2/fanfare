@@ -145,9 +145,15 @@ export const useOrderTracking = (specificOrderId?: string) => {
         throw new Error("Order not found");
       }
 
-      // Check if cancellation is allowed
-      if (!order.can_cancel) {
-        throw new Error("This order cannot be cancelled");
+      // Check if cancellation is allowed based on mapped status
+      const cancellableStatuses = ['waiting_admin_approval', 'waiting_acceptance'];
+      if (!cancellableStatuses.includes(order.status)) {
+        throw new Error("This order cannot be cancelled. Only pending orders can be cancelled.");
+      }
+
+      // Check if user owns the order
+      if (order.user_id !== user?.id) {
+        throw new Error("You can only cancel your own orders");
       }
 
       // Update the order status to cancelled in the unified orders table
@@ -157,9 +163,13 @@ export const useOrderTracking = (specificOrderId?: string) => {
           status: 'cancelled_by_user',
           cancelled_at: new Date().toISOString()
         })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .eq('user_id', user?.id); // Add user_id check for extra security
       
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to cancel order: " + error.message);
+      }
 
       toast({
         title: "Order Cancelled",
@@ -169,6 +179,7 @@ export const useOrderTracking = (specificOrderId?: string) => {
       // Refresh orders
       await fetchOrders();
     } catch (error: any) {
+      console.error("Cancel order error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to cancel the order",
