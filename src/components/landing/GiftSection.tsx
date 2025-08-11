@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, memo, useRef } from 'react';
-import { Search, ShoppingBag, Sparkles, Gift, Heart, ArrowRight, Star } from 'lucide-react';
+import { Search, ShoppingBag, Sparkles, Gift, Heart, ArrowRight, Star, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,15 @@ const ProductCard = memo(({
     });
     navigate(`/place-order?${params.toString()}`);
   };
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent parent card click
+    const productUrl = product.url || product.product_url;
+    if (productUrl) {
+      window.open(productUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return <Card className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white to-funky-pink/5 border-2 border-funky-pink/20 hover:border-funky-purple/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-funky-purple/25 cursor-pointer">
       <div className="absolute inset-0 bg-gradient-to-t from-funky-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       
@@ -37,8 +46,13 @@ const ProductCard = memo(({
           <img src={product.image_url || '/placeholder.svg'} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           
-          <Button size="icon" onClick={handleGiftClick} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm shadow-lg border border-funky-pink/20 text-funky-purple hover:bg-funky-purple hover:text-white transition-all duration-300 opacity-0 group-hover:opacity-100 transform scale-0 group-hover:scale-100">
-            <Gift className="h-3.5 w-3.5" />
+          <Button 
+            size="icon" 
+            onClick={handleLinkClick} 
+            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm shadow-lg border border-funky-pink/20 text-funky-purple hover:bg-funky-purple hover:text-white transition-all duration-300 opacity-0 group-hover:opacity-100 transform scale-0 group-hover:scale-100"
+            title="View Product"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
           </Button>
         </div>
         
