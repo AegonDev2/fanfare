@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 
 interface GoogleLoginButtonProps {
   isLoading?: boolean;
@@ -59,44 +59,27 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   };
 
   const handleNativeGoogleAuth = async () => {
-    // Initialize Google Auth if needed
-    try {
-      await GoogleAuth.initialize({
-        clientId: '551635583332-rjnaq9j7ssv0mst8b3t9ph7pt56ua6m6.apps.googleusercontent.com',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true
-      });
-    } catch (initError) {
-      console.log("GoogleAuth already initialized or init error:", initError);
+    console.log('Using Capgo SocialLogin (Google)');
+    // If needed, you can call SocialLogin.initialize({ google: { webClientId: 'YOUR_WEB_CLIENT_ID' } }) earlier in app startup.
+    const { result } = await SocialLogin.login({ provider: 'google', options: { scopes: ['profile', 'email'] } });
+    console.log('SocialLogin result:', result);
+
+    // Online flow returns idToken
+    const idToken = (result as any)?.idToken ?? (result as any)?.jwt ?? null;
+
+    if (!idToken) {
+      throw new Error('No ID token returned from Google login. Ensure Google Web Client ID is configured in the app.');
     }
 
-    const result = await GoogleAuth.signIn();
-    console.log("Native Google Auth result:", result);
-
-    if (result?.authentication?.idToken) {
-      // Sign in to Supabase with the Google ID token
-      const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: 'google',
-        token: result.authentication.idToken,
-      });
-
-      if (error) {
-        console.error('Supabase signInWithIdToken error:', error);
-        throw error;
-      }
-
-      console.log("Successfully authenticated with Supabase:", data);
-      
-      toast({
-        title: "Success!",
-        description: "Successfully authenticated with Google!"
-      });
-      
-      // Navigate to home page
-      navigate("/");
-    } else {
-      throw new Error("No ID token received from Google Auth");
+    const { data, error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: idToken });
+    if (error) {
+      console.error('Supabase signInWithIdToken error:', error);
+      throw error;
     }
+
+    console.log('Successfully authenticated with Supabase:', data);
+    toast({ title: 'Success!', description: 'Successfully authenticated with Google!' });
+    navigate('/');
   };
 
   const handleWebGoogleAuth = async () => {
