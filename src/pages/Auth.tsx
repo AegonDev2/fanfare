@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, User, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
+import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { user, signInWithGoogle, signInWithEmail, signUpWithEmail } = useFirebaseAuth();
 
   // Auth flow states
   const [showPasswordUpdate, setShowPasswordUpdate] = useState(false);
@@ -74,16 +76,11 @@ const Auth = () => {
     };
 
     // Check for existing session
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate("/");
-      }
-    };
-
+    if (user) {
+      navigate("/");
+    }
     checkFlow();
-    checkSession();
-  }, [location, navigate]);
+  }, [location, navigate, user]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -101,16 +98,15 @@ const Auth = () => {
       setIsLoading(true);
       setAuthError(null);
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`
-        }
+      const result = await signInWithGoogle();
+      console.log("Firebase Google auth result:", result);
+      
+      toast({
+        title: "Success!",
+        description: "Successfully authenticated with Google!"
       });
-
-      if (error) {
-        throw error;
-      }
+      
+      navigate("/");
     } catch (error: any) {
       console.error('Google auth error:', error);
       setAuthError(error.message || "Failed to sign in with Google");
@@ -139,36 +135,29 @@ const Auth = () => {
           throw new Error("Please enter your name");
         }
 
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              user_type: 'fan',
-              name: name
-            },
-            emailRedirectTo: `${window.location.origin}/`
-          }
-        });
+        const userCredential = await signUpWithEmail(email, password);
+        
+        if (userCredential.user) {
+          // Update the user's display name
+          await updateProfile(userCredential.user, {
+            displayName: name
+          });
+          
+          console.log("User created successfully:", userCredential.user);
 
-        if (error) throw error;
+          toast({
+            title: "Account created!",
+            description: "Welcome! Your account has been created successfully."
+          });
 
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account before logging in."
-        });
-
-        navigate("/email-verification");
+          // Navigate to home page
+          navigate("/");
+        }
       } else {
         // Sign in flow
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const userCredential = await signInWithEmail(email, password);
 
-        if (error) throw error;
-
-        if (data.user) {
+        if (userCredential.user) {
           toast({
             title: "Success",
             description: "You have successfully logged in!",
