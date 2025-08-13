@@ -2,12 +2,12 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBNYxQw1c5J8KhFhRVKxQ2CZs0uF9gYwXs",
-  authDomain: "fanfare-app-12345.firebaseapp.com",
-  projectId: "fanfare-app-12345",
-  storageBucket: "fanfare-app-12345.appspot.com",
-  messagingSenderId: "551635583332",
-  appId: "1:551635583332:web:abcdef1234567890",
+  apiKey: "AIzaSyCSRB5fWPZ4mrIzFnmltZULaKm5MRH1nyg",
+  authDomain: "fanfare-5b5ab.firebaseapp.com",
+  projectId: "fanfare-5b5ab",
+  storageBucket: "fanfare-5b5ab.appspot.com",
+  messagingSenderId: "781420238033",
+  appId: "1:781420238033:android:9d5b1144435f60cc4561f0",
   measurementId: "G-XXXXXXXXXX"
 };
 
