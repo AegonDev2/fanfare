@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { AppContent } from "@/components/AppContent";
 import { NotificationManager } from "@/components/notifications/NotificationManager";
+import { FirebaseAuthProvider } from "@/contexts/FirebaseAuthContext";
 
 const queryClient = new QueryClient();
 
@@ -16,9 +17,11 @@ function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <NotificationManager>
-            <AppContent />
-          </NotificationManager>
+          <FirebaseAuthProvider>
+            <NotificationManager>
+              <AppContent />
+            </NotificationManager>
+          </FirebaseAuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
