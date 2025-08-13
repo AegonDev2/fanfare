@@ -4,11 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import GoogleLoginButton from './GoogleLoginButton';
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
 
 interface LoginFormProps {
   onForgotPassword?: () => void;
@@ -21,7 +21,6 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signInWithEmail } = useFirebaseAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,9 +28,16 @@ const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
     setLoginError(null);
 
     try {
-      const userCredential = await signInWithEmail(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (userCredential.user) {
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
         toast({
           title: "Success",
           description: "You have successfully logged in!",

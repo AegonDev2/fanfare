@@ -3,19 +3,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import GoogleLoginButton from './GoogleLoginButton';
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
-import { updateProfile } from 'firebase/auth';
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
-  const { signUpWithEmail } = useFirebaseAuth();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -38,24 +38,40 @@ const SignUpForm = () => {
     setIsLoading(true);
     try {
       console.log("Starting signup process for:", email);
-      const userCredential = await signUpWithEmail(email, password);
-      
-      if (userCredential.user) {
-        // Update the user's display name
-        await updateProfile(userCredential.user, {
-          displayName: name
-        });
-        
-        console.log("User created successfully:", userCredential.user);
-
-        toast({
-          title: "Account created!",
-          description: "Welcome! Your account has been created successfully."
-        });
-
-        // Navigate to home page
-        navigate("/");
+      const {
+        data: authData,
+        error: authError
+      } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            user_type: 'fan', // All signups are now fans
+            name: name
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      console.log("Signup response:", {
+        authData,
+        authError
+      });
+      if (authError) {
+        throw authError;
       }
+      if (!authData.user) {
+        throw new Error("No user data returned");
+      }
+
+      // The profile creation and role assignment now happen automatically via database triggers
+
+      toast({
+        title: "Account created!",
+        description: "Please check your email to verify your account before logging in."
+      });
+
+      // Navigate to email verification page
+      navigate("/email-verification");
     } catch (error: any) {
       console.error("Signup error:", error);
 

@@ -55,7 +55,6 @@
     "date-fns": "^3.0.0",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.3.0",
-    "firebase": "^12.1.0",
     "framer-motion": "^7.10.3",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",

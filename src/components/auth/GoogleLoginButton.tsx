@@ -1,10 +1,10 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
 
 interface GoogleLoginButtonProps {
   isLoading?: boolean;
@@ -17,7 +17,6 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signInWithGoogle } = useFirebaseAuth();
 
   const handleGoogleAuth = async () => {
     try {
@@ -42,8 +41,8 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
         await handleNativeGoogleAuth();
         return;
       } else {
-        // Use Firebase web OAuth for browser
-        console.log("Using Firebase web OAuth for browser...");
+        // Use web OAuth for browser
+        console.log("Using web OAuth for browser...");
         await handleWebGoogleAuth();
         return;
       }
@@ -75,9 +74,18 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     console.log("Native Google Auth result:", result);
 
     if (result?.authentication?.idToken) {
-      // For native apps, we'll use Firebase signInWithCredential
-      // This requires additional setup with Firebase Admin SDK
-      console.log("Native Google Auth successful, handling Firebase auth...");
+      // Sign in to Supabase with the Google ID token
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: result.authentication.idToken,
+      });
+
+      if (error) {
+        console.error('Supabase signInWithIdToken error:', error);
+        throw error;
+      }
+
+      console.log("Successfully authenticated with Supabase:", data);
       
       toast({
         title: "Success!",
@@ -92,17 +100,21 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   };
 
   const handleWebGoogleAuth = async () => {
-    const result = await signInWithGoogle();
-    
-    console.log("Firebase Google auth result:", result);
-    
-    toast({
-      title: "Success!",
-      description: "Successfully authenticated with Google!"
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'https://a407041e-65d3-402d-a548-4a08462e8022.lovableproject.com/'
+      }
     });
     
-    // Navigate to home page
-    navigate("/");
+    console.log("OAuth response:", { data, error });
+    
+    if (error) {
+      console.error('Google OAuth error:', error);
+      throw error;
+    }
+    
+    console.log("OAuth initiated successfully, redirecting...");
   };
 
   return (

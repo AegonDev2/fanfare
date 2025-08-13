@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface UserProfile {
   id: string;
@@ -10,21 +10,50 @@ export interface UserProfile {
 }
 
 export const useUser = () => {
-  const { user: firebaseUser, loading } = useFirebaseAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (firebaseUser) {
-      setUser({
-        id: firebaseUser.uid,
-        name: firebaseUser.displayName,
-        email: firebaseUser.email || '',
-        user_type: 'fan' // Default to fan for Firebase users
-      });
-    } else {
-      setUser(null);
-    }
-  }, [firebaseUser]);
+    const fetchUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .maybeSingle();
 
-  return { user, isLoading: loading };
+          if (error) {
+            throw error;
+          }
+
+          setUser(profile);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session === null) {
+        setUser(null);
+      } else {
+        fetchUser();
+      }
+    });
+
+    return () => {
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
+    };
+  }, []);
+
+  return { user, isLoading };
 };
