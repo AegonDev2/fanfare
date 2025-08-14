@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 
 interface GoogleLoginButtonProps {
   isLoading?: boolean;
@@ -59,25 +59,27 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   };
 
   const handleNativeGoogleAuth = async () => {
-    // Initialize Google Auth if needed
-    try {
-      await GoogleAuth.initialize({
-        clientId: '551635583332-rjnaq9j7ssv0mst8b3t9ph7pt56ua6m6.apps.googleusercontent.com',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true
-      });
-    } catch (initError) {
-      console.log("GoogleAuth already initialized or init error:", initError);
-    }
+    // Initialize first
+    await SocialLogin.initialize({
+      google: {
+        webClientId: '551635583332-rjnaq9j7ssv0mst8b3t9ph7pt56ua6m6.apps.googleusercontent.com',
+        mode: 'online'
+      }
+    });
 
-    const result = await GoogleAuth.signIn();
+    const result = await SocialLogin.login({
+      provider: 'google',
+      options: {
+        scopes: ['email', 'profile']
+      }
+    });
     console.log("Native Google Auth result:", result);
 
-    if (result?.authentication?.idToken) {
+    if (result?.result && 'idToken' in result.result) {
       // Sign in to Supabase with the Google ID token
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
-        token: result.authentication.idToken,
+        token: result.result.idToken,
       });
 
       if (error) {
