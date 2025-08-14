@@ -37,9 +37,15 @@
 
         <meta-data android:name="com.google.android.gms.client_id"
            android:value="551635583332-udeahie637sgi5gd4ecmancb91rr3f1p.apps.googleusercontent.com"/>
+
+        <!-- Firebase Cloud Messaging service -->
+        <service
+            android:name="com.getcapacitor.plugin.pushnotifications.NotificationService"
+            android:exported="false" />
+
     </application>
 
     <!-- Permissions -->
-
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 </manifest>
