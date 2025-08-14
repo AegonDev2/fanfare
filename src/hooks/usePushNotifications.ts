@@ -55,12 +55,17 @@ export const usePushNotifications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        // Use manual SQL query since TypeScript types haven't been updated yet
-        const { error } = await supabase.rpc('query_raw', {
-          query: `INSERT INTO device_tokens (user_id, token, platform) 
-                  VALUES ('${user.id}', '${token}', '${Capacitor.getPlatform()}') 
-                  ON CONFLICT (user_id, token) DO UPDATE SET updated_at = NOW()`
-        });
+        // Use proper Supabase upsert to safely save device token
+        const { error } = await supabase
+          .from('device_tokens')
+          .upsert({
+            user_id: user.id,
+            token: token,
+            platform: Capacitor.getPlatform(),
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,token'
+          });
 
         if (error) {
           console.error('Error saving device token:', error);
