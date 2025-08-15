@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -903,7 +903,7 @@ export type Database = {
         Returns: boolean
       }
       approve_order_for_influencer: {
-        Args: { order_id: string; delivery_estimate?: string }
+        Args: { delivery_estimate?: string; order_id: string }
         Returns: boolean
       }
       cancel_order_by_user: {
@@ -911,7 +911,7 @@ export type Database = {
         Returns: boolean
       }
       complete_order: {
-        Args: { order_id: string; delivery_estimate?: string }
+        Args: { delivery_estimate?: string; order_id: string }
         Returns: boolean
       }
       consolidate_user_wallets: {
@@ -925,9 +925,9 @@ export type Database = {
       get_influencer_top_fans: {
         Args: { influencer_id_param: string }
         Returns: {
+          fan_email: string
           fan_id: string
           fan_name: string
-          fan_email: string
           profile_image_url: string
           total_gifts: number
         }[]
@@ -935,13 +935,13 @@ export type Database = {
       get_monthly_leaderboard: {
         Args: { target_month: number; target_year: number }
         Returns: {
+          fan_email: string
           fan_id: string
           fan_name: string
-          fan_email: string
-          total_gifts: number
           favorite_influencer_id: string
           favorite_influencer_name: string
           month: string
+          total_gifts: number
           year: number
         }[]
       }
@@ -950,18 +950,18 @@ export type Database = {
         Returns: {
           influencer_id: string
           influencer_name: string
-          total_gifts_received: number
-          total_amount_received: number
+          month: string
           top_fan_id: string
           top_fan_name: string
-          month: string
+          total_amount_received: number
+          total_gifts_received: number
           year: number
         }[]
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
@@ -982,15 +982,15 @@ export type Database = {
         Returns: boolean
       }
       move_order_to_gift_request: {
-        Args: { order_id: string; delivery_estimate?: string }
+        Args: { delivery_estimate?: string; order_id: string }
         Returns: boolean
       }
       process_gift_payment: {
         Args: {
-          p_user_id: string
           p_amount: number
-          p_gift_request_id: string
           p_description: string
+          p_gift_request_id: string
+          p_user_id: string
         }
         Returns: boolean
       }
@@ -1005,30 +1005,30 @@ export type Database = {
       reject_order: {
         Args: {
           order_id: string
-          rejection_reason: string
           rejected_by?: string
+          rejection_reason: string
         }
         Returns: boolean
       }
       reject_order_with_reason: {
         Args: {
           order_id: string
-          rejection_reason: string
           rejected_by?: string
+          rejection_reason: string
         }
         Returns: boolean
       }
       top_up_wallet: {
-        Args: { p_user_id: string; p_amount: number; p_description: string }
+        Args: { p_amount: number; p_description: string; p_user_id: string }
         Returns: boolean
       }
       update_order_status: {
         Args: {
-          order_id: string
-          new_status: string
           delivery_estimate?: string
-          rejection_reason?: string
           influencer_response?: string
+          new_status: string
+          order_id: string
+          rejection_reason?: string
         }
         Returns: boolean
       }
