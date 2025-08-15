@@ -1,97 +1,10 @@
 
-import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { getUserRoles } from "@/utils/roleManager";
-
-export type NavRole = 'fan' | 'influencer' | 'admin';
+import { useLocation } from "react-router-dom";
+import { useAuth, NavRole } from "@/contexts/AuthContext";
 
 export const useNavigation = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [userRole, setUserRole] = useState<NavRole>('fan');
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
-  
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Get session first to check if user is authenticated
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (sessionData && sessionData.session) {
-          // User is authenticated, get user data
-          const { data: userData, error: userError } = await supabase.auth.getUser();
-          
-          if (userError) {
-            throw userError;
-          }
-          
-          if (userData.user) {
-            // Get user profile to get email and name
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('email, name')
-              .eq('id', userData.user.id)
-              .maybeSingle();
-              
-            if (profileError) {
-              console.error("Error fetching profile:", profileError);
-            }
-            
-            setUser(userData.user);
-            setUserEmail(profileData?.email || userData.user.email);
-            setUserName(profileData?.name || null);
-            
-            // Special case for hardcoded admin UID
-            if (userData.user.id === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237" || userData.user.email === 'admin@fanfare.com') {
-              setUserRole('admin');
-            } else {
-              // Get user roles from database
-              const rolesResponse = await getUserRoles(userData.user.id);
-              
-              // Set role priority: admin > influencer > fan
-              if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
-                setUserRole('admin');
-              } else if (rolesResponse.success && rolesResponse.roles.includes('influencer')) {
-                setUserRole('influencer');
-              } else {
-                setUserRole('fan');
-              }
-            }
-          }
-        } else {
-          // User is not authenticated, reset states
-          setUser(null);
-          setUserEmail(null);
-          setUserName(null);
-          setUserRole('fan');
-        }
-      } catch (err) {
-        console.error("Navigation error:", err);
-        setError(err instanceof Error ? err : new Error('Failed to load user data'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchUserData();
-    
-    // Add auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      fetchUserData();
-    });
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+  const { user, userRole, profile, isLoading, error } = useAuth();
 
   // Main navigation items
   const mainNavItems = [
@@ -194,8 +107,8 @@ export const useNavigation = () => {
   return {
     navItems: allNavItems,
     userRole,
-    userEmail,
-    userName,
+    userEmail: profile?.email || user?.email,
+    userName: profile?.name,
     user,
     isActiveRoute: (path: string) => location.pathname === path,
     activeUrl,

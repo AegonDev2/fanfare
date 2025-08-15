@@ -5,8 +5,7 @@ import { X, Home, Gift, User, Search, Settings, Wallet, Trophy, Bell, Heart, Log
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { useUser } from "@/hooks/useUser";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 
@@ -17,7 +16,7 @@ interface NavbarProps {
 
 const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
 
   // Close navbar when clicking outside
@@ -42,15 +41,11 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await signOut();
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account.",
       });
-      
-      navigate("/");
       setIsOpen(false);
     } catch (error: any) {
       toast({
@@ -76,11 +71,11 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     },
     {
       icon: Gift,
-      label: user?.user_type === "influencer" ? "My Wishlist" : "Gifts Sent",
-      path: user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent",
-      action: () => handleNavigation(user?.user_type === "influencer" ? `/wishlist/${user?.id}` : "/gifts-sent")
+      label: profile?.user_type === "influencer" ? "My Wishlist" : "Gifts Sent",
+      path: profile?.user_type === "influencer" ? `/wishlist/${profile?.id}` : "/gifts-sent",
+      action: () => handleNavigation(profile?.user_type === "influencer" ? `/wishlist/${profile?.id}` : "/gifts-sent")
     },
-    ...(user?.user_type === "influencer" ? [{
+    ...(profile?.user_type === "influencer" ? [{
       icon: Heart,
       label: "Gift Requests",
       path: "/gift-requests",
@@ -95,8 +90,8 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     {
       icon: User,
       label: "Profile",
-      path: `/profile/${user?.id || ''}`,
-      action: () => handleNavigation(`/profile/${user?.id || ''}`)
+      path: `/profile/${profile?.id || ''}`,
+      action: () => handleNavigation(`/profile/${profile?.id || ''}`)
     },
     {
       icon: Wallet,
@@ -156,7 +151,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
                     Welcome back!
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {user.email}
+                    {profile?.email || user?.email}
                   </p>
                 </div>
                 <NotificationCenter />
