@@ -31,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<NavRole>('fan');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   const resetAuthState = () => {
     setUser(null);
@@ -40,29 +41,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
   };
 
-  const loadUserData = async (currentSession: Session | null) => {
+  const loadUserData = async (currentSession: Session | null, skipIfLoaded: boolean = false) => {
     if (!currentSession?.user) {
       resetAuthState();
       return;
     }
 
+    // Skip loading if already loaded and user is the same (prevents unnecessary reloads)
+    if (skipIfLoaded && user?.id === currentSession.user.id && profile && !error) {
+      console.log('🔄 Auth data already loaded, skipping reload');
+      return;
+    }
+
     try {
       setError(null);
+      console.log('🔄 Loading user data for:', currentSession.user.id);
       
-      // Get user profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentSession.user.id)
-        .maybeSingle();
+      // Get user profile and roles in parallel for better performance
+      const [profileResponse, rolesResponse] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentSession.user.id)
+          .maybeSingle(),
+        getUserRoles(currentSession.user.id)
+      ]);
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
+      if (profileResponse.error) {
+        console.error('Error fetching profile:', profileResponse.error);
         setError('Failed to load profile');
       }
 
       setUser(currentSession.user);
-      setProfile(profileData);
+      setProfile(profileResponse.data);
 
       // Determine user role
       const userId = currentSession.user.id;
@@ -72,9 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userId === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237" || userEmail === 'admin@fanfare.com') {
         setUserRole('admin');
       } else {
-        // Get roles from database
-        const rolesResponse = await getUserRoles(userId);
-        
+        // Use the parallel-loaded roles response
         if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
           setUserRole('admin');
         } else if (rolesResponse.success && rolesResponse.roles.includes('influencer')) {
@@ -83,6 +92,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserRole('fan');
         }
       }
+
+      console.log('✅ User data loaded successfully');
     } catch (err) {
       console.error('Error loading user data:', err);
       setError('Failed to load user data');
@@ -90,32 +101,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    let isInitialLoad = true;
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log('🔄 Auth state change:', event, !!currentSession);
         
         setSession(currentSession);
         
+        // Prevent duplicate loading during initialization
+        if (isInitialLoad && !initialized) {
+          return;
+        }
+        
         // Use setTimeout to prevent deadlocks
         setTimeout(async () => {
-          await loadUserData(currentSession);
+          // Skip reload if we already have the user data and this is just a token refresh
+          const shouldSkipReload = event === 'TOKEN_REFRESHED' || 
+                                  (event === 'SIGNED_IN' && initialized);
+          
+          await loadUserData(currentSession, shouldSkipReload);
           setIsLoading(false);
         }, 0);
       }
     );
 
-    // THEN check for existing session
+    // Initialize auth state only once
     const initializeAuth = async () => {
       try {
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         console.log('🚀 Initial session check:', !!existingSession);
         
         setSession(existingSession);
-        await loadUserData(existingSession);
+        await loadUserData(existingSession, false);
+        setInitialized(true);
+        isInitialLoad = false;
       } catch (err) {
         console.error('Error initializing auth:', err);
         setError('Failed to initialize authentication');
+        setInitialized(true);
+        isInitialLoad = false;
       } finally {
         setIsLoading(false);
       }

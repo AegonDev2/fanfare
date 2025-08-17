@@ -13,13 +13,14 @@ import Testimonials from '@/components/landing/Testimonials';
 import Footer from '@/components/landing/Footer';
 import FAQ from '@/components/landing/FAQ';
 import { useMobileFeatures } from '@/hooks/useMobileFeatures';
+import { AuthGuard } from '@/components/navigation/AuthGuard';
 
 export default function Landing() {
   const [navOpen, setNavOpen] = useState(false);
   const { isAndroid } = useMobileFeatures();
 
   return (
-    <>
+    <AuthGuard>
       <FloatingHeader setNavOpen={setNavOpen} />
       <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
       <div className="min-h-screen bg-background">
@@ -45,6 +46,6 @@ export default function Landing() {
         <FAQ />
         <Footer />
       </div>
-    </>
+    </AuthGuard>
   );
 }

@@ -16,7 +16,7 @@ interface NavbarProps {
 
 const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isLoading } = useAuth();
   const { toast } = useToast();
 
   // Close navbar when clicking outside
@@ -56,7 +56,8 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
     }
   };
 
-  const navItems = [
+  // Don't render navigation items while auth is loading
+  const navItems = !isLoading ? [
     {
       icon: Home,
       label: "Home",
@@ -105,7 +106,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
       path: "/settings",
       action: () => handleNavigation("/settings")
     }
-  ];
+  ] : [];
 
   return (
     <>
@@ -143,7 +144,7 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           </div>
 
           {/* User Info */}
-          {user && (
+          {!isLoading && user && (
             <div className="mb-6 p-4 bg-gradient-to-r from-funky-purple/10 to-funky-pink/10 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
@@ -159,25 +160,47 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
             </div>
           )}
 
+          {/* Loading State */}
+          {isLoading && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-funky-purple/10 to-funky-pink/10 rounded-lg">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+              </div>
+            </div>
+          )}
+
           {/* Navigation Items */}
           <div className="space-y-2">
-            {navItems.map((item, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                className="w-full justify-start text-left p-3 h-auto hover:bg-funky-purple/10 hover:text-funky-purple"
-                onClick={item.action}
-              >
-                <item.icon className="h-5 w-5 mr-3" />
-                <span>{item.label}</span>
-              </Button>
-            ))}
+            {isLoading ? (
+              // Loading skeleton for nav items
+              [...Array(6)].map((_, index) => (
+                <div key={index} className="w-full p-3 h-12 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+              ))
+            ) : (
+              navItems.map((item, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  className="w-full justify-start text-left p-3 h-auto hover:bg-funky-purple/10 hover:text-funky-purple"
+                  onClick={item.action}
+                >
+                  <item.icon className="h-5 w-5 mr-3" />
+                  <span>{item.label}</span>
+                </Button>
+              ))
+            )}
           </div>
 
           <Separator className="my-6" />
 
           {/* Additional Actions */}
-          {!user ? (
+          {isLoading ? (
+            <div className="space-y-2">
+              <div className="w-full h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+              <div className="w-full h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+            </div>
+          ) : !user ? (
             <div className="space-y-2">
               <Button
                 variant="outline"
