@@ -173,7 +173,10 @@ export const usePushNotifications = () => {
 
   const registerForPushNotifications = async () => {
     if (Capacitor.isNativePlatform()) {
+      console.log('🔔 Attempting to register for push notifications...');
       await initializePushNotifications();
+    } else {
+      console.log('⚠️ Push notifications only available on native platforms');
     }
   };
 
