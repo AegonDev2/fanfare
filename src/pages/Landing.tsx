@@ -4,7 +4,7 @@ import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 import Hero from '@/components/landing/Hero';
 import LeaderboardSection from '@/components/landing/LeaderboardSection';
-import LeaderboardWidget from '@/components/landing/LeaderboardWidget';
+import AndroidLeaderboard from '@/components/landing/AndroidLeaderboard';
 import InfluencerSection from '@/components/landing/InfluencerSection';
 import GiftSection from '@/components/landing/GiftSection';
 import HowItWorks from '@/components/landing/HowItWorks';
@@ -37,7 +37,7 @@ export default function Landing() {
         </div>
         {/* Secondary Content */}
         <div className="mb-4">
-          {isAndroid ? <LeaderboardWidget /> : <LeaderboardSection />}
+          {isAndroid ? <AndroidLeaderboard /> : <LeaderboardSection />}
         </div>
         <HowItWorks />
         <WhyUs />
