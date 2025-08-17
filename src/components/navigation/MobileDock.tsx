@@ -41,7 +41,7 @@ const MobileDock = () => {
         id: 'browse',
         icon: <Search />,
         label: 'Browse',
-        onClick: () => navigate('/gift-selection')
+        onClick: () => navigate('/gift-shop')
       }
     ];
 
@@ -74,10 +74,10 @@ const MobileDock = () => {
         onClick: () => navigate(`/profile/${profile?.id || ''}`)
       },
       {
-        id: 'wallet',
-        icon: <Wallet />,
-        label: 'Wallet',
-        onClick: () => navigate('/wallet')
+        id: 'leaderboard',
+        icon: <Trophy />,
+        label: 'Leaderboard',
+        onClick: () => navigate('/leaderboard')
       }
     ];
 
@@ -90,11 +90,10 @@ const MobileDock = () => {
     const path = location.pathname;
     
     if (path === '/' || path === '/home') return 0;
-    if (path.includes('/gift-selection') || path.includes('/browse')) return 1;
+    if (path.includes('/gift-shop') || path.includes('/browse')) return 1;
     if (path.includes('/gift-requests') || path.includes('/gifts-sent')) return 2;
     if (path.includes('/profile')) return user ? 3 : 0;
-    if (path.includes('/wallet')) return user ? 4 : 0;
-    if (path.includes('/leaderboard')) return user ? 0 : 2;
+    if (path.includes('/leaderboard')) return user ? 4 : 2;
     
     return 0;
   };
@@ -102,7 +101,7 @@ const MobileDock = () => {
   const navItems = getNavItems();
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 md:hidden">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 md:hidden scale-[0.6]">
       <LimelightNav
         items={navItems}
         defaultActiveIndex={getActiveIndex()}
