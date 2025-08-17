@@ -4,6 +4,7 @@ import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 import Hero from '@/components/landing/Hero';
 import LeaderboardSection from '@/components/landing/LeaderboardSection';
+import LeaderboardWidget from '@/components/landing/LeaderboardWidget';
 import InfluencerSection from '@/components/landing/InfluencerSection';
 import GiftSection from '@/components/landing/GiftSection';
 import HowItWorks from '@/components/landing/HowItWorks';
@@ -11,9 +12,11 @@ import WhyUs from '@/components/landing/WhyUs';
 import Testimonials from '@/components/landing/Testimonials';
 import Footer from '@/components/landing/Footer';
 import FAQ from '@/components/landing/FAQ';
+import { useMobileFeatures } from '@/hooks/useMobileFeatures';
 
 export default function Landing() {
   const [navOpen, setNavOpen] = useState(false);
+  const { isAndroid } = useMobileFeatures();
 
   return (
     <>
@@ -34,7 +37,7 @@ export default function Landing() {
         </div>
         {/* Secondary Content */}
         <div className="mb-4">
-          <LeaderboardSection />
+          {isAndroid ? <LeaderboardWidget /> : <LeaderboardSection />}
         </div>
         <HowItWorks />
         <WhyUs />

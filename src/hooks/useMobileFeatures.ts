@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { Device } from '@capacitor/device';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface UseMobileFeaturesOptions {
@@ -14,6 +15,18 @@ export const useMobileFeatures = (options: UseMobileFeaturesOptions = {}) => {
   const location = useLocation();
   const [showExitPrompt, setShowExitPrompt] = useState(false);
   const [backPressCount, setBackPressCount] = useState(0);
+  const [isAndroid, setIsAndroid] = useState(false);
+
+  // Detect Android platform
+  useEffect(() => {
+    const checkPlatform = async () => {
+      if (Capacitor.isNativePlatform()) {
+        const info = await Device.getInfo();
+        setIsAndroid(info.platform === 'android');
+      }
+    };
+    checkPlatform();
+  }, []);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !enableBackButton) return;
@@ -110,6 +123,7 @@ export const useMobileFeatures = (options: UseMobileFeaturesOptions = {}) => {
 
   return {
     showExitPrompt,
+    isAndroid,
     dismissExitPrompt: () => {
       setShowExitPrompt(false);
       setBackPressCount(0);
