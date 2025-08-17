@@ -30,10 +30,30 @@ export const usePushNotifications = () => {
       const result = await PushNotifications.requestPermissions();
       
       if (result.receive === 'granted') {
-        // Register with Apple / Google to receive push via APNS/FCM
-        await PushNotifications.register();
-        
-        setState(prev => ({ ...prev, isRegistered: true }));
+        try {
+          // Register with Apple / Google to receive push via APNS/FCM
+          await PushNotifications.register();
+          setState(prev => ({ ...prev, isRegistered: true }));
+        } catch (registerError: any) {
+          console.warn('Push notification registration failed:', registerError);
+          
+          // Check if it's a Firebase initialization error
+          if (registerError?.message?.includes('FirebaseApp is not initialized')) {
+            setState(prev => ({ 
+              ...prev, 
+              error: 'Firebase not configured for push notifications',
+              isRegistered: false 
+            }));
+            // Don't show toast for Firebase config issues in development
+            return;
+          }
+          
+          setState(prev => ({ 
+            ...prev, 
+            error: 'Push notification registration failed',
+            isRegistered: false 
+          }));
+        }
       } else {
         setState(prev => ({ 
           ...prev, 
