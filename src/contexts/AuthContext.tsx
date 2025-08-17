@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { getUserRoles } from '@/utils/roleManager';
+import { appCache, cacheHelpers } from '@/utils/appCache';
 
 export type NavRole = 'fan' | 'influencer' | 'admin';
 
@@ -47,51 +48,94 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    const userId = currentSession.user.id;
+
     // Skip loading if already loaded and user is the same (prevents unnecessary reloads)
-    if (skipIfLoaded && user?.id === currentSession.user.id && profile && !error) {
+    if (skipIfLoaded && user?.id === userId && profile && !error) {
       console.log('🔄 Auth data already loaded, skipping reload');
+      return;
+    }
+
+    // Try to get from cache first
+    const cachedAuth = cacheHelpers.getAuthData(userId) as { profile: UserProfile; userRole: NavRole } | null;
+    if (cachedAuth && skipIfLoaded) {
+      console.log('🔄 Loading auth data from cache');
+      setUser(currentSession.user);
+      setProfile(cachedAuth.profile);
+      setUserRole(cachedAuth.userRole);
       return;
     }
 
     try {
       setError(null);
-      console.log('🔄 Loading user data for:', currentSession.user.id);
+      console.log('🔄 Loading user data for:', userId);
       
-      // Get user profile and roles in parallel for better performance
-      const [profileResponse, rolesResponse] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentSession.user.id)
-          .maybeSingle(),
-        getUserRoles(currentSession.user.id)
-      ]);
+      // Check cache for profile and roles first
+      let profileData: UserProfile | null = cacheHelpers.getProfile(userId, 'general') as UserProfile | null;
+      let rolesResponse;
 
-      if (profileResponse.error) {
-        console.error('Error fetching profile:', profileResponse.error);
-        setError('Failed to load profile');
+      if (!profileData) {
+        // Get user profile and roles in parallel for better performance
+        const [profileResponse, rolesRes] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle(),
+          getUserRoles(userId)
+        ]);
+
+        if (profileResponse.error) {
+          console.error('Error fetching profile:', profileResponse.error);
+          setError('Failed to load profile');
+        }
+
+        profileData = profileResponse.data;
+        rolesResponse = rolesRes;
+
+        // Cache the profile
+        if (profileData) {
+          cacheHelpers.setProfile(userId, profileData, 'general');
+        }
+      } else {
+        // Get roles if not in main cache
+        rolesResponse = await getUserRoles(userId);
       }
 
       setUser(currentSession.user);
-      setProfile(profileResponse.data);
+      setProfile(profileData || null);
 
       // Determine user role
-      const userId = currentSession.user.id;
       const userEmail = currentSession.user.email;
 
+      let determinedRole: NavRole = 'fan';
+      
       // Special case for hardcoded admin
       if (userId === "724ce941-97c5-4b7d-b0ba-7ee9bd1df237" || userEmail === 'admin@fanfare.com') {
-        setUserRole('admin');
+        determinedRole = 'admin';
       } else {
-        // Use the parallel-loaded roles response
-        if (rolesResponse.success && rolesResponse.roles.includes('admin')) {
-          setUserRole('admin');
-        } else if (rolesResponse.success && rolesResponse.roles.includes('influencer')) {
-          setUserRole('influencer');
+        // Use the roles response
+        if (rolesResponse?.success && rolesResponse.roles.includes('admin')) {
+          determinedRole = 'admin';
+        } else if (rolesResponse?.success && rolesResponse.roles.includes('influencer')) {
+          determinedRole = 'influencer';
         } else {
-          setUserRole('fan');
+          determinedRole = 'fan';
         }
       }
+
+      setUserRole(determinedRole);
+
+      // Cache auth data for future use
+      cacheHelpers.setAuthData(userId, {
+        profile: profileData,
+        userRole: determinedRole
+      });
+
+      // Preload additional user data in background
+      setTimeout(() => {
+        appCache.preloadUserData(userId, supabase);
+      }, 100);
 
       console.log('✅ User data loaded successfully');
     } catch (err) {
@@ -157,6 +201,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setIsLoading(true);
+      
+      // Clear user-specific cache
+      if (user?.id) {
+        cacheHelpers.clearUserCache(user.id);
+      }
       
       // Clean up local state first
       resetAuthState();

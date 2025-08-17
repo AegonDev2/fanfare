@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useCache } from "./useCache";
+import { cacheHelpers } from "@/utils/appCache";
 import { useToast } from "@/hooks/use-toast";
 
 export interface SizePreferences {

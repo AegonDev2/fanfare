@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { AppContent } from "@/components/AppContent";
 import { NotificationManager } from "@/components/notifications/NotificationManager";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useDataPreloader } from "@/hooks/useDataPreloader";
 
 const queryClient = new QueryClient();
 
@@ -18,13 +19,21 @@ function App() {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <NotificationManager>
-              <AppContent />
-            </NotificationManager>
+            <AppWrapper />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+  );
+}
+
+function AppWrapper() {
+  useDataPreloader(); // Preload critical data
+  
+  return (
+    <NotificationManager>
+      <AppContent />
+    </NotificationManager>
   );
 }
 
