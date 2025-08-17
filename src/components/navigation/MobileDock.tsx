@@ -1,69 +1,117 @@
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { LimelightNav } from '@/components/ui/limelight-nav';
+import { 
+  Home, 
+  Search, 
+  User, 
+  Wallet, 
+  Gift, 
+  Heart, 
+  Bell,
+  Trophy
+} from 'lucide-react';
 
-import { useState } from 'react';
-import { Home, Search, ShoppingBag, User, Menu } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-
-interface MobileDockProps {
-  setNavOpen?: (open: boolean) => void;
-}
-
-export default function MobileDock({ setNavOpen }: MobileDockProps) {
-  const location = useLocation();
+const MobileDock = () => {
   const navigate = useNavigate();
-  const [localNavOpen, setLocalNavOpen] = useState(false);
+  const location = useLocation();
+  const { user, profile, isLoading } = useAuth();
 
-  const handleNavToggle = () => {
-    if (setNavOpen) {
-      setNavOpen(!localNavOpen);
-      setLocalNavOpen(!localNavOpen);
+  // Don't show dock while auth is loading
+  if (isLoading) {
+    return null;
+  }
+
+  // Don't show dock on auth pages
+  if (location.pathname.includes('/auth') || location.pathname.includes('/email-verification')) {
+    return null;
+  }
+
+  // Get user-specific navigation items
+  const getNavItems = () => {
+    const baseItems = [
+      {
+        id: 'home',
+        icon: <Home />,
+        label: 'Home',
+        onClick: () => navigate('/')
+      },
+      {
+        id: 'browse',
+        icon: <Search />,
+        label: 'Browse',
+        onClick: () => navigate('/gift-selection')
+      }
+    ];
+
+    if (!user) {
+      // Guest navigation
+      return [
+        ...baseItems,
+        {
+          id: 'leaderboard',
+          icon: <Trophy />,
+          label: 'Leaderboard',
+          onClick: () => navigate('/leaderboard')
+        }
+      ];
     }
+
+    // Authenticated user navigation
+    const authenticatedItems = [
+      ...baseItems,
+      {
+        id: 'gifts',
+        icon: profile?.user_type === 'influencer' ? <Heart /> : <Gift />,
+        label: profile?.user_type === 'influencer' ? 'Requests' : 'Gifts',
+        onClick: () => navigate(profile?.user_type === 'influencer' ? '/gift-requests' : '/gifts-sent')
+      },
+      {
+        id: 'profile',
+        icon: <User />,
+        label: 'Profile',
+        onClick: () => navigate(`/profile/${profile?.id || ''}`)
+      },
+      {
+        id: 'wallet',
+        icon: <Wallet />,
+        label: 'Wallet',
+        onClick: () => navigate('/wallet')
+      }
+    ];
+
+    return authenticatedItems;
   };
 
-  const navItems = [
-    { icon: Home, label: 'Home', path: '/home' },
-    { icon: Search, label: 'Influencers', path: '/influencers' },
-    { icon: ShoppingBag, label: 'Gifts', path: '/gift-selection' },
-    { icon: User, label: 'Profile', path: '/profile' },
-  ];
+  // Determine active index based on current route
+  const getActiveIndex = () => {
+    const items = getNavItems();
+    const path = location.pathname;
+    
+    if (path === '/' || path === '/home') return 0;
+    if (path.includes('/gift-selection') || path.includes('/browse')) return 1;
+    if (path.includes('/gift-requests') || path.includes('/gifts-sent')) return 2;
+    if (path.includes('/profile')) return user ? 3 : 0;
+    if (path.includes('/wallet')) return user ? 4 : 0;
+    if (path.includes('/leaderboard')) return user ? 0 : 2;
+    
+    return 0;
+  };
+
+  const navItems = getNavItems();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50 md:hidden">
-      <div className="flex items-center justify-around">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          
-          return (
-            <Button
-              key={item.path}
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-3",
-                isActive && "text-purple-600"
-              )}
-              onClick={() => navigate(item.path)}
-            >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs">{item.label}</span>
-            </Button>
-          );
-        })}
-        
-        {setNavOpen && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex flex-col items-center gap-1 h-auto py-2 px-3"
-            onClick={handleNavToggle}
-          >
-            <Menu className="h-5 w-5" />
-            <span className="text-xs">Menu</span>
-          </Button>
-        )}
-      </div>
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 md:hidden">
+      <LimelightNav
+        items={navItems}
+        defaultActiveIndex={getActiveIndex()}
+        className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-white/20 shadow-lg"
+        limelightClassName="bg-gradient-to-r from-funky-purple to-funky-pink"
+        iconClassName="text-gray-600 dark:text-gray-300"
+      />
     </div>
   );
-}
+};
+
+export default MobileDock;

@@ -14,6 +14,7 @@ import Footer from '@/components/landing/Footer';
 import FAQ from '@/components/landing/FAQ';
 import { useMobileFeatures } from '@/hooks/useMobileFeatures';
 import { AuthGuard } from '@/components/navigation/AuthGuard';
+import MobileDock from '@/components/navigation/MobileDock';
 
 export default function Landing() {
   const [navOpen, setNavOpen] = useState(false);
@@ -46,6 +47,7 @@ export default function Landing() {
         <FAQ />
         <Footer />
       </div>
+      <MobileDock />
     </AuthGuard>
   );
 }
