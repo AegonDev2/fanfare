@@ -18,6 +18,7 @@ import { useShopProducts } from '@/hooks/useShopProducts';
 import { useAllShopProducts } from '@/hooks/useAllShopProducts';
 import { useUser } from '@/hooks/useUser';
 import { hasRole } from '@/utils/roleManager';
+import { GiftCarousel } from '@/components/gift-shop/GiftCarousel';
 
 export default function GiftShop() {
   const navigate = useNavigate();
@@ -319,69 +320,17 @@ export default function GiftShop() {
 
             <TabsContent value="products" className="mt-0">
               <div className="space-y-6">
-                {/* Products Grid - Pairs of Two */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {allProductsLoading ? (
-                    [...Array(8)].map((_, i) => (
-                      <div key={i} className="h-40 bg-muted/50 rounded-xl animate-pulse" />
-                    ))
-                  ) : filteredAllProducts.length > 0 ? (
-                    filteredAllProducts.map((product) => (
-                      <Card 
-                        key={product.id}
-                        className="group cursor-pointer border-muted-foreground/10 hover:border-primary/30 transition-all duration-300 hover:shadow-lg"
-                      >
-                        <CardContent className="p-6">
-                          <div className="flex items-start gap-4">
-                            <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center flex-shrink-0">
-                              {product.image_url ? (
-                                <img 
-                                  src={product.image_url} 
-                                  alt={product.name}
-                                  className="w-16 h-16 object-cover rounded-lg"
-                                />
-                              ) : (
-                                <Package className="h-8 w-8 text-primary" />
-                              )}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                                {product.name}
-                              </h3>
-                              {product.description && (
-                                <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
-                                  {product.description}
-                                </p>
-                              )}
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                  <p className="font-semibold text-lg">₹{product.price}</p>
-                                  {product.category && (
-                                    <p className="text-xs text-muted-foreground">{product.category}</p>
-                                  )}
-                                </div>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
-                                >
-                                  Gift This
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="col-span-2 text-center py-16">
-                      <Package className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-                      <h3 className="text-xl font-medium text-muted-foreground mb-2">No products found</h3>
-                      <p className="text-muted-foreground">Try adjusting your search criteria</p>
-                    </div>
-                  )}
-                </div>
+                {allProductsLoading ? (
+                  <GiftCarousel />
+                ) : filteredAllProducts.length > 0 ? (
+                  <GiftCarousel />
+                ) : (
+                  <div className="text-center py-16">
+                    <Package className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+                    <h3 className="text-xl font-medium text-muted-foreground mb-2">No products found</h3>
+                    <p className="text-muted-foreground">Try adjusting your search criteria</p>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
