@@ -105,9 +105,8 @@ const MobileDock = () => {
       <LimelightNav
         items={navItems}
         defaultActiveIndex={getActiveIndex()}
-        className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-white/20 shadow-lg"
-        limelightClassName="bg-gradient-to-r from-funky-purple to-funky-pink"
-        iconClassName="text-gray-600 dark:text-gray-300"
+        className="bg-black/40 dark:bg-black/60 backdrop-blur-xl border-white/10 shadow-2xl"
+        limelightClassName="bg-gradient-to-r from-funky-purple/40 to-funky-pink/40"
       />
     </div>
   );

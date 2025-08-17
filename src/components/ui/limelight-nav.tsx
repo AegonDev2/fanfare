@@ -43,7 +43,8 @@ export const LimelightNav = ({
 }: LimelightNavProps) => {
   const [activeIndex, setActiveIndex] = useState(defaultActiveIndex);
   const [isReady, setIsReady] = useState(false);
-  const navItemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [pressedIndex, setPressedIndex] = useState<number | null>(null);
+  const navItemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const limelightRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
@@ -53,11 +54,12 @@ export const LimelightNav = ({
     const activeItem = navItemRefs.current[activeIndex];
     
     if (limelight && activeItem) {
-      const newLeft = activeItem.offsetLeft + activeItem.offsetWidth / 2 - limelight.offsetWidth / 2;
-      limelight.style.left = `${newLeft}px`;
+      const containerWidth = 56; // w-14 equivalent
+      const newLeft = activeItem.offsetLeft + activeItem.offsetWidth / 2 - containerWidth / 2;
+      limelight.style.left = `${Math.max(8, Math.min(newLeft, navItemRefs.current[navItemRefs.current.length - 1]?.offsetLeft || 0))}px`;
 
       if (!isReady) {
-        setTimeout(() => setIsReady(true), 50);
+        setTimeout(() => setIsReady(true), 100);
       }
     }
   }, [activeIndex, isReady, items]);
@@ -72,32 +74,71 @@ export const LimelightNav = ({
     itemOnClick?.();
   };
 
+  const handleTouchStart = (index: number) => {
+    setPressedIndex(index);
+  };
+
+  const handleTouchEnd = () => {
+    setPressedIndex(null);
+  };
+
   return (
-    <nav className={`relative inline-flex items-center h-16 rounded-lg bg-card text-foreground border px-2 ${className}`}>
-      {items.map(({ id, icon, label, onClick }, index) => (
-          <a
+    <nav className={`relative inline-flex items-center h-16 rounded-full backdrop-blur-xl border border-white/10 px-3 shadow-xl ${className}`}>
+      {items.map(({ id, icon, label, onClick }, index) => {
+        const isActive = activeIndex === index;
+        const isPressed = pressedIndex === index;
+        
+        return (
+          <div
             key={id}
             ref={el => (navItemRefs.current[index] = el)}
-            className={`relative z-20 flex h-full cursor-pointer items-center justify-center p-5 ${iconContainerClassName}`}
+            className={`relative z-20 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full transition-all duration-300 ease-out transform ${
+              isActive 
+                ? 'scale-110' 
+                : isPressed 
+                ? 'scale-95' 
+                : 'scale-100 hover:scale-105'
+            } ${iconContainerClassName}`}
             onClick={() => handleItemClick(index, onClick)}
+            onTouchStart={() => handleTouchStart(index)}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={() => handleTouchStart(index)}
+            onMouseUp={handleTouchEnd}
+            onMouseLeave={handleTouchEnd}
             aria-label={label}
           >
+            {/* Background glow for active item */}
+            {isActive && (
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-funky-purple/20 to-funky-pink/20 animate-pulse" />
+            )}
+            
+            {/* Icon */}
             {cloneElement(icon, {
-              className: `w-6 h-6 transition-opacity duration-100 ease-in-out ${
-                activeIndex === index ? 'opacity-100' : 'opacity-40'
+              className: `w-6 h-6 transition-all duration-300 ease-out relative z-10 ${
+                isActive 
+                  ? 'text-white drop-shadow-lg' 
+                  : 'text-white/60 hover:text-white/80'
               } ${icon.props.className || ''} ${iconClassName || ''}`,
             })}
-          </a>
-      ))}
 
+            {/* Active indicator dot */}
+            {isActive && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full animate-pulse" />
+            )}
+          </div>
+        );
+      })}
+
+      {/* Animated background blob */}
       <div 
         ref={limelightRef}
-        className={`absolute top-0 z-10 w-11 h-[5px] rounded-full bg-primary shadow-[0_50px_15px_var(--primary)] ${
-          isReady ? 'transition-[left] duration-400 ease-in-out' : ''
+        className={`absolute top-2 z-10 w-14 h-12 rounded-full bg-gradient-to-r from-funky-purple/30 to-funky-pink/30 backdrop-blur-sm border border-white/20 ${
+          isReady ? 'transition-all duration-500 ease-out' : ''
         } ${limelightClassName}`}
         style={{ left: '-999px' }}
       >
-        <div className="absolute left-[-30%] top-[5px] w-[160%] h-14 [clip-path:polygon(5%_100%,25%_0,75%_0,95%_100%)] bg-gradient-to-b from-primary/30 to-transparent pointer-events-none" />
+        {/* Inner glow */}
+        <div className="absolute inset-1 rounded-full bg-gradient-to-r from-funky-purple/20 to-funky-pink/20 blur-sm" />
       </div>
     </nav>
   );
