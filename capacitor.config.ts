@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.a407041e65d3402da5484a08462e8022',
+  appId: 'com.fanfare.app',
   appName: 'giftloop-connect',
   webDir: 'dist',
   server: {
