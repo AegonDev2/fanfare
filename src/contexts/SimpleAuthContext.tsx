@@ -4,11 +4,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { optimizedCache } from '@/utils/optimizedCache';
 import type { UnifiedUserData, AuthState, AuthHelpers, NavRole } from '@/types/auth';
 
+// Export NavRole for backward compatibility
+export type { NavRole };
+
 interface SimpleAuthContextType extends AuthState, AuthHelpers {
   user: User | null;
   session: Session | null;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  
+  // Backward compatibility properties
+  profile: UnifiedUserData['profile'] | null;
+  userRole: NavRole;
 }
 
 const SimpleAuthContext = createContext<SimpleAuthContextType | undefined>(undefined);
@@ -245,6 +252,10 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     isLoading,
     isAuthenticated,
     error,
+    
+    // Backward compatibility
+    profile: userData?.profile || null,
+    userRole: getUserRole(),
     
     // Helpers
     hasRole,

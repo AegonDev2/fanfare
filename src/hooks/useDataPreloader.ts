@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { appCache } from '@/utils/appCache';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 /**
  * Hook to preload critical data for better UX

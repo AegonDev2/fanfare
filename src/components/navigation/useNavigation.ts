@@ -1,6 +1,6 @@
 
 import { useLocation } from "react-router-dom";
-import { useAuth, NavRole } from "@/contexts/AuthContext";
+import { useAuth, type NavRole } from "@/contexts/SimpleAuthContext";
 
 export const useNavigation = () => {
   const location = useLocation();

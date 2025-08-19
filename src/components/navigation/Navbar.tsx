@@ -5,7 +5,7 @@ import { X, Home, Gift, User, Search, Settings, Wallet, Trophy, Bell, Heart, Log
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/SimpleAuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 
