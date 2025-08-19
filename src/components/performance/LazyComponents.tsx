@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, startTransition } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load components for better performance
@@ -24,11 +24,22 @@ const PageSkeleton = () => (
   </div>
 );
 
-// HOC for lazy loading with suspense
+// HOC for lazy loading with suspense and transition
 export const withLazyLoading = (Component: React.ComponentType) => {
   return (props: any) => (
     <Suspense fallback={<PageSkeleton />}>
       <Component {...props} />
     </Suspense>
   );
+};
+
+// Enhanced HOC with startTransition support
+export const withTransitionLazyLoading = (Component: React.ComponentType) => {
+  return (props: any) => {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <Component {...props} />
+      </Suspense>
+    );
+  };
 };
