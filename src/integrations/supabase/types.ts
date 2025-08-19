@@ -964,6 +964,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_complete_user_data: {
+        Args: { user_uuid: string }
+        Returns: Json
+      }
       get_influencer_top_fans: {
         Args: { influencer_id_param: string }
         Returns: {

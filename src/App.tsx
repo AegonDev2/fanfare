@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { AppContent } from "@/components/AppContent";
 import { NotificationManager } from "@/components/notifications/NotificationManager";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { SimpleAuthProvider } from "@/contexts/SimpleAuthContext";
 import { useDataPreloader } from "@/hooks/useDataPreloader";
 
 const queryClient = new QueryClient();
@@ -18,9 +18,9 @@ function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthProvider>
+          <SimpleAuthProvider>
             <AppWrapper />
-          </AuthProvider>
+          </SimpleAuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
