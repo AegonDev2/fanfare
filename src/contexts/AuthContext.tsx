@@ -88,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (profileResponse.error) {
           console.error('Error fetching profile:', profileResponse.error);
           setError('Failed to load profile');
+          return;
         }
 
         profileData = profileResponse.data;
@@ -132,69 +133,88 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userRole: determinedRole
       });
 
-      // Preload additional user data in background
+      // Preload additional user data in background (non-blocking)
       setTimeout(() => {
-        appCache.preloadUserData(userId, supabase);
+        appCache.preloadUserData(userId, supabase).catch(console.error);
       }, 100);
 
       console.log('✅ User data loaded successfully');
     } catch (err) {
-      console.error('Error loading user data:', err);
+      console.error('❌ Error loading user data:', err);
       setError('Failed to load user data');
     }
   };
 
   useEffect(() => {
-    let isInitialLoad = true;
+    let isMounted = true;
+    let authSubscription: any = null;
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('🔄 Auth state change:', event, !!currentSession);
-        
-        setSession(currentSession);
-        
-        // Prevent duplicate loading during initialization
-        if (isInitialLoad && !initialized) {
-          return;
-        }
-        
-        // Use setTimeout to prevent deadlocks
-        setTimeout(async () => {
-          // Skip reload if we already have the user data and this is just a token refresh
-          const shouldSkipReload = event === 'TOKEN_REFRESHED' || 
-                                  (event === 'SIGNED_IN' && initialized);
-          
-          await loadUserData(currentSession, shouldSkipReload);
-          setIsLoading(false);
-        }, 0);
-      }
-    );
-
-    // Initialize auth state only once
     const initializeAuth = async () => {
       try {
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
-        console.log('🚀 Initial session check:', !!existingSession);
+        console.log('🚀 Initializing auth...');
         
-        setSession(existingSession);
-        await loadUserData(existingSession, false);
-        setInitialized(true);
-        isInitialLoad = false;
+        // Get initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
+        setSession(initialSession);
+        
+        // Load user data if session exists
+        if (initialSession) {
+          await loadUserData(initialSession, false);
+        }
+        
+        // Set up auth state listener AFTER initial load
+        authSubscription = supabase.auth.onAuthStateChange(
+          async (event, currentSession) => {
+            if (!isMounted) return;
+            
+            console.log('🔄 Auth state change:', event, !!currentSession);
+            setSession(currentSession);
+            
+            // Handle different auth events
+            if (event === 'SIGNED_OUT') {
+              resetAuthState();
+              setIsLoading(false);
+              return;
+            }
+            
+            if (event === 'TOKEN_REFRESHED') {
+              // Don't reload user data on token refresh, just update session
+              setIsLoading(false);
+              return;
+            }
+            
+            if (event === 'SIGNED_IN') {
+              setIsLoading(true);
+              await loadUserData(currentSession, false);
+            }
+            
+            setIsLoading(false);
+          }
+        );
+        
+        console.log('✅ Auth initialized successfully');
+        
       } catch (err) {
-        console.error('Error initializing auth:', err);
+        console.error('❌ Error initializing auth:', err);
         setError('Failed to initialize authentication');
-        setInitialized(true);
-        isInitialLoad = false;
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setInitialized(true);
+          setIsLoading(false);
+        }
       }
     };
 
     initializeAuth();
 
     return () => {
-      subscription.unsubscribe();
+      isMounted = false;
+      if (authSubscription?.subscription) {
+        authSubscription.subscription.unsubscribe();
+      }
     };
   }, []);
 
