@@ -28,7 +28,7 @@ const LeaderboardSection = () => {
     }
   };
   const renderFansLeaderboard = () => {
-    const topFans = leaderboard.slice(0, 3);
+    const topFans = (leaderboard || []).slice(0, 3);
     const getPositionDisplay = (index: number) => {
       switch (index) {
         case 0:
@@ -116,7 +116,7 @@ const LeaderboardSection = () => {
       </div>;
   };
   const renderCreatorsLeaderboard = () => {
-    const topCreatorsData = topCreators.slice(0, 3);
+    const topCreatorsData = (topCreators || []).slice(0, 3);
     const getCreatorPositionDisplay = (index: number) => {
       switch (index) {
         case 0:
@@ -255,7 +255,7 @@ const LeaderboardSection = () => {
         </div>
       </section>;
   }
-  if (leaderboard.length === 0 && topCreators.length === 0) {
+  if ((leaderboard || []).length === 0 && (topCreators || []).length === 0) {
     return <section className="mb-6 px-4">
         <div className="max-w-6xl mx-auto">
           <Card className="shadow-xl border-2 border-funky-purple/30 bg-gradient-to-br from-white via-purple-50/50 to-pink-50/30 backdrop-blur-sm relative overflow-hidden">
