@@ -5,10 +5,11 @@ export const useFirstTimeUser = () => {
   const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean | null>(null);
   const [shouldShowAuth, setShouldShowAuth] = useState(false);
   const [shouldShowTutorial, setShouldShowTutorial] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const { isAuthenticated, isLoading } = useOptimizedAuth();
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || initialized) return;
 
     const hasVisited = localStorage.getItem('has-visited');
     const tutorialCompleted = localStorage.getItem('tutorial-completed');
@@ -27,6 +28,9 @@ export const useFirstTimeUser = () => {
         if (!tutorialCompleted) {
           setShouldShowAuth(false);
           setShouldShowTutorial(true);
+        } else {
+          setShouldShowAuth(false);
+          setShouldShowTutorial(false);
         }
       }
     } else {
@@ -35,7 +39,9 @@ export const useFirstTimeUser = () => {
       setShouldShowAuth(false);
       setShouldShowTutorial(false);
     }
-  }, [isAuthenticated, isLoading]);
+    
+    setInitialized(true);
+  }, [isAuthenticated, isLoading, initialized]);
 
   // Handle auth completion for first-time users
   useEffect(() => {
@@ -44,6 +50,9 @@ export const useFirstTimeUser = () => {
       if (!tutorialCompleted) {
         setShouldShowAuth(false);
         setShouldShowTutorial(true);
+      } else {
+        setShouldShowAuth(false);
+        setShouldShowTutorial(false);
       }
     }
   }, [isAuthenticated, isFirstTimeUser, shouldShowAuth]);
@@ -59,6 +68,7 @@ export const useFirstTimeUser = () => {
     setIsFirstTimeUser(null);
     setShouldShowAuth(false);
     setShouldShowTutorial(false);
+    setInitialized(false);
   };
 
   return {
@@ -67,6 +77,6 @@ export const useFirstTimeUser = () => {
     shouldShowTutorial,
     completeTutorial,
     resetFirstTimeUser,
-    isLoading: isFirstTimeUser === null
+    isLoading: !initialized || isFirstTimeUser === null
   };
 };
