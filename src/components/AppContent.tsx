@@ -9,6 +9,7 @@ import { OptimizedAuthGuard } from "@/components/navigation/OptimizedAuthGuard";
 import { TutorialContainer } from "@/components/tutorial/TutorialContainer";
 import { TutorialDebug } from "@/components/tutorial/TutorialDebug";
 import { PageLoader } from "@/components/ui/loader";
+import { SmartPreloader } from "@/components/performance/SmartPreloader";
 import { 
   LazyAdminDashboard, 
   LazyGiftShop, 
@@ -69,6 +70,7 @@ export function AppContent() {
 
   return (
     <>
+      <SmartPreloader />
       <ExitConfirmDialog 
         open={showExitPrompt} 
         onOpenChange={dismissExitPrompt} 
