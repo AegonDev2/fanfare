@@ -55,13 +55,12 @@ export function TutorialStep({
 
         {/* Progress Dots */}
         <div className="flex justify-center space-x-3 py-4">
-          {Array.from({ length: 5 }).map((_, index) => (
+          {['welcome', 'discover', 'wishlist', 'gift', 'connect'].map((stepId, index) => (
             <div
-              key={index}
+              key={stepId}
               className={`
                 w-3 h-3 rounded-full tutorial-progress-dot
-                ${index === Array.from(['welcome', 'discover', 'wishlist', 'gift', 'connect']).findIndex(id => id === step.id) 
-                  ? 'bg-primary active' : 'bg-muted/50'}
+                ${step.id === stepId ? 'bg-primary active' : 'bg-muted/50'}
               `}
             />
           ))}

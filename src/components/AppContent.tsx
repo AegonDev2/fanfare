@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { OptimizedAuthGuard } from "@/components/navigation/OptimizedAuthGuard";
 import { TutorialContainer } from "@/components/tutorial/TutorialContainer";
 import { TutorialDebug } from "@/components/tutorial/TutorialDebug";
+import { PageLoader } from "@/components/ui/loader";
 import { 
   LazyAdminDashboard, 
   LazyGiftShop, 
@@ -53,18 +54,7 @@ export function AppContent() {
 
   // Show loading while determining first-time user status
   if (firstTimeLoading) {
-    return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="h-16 w-full bg-muted animate-pulse rounded-lg" />
-          <div className="h-48 w-full bg-muted animate-pulse rounded-lg" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="h-32 w-full bg-muted animate-pulse rounded-lg" />
-            <div className="h-32 w-full bg-muted animate-pulse rounded-lg" />
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Initializing your experience..." />;
   }
 
   // For first-time users, show auth page first
@@ -83,18 +73,7 @@ export function AppContent() {
         open={showExitPrompt} 
         onOpenChange={dismissExitPrompt} 
       />
-      <Suspense fallback={
-        <div className="min-h-screen bg-background p-4">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="h-16 w-full bg-muted animate-pulse rounded-lg" />
-            <div className="h-48 w-full bg-muted animate-pulse rounded-lg" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="h-32 w-full bg-muted animate-pulse rounded-lg" />
-              <div className="h-32 w-full bg-muted animate-pulse rounded-lg" />
-            </div>
-          </div>
-        </div>
-      }>
+      <Suspense fallback={<PageLoader message="Loading page..." />}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/home" element={<Index />} />

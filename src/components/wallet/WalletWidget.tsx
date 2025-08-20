@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader } from "@/components/ui/loader";
 import { useWallet } from "@/hooks/use-wallet";
 import { Wallet, PlusCircle } from "lucide-react";
 const WalletWidget = () => {
@@ -21,7 +21,7 @@ const WalletWidget = () => {
           <Wallet className="h-5 w-5 text-primary" />
           <div>
             <p className="text-xs text-gray-500">Wallet Balance</p>
-            {loading ? <Skeleton className="h-5 w-20" /> : <p className="font-medium">₹{wallet?.balance.toFixed(2) || "0.00"}</p>}
+            {loading ? <Loader size="sm" /> : <p className="font-medium">₹{wallet?.balance.toFixed(2) || "0.00"}</p>}
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => navigate("/wallet")} className="text-xs mx-[10px] px-[5px]">

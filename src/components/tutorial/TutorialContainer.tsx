@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useTutorial } from '@/hooks/useTutorial';
 import { TutorialStep } from './TutorialStep';
+import { TutorialLoading } from './TutorialLoading';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { useTransitionNavigation } from '@/hooks/useTransitionNavigation';
 
@@ -24,7 +25,11 @@ export function TutorialContainer() {
   // Auto-start tutorial for first-time users
   useEffect(() => {
     if (isFirstTime && isAuthenticated && !isActive && !isComplete) {
-      startTutorial();
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        startTutorial();
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [isFirstTime, isAuthenticated, isActive, isComplete, startTutorial]);
 
@@ -48,6 +53,10 @@ export function TutorialContainer() {
   }, [isComplete, isAuthenticated, hasCompleteProfile, isPrimaryRole, navigate]);
 
   if (!isActive || !currentStepData) {
+    // Show loading state when tutorial is about to start
+    if (isFirstTime && isAuthenticated && !isComplete) {
+      return <TutorialLoading />;
+    }
     return null;
   }
 
