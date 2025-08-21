@@ -25,6 +25,7 @@ export function TutorialContainer() {
   // Auto-start tutorial for first-time users
   useEffect(() => {
     if (isFirstTime && isAuthenticated && !isActive && !isComplete) {
+      console.log('🎓 TutorialContainer: Auto-starting tutorial');
       // Small delay to ensure smooth transition
       const timer = setTimeout(() => {
         startTutorial();
@@ -36,19 +37,30 @@ export function TutorialContainer() {
   // Handle tutorial completion - redirect based on user state
   useEffect(() => {
     if (isComplete && isAuthenticated) {
-      // If user doesn't have a complete profile, redirect to create profile
-      if (!hasCompleteProfile()) {
-        if (isPrimaryRole('fan')) {
-          navigate('/create-fan-profile');
-        } else if (isPrimaryRole('influencer')) {
-          navigate('/create-influencer-profile');
+      console.log('🎓✅ TutorialContainer: Tutorial completed, redirecting...');
+      
+      // Small delay to ensure state propagation
+      const timer = setTimeout(() => {
+        // If user doesn't have a complete profile, redirect to create profile
+        if (!hasCompleteProfile()) {
+          if (isPrimaryRole('fan')) {
+            console.log('🎓➡️👤 TutorialContainer: Redirecting to fan profile creation');
+            navigate('/create-fan-profile');
+          } else if (isPrimaryRole('influencer')) {
+            console.log('🎓➡️🌟 TutorialContainer: Redirecting to influencer profile creation');
+            navigate('/create-influencer-profile');
+          } else {
+            console.log('🎓➡️🏠 TutorialContainer: Redirecting to home (no role)');
+            navigate('/home');
+          }
         } else {
+          // User has complete profile, go to main app
+          console.log('🎓➡️🏠 TutorialContainer: Redirecting to home (complete profile)');
           navigate('/home');
         }
-      } else {
-        // User has complete profile, go to main app
-        navigate('/home');
-      }
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
   }, [isComplete, isAuthenticated, hasCompleteProfile, isPrimaryRole, navigate]);
 

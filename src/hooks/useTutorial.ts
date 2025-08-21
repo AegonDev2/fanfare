@@ -63,14 +63,17 @@ export const useTutorial = () => {
   useDataPreloader();
 
   useEffect(() => {
-    // Check if user has completed tutorial before
+    // Check if user has completed tutorial before - use consistent keys
     const tutorialCompleted = localStorage.getItem('tutorial-completed');
-    const firstVisit = localStorage.getItem('first-visit');
+    const hasVisited = localStorage.getItem('has-visited');
     
-    if (!tutorialCompleted && !firstVisit) {
+    console.log('🎓 Tutorial: Initializing state', { tutorialCompleted, hasVisited });
+    
+    if (!tutorialCompleted && !hasVisited) {
+      console.log('🆕 Tutorial: First time detected');
       setIsFirstTime(true);
-      localStorage.setItem('first-visit', 'true');
     } else if (tutorialCompleted) {
+      console.log('✅ Tutorial: Already completed');
       setIsComplete(true);
     }
   }, []);
@@ -100,14 +103,22 @@ export const useTutorial = () => {
   }, []);
 
   const completeTutorial = useCallback(() => {
+    console.log('🎓✅ Tutorial: Completing tutorial');
     setIsComplete(true);
     setIsActive(false);
     localStorage.setItem('tutorial-completed', 'true');
+    
+    // Trigger storage event for same-window communication
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'tutorial-completed',
+      newValue: 'true'
+    }));
   }, []);
 
   const resetTutorial = useCallback(() => {
+    console.log('🔄 Tutorial: Resetting tutorial');
     localStorage.removeItem('tutorial-completed');
-    localStorage.removeItem('first-visit');
+    localStorage.removeItem('has-visited'); // Use consistent key
     setIsFirstTime(true);
     setCurrentStep(0);
     setIsActive(false);

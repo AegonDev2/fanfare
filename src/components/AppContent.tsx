@@ -55,18 +55,23 @@ export function AppContent() {
 
   // Show loading while determining first-time user status
   if (firstTimeLoading) {
+    console.log('⏳ AppContent: First time loading...');
     return <PageLoader message="Initializing your experience..." />;
   }
 
   // For first-time users, show auth page first
   if (isFirstTimeUser && shouldShowAuth) {
+    console.log('🔐 AppContent: Showing auth for first-time user');
     return <Auth />;
   }
 
   // Show tutorial after auth for first-time users
   if (shouldShowTutorial) {
+    console.log('🎓 AppContent: Showing tutorial');
     return <TutorialContainer />;
   }
+
+  console.log('🏠 AppContent: Showing main app');
 
   return (
     <>
