@@ -43,5 +43,7 @@ export function useAdBanners() {
   return useQuery({
     queryKey: ['adBanners'],
     queryFn: fetchAdBanners,
+    staleTime: 10 * 60 * 1000, // 10 minutes - banners don't change frequently
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
   });
 }

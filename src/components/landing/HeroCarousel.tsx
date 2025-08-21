@@ -1,11 +1,12 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import { CarouselNext, CarouselPrevious, Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { useAdBanners } from "@/hooks/useAdBanners";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import OptimizedImage from "@/components/common/OptimizedImage";
 
-const HeroCarousel = () => {
+const HeroCarousel = memo(() => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
@@ -63,10 +64,12 @@ const HeroCarousel = () => {
               <div className="py-0 my-[15px] w-full">
                 <div className="relative aspect-[16/9] overflow-hidden rounded-lg shadow-md">
                   <div className="absolute inset-0 bg-gradient-to-r from-funky-purple/30 to-funky-pink/30 z-10 opacity-60"></div>
-                  <img src={slide.image_url} alt={slide.title} className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-1000" onError={e => {
-                console.error('Failed to load image:', slide.image_url);
-                e.currentTarget.style.display = 'none';
-              }} />
+                  <OptimizedImage
+                    src={slide.image_url}
+                    alt={slide.title}
+                    className="w-full h-full transform hover:scale-105 transition-transform duration-1000"
+                    onError={() => console.error('Failed to load image:', slide.image_url)}
+                  />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-4 flex flex-col items-start justify-end z-20">
                     <h3 className="text-white text-sm lg:text-sm font-bold mb-0.5 sm:mb-1 font-display">
                       {slide.title}
@@ -90,5 +93,8 @@ const HeroCarousel = () => {
         {processedSlides.length > 1}
       </Carousel>
     </div>;
-};
+});
+
+HeroCarousel.displayName = 'HeroCarousel';
+
 export default HeroCarousel;

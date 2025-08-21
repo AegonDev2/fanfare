@@ -1,25 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trophy, Crown, Medal, Users, Star, Sparkles, ChevronLeft, ChevronRight, Gift } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { useTopCreators } from "@/hooks/useTopCreators";
+import { useOptimizedLeaderboard } from "@/hooks/useOptimizedLeaderboard";
+import { useOptimizedTopCreators } from "@/hooks/useOptimizedTopCreators";
 import { TopCreatorsCard } from "@/components/leaderboard/TopCreatorsCard";
-const LeaderboardSection = () => {
+const LeaderboardSection = memo(() => {
   const navigate = useNavigate();
   const {
-    leaderboard,
-    isLoading,
-    currentMonth,
-    currentYear
-  } = useLeaderboard();
+    data: leaderboardData,
+    isLoading
+  } = useOptimizedLeaderboard();
   const {
-    topCreators,
+    data: creatorsData,
     isLoading: creatorsLoading
-  } = useTopCreators();
+  } = useOptimizedTopCreators();
+  
   const [currentView, setCurrentView] = useState<'fans' | 'creators'>('fans');
+  
+  // Extract data from the new hook structure
+  const leaderboard = leaderboardData?.leaderboard || [];
+  const currentMonth = leaderboardData?.currentMonth || '';
+  const currentYear = leaderboardData?.currentYear || 0;
+  const topCreators = creatorsData?.topCreators || [];
   const switchView = (direction: 'left' | 'right') => {
     if (direction === 'left') {
       setCurrentView(currentView === 'fans' ? 'creators' : 'fans');
@@ -341,5 +346,8 @@ const LeaderboardSection = () => {
         </Card>
       </div>
     </section>;
-};
+});
+
+LeaderboardSection.displayName = 'LeaderboardSection';
+
 export default LeaderboardSection;

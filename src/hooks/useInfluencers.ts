@@ -43,6 +43,8 @@ export const useInfluencers = (searchQuery?: string, categoryFilter?: string) =>
 
       return data || [];
     },
+    staleTime: searchQuery ? 2 * 60 * 1000 : 10 * 60 * 1000, // 2 min for search, 10 min for general
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
   });
 };
 
@@ -64,5 +66,7 @@ export const useInfluencerCategories = () => {
       const categories = [...new Set(data?.map(item => item.category).filter(Boolean))];
       return categories.sort();
     },
+    staleTime: 60 * 60 * 1000, // 1 hour - categories rarely change
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours cache
   });
 };

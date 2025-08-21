@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import OptimizedImage from '@/components/common/OptimizedImage';
 // Removed embla-carousel import as it's causing issues - using custom implementation
 
 const InfluencerCard = memo(({
@@ -51,7 +52,11 @@ const InfluencerCard = memo(({
       <div className="relative z-10">
         <div className={cn("w-full aspect-square mb-2 overflow-hidden rounded-xl transition-all duration-500", isHovering ? "shadow-lg shadow-funky-purple/20" : "")}>
           <div className="w-full h-full relative">
-            <img src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'} alt={`${influencer.name}'s profile`} className={cn("w-full h-full object-cover transition-all duration-500", isHovering ? "scale-110" : "scale-100")} loading="lazy" />
+                  <OptimizedImage
+                    src={influencer.profile_image || 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg'}
+                    alt={`${influencer.name}'s profile`}
+                    className={cn("w-full h-full transition-all duration-500", isHovering ? "scale-110" : "scale-100")}
+                  />
             <div className={cn("absolute inset-0 bg-gradient-to-t from-funky-purple/40 to-transparent opacity-0 transition-opacity duration-300", isHovering ? "opacity-100" : "opacity-0")}></div>
           </div>
         </div>
