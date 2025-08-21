@@ -32,14 +32,14 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Single function to load complete user data
   const loadCompleteUserData = useCallback(async (userId: string): Promise<UnifiedUserData | null> => {
     try {
-      console.log('📊 Loading complete user data for:', userId);
-      
-      // Check cache first
+      // Check cache first to avoid duplicate calls
       const cachedData = optimizedCache.getUserComplete(userId);
       if (cachedData) {
         console.log('⚡ Using cached user data');
         return cachedData;
       }
+
+      console.log('📊 Loading complete user data for:', userId);
 
       // Use unified database function
       const { data, error: dbError } = await supabase.rpc('get_complete_user_data', {
@@ -104,8 +104,12 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Initialize auth
   useEffect(() => {
     let isMounted = true;
+    let hasInitialized = false;
 
     const initializeAuth = async () => {
+      if (hasInitialized) return;
+      hasInitialized = true;
+
       try {
         console.log('🚀 Initializing simple auth...');
 
@@ -125,8 +129,9 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             
             if (event === 'SIGNED_OUT') {
               // Clear all user cache on sign out
-              if (user?.id) {
-                optimizedCache.clearUserData(user.id);
+              const currentUserId = user?.id;
+              if (currentUserId) {
+                optimizedCache.clearUserData(currentUserId);
               }
               setUser(null);
               setSession(null);
@@ -169,7 +174,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       isMounted = false;
       cleanup.then(unsub => unsub?.());
     };
-  }, [handleSessionChange, user?.id]);
+  }, [handleSessionChange]); // Removed user?.id dependency
 
   // Auth helpers
   const hasRole = useCallback((role: NavRole): boolean => {
