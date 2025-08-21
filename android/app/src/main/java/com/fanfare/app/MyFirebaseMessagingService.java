@@ -1,7 +1,7 @@
 package com.fanfare.app;
 
 import android.util.Log;
-import com.getcapacitor.plugin.pushnotifications.PushNotificationsPlugin;
+import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
