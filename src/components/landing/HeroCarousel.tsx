@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { CarouselNext, CarouselPrevious, Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { useAdBanners } from "@/hooks/useAdBanners";
-import { SectionLoader } from "@/components/ui/loader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const HeroCarousel = () => {
@@ -46,7 +46,7 @@ const HeroCarousel = () => {
   if (isLoading) {
     return <div className="relative pb-2 pt-2 sm:pb-4 sm:pt-6 mx-0 overflow-hidden">
         <div className="w-full max-w-3xl lg:max-w-2xl mx-auto px-1">
-          <SectionLoader message="Loading carousel..." />
+          <Skeleton className="w-full h-32 sm:h-48 lg:h-40 rounded-lg" />
         </div>
       </div>;
   }

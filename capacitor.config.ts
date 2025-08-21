@@ -10,20 +10,9 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   bundledWebRuntime: false,
-  android: {
-    allowMixedContent: true,
-    captureInput: true,
-    webContentsDebuggingEnabled: false,
-    loggingBehavior: 'none'
-  },
   plugins: {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
-    },
-    SplashScreen: {
-      launchShowDuration: 1000,
-      backgroundColor: "#000000",
-      showSpinner: false
     }
   }
 };

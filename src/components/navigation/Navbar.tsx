@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/SimpleAuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
-import { SectionLoader } from "@/components/ui/loader";
 
 interface NavbarProps {
   isOpen: boolean;
@@ -164,15 +163,20 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
           {/* Loading State */}
           {isLoading && (
             <div className="mb-6 p-4 bg-gradient-to-r from-funky-purple/10 to-funky-pink/10 rounded-lg">
-              <SectionLoader />
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+              </div>
             </div>
           )}
 
           {/* Navigation Items */}
           <div className="space-y-2">
             {isLoading ? (
-              // Loading state
-              <SectionLoader />
+              // Loading skeleton for nav items
+              [...Array(6)].map((_, index) => (
+                <div key={index} className="w-full p-3 h-12 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+              ))
             ) : (
               navItems.map((item, index) => (
                 <Button
@@ -192,7 +196,10 @@ const Navbar = ({ isOpen, setIsOpen }: NavbarProps) => {
 
           {/* Additional Actions */}
           {isLoading ? (
-            <SectionLoader />
+            <div className="space-y-2">
+              <div className="w-full h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+              <div className="w-full h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+            </div>
           ) : !user ? (
             <div className="space-y-2">
               <Button
