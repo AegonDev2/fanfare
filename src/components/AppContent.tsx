@@ -9,7 +9,7 @@ import { OptimizedAuthGuard } from "@/components/navigation/OptimizedAuthGuard";
 import { TutorialContainer } from "@/components/tutorial/TutorialContainer";
 import { TutorialDebug } from "@/components/tutorial/TutorialDebug";
 import { PageLoader } from "@/components/ui/loader";
-import { SmartPreloader } from "@/components/performance/SmartPreloader";
+import { LazyPreloader } from "@/components/performance/LazyPreloader";
 import { 
   LazyAdminDashboard, 
   LazyGiftShop, 
@@ -75,7 +75,6 @@ export function AppContent() {
 
   return (
     <>
-      <SmartPreloader />
       <ExitConfirmDialog 
         open={showExitPrompt} 
         onOpenChange={dismissExitPrompt} 
@@ -156,6 +155,8 @@ export function AppContent() {
         {/* Tutorial Debug Component - Development Only */}
         <TutorialDebug />
       </Suspense>
+      {/* Lazy load preloader after app is ready */}
+      <LazyPreloader />
     </>
   );
 }

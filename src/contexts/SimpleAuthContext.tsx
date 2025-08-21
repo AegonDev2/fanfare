@@ -76,7 +76,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, []);
 
-  // Load user data when session changes
+  // Load user data when session changes - but don't block the UI
   const handleSessionChange = useCallback(async (currentSession: Session | null) => {
     setSession(currentSession);
     setUser(currentSession?.user || null);
@@ -88,16 +88,17 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return;
     }
 
+    // Don't block UI - show session immediately, load user data in background
+    setIsLoading(false);
+    
+    // Load user data in background
     try {
-      setIsLoading(true);
       const data = await loadCompleteUserData(currentSession.user.id);
       setUserData(data);
     } catch (err) {
       console.error('Failed to load user data:', err);
       setError('Failed to load user data');
       setUserData(null);
-    } finally {
-      setIsLoading(false);
     }
   }, [loadCompleteUserData]);
 
