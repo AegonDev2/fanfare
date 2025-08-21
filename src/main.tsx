@@ -11,10 +11,19 @@ window.PIKWY_API_TOKEN = "c39990741cf427d7baa5750d20bfaefc66c45915a84af5d8";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes - keep data fresh longer
+      gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache much longer
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
-      gcTime: 15 * 60 * 1000, // 15 minutes - cache persists for 15 minutes
+      refetchOnMount: false, // Don't refetch if data is fresh
+      retry: (failureCount, error) => {
+        if (error && typeof error === 'object' && 'status' in error) {
+          const status = (error as any).status;
+          if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
+            return false;
+          }
+        }
+        return failureCount < 2;
+      },
     },
   },
 })

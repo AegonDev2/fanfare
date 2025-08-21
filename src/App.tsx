@@ -8,6 +8,8 @@ import { AppContent } from "@/components/AppContent";
 import { NotificationManager } from "@/components/notifications/NotificationManager";
 import { SimpleAuthProvider } from "@/contexts/SimpleAuthContext";
 import { useDataPreloader } from "@/hooks/useDataPreloader";
+import { useBackgroundDataRefresh } from "@/hooks/useBackgroundDataRefresh";
+import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,8 @@ function App() {
 
 function AppWrapper() {
   useDataPreloader(); // Preload critical data
+  useBackgroundDataRefresh(); // Keep data fresh in background
+  usePerformanceMonitor(); // Monitor performance improvements
   
   return (
     <NotificationManager>

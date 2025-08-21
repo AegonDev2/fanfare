@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useUser } from '@/hooks/useUser';
-import { useInfluencerProfile } from '@/hooks/useInfluencerProfile';
-import { useFanProfile } from '@/hooks/useFanProfile';
+import { useParams } from 'react-router-dom';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
+import { useOptimizedProfile } from '@/hooks/useOptimizedProfile';
 import { useToast } from '@/hooks/use-toast';
-import { useTopFans } from '@/hooks/useTopFans';
+import { OptimizedNavigation } from '@/components/navigation/OptimizedNavigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
@@ -18,139 +17,45 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, List, Star, User, AlertCircle, Instagram, Youtube, Twitter, Facebook, Users } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 export default function Profile() {
-  const {
-    id
-  } = useParams<{
-    id: string;
-  }>();
-  const {
-    user
-  } = useUser();
-  const {
-    toast
-  } = useToast();
-  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const { user, isLoading: authLoading } = useOptimizedAuth();
+  const { toast } = useToast();
   const [navOpen, setNavOpen] = useState(false);
-  const [profileLoaded, setProfileLoaded] = useState(false);
-  const [userType, setUserType] = useState<string | null>(null);
-  const [profileCheckError, setProfileCheckError] = useState<string | null>(null);
 
   // Determine the profile ID to load
   const profileId = id || user?.id;
   const isCurrentUserProfile = !id || id === user?.id;
-  const {
-    influencer,
-    isLoading: influencerLoading,
-    error: influencerError
-  } = useInfluencerProfile(profileId || '');
-  const {
-    fanProfile,
-    isLoading: fanLoading,
-    error: fanError
-  } = useFanProfile(profileId || '');
 
-  // Fetch top fans for influencer profiles
+  // Use optimized profile hook - single query for all data
   const {
-    topFans,
-    isLoading: topFansLoading
-  } = useTopFans(influencer?.id || '');
+    data: profileData,
+    isLoading: profileLoading,
+    error: profileError
+  } = useOptimizedProfile(profileId, !authLoading);
 
-  // Helper function to safely convert error to string
-  const getErrorMessage = (error: unknown): string => {
-    if (!error) return '';
-    if (typeof error === 'string') return error;
-    if (error && typeof error === 'object') {
-      // Handle Supabase error objects
-      if ('message' in error && typeof error.message === 'string') {
-        return error.message;
-      }
-      // Handle other error objects
-      if ('toString' in error && typeof error.toString === 'function') {
-        return error.toString();
-      }
-      // Fallback for any object
-      return JSON.stringify(error);
-    }
-    return 'Unknown error occurred';
-  };
+  const influencer = profileData?.influencer_profile;
+  const fanProfile = profileData?.fan_profile;
+  const topFans = profileData?.top_fans || [];
+  const userType = profileData?.profile?.user_type;
+
+  // Profile validation effect
   useEffect(() => {
-    const checkUserType = async () => {
-      if (!profileId) {
-        setProfileCheckError('No profile ID provided');
-        return;
-      }
-      try {
-        console.log('Checking user type for profile ID:', profileId);
+    if (!user || authLoading || profileLoading) return;
 
-        // Get user type from profiles table
-        const {
-          data: profile,
-          error
-        } = await supabase.from('profiles').select('user_type, name, email').eq('id', profileId).maybeSingle();
-        if (error) {
-          console.error('Error fetching profile:', error);
-          setProfileCheckError(`Failed to load profile: ${getErrorMessage(error)}`);
-          return;
-        }
-        if (!profile) {
-          setProfileCheckError('Profile not found');
-          return;
-        }
-        console.log('Profile found:', profile);
-        setUserType(profile.user_type);
-        setProfileCheckError(null);
-      } catch (error: any) {
-        console.error('Error checking user type:', error);
-        setProfileCheckError(`Error loading profile: ${getErrorMessage(error)}`);
+    // Check if user needs to create a profile
+    if (isCurrentUserProfile && userType && !profileError) {
+      if (userType === 'influencer' && !influencer) {
+        console.log('Redirecting to create influencer profile');
+        return; // Let OptimizedNavigation handle this
+      } else if (userType === 'fan' && !fanProfile) {
+        console.log('Redirecting to create fan profile');
+        return; // Let OptimizedNavigation handle this
       }
-    };
-    if (profileId) {
-      checkUserType();
     }
-  }, [profileId]);
-  useEffect(() => {
-    if (!user && !profileLoaded) return;
-    const handleProfileLoad = async () => {
-      try {
-        if (!profileId) {
-          toast({
-            title: "Profile Not Found",
-            description: "Unable to load profile information",
-            variant: "destructive"
-          });
-          navigate('/');
-          return;
-        }
-
-        // For current user, check if they need to create a profile
-        if (isCurrentUserProfile && user && userType) {
-          if (userType === 'influencer' && !influencer && !influencerLoading && !influencerError) {
-            console.log('Redirecting to create influencer profile');
-            navigate('/create-influencer-profile');
-            return;
-          } else if (userType === 'fan' && !fanProfile && !fanLoading && !fanError) {
-            console.log('Redirecting to create fan profile');
-            navigate('/create-fan-profile');
-            return;
-          }
-        }
-        setProfileLoaded(true);
-      } catch (error) {
-        console.error('Error in profile loading:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile",
-          variant: "destructive"
-        });
-      }
-    };
-    if (userType !== null && !profileCheckError) {
-      handleProfileLoad();
-    }
-  }, [user, profileId, isCurrentUserProfile, influencer, influencerLoading, fanProfile, fanLoading, navigate, toast, profileLoaded, userType, influencerError, fanError, profileCheckError]);
+  }, [user, authLoading, profileLoading, userType, influencer, fanProfile, isCurrentUserProfile, profileError]);
 
   // Show loading state
-  if (influencerLoading || fanLoading || !profileLoaded || userType === null) {
+  if (authLoading || profileLoading) {
     return <>
         <FloatingHeader setNavOpen={setNavOpen} />
         <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
@@ -166,8 +71,7 @@ export default function Profile() {
   }
 
   // Handle error states
-  const errorMessage = profileCheckError || getErrorMessage(influencerError) || getErrorMessage(fanError);
-  if (errorMessage) {
+  if (profileError) {
     return <>
         <FloatingHeader setNavOpen={setNavOpen} />
         <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
@@ -177,15 +81,19 @@ export default function Profile() {
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Error</h2>
             <p className="text-gray-600 mb-4">
-              {errorMessage || "Unable to load profile information"}
+              {profileError?.message || "Unable to load profile information"}
             </p>
             <div className="space-x-2">
               <Button onClick={() => window.location.reload()} variant="outline">
                 Try Again
               </Button>
-              <Button onClick={() => navigate('/')} className="bg-funky-purple hover:bg-funky-purple/90">
-                Go Home
-              </Button>
+              <OptimizedNavigation>
+                {(navigate) => (
+                  <Button onClick={() => navigate('/')} className="bg-funky-purple hover:bg-funky-purple/90">
+                    Go Home
+                  </Button>
+                )}
+              </OptimizedNavigation>
             </div>
           </div>
         </div>
@@ -237,19 +145,31 @@ export default function Profile() {
 
                     {/* Action Buttons */}
                     <div className="space-y-3">
-                      {!isCurrentUserProfile ? <>
-                          <Button size="lg" className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white" onClick={() => navigate(`/place-order?influencer=${influencer.id}`)}>
-                            <Heart className="h-4 w-4 mr-2" />
-                            Send Gift
-                          </Button>
-                          <Button variant="outline" size="lg" onClick={() => navigate(`/wishlist/${influencer.id}`)} className="w-full border-secondary/30 bg-rose-300 hover:bg-rose-200 text-slate-950">
-                            <List className="h-4 w-4 mr-2" />
-                            View Wishlist
-                          </Button>
-                        </> : <Button variant="outline" size="lg" className="w-full border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate('/edit-profile')}>
-                          <User className="h-4 w-4 mr-2" />
-                          Edit Profile
-                        </Button>}
+                       {!isCurrentUserProfile ? (
+                         <OptimizedNavigation>
+                           {(navigate) => (
+                             <>
+                               <Button size="lg" className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white" onClick={() => navigate(`/place-order?influencer=${influencer.id}`)}>
+                                 <Heart className="h-4 w-4 mr-2" />
+                                 Send Gift
+                               </Button>
+                               <Button variant="outline" size="lg" onClick={() => navigate(`/wishlist/${influencer.id}`)} className="w-full border-secondary/30 bg-rose-300 hover:bg-rose-200 text-slate-950">
+                                 <List className="h-4 w-4 mr-2" />
+                                 View Wishlist
+                               </Button>
+                             </>
+                           )}
+                         </OptimizedNavigation>
+                       ) : (
+                         <OptimizedNavigation>
+                           {(navigate) => (
+                             <Button variant="outline" size="lg" className="w-full border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate('/edit-profile')}>
+                               <User className="h-4 w-4 mr-2" />
+                               Edit Profile
+                             </Button>
+                           )}
+                         </OptimizedNavigation>
+                       )}
                     </div>
                   </div>
                 </div>
@@ -399,9 +319,13 @@ export default function Profile() {
           <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
           <p className="text-gray-600 mb-4">The requested profile could not be found or is incomplete</p>
-          <Button onClick={() => navigate('/')} className="bg-funky-purple hover:bg-funky-purple/90">
-            Go Home
-          </Button>
+          <OptimizedNavigation>
+            {(navigate) => (
+              <Button onClick={() => navigate('/')} className="bg-funky-purple hover:bg-funky-purple/90">
+                Go Home
+              </Button>
+            )}
+          </OptimizedNavigation>
         </div>
       </div>
     </>;

@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useOptimizedAuth } from "@/hooks/useOptimizedAuth";
+import { useOptimizedWallet } from "@/hooks/useOptimizedWallet";
+import { OptimizedNavigation } from "@/components/navigation/OptimizedNavigation";
 import { useToast } from "@/hooks/use-toast";
-import { useWallet } from "@/hooks/use-wallet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,40 +14,46 @@ import TopUpWallet from "@/components/wallet/TopUpWallet";
 import { supabase } from "@/integrations/supabase/client";
 
 const WalletPage = () => {
+  const { user, isAuthenticated, isLoading: authLoading } = useOptimizedAuth();
   const {
     wallet,
     transactions,
-    loading,
-    fetchWallet,
-    fetchTransactions
-  } = useWallet();
+    isLoading: walletLoading,
+    mutate,
+    isMutating
+  } = useOptimizedWallet(user?.id);
+  
   const [activeTab, setActiveTab] = useState<string>("balance");
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Redirect if not authenticated
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        toast({
-          title: "Authentication required",
-          description: "Please login to access your wallet",
-          variant: "destructive"
-        });
-        navigate("/auth?tab=login");
-        return;
-      }
-      setIsLoggedIn(true);
-      fetchWallet();
-      fetchTransactions();
-    };
-    checkSession();
-  }, []);
+    if (!authLoading && !isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please login to access your wallet",
+        variant: "destructive"
+      });
+      // Will be handled by OptimizedNavigation
+    }
+  }, [authLoading, isAuthenticated, toast]);
 
-  if (!isLoggedIn) {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return null;
   }
+
+  const loading = walletLoading || isMutating;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -55,14 +62,18 @@ const WalletPage = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(-1)}
-                className="lg:hidden"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
+              <OptimizedNavigation>
+                {(navigate) => (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate('-1')}
+                    className="lg:hidden"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                )}
+              </OptimizedNavigation>
               <div className="flex items-center space-x-2">
                 <WalletIcon className="w-6 h-6 text-primary" />
                 <h1 className="text-xl font-bold text-gray-950">My Wallet</h1>
@@ -140,7 +151,13 @@ const WalletPage = () => {
             </TabsContent>
             
             <TabsContent value="transactions">
-              <TransactionHistory transactions={transactions} loading={loading} onRefresh={fetchTransactions} />
+              <TransactionHistory 
+                transactions={transactions} 
+                loading={loading} 
+                onRefresh={() => {
+                  // Refresh will be handled by React Query invalidation
+                }} 
+              />
             </TabsContent>
           </Tabs>
         </div>
