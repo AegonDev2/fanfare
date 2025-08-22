@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { requestManager } from "@/utils/requestDeduplication";
 
 export interface LeaderboardEntry {
   fan_id: string;
@@ -14,71 +15,80 @@ export interface LeaderboardEntry {
   year: number;
 }
 
-export const useLeaderboard = () => {
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState<string>("");
-  const [currentYear, setCurrentYear] = useState<number>(0);
+// Optimized fetch function with deduplication
+const fetchLeaderboard = async (month?: string, year?: number): Promise<{
+  leaderboard: LeaderboardEntry[];
+  currentMonth: string;
+  currentYear: number;
+}> => {
+  const now = new Date();
+  const targetMonth = month || new Intl.DateTimeFormat('en-US', { month: 'long' }).format(now);
+  const targetYear = year || now.getFullYear();
+  const monthNumber = new Date(`${targetMonth} 1, ${targetYear}`).getMonth() + 1;
+  
+  const cacheKey = `leaderboard_${targetMonth}_${targetYear}`;
+  
+  return requestManager.dedupeWithRetry(cacheKey, async () => {
+    console.log(`📊 Fetching leaderboard: ${targetMonth} ${targetYear}`);
+    
+    const { data, error } = await supabase.rpc('get_monthly_leaderboard', {
+      target_month: monthNumber,
+      target_year: targetYear
+    });
+
+    if (error) throw error;
+
+    const transformedData = (data || []).map((entry: any) => ({
+      fan_id: entry.fan_id,
+      fan_name: entry.fan_name,
+      fan_email: entry.fan_email,
+      total_gifts: Number(entry.total_gifts),
+      favorite_influencer_id: entry.favorite_influencer_id,
+      favorite_influencer_name: entry.favorite_influencer_name,
+      month: entry.month?.trim(),
+      year: Number(entry.year)
+    }));
+
+    return {
+      leaderboard: transformedData,
+      currentMonth: targetMonth,
+      currentYear: targetYear
+    };
+  });
+};
+
+export const useLeaderboard = (month?: string, year?: number) => {
   const { toast } = useToast();
+  const now = new Date();
+  const targetMonth = month || new Intl.DateTimeFormat('en-US', { month: 'long' }).format(now);
+  const targetYear = year || now.getFullYear();
 
-  const fetchLeaderboard = async (month?: string, year?: number) => {
-    setIsLoading(true);
-    try {
-      const now = new Date();
-      const targetMonth = month || new Intl.DateTimeFormat('en-US', { month: 'long' }).format(now);
-      const targetYear = year || now.getFullYear();
-      
-      setCurrentMonth(targetMonth);
-      setCurrentYear(targetYear);
+  const query = useQuery({
+    queryKey: ['leaderboard', targetMonth, targetYear],
+    queryFn: () => fetchLeaderboard(month, year),
+    staleTime: 3 * 60 * 1000, // 3 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: 1,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
 
-      // Get the month number from the month name
-      const monthNumber = new Date(`${targetMonth} 1, ${targetYear}`).getMonth() + 1;
-      
-      // Call the RPC function directly
-      const { data, error } = await supabase.rpc('get_monthly_leaderboard', {
-        target_month: monthNumber,
-        target_year: targetYear
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Transform the data to ensure all types are correct
-      const transformedData = data.map((entry: any) => ({
-        fan_id: entry.fan_id,
-        fan_name: entry.fan_name,
-        fan_email: entry.fan_email,
-        total_gifts: Number(entry.total_gifts), // Convert to number
-        favorite_influencer_id: entry.favorite_influencer_id,
-        favorite_influencer_name: entry.favorite_influencer_name,
-        month: entry.month?.trim(), // Trim whitespace from month name
-        year: Number(entry.year)
-      }));
-
-      setLeaderboard(transformedData || []);
-    } catch (error: any) {
-      console.error("Error fetching leaderboard:", error);
-      toast({
-        title: "Error loading leaderboard",
-        description: error.message || "Failed to load leaderboard data",
-        variant: "destructive",
-      });
-      setLeaderboard([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, []);
+  // Handle errors in component
+  if (query.error) {
+    console.error("Error fetching leaderboard:", query.error);
+    toast({
+      title: "Error loading leaderboard",
+      description: (query.error as any)?.message || "Failed to load leaderboard data",
+      variant: "destructive",
+    });
+  }
 
   return {
-    leaderboard,
-    isLoading,
-    fetchLeaderboard,
-    currentMonth,
-    currentYear
+    leaderboard: query.data?.leaderboard || [],
+    isLoading: query.isLoading,
+    error: query.error,
+    fetchLeaderboard: query.refetch,
+    currentMonth: query.data?.currentMonth || targetMonth,
+    currentYear: query.data?.currentYear || targetYear
   };
 };

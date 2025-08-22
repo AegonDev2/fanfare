@@ -1,8 +1,9 @@
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
+import { requestManager } from '@/utils/requestDeduplication';
 
 export interface GiftItem {
   id: string;
@@ -19,8 +20,10 @@ export interface GiftItem {
 export function useGiftItems() {
   const { toast } = useToast();
   
-  const fetchGiftItems = useCallback(async (): Promise<GiftItem[]> => {
-    try {
+  const fetchGiftItems = async (): Promise<GiftItem[]> => {
+    return requestManager.dedupeWithRetry('gift-items', async () => {
+      console.log('🎁 Fetching gift items');
+      
       const { data, error } = await supabase
         .from('shop_products')
         .select('*')
@@ -30,7 +33,6 @@ export function useGiftItems() {
         
       if (error) throw error;
       
-      // Map shop products to gift items format
       return (data || []).map(product => ({
         id: product.id,
         name: product.name,
@@ -42,16 +44,8 @@ export function useGiftItems() {
         updated_at: product.updated_at,
         gift_url: product.product_url,
       }));
-    } catch (error: any) {
-      console.error('Error fetching gift items:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load gift items',
-        variant: 'destructive',
-      });
-      return [];
-    }
-  }, [toast]);
+    });
+  };
 
   const getGiftById = useCallback(async (id: string): Promise<GiftItem | null> => {
     if (!id) return null;
@@ -95,10 +89,22 @@ export function useGiftItems() {
   const queryResult = useQuery({
     queryKey: ['giftItems'],
     queryFn: fetchGiftItems,
-    retry: 1, // Limit retries to prevent infinite loops
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
+
+  // Handle errors in component
+  if (queryResult.error) {
+    console.error('Error fetching gift items:', queryResult.error);
+    toast({
+      title: 'Error',
+      description: 'Failed to load gift items',
+      variant: 'destructive',
+    });
+  }
 
   return {
     ...queryResult,

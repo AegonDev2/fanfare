@@ -7,24 +7,22 @@ import './index.css'
 // Add the Pikwy API token as a global variable with the provided key
 window.PIKWY_API_TOKEN = "c39990741cf427d7baa5750d20bfaefc66c45915a84af5d8";
 
-// Create a client with optimized cache settings
+// Optimized query client for mobile performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes - keep data fresh longer
-      gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache much longer
+      staleTime: 2 * 60 * 1000, // 2 minutes - faster updates
+      gcTime: 10 * 60 * 1000, // 10 minutes - reasonable cache
       refetchOnWindowFocus: false,
-      refetchOnMount: false, // Don't refetch if data is fresh
-      retry: (failureCount, error) => {
-        if (error && typeof error === 'object' && 'status' in error) {
-          const status = (error as any).status;
-          if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
-            return false;
-          }
-        }
-        return failureCount < 2;
-      },
+      refetchOnMount: false,
+      refetchOnReconnect: true, // Refetch when reconnecting
+      retry: 1, // Reduced retries for mobile
+      retryDelay: 1000, // Faster retry
     },
+    mutations: {
+      retry: 1,
+      retryDelay: 1000,
+    }
   },
 })
 

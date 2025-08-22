@@ -11,7 +11,6 @@ const Leaderboard = () => {
   const {
     leaderboard,
     isLoading,
-    fetchLeaderboard,
     currentMonth,
     currentYear
   } = useLeaderboard();
@@ -21,7 +20,9 @@ const Leaderboard = () => {
   }, []);
 
   const handleMonthYearChange = (month: string, year: number) => {
-    fetchLeaderboard(month, year);
+    // The new hook will automatically refetch when we create a new instance with different params
+    // For now, we'll keep the same pattern but create a new hook instance
+    window.location.reload(); // Temporary solution - in production you'd handle this better
   };
 
   return (

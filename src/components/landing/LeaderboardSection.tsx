@@ -4,15 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trophy, Crown, Medal, Users, Star, Sparkles, ChevronLeft, ChevronRight, Gift } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useOptimizedLeaderboard } from "@/hooks/useOptimizedLeaderboard";
+import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useOptimizedTopCreators } from "@/hooks/useOptimizedTopCreators";
 import { TopCreatorsCard } from "@/components/leaderboard/TopCreatorsCard";
 const LeaderboardSection = memo(() => {
   const navigate = useNavigate();
   const {
-    data: leaderboardData,
-    isLoading
-  } = useOptimizedLeaderboard();
+    leaderboard,
+    isLoading,
+    currentMonth,
+    currentYear
+  } = useLeaderboard();
   const {
     data: creatorsData,
     isLoading: creatorsLoading
@@ -20,10 +22,8 @@ const LeaderboardSection = memo(() => {
   
   const [currentView, setCurrentView] = useState<'fans' | 'creators'>('fans');
   
-  // Extract data from the new hook structure
-  const leaderboard = leaderboardData?.leaderboard || [];
-  const currentMonth = leaderboardData?.currentMonth || '';
-  const currentYear = leaderboardData?.currentYear || 0;
+  // Extract data - no need to extract from nested structure
+  const leaderboardEntries = leaderboard || [];
   const topCreators = creatorsData?.topCreators || [];
   const switchView = (direction: 'left' | 'right') => {
     if (direction === 'left') {

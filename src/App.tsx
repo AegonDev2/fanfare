@@ -6,13 +6,30 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { AppContent } from "@/components/AppContent";
 import { NotificationManager } from "@/components/notifications/NotificationManager";
+import { MobileRefreshHandler } from "@/components/mobile/MobileRefreshHandler";
 import { SimpleAuthProvider } from "@/contexts/SimpleAuthContext";
 import { useDataPreloader } from "@/hooks/useDataPreloader";
 import { useBackgroundDataRefresh } from "@/hooks/useBackgroundDataRefresh";
 import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 import { useMobileOptimizations } from "@/hooks/useMobileOptimizations";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000, // 2 minutes - faster updates
+      gcTime: 10 * 60 * 1000, // 10 minutes - reasonable cache
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: true, // Refetch when reconnecting
+      retry: 1, // Reduced retries for mobile
+      retryDelay: 1000, // Faster retry
+    },
+    mutations: {
+      retry: 1,
+      retryDelay: 1000,
+    }
+  },
+});
 
 function App() {
   return (
@@ -38,6 +55,7 @@ function AppWrapper() {
   
   return (
     <NotificationManager>
+      <MobileRefreshHandler />
       <AppContent />
     </NotificationManager>
   );

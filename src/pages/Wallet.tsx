@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useOptimizedAuth } from "@/hooks/useOptimizedAuth";
-import { useOptimizedWallet } from "@/hooks/useOptimizedWallet";
+import { useWallet } from '@/hooks/useWallet';
 import { OptimizedNavigation } from "@/components/navigation/OptimizedNavigation";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +21,7 @@ const WalletPage = () => {
     isLoading: walletLoading,
     mutate,
     isMutating
-  } = useOptimizedWallet(user?.id);
+  } = useWallet(user?.id);
   
   const [activeTab, setActiveTab] = useState<string>("balance");
   const { toast } = useToast();
