@@ -8,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Gift, Clock, History } from 'lucide-react';
 import GiftRequestCard from '@/components/gift-requests/GiftRequestCard';
+import { GiftsListSkeleton } from '@/components/loading/AppSkeleton';
+import { ErrorFallback } from '@/components/error/ErrorFallback';
 import { useUser } from '@/hooks/useUser';
 
 export default function GiftRequests() {
@@ -65,8 +67,14 @@ export default function GiftRequests() {
       <>
         <FloatingHeader setNavOpen={setNavOpen} />
         <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
-        <div className="min-h-screen bg-background pt-20 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="min-h-screen bg-background pt-20 p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6">
+              <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+              <div className="h-6 w-64 bg-muted animate-pulse rounded mt-2" />
+            </div>
+            <GiftsListSkeleton />
+          </div>
         </div>
       </>
     );
@@ -87,11 +95,13 @@ export default function GiftRequests() {
           </div>
 
           {error && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="pt-6">
-                <p className="text-red-800">Error loading gift requests: {error.message}</p>
-              </CardContent>
-            </Card>
+            <ErrorFallback 
+              error={error} 
+              onRetry={fetchRequests}
+              title="Failed to load gift requests"
+              description="Unable to load your gift requests. Please try again."
+              showHomeButton={false}
+            />
           )}
 
           <Tabs defaultValue={urlTab} className="w-full">

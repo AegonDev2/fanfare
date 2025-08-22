@@ -48,13 +48,35 @@ export function AppContent() {
         onOpenChange={dismissExitPrompt} 
       />
       <Suspense fallback={
-        <div className="min-h-screen bg-background p-4">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="h-16 w-full bg-muted animate-pulse rounded-lg" />
-            <div className="h-48 w-full bg-muted animate-pulse rounded-lg" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="h-32 w-full bg-muted animate-pulse rounded-lg" />
-              <div className="h-32 w-full bg-muted animate-pulse rounded-lg" />
+        <div className="min-h-screen bg-background">
+          <div className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-b z-50">
+            <div className="h-16 flex items-center justify-between px-4">
+              <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 bg-muted animate-pulse rounded-full" />
+                <div className="h-8 w-20 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          </div>
+          <div className="pt-20 p-4">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="text-center space-y-4 py-12">
+                <div className="h-12 w-64 bg-muted animate-pulse rounded mx-auto" />
+                <div className="h-6 w-96 bg-muted animate-pulse rounded mx-auto" />
+                <div className="flex justify-center gap-4 mt-6">
+                  <div className="h-10 w-32 bg-muted animate-pulse rounded" />
+                  <div className="h-10 w-32 bg-muted animate-pulse rounded" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="space-y-4">
+                    <div className="h-48 w-full bg-muted animate-pulse rounded-lg" />
+                    <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+                    <div className="h-4 w-1/2 bg-muted animate-pulse rounded" />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

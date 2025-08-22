@@ -12,6 +12,8 @@ import { useDataPreloader } from "@/hooks/useDataPreloader";
 import { useBackgroundDataRefresh } from "@/hooks/useBackgroundDataRefresh";
 import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 import { useMobileOptimizations } from "@/hooks/useMobileOptimizations";
+import { AppInitializingSkeleton } from "@/components/loading/AppSkeleton";
+import { Suspense, useState, useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,15 +50,32 @@ function App() {
 }
 
 function AppWrapper() {
+  const [isInitializing, setIsInitializing] = useState(true);
+  
   useDataPreloader(); // Preload critical data
   useBackgroundDataRefresh(); // Keep data fresh in background
   usePerformanceMonitor(); // Monitor performance improvements
   useMobileOptimizations(); // Mobile-specific optimizations
   
+  // Simulate app initialization
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitializing(false);
+    }, 1000); // Show skeleton for 1 second minimum
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  if (isInitializing) {
+    return <AppInitializingSkeleton />;
+  }
+  
   return (
     <NotificationManager>
       <MobileRefreshHandler />
-      <AppContent />
+      <Suspense fallback={<AppInitializingSkeleton />}>
+        <AppContent />
+      </Suspense>
     </NotificationManager>
   );
 }

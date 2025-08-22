@@ -54,7 +54,7 @@ export default function Profile() {
     }
   }, [user, authLoading, profileLoading, userType, influencer, fanProfile, isCurrentUserProfile, profileError]);
 
-  // Show loading state
+  // Show loading state with enhanced skeleton
   if (authLoading || profileLoading) {
     return <>
         <FloatingHeader setNavOpen={setNavOpen} />
@@ -62,9 +62,26 @@ export default function Profile() {
         
         <div className="min-h-screen bg-background pt-20 p-4">
           <div className="max-w-4xl mx-auto space-y-6">
-            <Skeleton className="h-32 w-full rounded-lg" />
-            <Skeleton className="h-48 w-full rounded-lg" />
-            <Skeleton className="h-24 w-full rounded-lg" />
+            {/* Profile header skeleton */}
+            <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+              <Skeleton className="h-32 w-32 rounded-full" />
+              <div className="flex-1 space-y-4">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-6 w-32" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-10 w-24" />
+                  <Skeleton className="h-10 w-24" />
+                </div>
+              </div>
+            </div>
+
+            {/* Content sections skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton className="h-48 w-full rounded-lg" />
+              <Skeleton className="h-48 w-full rounded-lg" />
+            </div>
+            
+            <Skeleton className="h-64 w-full rounded-lg" />
           </div>
         </div>
       </>;

@@ -6,6 +6,8 @@ import { useGiftsSent } from "@/hooks/useGiftsSent";
 import { GiftRequestCard } from "@/components/gifts/GiftRequestCard";
 import { EmptyGiftsState } from "@/components/gifts/EmptyGiftsState";
 import { LoadingGiftsState } from "@/components/gifts/LoadingGiftsState";
+import { GiftsListSkeleton } from "@/components/loading/AppSkeleton";
+import { ErrorFallback } from "@/components/error/ErrorFallback";
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 
@@ -93,7 +95,15 @@ const GiftsSent = () => {
             )}
 
             {loading ? (
-              <LoadingGiftsState />
+              <GiftsListSkeleton />
+            ) : error ? (
+              <ErrorFallback 
+                error={new Error(error)} 
+                onRetry={fetchSentGiftRequests}
+                title="Failed to load gifts"
+                description="Unable to load your sent gifts. Please try again."
+                showHomeButton={false}
+              />
             ) : requests.length === 0 ? (
               <EmptyGiftsState />
             ) : (

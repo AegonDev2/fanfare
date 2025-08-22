@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useProductPreview } from "@/hooks/use-product-preview";
-import { Plus, Loader2 } from "lucide-react";
+import { useOptimisticUpdate } from "@/hooks/useOptimisticUpdate";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Loader2, Check } from "lucide-react";
 
 const formSchema = z.object({
   product_url: z.string().url("Please enter a valid URL"),
@@ -23,12 +25,42 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface WishlistFormProps {
   onAddItem: (item: any) => Promise<void>;
+  wishlistItems?: any[];
+  onOptimisticUpdate?: (items: any[]) => void;
 }
 
-const WishlistForm = ({ onAddItem }: WishlistFormProps) => {
+const WishlistForm = ({ onAddItem, wishlistItems = [], onOptimisticUpdate }: WishlistFormProps) => {
   const [open, setOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const { handlePreviewProduct, productPreview, isFetchingProduct } = useProductPreview();
+  const { toast } = useToast();
+
+  // Optimistic update for wishlist
+  const { mutate: optimisticAddItem, isLoading: isSubmitting } = useOptimisticUpdate({
+    queryKey: ['wishlist'],
+    mutationFn: onAddItem,
+    onOptimisticUpdate: (newItem, currentItems) => {
+      if (!currentItems) return [newItem];
+      const optimisticItem = {
+        ...newItem,
+        id: `temp-${Date.now()}`, // Temporary ID
+        created_at: new Date().toISOString(),
+      };
+      const updatedItems = [optimisticItem, ...currentItems];
+      onOptimisticUpdate?.(updatedItems);
+      return updatedItems;
+    },
+    onSuccess: () => {
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setOpen(false);
+      }, 1500);
+      form.reset();
+    },
+    successMessage: "Item added to wishlist!",
+    errorMessage: "Failed to add item to wishlist"
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -48,23 +80,14 @@ const WishlistForm = ({ onAddItem }: WishlistFormProps) => {
   };
 
   const onSubmit = async (values: FormValues) => {
-    try {
-      setIsSubmitting(true);
-      
-      // Convert price to number if present
-      const formattedValues = {
-        ...values,
-        product_price: values.product_price ? parseFloat(values.product_price) : undefined,
-      };
-      
-      await onAddItem(formattedValues);
-      form.reset();
-      setOpen(false);
-    } catch (error) {
-      console.error("Error submitting wishlist item:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Convert price to number if present
+    const formattedValues = {
+      ...values,
+      product_price: values.product_price ? parseFloat(values.product_price) : undefined,
+    };
+    
+    // Use optimistic update
+    await optimisticAddItem(formattedValues);
   };
 
   // Update form with product data when available
@@ -210,8 +233,22 @@ const WishlistForm = ({ onAddItem }: WishlistFormProps) => {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add Item
+                {showSuccess ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Added!
+                  </>
+                ) : isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Item
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </form>

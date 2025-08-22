@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 import Hero from '@/components/landing/Hero';
@@ -16,14 +16,37 @@ import { useMobileFeatures } from '@/hooks/useMobileFeatures';
 import { AuthGuard } from '@/components/navigation/AuthGuard';
 import MobileDock from '@/components/navigation/MobileDock';
 import { usePreloadData, useBackgroundRefresh } from '@/hooks/usePreloadData';
+import { useProactiveDataLoader } from '@/hooks/useProactiveDataLoader';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 
 export default function Landing() {
   const [navOpen, setNavOpen] = useState(false);
   const { isAndroid } = useMobileFeatures();
+  const { user } = useOptimizedAuth();
   
   // Preload static data and setup background refresh
   usePreloadData();
   useBackgroundRefresh();
+  
+  // Proactive data loading based on user likely actions
+  const { preloadInfluencers, preloadLeaderboard, preloadWallet } = useProactiveDataLoader({
+    enabled: true,
+    priority: 'high'
+  });
+
+  // Preload data that users are likely to visit next
+  React.useEffect(() => {
+    // Always preload influencers page since it's prominently featured
+    preloadInfluencers();
+    
+    // Preload leaderboard since it's visible on landing
+    preloadLeaderboard();
+    
+    // If user is authenticated, preload their wallet
+    if (user?.id) {
+      preloadWallet(user.id);
+    }
+  }, [user?.id, preloadInfluencers, preloadLeaderboard, preloadWallet]);
 
   return (
     <AuthGuard>

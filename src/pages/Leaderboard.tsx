@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import LeaderboardHeader from "@/components/leaderboard/LeaderboardHeader";
 import LeaderboardShowcase from "@/components/leaderboard/LeaderboardShowcase";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { LeaderboardPageSkeleton } from "@/components/loading/AppSkeleton";
+import { ErrorFallback } from "@/components/error/ErrorFallback";
 import FloatingHeader from '@/components/ui/floating-header';
 import Navbar from '@/components/navigation/Navbar';
 
@@ -11,6 +13,8 @@ const Leaderboard = () => {
   const {
     leaderboard,
     isLoading,
+    error,
+    fetchLeaderboard,
     currentMonth,
     currentYear
   } = useLeaderboard();
@@ -24,6 +28,29 @@ const Leaderboard = () => {
     // For now, we'll keep the same pattern but create a new hook instance
     window.location.reload(); // Temporary solution - in production you'd handle this better
   };
+
+  // Show loading skeleton
+  if (isLoading) {
+    return <LeaderboardPageSkeleton />;
+  }
+
+  // Show error fallback
+  if (error) {
+    return (
+      <>
+        <FloatingHeader setNavOpen={setNavOpen} />
+        <Navbar isOpen={navOpen} setIsOpen={setNavOpen} />
+        <div className="min-h-screen bg-gradient-to-br from-funky-purple via-funky-pink to-funky-blue pt-20 p-4">
+          <ErrorFallback 
+            error={error} 
+            onRetry={fetchLeaderboard}
+            title="Failed to load leaderboard"
+            description="Unable to load the leaderboard data. Please try again."
+          />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
