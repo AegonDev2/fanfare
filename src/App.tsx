@@ -10,6 +10,7 @@ import { SimpleAuthProvider } from "@/contexts/SimpleAuthContext";
 import { useDataPreloader } from "@/hooks/useDataPreloader";
 import { useBackgroundDataRefresh } from "@/hooks/useBackgroundDataRefresh";
 import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
+import { useMobileOptimizations } from "@/hooks/useMobileOptimizations";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ function AppWrapper() {
   useDataPreloader(); // Preload critical data
   useBackgroundDataRefresh(); // Keep data fresh in background
   usePerformanceMonitor(); // Monitor performance improvements
+  useMobileOptimizations(); // Mobile-specific optimizations
   
   return (
     <NotificationManager>

@@ -10,9 +10,36 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   bundledWebRuntime: false,
+  android: {
+    webContentsDebuggingEnabled: false,
+    // Performance optimizations for Android
+    allowMixedContent: true,
+    captureInput: true,
+    hideLogs: true,
+    // Enable hardware acceleration
+    hardwareAccelerated: true,
+    // Optimize WebView performance
+    loggingBehavior: 'none'
+  },
+  ios: {
+    // Performance optimizations for iOS
+    webContentsDebuggingEnabled: false,
+    scheme: 'fanfare'
+  },
   plugins: {
+    SplashScreen: {
+      launchShowDuration: 800,
+      backgroundColor: "#1a1a1a",
+      showSpinner: false,
+      androidScaleType: "CENTER_CROP",
+      splashFullScreen: true,
+      splashImmersive: true
+    },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
+    },
+    App: {
+      launchUrl: ""
     }
   }
 };
