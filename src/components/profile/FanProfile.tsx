@@ -72,7 +72,7 @@ export default function FanProfile({ profile, isCurrentUserProfile }: FanProfile
               <Gift className="h-6 w-6 text-funky-purple" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-funky-purple">{profile.stats.giftsSent}</p>
+              <p className="text-2xl font-bold text-funky-purple">{profile.stats?.giftsSent || 0}</p>
               <p className="text-sm text-gray-600">Gifts Sent</p>
             </div>
           </CardContent>
@@ -84,7 +84,7 @@ export default function FanProfile({ profile, isCurrentUserProfile }: FanProfile
               <DollarSign className="h-6 w-6 text-funky-pink" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-funky-pink">₹{profile.stats.totalSpent.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-funky-pink">₹{(profile.stats?.totalSpent || 0).toLocaleString()}</p>
               <p className="text-sm text-gray-600">Total Spent</p>
             </div>
           </CardContent>
@@ -99,7 +99,7 @@ export default function FanProfile({ profile, isCurrentUserProfile }: FanProfile
             </div>
             <div>
               <p className="text-2xl font-bold bg-gradient-to-r from-funky-purple to-funky-pink bg-clip-text text-transparent">
-                {profile.stats.favoriteInfluencers}
+                {profile.stats?.favoriteInfluencers || 0}
               </p>
               <p className="text-sm text-gray-600">Supported Influencers</p>
             </div>
