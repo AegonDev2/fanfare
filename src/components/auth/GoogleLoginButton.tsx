@@ -20,31 +20,33 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
   const handleGoogleAuth = async () => {
     try {
+      const isNative = Capacitor.isNativePlatform();
+      const platform = Capacitor.getPlatform();
+      const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       console.log("Starting Google authentication...");
-      console.log("Platform info:", {
-        isNativePlatform: Capacitor.isNativePlatform(),
-        platform: Capacitor.getPlatform(),
-        userAgent: navigator.userAgent
+      console.log("Platform detection:", {
+        isNativePlatform: isNative,
+        platform: platform,
+        isMobileDevice: isMobileDevice,
+        userAgent: navigator.userAgent.substring(0, 100) + "..."
       });
       
       onLoadingChange?.(true);
 
-      // More robust platform detection
-      const isNative = Capacitor.isNativePlatform();
-      const platform = Capacitor.getPlatform();
+      // Enhanced platform detection logic
+      const shouldUseNativeAuth = isNative && (platform === 'android' || platform === 'ios');
+      const shouldUseMobileWebAuth = !isNative && isMobileDevice;
       
-      if (isNative && (platform === 'android' || platform === 'ios')) {
-        // Use native Google Auth for mobile
+      if (shouldUseNativeAuth) {
         console.log(`Using native Google Auth for ${platform}...`);
-        
-        // Early return after native auth to prevent web flow
         await handleNativeGoogleAuth();
-        return;
-      } else {
-        // Use web OAuth for browser
-        console.log("Using web OAuth for browser...");
+      } else if (shouldUseMobileWebAuth) {
+        console.log("Using mobile web OAuth...");
         await handleWebGoogleAuth();
-        return;
+      } else {
+        console.log("Using desktop web OAuth...");
+        await handleWebGoogleAuth();
       }
     } catch (err: any) {
       console.error('Google auth error:', err);
