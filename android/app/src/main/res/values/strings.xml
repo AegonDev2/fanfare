@@ -4,4 +4,6 @@
     <string name="title_activity_main">giftloop-connect</string>
     <string name="package_name">com.fanfare.app</string>
     <string name="custom_url_scheme">com.fanfare.app</string>
+    <string name="google_android_client_id">551635583332-udeahie637sgi5gd4ecmancb91rr3f1p.apps.googleusercontent.com</string>
+    <string name="google_web_client_id">551635583332-rjnaq9j7ssv0mst8b3t9ph7pt56ua6m6.apps.googleusercontent.com</string>
 </resources>

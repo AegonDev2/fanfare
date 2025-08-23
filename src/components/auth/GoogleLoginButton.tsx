@@ -34,9 +34,16 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       
       onLoadingChange?.(true);
 
-      // Enhanced platform detection logic
+      // Enhanced platform detection logic with additional checks
       const shouldUseNativeAuth = isNative && (platform === 'android' || platform === 'ios');
       const shouldUseMobileWebAuth = !isNative && isMobileDevice;
+      
+      console.log("Auth method selection:", {
+        shouldUseNativeAuth,
+        shouldUseMobileWebAuth,
+        reason: shouldUseNativeAuth ? 'Native platform detected' : 
+                shouldUseMobileWebAuth ? 'Mobile web detected' : 'Desktop web detected'
+      });
       
       if (shouldUseNativeAuth) {
         console.log(`Using native Google Auth for ${platform}...`);
@@ -61,13 +68,22 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   };
 
   const handleNativeGoogleAuth = async () => {
-    // Initialize first
-    await SocialLogin.initialize({
-      google: {
-        webClientId: '551635583332-rjnaq9j7ssv0mst8b3t9ph7pt56ua6m6.apps.googleusercontent.com',
-        mode: 'online'
-      }
-    });
+    console.log("Initializing native Google Auth...");
+    
+    try {
+      // Use Android-specific client ID for Android platform
+      await SocialLogin.initialize({
+        google: {
+          webClientId: '551635583332-rjnaq9j7ssv0mst8b3t9ph7pt56ua6m6.apps.googleusercontent.com',
+          mode: 'online'
+        }
+      });
+      
+      console.log("Native Google Auth initialized, attempting login...");
+    } catch (initError: any) {
+      console.error("Failed to initialize Social Login:", initError);
+      throw new Error(`Failed to initialize Google Auth: ${initError.message}`);
+    }
 
     const result = await SocialLogin.login({
       provider: 'google',
