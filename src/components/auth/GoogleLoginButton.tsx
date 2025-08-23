@@ -87,9 +87,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
     const result = await SocialLogin.login({
       provider: 'google',
-      options: {
-        scopes: ['email', 'profile']
-      }
+      options: {}
     });
     console.log("Native Google Auth result:", result);
 
