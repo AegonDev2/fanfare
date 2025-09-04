@@ -13,6 +13,7 @@ import { useBackgroundDataRefresh } from "@/hooks/useBackgroundDataRefresh";
 import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 import { useMobileOptimizations } from "@/hooks/useMobileOptimizations";
 import { AppInitializingSkeleton } from "@/components/loading/AppSkeleton";
+import { AppStartupScreen } from "@/components/loading/AppStartupScreen";
 import { Suspense, useState, useEffect } from "react";
 
 const queryClient = new QueryClient({
@@ -50,24 +51,29 @@ function App() {
 }
 
 function AppWrapper() {
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [showStartupScreen, setShowStartupScreen] = useState(true);
   
   useDataPreloader(); // Preload critical data
   useBackgroundDataRefresh(); // Keep data fresh in background
   usePerformanceMonitor(); // Monitor performance improvements
   useMobileOptimizations(); // Mobile-specific optimizations
   
-  // Simulate app initialization
+  // Check if it's first time opening the app (startup screen)
+  // Note: To test startup screen again, clear sessionStorage: sessionStorage.removeItem('hasSeenStartup')
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitializing(false);
-    }, 1000); // Show skeleton for 1 second minimum
-    
-    return () => clearTimeout(timer);
+    const hasSeenStartup = sessionStorage.getItem('hasSeenStartup');
+    if (hasSeenStartup) {
+      setShowStartupScreen(false);
+    }
   }, []);
+
+  const handleStartupComplete = () => {
+    sessionStorage.setItem('hasSeenStartup', 'true');
+    setShowStartupScreen(false);
+  };
   
-  if (isInitializing) {
-    return <AppInitializingSkeleton />;
+  if (showStartupScreen) {
+    return <AppStartupScreen onComplete={handleStartupComplete} />;
   }
   
   return (
