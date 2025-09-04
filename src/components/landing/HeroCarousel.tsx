@@ -90,7 +90,20 @@ const HeroCarousel = memo(() => {
           </>}
 
         {/* Slide Indicators */}
-        {processedSlides.length > 1}
+        {processedSlides.length > 1 && (
+          <div className="flex justify-center gap-2 mt-2">
+            {processedSlides.map((_, index) => (
+              <button
+                key={index}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-colors duration-200",
+                  current === index + 1 ? "bg-funky-pink" : "bg-white/50"
+                )}
+                onClick={() => scrollTo(index)}
+              />
+            ))}
+          </div>
+        )}
       </Carousel>
     </div>;
 });
