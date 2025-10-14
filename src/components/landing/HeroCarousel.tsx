@@ -5,7 +5,6 @@ import { useAdBanners } from "@/hooks/useAdBanners";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import OptimizedImage from "@/components/common/OptimizedImage";
-
 const HeroCarousel = memo(() => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -51,10 +50,13 @@ const HeroCarousel = memo(() => {
         </div>
       </div>;
   }
-  
+
   // Show carousel even if no slides - helps with debugging
   if (!slides || processedSlides.length === 0) {
-    console.log('No ad banner slides available:', { slides, processedSlides });
+    console.log('No ad banner slides available:', {
+      slides,
+      processedSlides
+    });
     return null;
   }
   return <div className="relative pb-2 pt-2 sm:pb-4 sm:pt-6 mx-0 overflow-hidden">
@@ -67,12 +69,7 @@ const HeroCarousel = memo(() => {
               <div className="py-0 my-[15px] w-full">
                 <div className="relative aspect-[16/9] overflow-hidden rounded-lg shadow-md">
                   <div className="absolute inset-0 bg-gradient-to-r from-funky-purple/30 to-funky-pink/30 z-10 opacity-60"></div>
-                  <OptimizedImage
-                    src={slide.image_url}
-                    alt={slide.title}
-                    className="w-full h-full transform hover:scale-105 transition-transform duration-1000"
-                    onError={() => console.error('Failed to load image:', slide.image_url)}
-                  />
+                  <OptimizedImage src={slide.image_url} alt={slide.title} className="w-full h-full transform hover:scale-105 transition-transform duration-1000" onError={() => console.error('Failed to load image:', slide.image_url)} />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-4 flex flex-col items-start justify-end z-20">
                     <h3 className="text-white text-sm lg:text-sm font-bold mb-0.5 sm:mb-1 font-display">
                       {slide.title}
@@ -93,24 +90,11 @@ const HeroCarousel = memo(() => {
           </>}
 
         {/* Slide Indicators */}
-        {processedSlides.length > 1 && (
-          <div className="flex justify-center gap-2 mt-2">
-            {processedSlides.map((_, index) => (
-              <button
-                key={index}
-                className={cn(
-                  "w-0.5 h-0.5 rounded-full transition-colors duration-200",
-                  current === index + 1 ? "bg-funky-pink" : "bg-white/50"
-                )}
-                onClick={() => scrollTo(index)}
-              />
-            ))}
-          </div>
-        )}
+        {processedSlides.length > 1 && <div className="flex justify-center gap-2 mt-2">
+            {processedSlides.map((_, index) => {})}
+          </div>}
       </Carousel>
     </div>;
 });
-
 HeroCarousel.displayName = 'HeroCarousel';
-
 export default HeroCarousel;
