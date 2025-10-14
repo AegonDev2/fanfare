@@ -131,7 +131,7 @@ export default function Header({ setNavOpen }: HeaderProps) {
           )}
         </div>
       </header>
-      <MobileDock />
+      <MobileDock navOpen={mobileMenuOpen} />
     </>
   );
 }

@@ -13,7 +13,11 @@ import {
   Trophy
 } from 'lucide-react';
 
-const MobileDock = () => {
+interface MobileDockProps {
+  navOpen?: boolean;
+}
+
+const MobileDock = ({ navOpen = false }: MobileDockProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, isLoading } = useAuth();
@@ -25,6 +29,11 @@ const MobileDock = () => {
 
   // Don't show dock on auth pages
   if (location.pathname.includes('/auth') || location.pathname.includes('/email-verification')) {
+    return null;
+  }
+
+  // Hide dock when navigation menu is open
+  if (navOpen) {
     return null;
   }
 

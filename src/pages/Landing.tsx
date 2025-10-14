@@ -75,7 +75,7 @@ export default function Landing() {
         <FAQ />
         <Footer />
       </div>
-      <MobileDock />
+      <MobileDock navOpen={navOpen} />
     </AuthGuard>
   );
 }
