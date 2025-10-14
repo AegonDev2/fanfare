@@ -51,7 +51,10 @@ const HeroCarousel = memo(() => {
         </div>
       </div>;
   }
-  if (processedSlides.length === 0) {
+  
+  // Show carousel even if no slides - helps with debugging
+  if (!slides || processedSlides.length === 0) {
+    console.log('No ad banner slides available:', { slides, processedSlides });
     return null;
   }
   return <div className="relative pb-2 pt-2 sm:pb-4 sm:pt-6 mx-0 overflow-hidden">
