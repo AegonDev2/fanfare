@@ -90,9 +90,7 @@ const HeroCarousel = memo(() => {
           </>}
 
         {/* Slide Indicators */}
-        {processedSlides.length > 1 && <div className="flex justify-center gap-1.5 sm:gap-2 mt-2">
-            {processedSlides.map((_, index) => <button key={index} onClick={() => scrollTo(index)} className={cn("w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full transition-all", current === index + 1 ? "bg-primary w-2 sm:w-3" : "bg-primary/30")} aria-label={`Go to slide ${index + 1}`} />)}
-          </div>}
+        {processedSlides.length > 1}
       </Carousel>
     </div>;
 });
