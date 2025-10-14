@@ -99,7 +99,7 @@ const HeroCarousel = memo(() => {
               <button
                 key={index}
                 className={cn(
-                  "w-2 h-2 rounded-full transition-colors duration-200",
+                  "w-0.5 h-0.5 rounded-full transition-colors duration-200",
                   current === index + 1 ? "bg-funky-pink" : "bg-white/50"
                 )}
                 onClick={() => scrollTo(index)}
