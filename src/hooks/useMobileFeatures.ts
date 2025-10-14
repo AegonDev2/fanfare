@@ -89,35 +89,32 @@ export const useMobileFeatures = (options: UseMobileFeaturesOptions = {}) => {
       // Only trigger if at top of page and pulling down
       if (scrollTop === 0 && currentY > startY + 100) {
         isRefreshing = true;
-        // Create visual feedback
-        const refreshIndicator = document.createElement('div');
-        refreshIndicator.innerHTML = '↻ Refreshing...';
-        refreshIndicator.style.cssText = `
-          position: fixed;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: hsl(var(--primary));
-          color: hsl(var(--primary-foreground));
-          padding: 8px 16px;
-          border-radius: 8px;
-          z-index: 9999;
-          font-size: 14px;
-        `;
-        document.body.appendChild(refreshIndicator);
         
+        // Dispatch custom event for React Query to handle
+        window.dispatchEvent(new CustomEvent('mobile-pull-refresh'));
+        
+        // Reset refreshing state after a short delay
         setTimeout(() => {
-          window.location.reload();
-        }, 500);
+          isRefreshing = false;
+        }, 2000);
       }
     };
 
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchmove', handleTouchMove);
+    const handleTouchEnd = () => {
+      // Reset on touch end
+      setTimeout(() => {
+        isRefreshing = false;
+      }, 1000);
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [enablePullToRefresh]);
 

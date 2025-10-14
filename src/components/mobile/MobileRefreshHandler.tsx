@@ -11,19 +11,33 @@ export const MobileRefreshHandler = () => {
     
     console.log('🔄 Mobile refresh triggered');
     
-    // Clear specific stale queries
-    queryClient.removeQueries({ stale: true });
+    // Show visual feedback
+    const refreshIndicator = document.createElement('div');
+    refreshIndicator.innerHTML = '↻ Refreshing...';
+    refreshIndicator.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      padding: 8px 16px;
+      border-radius: 8px;
+      z-index: 9999;
+      font-size: 14px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    `;
+    document.body.appendChild(refreshIndicator);
     
-    // Invalidate critical data
-    queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
-    queryClient.invalidateQueries({ queryKey: ['giftItems'] });
-    queryClient.invalidateQueries({ queryKey: ['wallet'] });
-    
-    // Refetch in background
-    queryClient.refetchQueries({ 
-      queryKey: ['leaderboard'],
-      type: 'active'
+    // Invalidate all active queries to trigger fresh data fetch
+    await queryClient.invalidateQueries({ 
+      refetchType: 'active'
     });
+    
+    // Remove indicator after refresh
+    setTimeout(() => {
+      refreshIndicator.remove();
+    }, 1000);
     
     console.log('✅ Mobile refresh completed');
   }, [queryClient]);
