@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Star, Gift, Users } from "lucide-react";
-import { TopCreator } from "@/hooks/useTopCreators";
+import { TopCreator } from "@/hooks/useOptimizedTopCreators";
 import { formatCurrency } from "@/utils/formatters";
 
 interface TopCreatorsCardProps {

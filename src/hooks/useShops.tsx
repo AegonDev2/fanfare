@@ -33,5 +33,9 @@ export const useShops = () => {
 
       return data || [];
     },
+    staleTime: 15 * 60 * 1000,      // 15 minutes - shops rarely change
+    gcTime: 60 * 60 * 1000,          // 1 hour cache
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };
