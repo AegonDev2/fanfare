@@ -55,7 +55,7 @@ export type Database = {
           action: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           record_id: string | null
@@ -67,7 +67,7 @@ export type Database = {
           action: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -79,7 +79,7 @@ export type Database = {
           action?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -948,26 +948,14 @@ export type Database = {
         Args: { delivery_estimate?: string; order_id: string }
         Returns: boolean
       }
-      cancel_order_by_user: {
-        Args: { order_id: string }
-        Returns: boolean
-      }
+      cancel_order_by_user: { Args: { order_id: string }; Returns: boolean }
       complete_order: {
         Args: { delivery_estimate?: string; order_id: string }
         Returns: boolean
       }
-      consolidate_user_wallets: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      create_admin_session_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_complete_user_data: {
-        Args: { user_uuid: string }
-        Returns: Json
-      }
+      consolidate_user_wallets: { Args: never; Returns: undefined }
+      create_admin_session_token: { Args: never; Returns: string }
+      get_complete_user_data: { Args: { user_uuid: string }; Returns: Json }
       get_influencer_top_fans: {
         Args: { influencer_id_param: string }
         Returns: {
@@ -1011,18 +999,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: { user_uuid: string }
-        Returns: boolean
-      }
-      migrate_gift_requests_to_orders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      move_order_to_accepted: {
-        Args: { order_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_uuid: string }; Returns: boolean }
+      migrate_gift_requests_to_orders: { Args: never; Returns: undefined }
+      move_order_to_accepted: { Args: { order_id: string }; Returns: boolean }
       move_order_to_completed: {
         Args: { order_id: string; p_delivery_estimate: string }
         Returns: boolean
@@ -1044,10 +1023,7 @@ export type Database = {
         Args: { gift_request_id: string }
         Returns: boolean
       }
-      query_raw: {
-        Args: { query: string }
-        Returns: Json
-      }
+      query_raw: { Args: { query: string }; Returns: Json }
       reject_order: {
         Args: {
           order_id: string
@@ -1078,10 +1054,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      verify_admin_access: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      verify_admin_access: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "fan" | "influencer" | "admin"

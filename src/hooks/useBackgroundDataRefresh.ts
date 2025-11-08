@@ -7,21 +7,22 @@ export const useBackgroundDataRefresh = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Refresh stale data in background every 5 minutes
+    // Refresh stale data in background every 10 minutes (reduced from 5)
     const interval = setInterval(() => {
       console.log('🔄 Background refresh of stale data');
       
-      // Get all cached queries and refresh stale ones
+      // Get all cached queries and refresh only active stale ones
       const queryCache = queryClient.getQueryCache();
       const queries = queryCache.getAll();
       
       queries.forEach(query => {
-        if (query.isStale() && query.state.status === 'success') {
-          console.log('Refreshing stale query:', query.queryKey);
+        // Only refresh if query is stale, has data, and has active observers
+        if (query.isStale() && query.state.status === 'success' && query.getObserversCount() > 0) {
+          console.log('Refreshing active stale query:', query.queryKey);
           query.fetch();
         }
       });
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 10 * 60 * 1000); // 10 minutes
 
     // Listen for network changes
     const handleOnline = () => {

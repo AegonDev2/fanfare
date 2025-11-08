@@ -13,8 +13,8 @@ export const usePerformanceMonitor = () => {
 
   useEffect(() => {
     const startTime = performance.now();
-    let queryCount = 0;
-    let errorCount = 0;
+    let queryCountSnapshot = 0;
+    let errorCountSnapshot = 0;
 
     const trackPageLoad = () => {
       const loadTime = performance.now() - startTime;
@@ -41,17 +41,16 @@ export const usePerformanceMonitor = () => {
       const queryCache = queryClient.getQueryCache();
       const queries = queryCache.getAll();
       
-      queries.forEach(query => {
-        if (query.state.status === 'success') {
-          queryCount++;
-        } else if (query.state.status === 'error') {
-          errorCount++;
-        }
-      });
-
-      const cacheHitRate = queries.length > 0 ? (queryCount / queries.length) * 100 : 0;
+      const successQueries = queries.filter(q => q.state.status === 'success' && q.state.dataUpdatedAt > 0);
+      const errorQueries = queries.filter(q => q.state.status === 'error');
       
-      console.log(`📊 Query stats: ${queryCount} successful, ${errorCount} errors, ${cacheHitRate.toFixed(1)}% cache hit rate`);
+      queryCountSnapshot = successQueries.length;
+      errorCountSnapshot = errorQueries.length;
+
+      // Cache hit rate: queries with cached data / total queries
+      const cacheHitRate = queries.length > 0 ? (successQueries.length / queries.length) * 100 : 0;
+      
+      console.log(`📊 Query stats: ${queryCountSnapshot} successful, ${errorCountSnapshot} errors, ${cacheHitRate.toFixed(1)}% cache hit rate`);
     };
 
     // Track initial performance
@@ -60,16 +59,14 @@ export const usePerformanceMonitor = () => {
       trackQueries();
     }, 1000);
 
-    // Monitor query changes
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event.type === 'added' || event.type === 'updated') {
-        trackQueries();
-      }
-    });
+    // Monitor query changes every 30 seconds instead of on every update
+    const trackInterval = setInterval(() => {
+      trackQueries();
+    }, 30000);
 
     return () => {
       clearTimeout(timeoutId);
-      unsubscribe();
+      clearInterval(trackInterval);
     };
   }, [queryClient]);
 
