@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { appCache } from '@/utils/appCache';
+import { optimizedCache } from '@/utils/optimizedCache';
 
 interface UseCacheOptions<T> {
   key: string;
@@ -29,7 +29,7 @@ export function useCache<T>({
 
       // Try to get from cache first
       if (!forceRefresh) {
-        const cachedData = appCache.get<T>(key);
+        const cachedData = optimizedCache.get<T>(key);
         if (cachedData) {
           setData(cachedData);
           setIsLoading(false);
@@ -41,7 +41,7 @@ export function useCache<T>({
       const freshData = await fetcher();
       
       // Cache the result
-      appCache.set(key, freshData, ttl);
+      optimizedCache.set(key, freshData, ttl);
       setData(freshData);
       
       return freshData;
@@ -60,7 +60,7 @@ export function useCache<T>({
 
   // Clear cache for this key
   const clearCache = useCallback(() => {
-    appCache.delete(key);
+    optimizedCache.delete(key);
     setData(null);
   }, [key]);
 

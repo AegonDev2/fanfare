@@ -1,6 +1,6 @@
 import { useCache } from "./useCache";
 import { supabase } from "@/integrations/supabase/client";
-import { cacheHelpers } from "@/utils/appCache";
+import { cacheHelpers } from "@/utils/optimizedCache";
 
 export const useNotifications = (userId: string) => {
   const { data, isLoading, error, refresh } = useCache({
@@ -19,9 +19,6 @@ export const useNotifications = (userId: string) => {
         console.error('Error fetching notifications:', error);
         throw error;
       }
-
-      // Cache notifications
-      cacheHelpers.setNotifications(userId, data || []);
 
       return data || [];
     },
@@ -96,9 +93,6 @@ export const useOrders = (userId: string, type: string = 'all') => {
         console.error('Error fetching orders:', error);
         throw error;
       }
-
-      // Cache orders
-      cacheHelpers.setOrders(userId, data || [], type);
 
       return data || [];
     },

@@ -17,13 +17,19 @@ export interface DatabaseInfluencer {
   facebook_url: string | null;
 }
 
-export const useInfluencers = (searchQuery?: string, categoryFilter?: string) => {
+export const useInfluencers = (
+  searchQuery?: string, 
+  categoryFilter?: string,
+  page: number = 1,
+  pageSize: number = 20
+) => {
   return useQuery({
-    queryKey: ['influencers', searchQuery, categoryFilter],
+    queryKey: ['influencers', searchQuery, categoryFilter, page, pageSize],
     queryFn: async () => {
       let query = supabase
         .from('influencer_profiles')
-        .select('*')
+        .select('*', { count: 'exact' })
+        .range((page - 1) * pageSize, page * pageSize - 1)
         .order('followers', { ascending: false });
 
       if (searchQuery && searchQuery.trim()) {
@@ -34,17 +40,18 @@ export const useInfluencers = (searchQuery?: string, categoryFilter?: string) =>
         query = query.eq('category', categoryFilter);
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
 
       if (error) {
         console.error('Error fetching influencers:', error);
         throw error;
       }
 
-      return data || [];
+      return { data: data || [], count: count || 0 };
     },
     staleTime: searchQuery ? 2 * 60 * 1000 : 10 * 60 * 1000, // 2 min for search, 10 min for general
     gcTime: 30 * 60 * 1000, // 30 minutes cache
+    placeholderData: (previousData) => previousData, // Keep previous data while loading
   });
 };
 

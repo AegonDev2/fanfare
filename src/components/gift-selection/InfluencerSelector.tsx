@@ -15,8 +15,10 @@ interface InfluencerSelectorProps {
 
 export default function InfluencerSelector({ onSelect, selectedInfluencerId }: InfluencerSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: influencers = [], isLoading } = useInfluencers(searchQuery);
+  const { data: influencersData, isLoading } = useInfluencers(searchQuery);
   const { user } = useUser();
+
+  const influencers = influencersData?.data || [];
 
   // Filter out the current user to prevent self-gifting
   const filteredInfluencers = influencers.filter(influencer => influencer.id !== user?.id);

@@ -179,9 +179,12 @@ const InfluencerSection = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchInputRef = useRef<HTMLDivElement>(null);
   const {
-    data: influencers = [],
+    data: influencersData,
     isLoading
   } = useInfluencers(searchQuery);
+  
+  const influencers = influencersData?.data || [];
+  
   const handleProfileClick = (id: string) => {
     console.log("Navigating to profile from InfluencerSection:", id);
     navigate(`/profile/${id}`);

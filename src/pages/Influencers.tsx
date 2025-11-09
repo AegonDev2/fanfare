@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInfluencers, useInfluencerCategories, DatabaseInfluencer } from '@/hooks/useInfluencers';
 import { Input } from '@/components/ui/input';
@@ -8,15 +8,27 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
 import { Search, Filter, Users, Gift, ArrowLeft } from 'lucide-react';
 
 export default function Influencers() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
-  const { data: influencers = [], isLoading } = useInfluencers(searchQuery, categoryFilter);
+  const { data: influencersData, isLoading } = useInfluencers(searchQuery, categoryFilter, currentPage, pageSize);
   const { data: categories = [] } = useInfluencerCategories();
+
+  const influencers = influencersData?.data || [];
+  const totalCount = influencersData?.count || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Reset to page 1 when search/filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, categoryFilter]);
 
   const handleProfileClick = (id: string) => {
     console.log("Navigating to profile:", id);
@@ -148,9 +160,10 @@ export default function Influencers() {
         {!isLoading && (
           <div className="mb-4">
             <p className="text-sm text-gray-600">
-              {influencers.length} influencer{influencers.length !== 1 ? 's' : ''} found
+              {totalCount} influencer{totalCount !== 1 ? 's' : ''} found
               {searchQuery && ` for "${searchQuery}"`}
               {categoryFilter !== 'all' && ` in ${categoryFilter}`}
+              {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
             </p>
           </div>
         )}
@@ -195,6 +208,58 @@ export default function Influencers() {
             >
               Clear filters
             </Button>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && !isLoading && influencers.length > 0 && (
+          <div className="mt-8">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  // Show first page, last page, current page, and pages around current
+                  if (
+                    pageNum === 1 ||
+                    pageNum === totalPages ||
+                    (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                  ) {
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(pageNum)}
+                          isActive={currentPage === pageNum}
+                          className="cursor-pointer"
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                })}
+
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </div>

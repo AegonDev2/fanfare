@@ -24,29 +24,12 @@ export default function Landing() {
   const { isAndroid } = useMobileFeatures();
   const { user } = useOptimizedAuth();
   
-  // Preload static data and setup background refresh
+  // Only preload lightweight static data
   usePreloadData();
   useBackgroundRefresh();
   
-  // Proactive data loading based on user likely actions
-  const { preloadInfluencers, preloadLeaderboard, preloadWallet } = useProactiveDataLoader({
-    enabled: true,
-    priority: 'high'
-  });
-
-  // Preload data that users are likely to visit next
-  React.useEffect(() => {
-    // Always preload influencers page since it's prominently featured
-    preloadInfluencers();
-    
-    // Preload leaderboard since it's visible on landing
-    preloadLeaderboard();
-    
-    // If user is authenticated, preload their wallet
-    if (user?.id) {
-      preloadWallet(user.id);
-    }
-  }, [user?.id, preloadInfluencers, preloadLeaderboard, preloadWallet]);
+  // Don't preload heavy data upfront - let lazy loading and React Query handle it
+  // Materialized views make queries fast enough that preloading is unnecessary
 
   return (
     <AuthGuard>

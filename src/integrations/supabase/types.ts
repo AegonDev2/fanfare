@@ -158,6 +158,13 @@ export type Database = {
             foreignKeyName: "fan_profiles_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "mv_monthly_leaderboard"
+            referencedColumns: ["fan_id"]
+          },
+          {
+            foreignKeyName: "fan_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -223,8 +230,22 @@ export type Database = {
             foreignKeyName: "gift_requests_influencer_id_fkey"
             columns: ["influencer_id"]
             isOneToOne: false
+            referencedRelation: "mv_monthly_leaderboard"
+            referencedColumns: ["fan_id"]
+          },
+          {
+            foreignKeyName: "gift_requests_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_requests_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "mv_monthly_leaderboard"
+            referencedColumns: ["fan_id"]
           },
           {
             foreignKeyName: "gift_requests_sender_id_fkey"
@@ -270,6 +291,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "influencer_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gifts_to_influencers_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "mv_monthly_leaderboard"
+            referencedColumns: ["fan_id"]
           },
           {
             foreignKeyName: "gifts_to_influencers_sender_id_fkey"
@@ -937,7 +965,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mv_monthly_leaderboard: {
+        Row: {
+          fan_email: string | null
+          fan_id: string | null
+          fan_name: string | null
+          favorite_influencer_id: string | null
+          favorite_influencer_name: string | null
+          month: string | null
+          target_month: number | null
+          target_year: number | null
+          total_gifts: number | null
+          year: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_order_by_influencer: {
@@ -1024,6 +1066,7 @@ export type Database = {
         Returns: boolean
       }
       query_raw: { Args: { query: string }; Returns: Json }
+      refresh_leaderboard_mv: { Args: never; Returns: undefined }
       reject_order: {
         Args: {
           order_id: string
