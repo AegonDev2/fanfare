@@ -93,7 +93,7 @@ const GiftCarousel = ({
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const itemsPerView = isMobile ? 2 : 4;
+  const itemsPerView = isMobile ? 2 : 6;
   const totalSlides = Math.ceil(products.length / itemsPerView);
   const scrollPrev = useCallback(() => {
     setCurrentIndex(prev => (prev - 1 + totalSlides) % totalSlides);
@@ -143,7 +143,7 @@ const GiftCarousel = ({
   const handleMouseUp = (e: React.MouseEvent) => {
     handleEnd(e.clientX);
   };
-  return <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-funky-pink/5 to-funky-purple/5 border-2 border-gradient-to-r from-funky-pink/20 to-funky-purple/20 shadow-xl">
+  return <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-funky-pink/5 to-funky-purple/5 border border-funky-pink/20 shadow-sm">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,105,180,0.1),transparent_50%)]"></div>
       
       <div ref={carouselRef} className="flex transition-transform duration-300 ease-out relative z-10 cursor-grab active:cursor-grabbing" style={{
@@ -152,7 +152,7 @@ const GiftCarousel = ({
         {Array.from({
         length: totalSlides
       }).map((_, slideIndex) => <div key={slideIndex} className="w-full flex-shrink-0">
-            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`}>
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-6'} gap-3 p-4`}>
               {products.slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView).map(product => <ProductCard key={product.id} product={product} />)}
             </div>
           </div>)}
@@ -228,10 +228,8 @@ const GiftSection = () => {
         </div>
       </section>;
   }
-  return <section className="mb-8 relative py-8 px-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-funky-pink/5 to-funky-purple/5 rounded-3xl"></div>
-      
-      <div className="max-w-6xl mx-auto relative z-10">
+  return <section className="mb-6 relative py-4">
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center justify-between w-full md:w-auto">
             <h2 className="font-display text-2xl lg:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-funky-purple to-funky-pink"> Gift Collection</h2>

@@ -99,7 +99,7 @@ const CreatorCarousel = ({
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const itemsPerView = isMobile ? 2 : 4;
+  const itemsPerView = isMobile ? 2 : 6;
   const totalSlides = Math.ceil(influencers.length / itemsPerView);
   const scrollPrev = useCallback(() => {
     setCurrentIndex(prev => (prev - 1 + totalSlides) % totalSlides);
@@ -149,14 +149,14 @@ const CreatorCarousel = ({
   const handleMouseUp = (e: React.MouseEvent) => {
     handleEnd(e.clientX);
   };
-  return <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-funky-purple/10">
+  return <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-funky-purple/10 shadow-sm">
       <div ref={carouselRef} className="flex transition-transform duration-300 ease-out cursor-grab active:cursor-grabbing" style={{
       transform: `translateX(-${currentIndex * 100}%)`
     }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onMouseDown={handleMouseDown} onMouseMove={isDragging ? handleMouseMove : undefined} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
         {Array.from({
         length: totalSlides
       }).map((_, slideIndex) => <div key={slideIndex} className="w-full flex-shrink-0">
-            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4 p-4`}>
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-6'} gap-3 p-4`}>
               {influencers.slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView).map(influencer => <InfluencerCard key={influencer.id} influencer={influencer} onProfileClick={onProfileClick} isMobile={isMobile} />)}
             </div>
           </div>)}
@@ -237,8 +237,8 @@ const InfluencerSection = () => {
         </div>
       </section>;
   }
-  return <section className="mb-4 relative py-[3px] my-0 px-4">
-      <div className="max-w-6xl mx-auto">
+  return <section className="mb-6 relative py-4">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2 mx-1">
           <div className="flex items-center justify-between w-full md:w-auto rounded-sm">
             <h2 className="font-display bg-clip-text bg-gradient-to-r from-funky-purple to-funky-pink lg:text-xl mx-0 text-black font-extrabold text-xl">

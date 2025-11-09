@@ -38,15 +38,9 @@ export default function Landing() {
       <div className="min-h-screen bg-background">
         <Hero />
         {/* Primary Content - Creators & Gifts Front and Center */}
-        <div className="container mx-auto px-4 py-4">
-          <div className="grid lg:grid-cols-2 gap-4 mb-4">
-            <div className="lg:order-1">
-              <ConditionalInfluencers />
-            </div>
-            <div className="lg:order-2">
-              <GiftSection />
-            </div>
-          </div>
+        <div className="container mx-auto px-4 py-4 space-y-6">
+          <ConditionalInfluencers />
+          <GiftSection />
         </div>
         {/* Secondary Content */}
         <div className="mb-4">
