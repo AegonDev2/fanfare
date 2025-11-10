@@ -116,6 +116,39 @@ export type Database = {
         }
         Relationships: []
       }
+      extraction_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error: string | null
+          id: string
+          product_url: string
+          result: Json | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          product_url: string
+          result?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          product_url?: string
+          result?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       fan_profiles: {
         Row: {
           bio: string | null
@@ -606,6 +639,36 @@ export type Database = {
         }
         Relationships: []
       }
+      product_extractions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          product_data: Json
+          product_url: string
+          screenshot_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          product_data: Json
+          product_url: string
+          screenshot_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          product_data?: Json
+          product_url?: string
+          screenshot_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       product_preview_data: {
         Row: {
           created_at: string | null
@@ -991,6 +1054,7 @@ export type Database = {
         Returns: boolean
       }
       cancel_order_by_user: { Args: { order_id: string }; Returns: boolean }
+      cleanup_expired_extractions: { Args: never; Returns: undefined }
       complete_order: {
         Args: { delivery_estimate?: string; order_id: string }
         Returns: boolean

@@ -75,7 +75,7 @@ export const useProductPreview = () => {
       const { data: extractionResponse, error: extractError } = await supabase.functions.invoke(
         "jigsawstack-extraction",
         {
-          body: { url },
+          body: { url, async: false },
         }
       );
 
@@ -88,9 +88,17 @@ export const useProductPreview = () => {
         throw new Error(extractError.message);
       }
 
-      // Wait for website preview to complete
-      const previewImage = await previewPromise;
-      console.log("Preview image received:", previewImage ? "yes (length: " + previewImage.length + ")" : "no");
+      // Check if data is from cache
+      const isCached = extractionResponse?.cached || false;
+      
+      // If cached and has screenshot, use it
+      if (isCached && extractionResponse?.screenshot_url) {
+        setWebsitePreview(extractionResponse.screenshot_url);
+      } else {
+        // Wait for website preview to complete
+        const previewImage = await previewPromise;
+        console.log("Preview image received:", previewImage ? "yes (length: " + previewImage.length + ")" : "no");
+      }
 
       // Set to 95% as we're almost done
       setFetchProgress(95);
@@ -100,11 +108,12 @@ export const useProductPreview = () => {
         console.log("No product data in response:", extractionResponse);
         
         // Create a fallback product preview with website screenshot
+        const fallbackImage = websitePreview || "https://placehold.co/600x400?text=No+Image";
         setProductPreview({
           name: "Product information couldn't be fully extracted",
           price: "N/A",
           priceInr: 0,
-          image: previewImage || "https://placehold.co/600x400?text=No+Image",
+          image: fallbackImage,
           description: "Please verify the product details before proceeding.",
           platformFee: 5.00
         });
@@ -124,11 +133,12 @@ export const useProductPreview = () => {
       // Check if we received valid product data
       if (!productData.name) {
         console.log("Product data missing name:", productData);
+        const fallbackImage = websitePreview || "https://placehold.co/600x400?text=No+Image";
         setProductPreview({
           name: "Product information couldn't be extracted",
           price: "N/A",
           priceInr: 0,
-          image: previewImage || "https://placehold.co/600x400?text=No+Image",
+          image: fallbackImage,
           description: "Please try a different URL or enter product details manually.",
           platformFee: 5.00
         });
@@ -151,25 +161,28 @@ export const useProductPreview = () => {
         priceNumber = parseFloat(productData.price) || 0;
       }
 
+      // Use cached screenshot if available, otherwise use website preview or fallback
+      const imageUrl = extractionResponse.screenshot_url || websitePreview || productData.image || "https://placehold.co/600x400?text=No+Image";
+
       // Set the product preview data
       const preview = {
         name: productData.name,
         price: productData.price?.toString() || "Price not available",
         priceInr: priceNumber,
-        image: productData.image || previewImage || "https://placehold.co/600x400?text=No+Image",
+        image: imageUrl,
         description: productData.description || "No description available",
         platformFee: 5.00
       };
       
       console.log("Setting product preview:", preview);
-      console.log("Website preview image:", websitePreview ? "available" : "not available");
+      console.log("Using cached data:", isCached);
       setProductPreview(preview);
       setFetchProgress(100);
 
       // Success notification
       toast({
-        title: "Product Processed",
-        description: "Product information has been successfully extracted.",
+        title: isCached ? "Product Retrieved (Cached)" : "Product Processed",
+        description: isCached ? "Product information retrieved from cache." : "Product information has been successfully extracted.",
         variant: "default",
       });
 

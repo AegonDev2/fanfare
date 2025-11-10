@@ -1,5 +1,6 @@
 
 project_id = "utuguowpwezberrmqabw"
+
 [functions_permissions."execute_sql"]
 verify_jwt = true
 
@@ -19,5 +20,11 @@ verify_jwt = false
 verify_jwt = true
 
 [functions_permissions."pikwy-screenshot"]
+verify_jwt = false
+
+[functions_permissions."refresh-leaderboard"]
+verify_jwt = false
+
+[functions_permissions."process-extraction-jobs"]
 verify_jwt = false
 
