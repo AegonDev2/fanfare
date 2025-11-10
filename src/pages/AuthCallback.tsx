@@ -2,18 +2,48 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { initializeDeepLinkListener, isNativeApp } from "@/utils/deepLinkHandler";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
+    const handleAuthCallback = async (url?: string) => {
       try {
         console.log("Processing auth callback...");
-        console.log("Current URL:", window.location.href);
+        console.log("Current URL:", url || window.location.href);
         console.log("Hash:", window.location.hash);
         console.log("Search:", window.location.search);
+        console.log("Is Native App:", isNativeApp());
+
+        // For native app, extract tokens from deep link URL
+        if (isNativeApp() && url) {
+          // Parse the URL to extract fragment
+          const parsedUrl = new URL(url);
+          const fragment = parsedUrl.hash.substring(1); // Remove the # symbol
+          
+          if (fragment) {
+            // Convert fragment to URLSearchParams
+            const params = new URLSearchParams(fragment);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+            
+            console.log("Extracted tokens from deep link");
+            
+            if (accessToken && refreshToken) {
+              // Set the session using the tokens
+              const { error: setSessionError } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+              });
+              
+              if (setSessionError) {
+                throw setSessionError;
+              }
+            }
+          }
+        }
 
         // Handle OAuth callback by getting session
         const { data, error } = await supabase.auth.getSession();
@@ -78,7 +108,16 @@ const AuthCallback = () => {
       }
     };
 
+    // Initialize auth callback
     handleAuthCallback();
+    
+    // Set up deep link listener for native apps
+    const cleanup = initializeDeepLinkListener((url) => {
+      console.log("Deep link callback triggered:", url);
+      handleAuthCallback(url);
+    });
+    
+    return cleanup;
   }, [navigate, toast]);
 
   return (

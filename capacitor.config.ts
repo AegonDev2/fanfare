@@ -39,7 +39,10 @@ const config: CapacitorConfig = {
       presentationOptions: ["badge", "sound", "alert"]
     },
     App: {
-      launchUrl: ""
+      launchUrl: "",
+      // Handle deep links
+      androidScheme: "fanfare",
+      iosScheme: "fanfare"
     }
   }
 };

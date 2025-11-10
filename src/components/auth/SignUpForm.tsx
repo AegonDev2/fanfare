@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import GoogleLoginButton from './GoogleLoginButton';
+import { getAuthRedirectUrl } from '@/utils/deepLinkHandler';
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -38,6 +39,9 @@ const SignUpForm = () => {
     setIsLoading(true);
     try {
       console.log("Starting signup process for:", email);
+      const redirectUrl = getAuthRedirectUrl();
+      console.log("Using redirect URL:", redirectUrl);
+      
       const {
         data: authData,
         error: authError
@@ -49,7 +53,7 @@ const SignUpForm = () => {
             user_type: 'fan', // All signups are now fans
             name: name
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: redirectUrl
         }
       });
       console.log("Signup response:", {

@@ -28,6 +28,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Deep link intent filter for authentication -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="fanfare" android:host="auth" />
+            </intent-filter>
+
+            <!-- Alternative HTTPS deep link (if you have a domain) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                      android:host="a407041e-65d3-402d-a548-4a08462e8022.lovableproject.com"
+                      android:pathPrefix="/auth/callback" />
+            </intent-filter>
+
         </activity>
 
         <provider
