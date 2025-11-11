@@ -9,7 +9,7 @@ import { generateWebsitePreview } from "@/utils/pikwy";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Image, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import ImageViewer from "@/components/common/ImageViewer";
+import { ImageViewer } from "@/components/common/ImageViewer";
 import { useUser } from "@/hooks/useUser";
 import { useWallet } from "@/hooks/use-wallet";
 import { useNavigate } from "react-router-dom";
@@ -224,7 +224,7 @@ const RequestCreateForm = ({ influencerId, onSubmit }: { influencerId: string, o
                 </div>
                 <div className="aspect-video bg-white">
                   <ImageViewer 
-                    imageUrl={websitePreview} 
+                    src={websitePreview} 
                     alt="Product preview" 
                   />
                 </div>

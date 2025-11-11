@@ -1,61 +1,75 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface OptimizedImageProps {
   src: string;
   alt: string;
   className?: string;
-  fallbackSrc?: string;
+  width?: number;
+  height?: number;
+  priority?: boolean;
   onLoad?: () => void;
-  onError?: () => void;
 }
 
-const OptimizedImage = memo<OptimizedImageProps>(({
+export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   src,
   alt,
   className,
-  fallbackSrc = 'https://storage.googleapis.com/a1aa/image/XZap5acURHVhX1bOw4h9xVM_CSgwW4lMTY9IVmySNr0.jpg',
+  width,
+  height,
+  priority = false,
   onLoad,
-  onError
 }) => {
-  const [imageSrc, setImageSrc] = useState(src);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(priority);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (priority) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            observer.disconnect();
+          }
+        });
+      },
+      { rootMargin: '50px' }
+    );
+
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [priority]);
 
   const handleLoad = () => {
-    setIsLoading(false);
+    setIsLoaded(true);
     onLoad?.();
   };
 
-  const handleError = () => {
-    setHasError(true);
-    setIsLoading(false);
-    if (imageSrc !== fallbackSrc) {
-      setImageSrc(fallbackSrc);
-    }
-    onError?.();
-  };
-
   return (
-    <div className={cn("relative overflow-hidden", className)}>
-      {isLoading && !hasError && (
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
+    <div className={cn('relative overflow-hidden bg-muted', className)}>
+      {!isLoaded && (
+        <div className="absolute inset-0 animate-pulse bg-muted" />
       )}
       <img
-        src={imageSrc}
+        ref={imgRef}
+        src={isInView ? src : undefined}
         alt={alt}
-        className={cn(
-          "w-full h-full object-cover transition-opacity duration-300",
-          isLoading ? "opacity-0" : "opacity-100"
-        )}
-        loading="lazy"
+        width={width}
+        height={height}
+        loading={priority ? 'eager' : 'lazy'}
         onLoad={handleLoad}
-        onError={handleError}
+        className={cn(
+          'transition-opacity duration-300',
+          isLoaded ? 'opacity-100' : 'opacity-0',
+          className
+        )}
       />
     </div>
   );
-});
-
-OptimizedImage.displayName = 'OptimizedImage';
-
-export default OptimizedImage;
+};

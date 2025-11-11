@@ -1,50 +1,45 @@
-import React, { useRef, useEffect, useState, ReactNode } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface IntersectionObserverProps {
-  children: (inView: boolean) => ReactNode;
+  children: React.ReactNode;
+  onInView?: () => void;
   threshold?: number;
   rootMargin?: string;
   triggerOnce?: boolean;
 }
 
-const IntersectionObserver: React.FC<IntersectionObserverProps> = ({
+export const IntersectionObserverWrapper: React.FC<IntersectionObserverProps> = ({
   children,
+  onInView,
   threshold = 0.1,
   rootMargin = '50px',
-  triggerOnce = true
+  triggerOnce = true,
 }) => {
-  const [inView, setInView] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    const observer = new window.IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          if (triggerOnce) {
-            observer.unobserve(element);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            onInView?.();
+            if (triggerOnce) {
+              observer.disconnect();
+            }
           }
-        } else if (!triggerOnce) {
-          setInView(false);
-        }
+        });
       },
-      {
-        threshold,
-        rootMargin
-      }
+      { threshold, rootMargin }
     );
 
-    observer.observe(element);
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
 
-    return () => {
-      observer.unobserve(element);
-    };
-  }, [threshold, rootMargin, triggerOnce]);
+    return () => observer.disconnect();
+  }, [onInView, threshold, rootMargin, triggerOnce]);
 
-  return <div ref={ref}>{children(inView)}</div>;
+  return <div ref={ref}>{isInView && children}</div>;
 };
-
-export default IntersectionObserver;

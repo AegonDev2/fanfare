@@ -12,44 +12,58 @@ export class NavigationOptimizer {
     return NavigationOptimizer.instance;
   }
 
-  // Preload data for common routes
+  // Preload data for common routes using requestIdleCallback for low-priority loading
   async preloadRoute(route: string): Promise<void> {
     if (this.preloadedRoutes.has(route)) {
-      console.log(`🔄 Route ${route} already preloaded`);
+      console.log(`✓ Route already preloaded: ${route}`);
       return;
     }
 
-    console.log(`🚀 Preloading route: ${route}`);
+    console.log(`🔄 Preloading route: ${route}`);
+    this.preloadedRoutes.add(route);
 
-    try {
+    // Use requestIdleCallback for low-priority preloading
+    const preloadTask = () => {
       switch (route) {
         case '/':
         case '/home':
-          await this.preloadHomeData();
+          this.preloadHomeData();
           break;
         case '/profile':
-          await this.preloadProfileData();
+          this.preloadProfileData();
           break;
         case '/wallet':
-          await this.preloadWalletData();
+          this.preloadWalletData();
           break;
         case '/influencers':
-          await this.preloadInfluencersData();
+          this.preloadInfluencersData();
           break;
         case '/leaderboard':
-          await this.preloadLeaderboardData();
+          this.preloadLeaderboardData();
+          break;
+        case '/gift-shop':
+          this.preloadGiftShopData();
           break;
       }
+    };
 
-      this.preloadedRoutes.add(route);
-      console.log(`✅ Route ${route} preloaded`);
-    } catch (error) {
-      console.warn(`⚠️ Failed to preload ${route}:`, error);
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => preloadTask(), { timeout: 2000 });
+    } else {
+      setTimeout(preloadTask, 100);
     }
   }
 
-  private async preloadHomeData(): Promise<void> {
-    // Check if data is already cached
+  private preloadGiftShopData(): void {
+    const cached = optimizedCache.getStaticData('shops_featured');
+    if (!cached) {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('preload-giftshop-data'));
+      }, 100);
+    }
+  }
+
+  private preloadHomeData(): void {
     const cachedInfluencers = optimizedCache.getStaticData('influencers_featured');
     const cachedLeaderboard = optimizedCache.getStaticData('leaderboard_current');
     
@@ -58,22 +72,20 @@ export class NavigationOptimizer {
       return;
     }
 
-    // Trigger background loading
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('preload-home-data'));
     }, 100);
   }
 
-  private async preloadProfileData(): Promise<void> {
-    // Profile data is user-specific, so we can only preload general structure
+  private preloadProfileData(): void {
     console.log('📋 Profile structure preloaded');
   }
 
-  private async preloadWalletData(): Promise<void> {
+  private preloadWalletData(): void {
     console.log('💰 Wallet structure preloaded');
   }
 
-  private async preloadInfluencersData(): Promise<void> {
+  private preloadInfluencersData(): void {
     const cached = optimizedCache.getStaticData('influencers_all');
     if (!cached) {
       setTimeout(() => {
@@ -82,7 +94,7 @@ export class NavigationOptimizer {
     }
   }
 
-  private async preloadLeaderboardData(): Promise<void> {
+  private preloadLeaderboardData(): void {
     const cached = optimizedCache.getStaticData('leaderboard_current');
     if (!cached) {
       setTimeout(() => {

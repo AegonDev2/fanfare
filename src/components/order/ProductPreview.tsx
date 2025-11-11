@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Gift, CheckCircle2, Wallet, AlertCircle, Link as LinkIcon, Image, Globe } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import ImageViewer from "@/components/common/ImageViewer";
+import { ImageViewer } from "@/components/common/ImageViewer";
 interface ProductPreviewProps {
   productPreview: ProductDetails | null;
   influencerAddress: InfluencerAddress | null;
@@ -92,7 +92,7 @@ const ProductPreview = ({
         </div>
         
         <div className="aspect-video relative bg-gray-50">
-          {websitePreview && websitePreview.length > 100 ? <ImageViewer imageUrl={websitePreview} alt="Website preview" /> : <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          {websitePreview && websitePreview.length > 100 ? <ImageViewer src={websitePreview} alt="Website preview" /> : <div className="flex flex-col items-center justify-center h-full text-gray-400">
               <Globe className="h-12 w-12 mb-2 opacity-50" />
               <p className="text-sm text-center px-4">
                 Website preview unavailable
@@ -173,7 +173,7 @@ const ProductPreview = ({
           <div className="bg-white p-6 shadow-md rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                {isPreviewAvailable && productPreview?.image && !productPreview.image.startsWith("https://placehold.co") ? <ImageViewer imageUrl={productPreview.image} alt={productPreview.name} /> : <WebsitePreviewComponent />}
+                {isPreviewAvailable && productPreview?.image && !productPreview.image.startsWith("https://placehold.co") ? <ImageViewer src={productPreview.image} alt={productPreview.name} /> : <WebsitePreviewComponent />}
               </div>
               <div className="flex flex-col justify-between">
                 <div>
