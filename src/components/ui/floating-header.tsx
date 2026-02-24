@@ -52,7 +52,7 @@ const FloatingHeader = ({
       <div className="max-w-full mx-auto px-4 py-3 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" onClick={() => setNavOpen(true)} className="lg:hidden">
+            <Button variant="ghost" size="icon" onClick={() => setNavOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
             
@@ -61,6 +61,17 @@ const FloatingHeader = ({
             </div>
           </div>
 
+          {/* Guest Actions - Show when not logged in (Desktop only) */}
+          {!user && (
+            <div className="hidden lg:flex items-center space-x-2">
+              <Button variant="ghost" onClick={() => navigate('/auth')}>
+                Sign In
+              </Button>
+              <Button onClick={() => navigate('/auth?tab=signup')} className="bg-gradient-to-r from-funky-purple to-funky-pink text-white">
+                Get Started
+              </Button>
+            </div>
+          )}
           {/* User Actions - Only show when logged in */}
           {user && <div className="flex items-center space-x-3">
               {/* Wallet Balance Preview */}
