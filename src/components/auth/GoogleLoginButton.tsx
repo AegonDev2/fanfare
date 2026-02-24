@@ -138,7 +138,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
       if (data?.url) {
         const oauthUrl = new URL(data.url);
-        const allowedHosts = ['accounts.google.com'];
+        const allowedHosts = ['accounts.google.com', 'utuguowpwezberrmqabw.supabase.co'];
         if (!allowedHosts.some(host => oauthUrl.hostname === host)) {
           throw new Error('Invalid OAuth redirect URL');
         }
