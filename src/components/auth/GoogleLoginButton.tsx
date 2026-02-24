@@ -118,18 +118,42 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   };
 
   const handleWebGoogleAuth = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'https://a407041e-65d3-402d-a548-4a08462e8022.lovableproject.com/'
+    const currentOrigin = window.location.origin;
+    const isLovableDomain = currentOrigin.includes('lovable.app') || currentOrigin.includes('lovableproject.com');
+    
+    console.log("Web OAuth config:", { currentOrigin, isLovableDomain });
+
+    if (isLovableDomain) {
+      // Bypass Lovable's auth-bridge to avoid 403
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: currentOrigin,
+          skipBrowserRedirect: true,
+        }
+      });
+
+      console.log("OAuth response:", { data, error });
+      if (error) throw error;
+
+      if (data?.url) {
+        const oauthUrl = new URL(data.url);
+        const allowedHosts = ['accounts.google.com'];
+        if (!allowedHosts.some(host => oauthUrl.hostname === host)) {
+          throw new Error('Invalid OAuth redirect URL');
+        }
+        window.location.href = data.url;
       }
-    });
-    
-    console.log("OAuth response:", { data, error });
-    
-    if (error) {
-      console.error('Google OAuth error:', error);
-      throw error;
+    } else {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: currentOrigin,
+        }
+      });
+
+      console.log("OAuth response:", { data, error });
+      if (error) throw error;
     }
     
     console.log("OAuth initiated successfully, redirecting...");
